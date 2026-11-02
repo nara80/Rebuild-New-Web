@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -85,7 +85,6 @@
     <script>
     (function () {
       var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
 
       function loadScript(src, async) {
         var s = document.createElement('script');
@@ -98,11 +97,7 @@
         if (window.__mildmateAnalyticsLoaded) return;
         window.__mildmateAnalyticsLoaded = true;
         window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
         window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
       }
 
@@ -305,8 +300,11 @@
   <script src="/js/nav.js"></script>
   <script src="/js/clerk.js"></script>
   <script src="/js/cart.js"></script>
+  <script src="/js/campaign-state.js?v=20260601"></script>
+  <script src="/js/catalog-campaign-ui.js?v=20261025"></script>
   <script src="/js/cookie-consent.js"></script>
 </body>
 </html>
+
 
 

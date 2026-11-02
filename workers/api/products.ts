@@ -69,6 +69,26 @@ export interface Product {
   tags: string | null;  // comma-separated cross-sell tags, e.g. 'Family, Duvet, Marine, Pets'
 }
 
+async function ensureProductTaxonomyTables(env: any): Promise<void> {
+  const db = env.DB as D1Database;
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS product_niches (
+      product_id INTEGER NOT NULL,
+      niche_type TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (product_id, niche_type)
+    )
+  `).run();
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS product_collections (
+      product_id INTEGER NOT NULL,
+      collection_type TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (product_id, collection_type)
+    )
+  `).run();
+}
+
 // Product type slug → display name mapping for reviews table matching
 const PRODUCT_TYPE_DISPLAY: Record<string, string> = {
   "sheets": "Sheets",
@@ -90,6 +110,7 @@ const NICHE_DISPLAY: Record<string, string> = {
 
 export async function listProducts(env: any, filters: { category?: string; product_type?: string; niche?: string; fabric?: string; search?: string }): Promise<Product[]> {
   const db = env.DB as D1Database;
+  await ensureProductTaxonomyTables(env);
   let sql = `SELECT * FROM products WHERE 1=1`;
   const params: any[] = [];
 
@@ -102,8 +123,15 @@ export async function listProducts(env: any, filters: { category?: string; produ
     params.push(filters.category, filters.category);
   }
   if (filters.niche) {
-    sql += ` AND (',' || niches || ',' LIKE '%,' || ? || ',%' OR ',' || category || ',' LIKE '%,' || ? || ',%')`;
-    params.push(filters.niche, filters.niche);
+    sql += ` AND (
+      EXISTS (
+        SELECT 1 FROM product_collections pc
+        WHERE pc.product_id = products.id AND pc.collection_type = ?
+      )
+      OR ',' || niches || ',' LIKE '%,' || ? || ',%'
+      OR ',' || category || ',' LIKE '%,' || ? || ',%'
+    )`;
+    params.push(filters.niche, filters.niche, filters.niche);
   }
   if (filters.fabric) {
     sql += ` AND fabric = ?`;
@@ -121,6 +149,7 @@ export async function listProducts(env: any, filters: { category?: string; produ
 
 export async function getProductBySlug(env: any, slug: string): Promise<Product | null> {
   const db = env.DB as D1Database;
+  await ensureProductTaxonomyTables(env);
   const result = await db.prepare(`SELECT * FROM products WHERE slug = ?`).bind(slug).first();
   return result as Product | null;
 }

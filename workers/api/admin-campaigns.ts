@@ -85,11 +85,92 @@ async function ensureCampaignsSchema(env: any): Promise<void> {
   ).run();
 }
 
+function normalizeProductSlugs(input: any): string[] {
+  const raw = Array.isArray(input) ? input : [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const v of raw) {
+    const slug = String(v || "").trim();
+    if (!slug) continue;
+    const key = slug.toLowerCase();
+    if (key === "all" || key === "*") continue;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(slug);
+  }
+  return out;
+}
+
+function parseIsoDate(value: any): number {
+  const ts = new Date(String(value || "").trim()).getTime();
+  return Number.isFinite(ts) ? ts : NaN;
+}
+
+async function getActiveListings(env: any): Promise<any[]> {
+  const { results } = await env.DB.prepare(
+    "SELECT slug, title_en, image_url, base_price_usd, base_price_thb, category, product_type, is_active FROM products WHERE slug IS NOT NULL AND slug != '' AND COALESCE(is_active, 1) = 1 ORDER BY COALESCE(sort_order, 9999), title_en"
+  ).all();
+  return ((results || []) as any[]).map((r: any) => ({
+    slug: r.slug,
+    title_en: r.title_en || r.slug,
+    image_url: r.image_url || "",
+    base_price_usd: Number(r.base_price_usd || 0),
+    base_price_thb: Number(r.base_price_thb || 0),
+    category: r.category || "",
+    product_type: r.product_type || "",
+    is_active: Number(r.is_active || 1) === 1,
+  }));
+}
+
+async function validateCampaignPayload(body: any, env: any, requireId = false): Promise<{ ok: true; normalized: any } | { ok: false; error: string }> {
+  const id = String(body?.id || "").trim();
+  const name = String(body?.name || "").trim();
+  const discountRaw = Number(body?.discount);
+  const discount = Math.round(discountRaw);
+  const startDateRaw = String(body?.startDate || "").trim();
+  const endDateRaw = String(body?.endDate || "").trim();
+  const productSlugs = normalizeProductSlugs(body?.productSlugs);
+
+  if (requireId && !id) return { ok: false, error: "Campaign id is required" };
+  if (!name || name.length < 3 || name.length > 80) return { ok: false, error: "Campaign name must be 3-80 characters" };
+  if (!Number.isFinite(discountRaw) || !Number.isInteger(discountRaw) || discount < 1 || discount > 90) {
+    return { ok: false, error: "Discount must be an integer between 1 and 90" };
+  }
+  if (!startDateRaw || !endDateRaw) return { ok: false, error: "Start/end dates are required" };
+  const startTs = parseIsoDate(startDateRaw);
+  const endTs = parseIsoDate(endDateRaw);
+  if (!Number.isFinite(startTs) || !Number.isFinite(endTs)) return { ok: false, error: "Invalid date format" };
+  if (endTs <= startTs) return { ok: false, error: "End date must be after start date" };
+  if (!productSlugs.length) return { ok: false, error: "At least one product is required" };
+  const maybeAll = (Array.isArray(body?.productSlugs) ? body.productSlugs : []).some((v: any) => String(v || "").trim().toLowerCase() === "all");
+  if (maybeAll) return { ok: false, error: "\"All listings\" is not allowed. Select specific listings." };
+
+  const placeholders = productSlugs.map((_, i) => `?${i + 1}`).join(", ");
+  const found = await env.DB.prepare(
+    `SELECT slug FROM products WHERE COALESCE(is_active, 1) = 1 AND slug IN (${placeholders})`
+  ).bind(...productSlugs).all();
+  const foundSet = new Set(((found.results || []) as any[]).map((r: any) => String(r.slug || "")));
+  const invalid = productSlugs.filter((slug) => !foundSet.has(slug));
+  if (invalid.length) return { ok: false, error: "Invalid or inactive product slugs: " + invalid.join(", ") };
+
+  return {
+    ok: true,
+    normalized: {
+      id,
+      name,
+      discount,
+      productSlugs,
+      startDate: new Date(startTs).toISOString(),
+      endDate: new Date(endTs).toISOString(),
+    }
+  };
+}
+
 export async function handleAdminCampaigns(request: Request, env: any): Promise<Response> {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret",
   };
 
@@ -98,8 +179,13 @@ export async function handleAdminCampaigns(request: Request, env: any): Promise<
   const auth = await authorizeAdmin(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   await ensureCampaignsSchema(env);
+  const url = new URL(request.url);
 
   if (request.method === "GET") {
+    if (url.searchParams.get("mode") === "listings") {
+      const listings = await getActiveListings(env);
+      return new Response(JSON.stringify({ products: listings }), { headers });
+    }
     const { results } = await env.DB.prepare(
       "SELECT id, name, discount_pct, product_slugs, start_date, end_date, is_active, created_at FROM marketing_campaigns ORDER BY created_at DESC"
     ).all();
@@ -123,20 +209,33 @@ export async function handleAdminCampaigns(request: Request, env: any): Promise<
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
-    const name = String(body?.name || "").trim();
-    const discount = Math.max(1, Math.min(90, Number(body?.discount || 15)));
-    const startDate = String(body?.startDate || "").trim();
-    const endDate = String(body?.endDate || "").trim();
-    const productSlugs = Array.isArray(body?.productSlugs) ? body.productSlugs.map((s: any) => String(s || "").trim()).filter(Boolean) : [];
-    if (!name) return new Response(JSON.stringify({ error: "Campaign name is required" }), { status: 400, headers });
-    if (!startDate || !endDate) return new Response(JSON.stringify({ error: "Start/end dates are required" }), { status: 400, headers });
-    if (!productSlugs.length) return new Response(JSON.stringify({ error: "At least one product is required" }), { status: 400, headers });
+    const valid = await validateCampaignPayload(body, env, false);
+    if (!valid.ok) return new Response(JSON.stringify({ error: valid.error }), { status: 400, headers });
+    const payload = valid.normalized;
 
     const id = String(body?.id || ("camp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)));
     await env.DB.prepare(
       "INSERT INTO marketing_campaigns (id, name, discount_pct, product_slugs, start_date, end_date, is_active) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1)"
-    ).bind(id, name, Math.round(discount), JSON.stringify(productSlugs), startDate, endDate).run();
+    ).bind(id, payload.name, payload.discount, JSON.stringify(payload.productSlugs), payload.startDate, payload.endDate).run();
     return new Response(JSON.stringify({ ok: true, id }), { headers });
+  }
+
+  if (request.method === "PUT") {
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
+    }
+    const valid = await validateCampaignPayload(body, env, true);
+    if (!valid.ok) return new Response(JSON.stringify({ error: valid.error }), { status: 400, headers });
+    const payload = valid.normalized;
+    const updated = await env.DB.prepare(
+      "UPDATE marketing_campaigns SET name = ?1, discount_pct = ?2, product_slugs = ?3, start_date = ?4, end_date = ?5 WHERE id = ?6"
+    ).bind(payload.name, payload.discount, JSON.stringify(payload.productSlugs), payload.startDate, payload.endDate, payload.id).run();
+    const changes = Number((updated as any)?.meta?.changes || 0);
+    if (!changes) return new Response(JSON.stringify({ error: "Campaign not found" }), { status: 404, headers });
+    return new Response(JSON.stringify({ ok: true, id: payload.id }), { headers });
   }
 
   if (request.method === "DELETE") {
@@ -145,7 +244,7 @@ export async function handleAdminCampaigns(request: Request, env: any): Promise<
       const body = await request.json() as any;
       id = String(body?.id || "").trim();
     } catch {}
-    if (!id) id = String(new URL(request.url).searchParams.get("id") || "").trim();
+    if (!id) id = String(url.searchParams.get("id") || "").trim();
     if (!id) return new Response(JSON.stringify({ error: "id is required" }), { status: 400, headers });
     await env.DB.prepare("DELETE FROM marketing_campaigns WHERE id = ?1").bind(id).run();
     return new Response(JSON.stringify({ ok: true }), { headers });

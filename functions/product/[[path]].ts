@@ -9,7 +9,9 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'pet-owner-fitted-sheet',
   'flat-sheet-standard',
   'flat-sheet-extra-deep-pocket',
+  'co-sleeping-top-sheet',
   '3-sided-duvet',
+  'weighted-duvet-cover',
   'pet-owner-duvet-cover',
   'duvet-cover-marine',
   'duvet-cover-rv',
@@ -23,6 +25,7 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'mattress-protector-family',
   'mattress-protector-deep-pocket',
   'pet-proof-mattress-protector',
+  'custom-waterproof-cushion-protector',
   'mattress-encasement-general',
   'rv-truck-mattress-encasement',
   'pillow-protector-general',
@@ -46,6 +49,35 @@ const NICHE_DISPLAY: Record<string, string> = {
   'boarding-dorm': 'Boarding Dorm',
   'rv-truck': 'RV & Truck Cab'
 };
+
+const MISSING_ECOMMERCE_PRODUCER_SLUGS = new Set([
+  'bedbridge-connector',
+  'duvet-insert',
+  'mattress-lift-helper',
+  'marine-fitted-sheet',
+  'marine-top-sheet',
+  'marine-mattress-protector'
+]);
+
+// Clerk CSP origins are host-aware: production pages allow ONLY the Clerk
+// Production custom domains (fail-closed — the Development instance is never
+// permitted on www.mildmate.com); dev/preview pages allow the Development
+// instance so local/preview rehearsals keep working.
+function clerkCspOrigins(requestUrl: string): string {
+  try {
+    const h = new URL(requestUrl).hostname.toLowerCase();
+    if (h.endsWith(".pages.dev") || h === "localhost" || h === "127.0.0.1") {
+      return "https://kind-joey-29.clerk.accounts.dev";
+    }
+  } catch {}
+  return "https://clerk.mildmate.com https://accounts.mildmate.com";
+}
+
+const SECURITY_CSP_TEMPLATE = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://cdn.protect.clerk.com __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.co.th data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.co.th https://cdn.protect.clerk.com __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; upgrade-insecure-requests;";
+
+function securityCsp(requestUrl: string): string {
+  return SECURITY_CSP_TEMPLATE.split("__CLERK_CSP_ORIGINS__").join(clerkCspOrigins(requestUrl));
+}
 
 function hasToken(slug: string, token: string): boolean {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
@@ -100,15 +132,51 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function applyLocalizedDescriptionFromD1(html: string, description: string, isTh: boolean): string {
+function stripHtml(value: string): string {
+  return String(value || '')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<\/?[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function truncateForMeta(value: string, max = 160): string {
+  const text = String(value || '').trim();
+  if (!text || text.length <= max) return text;
+  return `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
+function looksLikeHtml(value: string): boolean {
+  return /<\/?[a-z][\s\S]*>/i.test(String(value || ''));
+}
+
+function buildDescriptionHtml(description: string): string {
   const text = String(description || '').trim();
-  if (!text) return html;
-  const escaped = escapeHtml(text);
+  if (!text) return '';
+  if (looksLikeHtml(text)) return text;
+  return `<p>${escapeHtml(text)}</p>`;
+}
+
+function applyLocalizedDescriptionFromD1(
+  html: string,
+  description: string,
+  isTh: boolean,
+  seoMetaOverride?: string
+): string {
+  const text = String(description || '').trim();
+  const overrideMeta = String(seoMetaOverride || '').trim();
+  if (!text && !overrideMeta) return html;
+
+  const metaSource = overrideMeta || text;
+  const metaDescription = escapeHtml(truncateForMeta(stripHtml(metaSource), 160));
+  const descriptionHtml = buildDescriptionHtml(text);
 
   html = html
-    .replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${escaped}">`)
-    .replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${escaped}">`)
-    .replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${escaped}">`);
+    .replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${metaDescription}">`)
+    .replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${metaDescription}">`)
+    .replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${metaDescription}">`);
 
   if (isTh) {
     html = html
@@ -116,11 +184,464 @@ function applyLocalizedDescriptionFromD1(html: string, description: string, isTh
       .replace(/data-info-tab="faq">[\s\S]*?<\/button>/i, 'data-info-tab="faq">คำถามที่พบบ่อย</button>');
   }
 
-  html = html.replace(
-    /(<div[^>]*id="info-panel-description"[^>]*>[\s\S]*?<p>)[\s\S]*?(<\/p>)/i,
-    `$1${escaped}$2`
-  );
+  if (text) {
+    html = html.replace(
+      /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
+      (_m, start, end) => `${start}${descriptionHtml}\n        ${end}`
+    );
+  }
   return html;
+}
+
+function applyLocalizedFaqFromD1(html: string, faq: string): string {
+  const text = String(faq || '').trim();
+  if (!text) return html;
+  const faqHtml = looksLikeHtml(text) ? text : `<p>${escapeHtml(text)}</p>`;
+  return html.replace(
+    /(<div[^>]*id="info-panel-faq"[^>]*>)[\s\S]*?(<\/div>\s*<\/div>\s*<\/div>)/i,
+    (_m, start, end) => `${start}${faqHtml}\n        ${end}`
+  );
+}
+
+function formatSeoTitle(value: string): string {
+  const title = String(value || '').trim();
+  if (!title) return '';
+  return /mildmate/i.test(title) ? title : `${title} — MildMate`;
+}
+
+function replaceProductTagline(html: string, tagline: string): string {
+  const safeTagline = String(tagline || '').trim();
+  if (!safeTagline) return html;
+  return html.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+}
+
+function applyProductUiLabelOverrides(
+  html: string,
+  labels: { ctaPrimary?: string; ctaCustom?: string; ctaSizeHelp?: string }
+): string {
+  let result = html;
+  const ctaPrimary = String(labels.ctaPrimary || '').trim();
+  const ctaCustom = String(labels.ctaCustom || '').trim();
+  const ctaSizeHelp = String(labels.ctaSizeHelp || '').trim();
+
+  if (ctaPrimary) {
+    const label = escapeHtml(ctaPrimary);
+    result = result
+      .replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*[\s\S]*?(<\/button>)/i, `$1 ${label}$2`)
+      .replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*[\s\S]*?(<\/button>)/i, `$1 ${label}$2`);
+  }
+
+  if (ctaCustom) {
+    const label = escapeHtml(ctaCustom);
+    result = result.replace(
+      /(<button class="config-tab" data-tab="custom">)[\s\S]*?(<\/button>)/i,
+      `$1${label}$2`
+    );
+  }
+
+  if (ctaSizeHelp) {
+    const label = escapeHtml(ctaSizeHelp);
+    result = result.replace(
+      /(<a href="\/(?:th\/)?sizeguide\/"[^>]*>)[\s\S]*?(<\/a>)/i,
+      `$1${label}$2`
+    );
+  }
+
+  return result;
+}
+
+function injectConfiguratorLabelMeta(
+  html: string,
+  labels: { ctaPrimary?: string; ctaCustom?: string; ctaSizeHelp?: string }
+): string {
+  const ctaPrimary = String(labels.ctaPrimary || '').trim();
+  const ctaCustom = String(labels.ctaCustom || '').trim();
+  const ctaSizeHelp = String(labels.ctaSizeHelp || '').trim();
+  const parts: string[] = [];
+  if (ctaPrimary) parts.push(`<meta name="mm-cta-primary" content="${escapeHtml(ctaPrimary)}">`);
+  if (ctaCustom) parts.push(`<meta name="mm-cta-custom" content="${escapeHtml(ctaCustom)}">`);
+  if (ctaSizeHelp) parts.push(`<meta name="mm-cta-size-help" content="${escapeHtml(ctaSizeHelp)}">`);
+  if (parts.length === 0) return html;
+  const anchor = '<meta charset="UTF-8">';
+  if (!html.includes(anchor)) return html;
+  return html.replace(anchor, `${anchor}\n  ${parts.join('\n  ')}`);
+}
+
+// Generic Thai FAQ block used as a fallback for products that don't have a
+// hand-curated faq_th in D1. Mirrors the four standard questions in the EN
+// customizable template, with internal links rewritten to /th/... paths.
+const TH_GENERIC_FAQ_INNER = `<details class="faq-item" open>
+            <summary>จะเลือกขนาดที่นอนได้อย่างไร?</summary>
+            <p>ดู<a href="/th/sizeguide/">คู่มือขนาด</a>ของเราสำหรับขนาดมาตรฐาน หรือกรอกขนาดจริงของคุณในแบบฟอร์มสั่งตัดตามออเดอร์</p>
+          </details>
+          <details class="faq-item">
+            <summary>สามารถสั่งตัดตามขนาดพิเศษได้หรือไม่?</summary>
+            <p>ได้ คลิก <strong>ขนาดที่นอนแบบกำหนดเอง</strong> กรอกขนาดของคุณ แล้วส่งคำขอใบเสนอราคาสั่งตัด</p>
+          </details>
+          <details class="faq-item">
+            <summary>ควรทราบรายละเอียดเกี่ยวกับเนื้อผ้าและการดูแลรักษาอย่างไร?</summary>
+            <p>ผ้าทุกชนิดของ MildMate ซักเครื่องได้ที่อุณหภูมิปานกลาง (40°C / 104°F) ห้ามใช้น้ำยาฟอกขาว แนะนำให้ตากแห้งในที่ร่มเพื่อรักษาคุณภาพเส้นใยระยะยาว</p>
+          </details>
+          <details class="faq-item">
+            <summary>ใช้เวลาจัดส่งนานเท่าไหร่?</summary>
+            <p>ผลิตแบบสั่งตัดตามออเดอร์ที่โรงงานในประเทศไทย ระยะเวลาจัดส่งขึ้นอยู่กับปลายทางและจะแจ้งให้ทราบในอีเมลใบเสนอราคาหรือคำสั่งซื้อของคุณ</p>
+          </details>`;
+
+// Marine-specific Thai FAQ block (V-Berth sheets + marine mattress protector).
+const TH_MARINE_FAQ_INNER = `<details class="faq-item" open>
+            <summary>ควรทราบรายละเอียดเกี่ยวกับเนื้อผ้าและการดูแลรักษาอย่างไร?</summary>
+            <p>ผ้า CloudSoft ของเราซักเครื่องได้ แห้งเร็ว ทนทานต่อสภาพแวดล้อมทางทะเล ห้ามใช้น้ำยาฟอกขาว แนะนำให้ตากแห้งในที่ร่มเพื่อรักษาคุณภาพเส้นใยระยะยาว</p>
+          </details>
+          <details class="faq-item">
+            <summary>วัดขนาดที่นอนเรืออย่างไร?</summary>
+            <p>ใช้<a href="/th/sizeguide/">คู่มือขนาด</a>ของเราเป็นข้อมูลอ้างอิง เลือกรูปทรงเตียงเรือของคุณด้านบน แล้วกรอกความยาวของแต่ละด้านให้ตรงตามที่วัดได้จริง ระบุความหนาของที่นอนเพื่อให้ตัดเย็บพอดีแบบกำหนดเอง</p>
+          </details>
+          <details class="faq-item">
+            <summary>ใช้เวลาผลิตและจัดส่งนานเท่าไหร่?</summary>
+            <p>ผลิตแบบสั่งตัดตามออเดอร์ตามรูปทรงและขนาดจริงของคุณ ใช้เวลาผลิต 5–7 วันทำการ ระยะเวลาจัดส่งขึ้นอยู่กับปลายทาง คุณจะได้รับหมายเลขพัสดุเมื่อจัดส่งแล้ว</p>
+          </details>
+          <details class="faq-item">
+            <summary>ถ้ารูปทรงไม่อยู่ในลิสต์ล่ะ?</summary>
+            <p>เลือกรูปทรงที่ใกล้เคียงที่สุดและเพิ่มหมายเหตุในแบบฟอร์มขอใบเสนอราคา — เราผลิตตามแบบจริงของคุณ หรือ<a href="/th/contact/">ติดต่อเรา</a>โดยตรงพร้อมแนบภาพวาดหรือรูปถ่ายที่นอนเรือของคุณ</p>
+          </details>`;
+
+const MARINE_FAQ_SLUGS = new Set(['marine-fitted-sheet', 'marine-top-sheet', 'marine-mattress-protector']);
+
+// TH labels for the breadcrumb category link text. Mirrors the EN labels that
+// ship in the static product templates' breadcrumb ("Fitted Sheets",
+// "Duvet Covers", etc). Indexed by URL path so the Pages Function can swap the
+// EN label for its TH counterpart regardless of which EN static file was loaded.
+const TH_BREADCRUMB_CATEGORY_LABELS: Record<string, string> = {
+  '/sheets/': 'ผ้าปูที่นอน',
+  '/duvet-covers/': 'ปลอกผ้าห่ม',
+  '/pillowcases/': 'ปลอกหมอน',
+  '/protection/': 'ผลิตภัณฑ์ปกป้อง',
+  '/accessories/': 'อุปกรณ์เสริม',
+};
+
+// Marine shape selector strings (templates/product-marine.html). These appear
+// in static HTML so they need to be patched by the Pages Function (TH static
+// files are never served — Pages Function loads EN static and patches fields).
+const TH_MARINE_SHAPE_LABELS: Array<[RegExp, string]> = [
+  [/Choose Your Boat Mattress Shape/g, 'เลือกรูปทรงที่นอนเรือของคุณ'],
+  [/— Select a shape —/g, '— เลือกรูปทรง —'],
+  [/Select a shape above to see the measurement diagram/g, 'เลือกรูปทรงด้านบนเพื่อดูแผนภาพการวัด'],
+];
+
+// Static HTML customer-facing strings to translate on TH product pages.
+// Each entry targets a specific HTML anchor (label, header, badge) to avoid
+// false matches elsewhere in the document. Applied by the Pages Function
+// when isTh=true (the TH static files at /th/product/* are never served).
+const TH_STATIC_HTML_REPLACEMENTS: Array<[RegExp, string]> = [
+  // Configurator dimension labels
+  [/<label for="dim-width">Width \(W\)<\/label>/g, '<label for="dim-width">ความกว้าง (W)</label>'],
+  [/<label for="dim-length">Length \(L\)<\/label>/g, '<label for="dim-length">ความยาว (L)</label>'],
+  [/<label for="dim-depth">Depth \(D\)<\/label>/g, '<label for="dim-depth">ความลึก (D)</label>'],
+  // Price labels
+  [/<span class="price-label">Estimated price<\/span>/g, '<span class="price-label">ราคาประมาณการ</span>'],
+  [/<span class="price-label">Price<\/span>/g, '<span class="price-label">ราคา</span>'],
+  [/<span class="price-sub" id="price-top-sub">Starting from<\/span>/g, '<span class="price-sub" id="price-top-sub">ราคาเริ่มต้น</span>'],
+  // Color picker label (preserves fabric name in English — fabric names stay EN)
+  [/<div class="panel-label">Color — /g, '<div class="panel-label">สี — '],
+  // Payment badges
+  [/<\/svg> Secure checkout<\/span>/g, '</svg> ชำระเงินอย่างปลอดภัย</span>'],
+  // Trust badges (OEKO label fallback) — Premium Quality (no space and with space)
+  [/<\/svg>Premium Quality<\/div>/g, '</svg>คุณภาพระดับพรีเมียม</div>'],
+  [/<\/svg> Premium Quality<\/div>/g, '</svg> คุณภาพระดับพรีเมียม</div>'],
+  [/<\/svg>Premium Quality<\/span>/g, '</svg>คุณภาพระดับพรีเมียม</span>'],
+  // Trust badges (mobile, customizable template)
+  [/<\/svg>Custom Fit<\/div>/g, '</svg>ตัดเย็บตามขนาด</div>'],
+  [/<\/svg>Human Safe<\/div>/g, '</svg>ปลอดภัยต่อการใช้งาน</div>'],
+  [/<\/svg>Pet Resist<\/div>/g, '</svg>เหมาะกับบ้านที่มีสัตว์เลี้ยง</div>'],
+  // Trust badges (desktop, all templates)
+  [/<\/svg> Top-Rated Etsy Boutique/g, '</svg> ร้าน Etsy ที่ได้รับคะแนนสูง'],
+  [/<\/svg> Ships from Thailand/g, '</svg> จัดส่งจากประเทศไทย'],
+  // Reviews section
+  [/<div class="reviews-header"><h2>Customer Reviews<\/h2><\/div>/g, '<div class="reviews-header"><h2>รีวิวจากลูกค้า</h2></div>'],
+  [/id="product-review-count">Loading reviews\.\.\.<\/div>/g, 'id="product-review-count">กำลังโหลดรีวิว...</div>'],
+  [/<h2>You might also like<\/h2>/g, '<h2>สินค้าที่คุณอาจสนใจ</h2>'],
+  // Tags label (anchored on class context to avoid false matches)
+  [/text-transform:uppercase; letter-spacing:0\.08em; margin-right:4px;">Tags:<\/span>/g, 'text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">หมวดหมู่:</span>'],
+  // Marine template — fabric spec label + boat model prompt
+  [/<div class="spec-label">Fabric<\/div>/g, '<div class="spec-label">เนื้อผ้า</div>'],
+  // Configurator inline JS — single-fabric Fabric badge label
+  [/<div class="panel-label">Fabric<\/div>/g, '<div class="panel-label">เนื้อผ้า</div>'],
+  [/Choose one sizing mode/g, 'เลือกโหมดการสั่งซื้อหนึ่งแบบ'],
+  [/Know your boat model\? Choose fixed-price option/g, 'ทราบรุ่นเรือของคุณ? เลือกตัวเลือกราคาคงที่'],
+  [/Select boat model<\/option>/g, 'เลือกรุ่นเรือ</option>'],
+  [/Select a boat model to use Boat Model pricing\./g, 'เลือกรุ่นเรือเพื่อใช้การตั้งราคาแบบรุ่นเรือ'],
+  [/Choose a boat model to apply fixed Boat Model pricing\./g, 'เลือกรุ่นเรือเพื่อใช้ราคาคงที่ตามรุ่นเรือ'],
+  [/No saved boat models yet\. Use Mattress Shape instead\./g, 'ยังไม่มีรุ่นเรือที่บันทึกไว้ กรุณาใช้โหมดรูปทรงที่นอนแทน'],
+  [/Mattress Shape mode active\. Select a shape and enter dimensions below\./g, 'โหมดรูปทรงที่นอนเปิดใช้งานแล้ว เลือกรูปทรงและกรอกขนาดด้านล่าง'],
+  // Unit warning (configurator) — preserves <strong> markup
+  [/Default: <strong>cm<\/strong>\. Using inches\? Switch to <strong>inch<\/strong> first\./g, 'หน่วยเริ่มต้น: <strong>ซม.</strong> ต้องการใช้หน่วยนิ้ว? เปลี่ยนเป็น <strong>นิ้ว</strong> ก่อน'],
+];
+
+function applyThaiProductUiLocalization(html: string, tagline: string, slug: string): string {
+  const safeTagline = String(tagline || '').trim();
+  const isWeightedDuvet = slug === 'weighted-duvet-cover';
+  const isCushionProtector = slug === 'custom-waterproof-cushion-protector';
+  const sizeLabel = isWeightedDuvet
+    ? 'เลือกขนาดผ้าห่มถ่วงน้ำหนัก'
+    : isCushionProtector
+      ? 'เลือกขนาดเบาะ / ขนาดสั่งทำ'
+      : 'เลือกขนาดที่นอน';
+  const customPrompt = isWeightedDuvet
+    ? 'กรอกขนาดผ้าห่มถ่วงน้ำหนักจริงของคุณ'
+    : isCushionProtector
+      ? 'กรอกขนาดเบาะของคุณ (ยาว × กว้าง × สูง)'
+      : 'กรอกขนาดที่นอนจริงของคุณ';
+  const sizeHintText = isWeightedDuvet ? 'ดูวิธีวัดขนาดผ้าห่ม' : 'ดูคู่มือขนาด';
+  const customTabNote = isWeightedDuvet
+    ? 'วัดจากผ้าห่มถ่วงน้ำหนักจริง (กว้าง × ยาว) ไม่ใช่ขนาดที่นอน'
+    : isCushionProtector
+      ? 'วัดจากเบาะจริงที่จุดยาวที่สุด กว้างที่สุด และสูงที่สุด'
+      : 'วัดจากขนาดที่นอนจริงของคุณ';
+  const localized = html
+    .replace(
+      /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
+      '<button class="config-tab active" data-tab="standard">ขนาดมาตรฐาน</button>'
+    )
+    .replace(
+      /<button class="config-tab" data-tab="custom">[\s\S]*?<\/button>/i,
+      '<button class="config-tab" data-tab="custom">ขนาดสั่งทำ</button>'
+    )
+    .replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">ราคาเริ่มต้น</span>')
+    .replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`)
+    .replace(/<div class="panel-label">\s*Select Duvet Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`)
+    .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`)
+    .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact duvet dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`)
+    .replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, `<div class="size-hint"><a href="/th/sizeguide/">${sizeHintText}</a></div>`)
+    .replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, `<p class="dim-diagram-caption">${customTabNote}</p>`)
+    .replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, '$1 เพิ่มลงตะกร้า')
+    .replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, '$1 เพิ่มลงตะกร้า')
+    .replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">รายละเอียด</button>')
+    .replace(/<button class="info-tab" type="button" data-info-tab="faq">[\s\S]*?<\/button>/i, '<button class="info-tab" type="button" data-info-tab="faq">คำถามที่พบบ่อย</button>')
+    .replace(/>\s*Premium Quality\s*<\/span>/i, '>คุณภาพพรีเมียม</span>')
+    .replace(/>\s*Custom Fit\s*<\/div>/i, '>ตัดเย็บตามขนาด</div>')
+    .replace(/>\s*Human Safe\s*<\/div>/i, '>ปลอดภัยต่อการใช้งาน</div>')
+    .replace(/>\s*Pet Resist\s*<\/div>/i, '>เหมาะกับบ้านที่มีสัตว์เลี้ยง</div>');
+  let result = localized;
+  if (isCushionProtector) {
+    result = result
+      .replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">ความสูง (H)</label>')
+      .replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="แผนภาพวัดขนาดเบาะ: ความยาว (L), ความกว้าง (W), ความสูง (H)"');
+  }
+  if (!safeTagline) return result;
+  return result.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+}
+
+function applyCushionProtectorUiLocalization(html: string, isTh: boolean): string {
+  if (isTh) {
+    return html
+      .replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">เลือกขนาดเบาะ / ขนาดสั่งทำ</div>')
+      .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">กรอกขนาดเบาะของคุณ</strong>')
+      .replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, '<p class="dim-diagram-caption">วัดจากเบาะจริงที่จุดยาวที่สุด กว้างที่สุด และสูงที่สุด</p>')
+      .replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">ความหนา (T)</label>')
+      .replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="แผนภาพการวัดเบาะ แสดง Width (W), Length (L), และ Thickness (T)"')
+      .replace(/<img src="\/images\/products\/common\/measure-mattress-diagram-01\.png" alt="[^"]*">/i, '<img src="/images/products/common/measure-cushion-diagram-01.png" alt="แผนภาพการวัดเบาะ แสดง Width (W), Length (L), และ Thickness (T)">')
+      .replace(/<div class="size-hint"><a href="\/th\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/th/sizeguide/">ดูคู่มือขนาด</a><br><span style="display:block;margin-top:6px;">ทรงไม่มาตรฐาน? ส่งรูปถ่ายหรือสเก็ตช์ขนาดเพื่อขอใบเสนอราคาแบบสั่งทำ</span></div>');
+  }
+  return html
+    .replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">Select Cushion Size</div>')
+    .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">Enter your exact cushion dimensions</strong>')
+    .replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, '<p class="dim-diagram-caption">Measure your cushion at its longest, widest, and thickest points</p>')
+    .replace(/<label for="dim-depth">Depth \(D\)<\/label>/i, '<label for="dim-depth">Thickness (T)</label>')
+    .replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)"')
+    .replace(/<img src="\/images\/products\/common\/measure-mattress-diagram-01\.png" alt="[^"]*">/i, '<img src="/images/products/common/measure-cushion-diagram-01.png" alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)">')
+    .replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/sizeguide/">View full size guide</a><br><span style="display:block;margin-top:6px;">Irregular shape? Send us a photo or measurement sketch for a custom quote.</span></div>')
+    .replace(/>\s*Pet Resist\s*<\/div>/gi, '>Pet Accident Protection</div>')
+    .replace(/Measure the cushion itself and provide width,\s*length,\s*and thickness\.\s*Do not use mattress dimensions\./gi, 'Measure the cushion itself and provide width, length, and thickness.');
+}
+
+function applyFlatSheetExtraDeepPocketGuardrails(html: string, isTh: boolean): string {
+  if (isTh) return html;
+  return html
+    .replace(
+      /<p class="product-tagline">[\s\S]*?<\/p>/i,
+      '<p class="product-tagline">Loose, non-elastic deep pocket top sheet for extra-deep mattresses with 20 in / 51 cm default depth and ~10 in / 25 cm tuck allowance.</p>'
+    )
+    .replace(/Full-perimeter elastic\.?/gi, 'Loose non-elastic top sheet');
+}
+
+function injectMissingEcommerceTracking(html: string, slug: string, productName: string, fallbackPriceUsd: number): string {
+  if (!MISSING_ECOMMERCE_PRODUCER_SLUGS.has(slug)) return html;
+  if (html.includes('id="mm-fixed-ga4-ecommerce"')) return html;
+
+  const trackerMeta = JSON.stringify({
+    slug,
+    name: String(productName || ''),
+    fallbackPriceUsd: Number(fallbackPriceUsd || 0)
+  });
+
+  const trackerScript = `<script id="mm-fixed-ga4-ecommerce">
+    (function () {
+      var meta = ${trackerMeta};
+      var ga4ViewSent = false;
+      var lastSig = '';
+      var lastSigAt = 0;
+
+      function toNum(v) {
+        var n = Number(v);
+        return isFinite(n) ? n : 0;
+      }
+
+      function round2(v) {
+        return Math.round(toNum(v) * 100) / 100;
+      }
+
+      function ensureGa4Stub() {
+        window.dataLayer = window.dataLayer || [];
+        if (typeof window.gtag !== 'function') {
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+        }
+      }
+
+      function sendGa4Event(name, params) {
+        try {
+          var payload = params || {};
+          if (typeof window.__mildmateTrackEvent === 'function') {
+            window.__mildmateTrackEvent(name, payload);
+            return;
+          }
+          ensureGa4Stub();
+          window.gtag('event', name, payload);
+        } catch (e) {}
+      }
+
+      function detectCurrencyFromText(text) {
+        var t = String(text || '');
+        if (/฿|THB/i.test(t)) return 'THB';
+        if (/\\$|USD/i.test(t)) return 'USD';
+        return '';
+      }
+
+      function parsePriceFromText(text) {
+        var n = String(text || '').replace(/[^0-9.]/g, '');
+        if (!n) return 0;
+        return round2(Number(n));
+      }
+
+      function resolveCurrency(item) {
+        if (item && String(item.quote_currency || '').toUpperCase() === 'THB') return 'THB';
+        if (item && String(item.currency || '').toUpperCase() === 'THB') return 'THB';
+        var priceEl = document.getElementById('price-display') || document.getElementById('custom-price') || document.getElementById('price-display-top');
+        var currencyFromText = detectCurrencyFromText(priceEl ? priceEl.textContent : '');
+        if (currencyFromText) return currencyFromText;
+        return 'USD';
+      }
+
+      function resolveUnitPrice(item, currency) {
+        if (item) {
+          if (currency === 'THB') {
+            var thb = toNum(item.price_thb || item.priceThb || item.price);
+            if (thb > 0) return round2(thb);
+          }
+          var usd = toNum(item.price_usd || item.priceUsd || item.price);
+          if (usd > 0) return round2(usd);
+        }
+
+        var priceEl = document.getElementById('price-display') || document.getElementById('custom-price') || document.getElementById('price-display-top');
+        var parsed = parsePriceFromText(priceEl ? priceEl.textContent : '');
+        if (parsed > 0) return round2(parsed);
+        return round2(meta.fallbackPriceUsd || 0);
+      }
+
+      function buildGa4Item(item, currency, unitPrice) {
+        var qty = toNum(item && item.qty) || 1;
+        return {
+          item_id: String((item && (item.product_slug || item.slug)) || meta.slug || ''),
+          item_name: String((item && (item.product_name || item.name || item.title)) || meta.name || meta.slug || ''),
+          price: round2(unitPrice),
+          quantity: qty
+        };
+      }
+
+      function shouldSkip(sig) {
+        var now = Date.now();
+        if (sig && sig === lastSig && (now - lastSigAt) < 1200) return true;
+        lastSig = sig;
+        lastSigAt = now;
+        return false;
+      }
+
+      function trackViewItemOnce() {
+        if (ga4ViewSent) return;
+        var currency = resolveCurrency(null);
+        var unitPrice = resolveUnitPrice(null, currency);
+        var payload = {
+          currency: currency,
+          value: round2(unitPrice),
+          items: [buildGa4Item(null, currency, unitPrice)]
+        };
+        sendGa4Event('view_item', payload);
+        ga4ViewSent = true;
+      }
+
+      function trackAddToCart(item) {
+        var currency = resolveCurrency(item || null);
+        var unitPrice = resolveUnitPrice(item || null, currency);
+        var gaItem = buildGa4Item(item || null, currency, unitPrice);
+        var value = round2(unitPrice * (toNum(gaItem.quantity) || 1));
+        var sig = [gaItem.item_id, gaItem.item_name, currency, value, gaItem.quantity].join('|');
+        if (shouldSkip(sig)) return;
+        sendGa4Event('add_to_cart', {
+          currency: currency,
+          value: value,
+          items: [gaItem]
+        });
+      }
+
+      function wrapGlobalAddToCart() {
+        if (typeof window.addToCart !== 'function') return false;
+        if (window.addToCart.__mildmateGa4Wrapped) return true;
+        var original = window.addToCart;
+        var wrapped = function () {
+          var argItem = arguments.length ? arguments[0] : null;
+          var result = original.apply(this, arguments);
+          trackAddToCart(argItem);
+          return result;
+        };
+        wrapped.__mildmateGa4Wrapped = true;
+        wrapped.__mildmateGa4Original = original;
+        window.addToCart = wrapped;
+        return true;
+      }
+
+      function wrapCartAdd() {
+        if (!window.MildMateCart || typeof window.MildMateCart.add !== 'function') return false;
+        if (window.MildMateCart.__mildmateGa4Wrapped) return true;
+        var originalAdd = window.MildMateCart.add;
+        window.MildMateCart.add = function (item) {
+          var result = originalAdd.apply(this, arguments);
+          trackAddToCart(item);
+          return result;
+        };
+        window.MildMateCart.__mildmateGa4Wrapped = true;
+        return true;
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', trackViewItemOnce, { once: true });
+      } else {
+        trackViewItemOnce();
+      }
+      setTimeout(trackViewItemOnce, 800);
+
+      wrapGlobalAddToCart();
+      wrapCartAdd();
+      var attempts = 0;
+      var timer = setInterval(function () {
+        var wrapped = wrapGlobalAddToCart() && wrapCartAdd();
+        attempts += 1;
+        if (wrapped || attempts > 80) clearInterval(timer);
+      }, 120);
+    })();
+  </script>`;
+
+  return html.replace(/<\/body>/i, `${trackerScript}\n</body>`);
 }
 
 export async function onRequest(context: any): Promise<Response> {
@@ -168,14 +689,70 @@ export async function onRequest(context: any): Promise<Response> {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
 
-    // 2. Query D1 for this product's image, title, pricing, and category data
-    const stmt = context.env.DB.prepare(
-      'SELECT image_url, images, title_en, title_th, description_en, description_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
-    ).bind(slug);
-    const product = await stmt.first() as any;
+    // 2. Query D1 for this product's image, titles, SEO fields, CTA labels,
+    // pricing, and category data. Keep compatibility fallbacks for environments
+    // where newer columns are not yet present.
+    let product: any = null;
+    try {
+      const stmt = context.env.DB.prepare(
+        'SELECT image_url, images, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th, product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+      ).bind(slug);
+      product = await stmt.first() as any;
+    } catch (dbErr) {
+      console.warn('Product SSR: primary product query failed, retrying with compatibility projection', dbErr);
+      try {
+        const fallbackStmt = context.env.DB.prepare(
+          'SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+        ).bind(slug);
+        product = await fallbackStmt.first() as any;
+      } catch (legacyDbErr) {
+        console.warn('Product SSR: faq projection unavailable, retrying legacy fallback', legacyDbErr);
+        const legacyStmt = context.env.DB.prepare(
+          'SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+        ).bind(slug);
+        product = await legacyStmt.first() as any;
+      }
+    }
 
-    const localizedDescription = isTh ? String(product?.description_th || '') : String(product?.description_en || '');
-    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
+    // EN must never fall back to *_th fields: an empty EN value keeps the
+    // static template's built-in English copy instead of leaking Thai.
+    const localizedDescription = isTh
+      ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || '')
+      : String(product?.description_en || product?.card_benefit_en || '');
+    const seoMetaDescription = isTh
+      ? String(product?.seo_meta_description_th || product?.seo_meta_description_en || '')
+      : String(product?.seo_meta_description_en || '');
+    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh, seoMetaDescription);
+    const thFaqFallback = MARINE_FAQ_SLUGS.has(slug) ? TH_MARINE_FAQ_INNER : TH_GENERIC_FAQ_INNER;
+    const localizedFaq = isTh
+      ? String(product?.faq_th || thFaqFallback)
+      : String(product?.faq_en || '');
+    html = applyLocalizedFaqFromD1(html, localizedFaq);
+    const localizedTagline = isTh
+      ? String(product?.product_tagline_th || product?.card_benefit_th || product?.product_tagline_en || product?.card_benefit_en || product?.title_th || '')
+      : String(product?.product_tagline_en || product?.card_benefit_en || product?.title_en || '');
+    if (isTh) {
+      html = applyThaiProductUiLocalization(html, localizedTagline, slug);
+    } else {
+      html = replaceProductTagline(html, localizedTagline);
+    }
+    const ctaPrimary = isTh
+      ? String(product?.cta_primary_th || product?.cta_primary_en || '')
+      : String(product?.cta_primary_en || '');
+    const ctaCustom = isTh
+      ? String(product?.cta_custom_th || product?.cta_custom_en || '')
+      : String(product?.cta_custom_en || '');
+    const ctaSizeHelp = isTh
+      ? String(product?.cta_size_help_th || product?.cta_size_help_en || '')
+      : String(product?.cta_size_help_en || '');
+    html = applyProductUiLabelOverrides(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
+    html = injectConfiguratorLabelMeta(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
+    if (slug === 'flat-sheet-extra-deep-pocket') {
+      html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);
+    }
+    if (slug === 'custom-waterproof-cushion-protector') {
+      html = applyCushionProtectorUiLocalization(html, isTh);
+    }
 
     // Extract mainImage BEFORE the if block so it's in scope for JSON-LD
     let images: string[] = [];
@@ -192,23 +769,99 @@ export async function onRequest(context: any): Promise<Response> {
     }
     const mainImage = (product && (product.image_url as string)) || images[0] || '';
 
-    // Handle localized title translation for Thai pages
-    const title = isTh && product && product.title_th ? product.title_th : (product && product.title_en);
-    if (title) {
+    // Visible title follows title_en/title_th; SEO title can be overridden.
+    const visibleTitle = isTh
+      ? String(product?.title_th || product?.title_en || '')
+      : String(product?.title_en || '');
+    const seoTitleRaw = isTh
+      ? String(product?.seo_title_th || product?.seo_title_en || visibleTitle)
+      : String(product?.seo_title_en || visibleTitle);
+    const seoTitle = formatSeoTitle(seoTitleRaw);
+    if (visibleTitle) {
       // Replace browser title
-      html = html.replace(/<title>[^<]*<\/title>/i, `<title>${title} — MildMate<\/title>`);
-      html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${title} — MildMate"`);
-      html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${title} — MildMate"`);
+      if (seoTitle) {
+        html = html.replace(/<title>[^<]*<\/title>/i, `<title>${seoTitle}<\/title>`);
+        html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${seoTitle}"`);
+        html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${seoTitle}"`);
+      }
 
       // Keep visible product title blocks consistent with D1 title (EN/TH)
       html = html.replace(
         /<h1 class="product-title">[\s\S]*?<\/h1>/i,
-        `<h1 class="product-title">${title}</h1>`
+        `<h1 class="product-title">${visibleTitle}</h1>`
       );
       html = html.replace(
         /(<nav class="product-breadcrumb"[\s\S]*?<span>)[\s\S]*?(<\/span>)/i,
-        `$1${title}$2`
+        `$1${visibleTitle}$2`
       );
+    }
+
+    const effectiveTitle = visibleTitle || String(product?.title_en || slug.replace(/-/g, ' '));
+    html = injectMissingEcommerceTracking(html, slug, effectiveTitle, Number(product?.base_price_usd || 0));
+
+    // For TH pages, also swap the breadcrumb category link text to its TH
+    // counterpart. The EN static templates ship EN labels (e.g. "Fitted Sheets",
+    // "Duvet Covers"); TH_CHROME_REPLACEMENTS in build-products.js only fixes
+    // the TH static files, which the Pages Function doesn't serve — so we
+    // patch here too. Look up by category URL.
+    if (isTh) {
+      html = html.replace(
+        /<nav class="product-breadcrumb"[\s\S]*?<\/nav>/i,
+        (navBlock) => {
+          let patched = navBlock;
+          for (const [catUrl, thLabel] of Object.entries(TH_BREADCRUMB_CATEGORY_LABELS)) {
+            // Replace only the link text inside <a href="{catUrl}">...</a>
+            const re = new RegExp(
+              '(<a href="' + catUrl.replace(/\//g, '\\/') + '"[^>]*>)([\\s\\S]*?)(<\\/a>)',
+              'g'
+            );
+            patched = patched.replace(re, (_m, open, _text, close) => `${open}${thLabel}${close}`);
+          }
+          // Also swap the home link text "Home" → "หน้าแรก"
+          patched = patched.replace(
+            /(<a href="\/"[^>]*>)Home(<\/a>)/,
+            '$1หน้าแรก$2'
+          );
+          return patched;
+        }
+      );
+
+      // Marine shape selector strings (templates/product-marine.html). These
+      // are static HTML labels inside the configurator panel; we replace them
+      // for TH pages.
+      for (const [re, thLabel] of TH_MARINE_SHAPE_LABELS) {
+        html = html.replace(re, thLabel);
+      }
+
+      // Static HTML customer-facing strings (dimensions, estimated price,
+      // trust badges, reviews header, recommendations, tags, unit warning).
+      // Each pattern is anchored to specific HTML context to avoid false matches.
+      for (const [re, thLabel] of TH_STATIC_HTML_REPLACEMENTS) {
+        html = html.replace(re, thLabel);
+      }
+    }
+
+    // Inject canonical + hreflang alternates for bilingual product URLs.
+    // EN canonical points to /product/{slug}/; TH canonical points to /th/product/{slug}/.
+    // Both hreflang alternates link the EN and TH counterparts.
+    // Inject right after <meta charset="UTF-8"> so it sits at the top of <head>
+    // regardless of any subsequent middleware or in-page insertions before </head>.
+    {
+      const enPath = `/product/${slug}/`;
+      const thPath = `/th/product/${slug}/`;
+      const canonicalHref = isTh
+        ? `https://www.mildmate.com${thPath}`
+        : `https://www.mildmate.com${enPath}`;
+      const enHref = `https://www.mildmate.com${enPath}`;
+      const thHref = `https://www.mildmate.com${thPath}`;
+      const seoTags =
+        `<link rel="canonical" href="${canonicalHref}">\n` +
+        `  <link rel="alternate" hreflang="en" href="${enHref}">\n` +
+        `  <link rel="alternate" hreflang="th" href="${thHref}">`;
+      const anchor = '<meta charset="UTF-8">';
+      if (html.includes(anchor) && !html.includes('rel="canonical"')) {
+        html = html.replace(anchor, anchor + '\n  ' + seoTags);
+      }
     }
 
     if (product && (product.image_url || product.images)) {
@@ -318,6 +971,7 @@ export async function onRequest(context: any): Promise<Response> {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'public, max-age=60',
+        'Content-Security-Policy': securityCsp(context.request.url),
       },
     });
   } catch (err) {

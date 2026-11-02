@@ -1,0 +1,23 @@
+{
+  "checks": {
+    "seven_tabs_preserved": true,
+    "ga4_lead_card_present": true,
+    "ga4_lead_loader_present": true,
+    "apply_filters_calls_loader": true,
+    "load_all_calls_loader": true,
+    "responsive_table_wraps_present": true,
+    "no_fabricated_unique_leads_label": true
+  },
+  "added_bytes": 8910,
+  "before_size": 131013,
+  "after_size": 139923,
+  "tabs": [
+    "overview",
+    "sales",
+    "seo",
+    "etsy",
+    "google-ads",
+    "growth",
+    "data-quality"
+  ]
+}

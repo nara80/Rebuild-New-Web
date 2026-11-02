@@ -17,6 +17,36 @@ preview_database_id = "85ce2f41-463a-43fa-8485-181e983b8fd4"
 binding = "MILDMATE_ASSETS"
 bucket_name = "mildmate-assets"
 
+# Explicit Pages environment overrides.
+# Bindings such as D1 and R2 are non-inheritable when an env block is used,
+# so both production and preview must declare them explicitly.
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "mildmate-db-prod"
+database_id = "854f206a-b240-491c-bb91-7e064736d487"
+
+[[env.production.r2_buckets]]
+binding = "MILDMATE_ASSETS"
+bucket_name = "mildmate-assets"
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "mildmate-db"
+database_id = "85ce2f41-463a-43fa-8485-181e983b8fd4"
+
+[[env.preview.r2_buckets]]
+binding = "MILDMATE_ASSETS"
+bucket_name = "mildmate-assets"
+
+[env.preview.vars]
+RUNTIME_ENV = "staging"
+D1_ENV_LABEL = "staging"
+STRIPE_ENV_MODE = "test"
+NON_PROD_STRIPE_ALLOWED = "true"
+NON_PROD_EMAIL_ALLOWED = "false"
+ANALYTICS_NON_PROD_ENABLED = "false"
+
 # NOTE ON SECRETS:
 # Stripe API keys (STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET)
 # and MailChannels API keys are managed via the Cloudflare Dashboard or

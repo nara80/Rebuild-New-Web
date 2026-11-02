@@ -93,6 +93,13 @@
     .trust-signals-mobile{display:none}
     .trust-item{display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:#1E293B;white-space:nowrap}
     .trust-item svg{width:16px;height:16px;color:var(--color-primary);flex-shrink:0}
+    .mode-choice-hint{font-size:0.75rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+    .marine-mode-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+    .marine-mode-tabs .config-tab{min-height:46px;border:2px solid #dbe3ee;border-radius:8px;background:#fff;color:#1E293B;font-size:0.9rem;font-weight:700;transition:border-color .15s,background-color .15s,color .15s}
+    .marine-mode-tabs .config-tab:hover{border-color:var(--color-primary)}
+    .marine-mode-tabs .config-tab.active{border:2px solid #1e40af;background:#dbeafe;color:#1e3a8a}
+    .marine-mode-panel{display:none}
+    .marine-mode-panel.active{display:block}
     /* Marine Shape Configurator */
     .shape-select{width:100%;padding:12px 14px;border:2px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--color-text);background:#fff;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;min-height:48px}
     .shape-select:focus{outline:none;border-color:var(--color-primary)}
@@ -196,7 +203,6 @@
     <script>
     (function () {
       var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
 
       function loadScript(src, async) {
         var s = document.createElement('script');
@@ -209,11 +215,7 @@
         if (window.__mildmateAnalyticsLoaded) return;
         window.__mildmateAnalyticsLoaded = true;
         window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
         window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
       }
 
@@ -280,7 +282,7 @@
       <div class="product-info">
         <div class="product-title-row">
           <h1 class="product-title">Marine Fitted Sheet</h1>
-          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">â™¡</button>
+          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">♡</button>
         </div>
         <p class="favorite-toast" id="fav-toast"></p>
         <p class="product-tagline">14 boat mattress shapes. Enter dimensions. Get an instant price. 12 colors. Quick-dry CloudSoft. Ships worldwide.</p>
@@ -300,20 +302,30 @@
         <div class="pricing-panel" id="marine-configurator">
           <!-- Shape Selector -->
           <div class="panel-section">
-            <label class="panel-label" for="marine-shape-select" id="shape-select-label">Choose Your Boat Mattress Shape</label>
-            <select class="shape-select" id="marine-shape-select">
-              <option value=""> — Select a shape — </option>
-            </select>
-            <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0">
-              <label class="panel-label" for="boat-model-input" style="margin-bottom:6px;text-transform:none;letter-spacing:0;font-size:0.8125rem">Know your boat model? Auto-fill dimensions</label>
-              <input id="boat-model-input" list="boat-model-list" class="shape-select" placeholder="Type boat model (e.g. 2007 Meridian 391 Sedan)">
-              <datalist id="boat-model-list"></datalist>
-              <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-                <button type="button" class="shape-estimate-btn" id="boat-model-apply-btn">Use this model</button>
-                <span id="boat-model-status" style="font-size:0.75rem;color:#64748b"></span>
+            <div class="mode-choice-hint">Choose one sizing mode</div>
+            <div class="marine-mode-tabs" role="tablist" aria-label="Marine sizing mode">
+              <button type="button" class="config-tab active" id="marine-tab-standard" data-tab="standard" aria-selected="true">Boat Model</button>
+              <button type="button" class="config-tab" id="marine-tab-custom" data-tab="custom" aria-selected="false">Mattress Shape</button>
+            </div>
+            <div class="marine-mode-panel active" id="marine-mode-standard">
+              <label class="panel-label" for="boat-model-select" style="margin-bottom:6px;text-transform:none;letter-spacing:0;font-size:0.8125rem">Know your boat model? Choose fixed-price option</label>
+              <select id="boat-model-select" class="shape-select">
+                <option value="">Select boat model</option>
+              </select>
+              <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px">
+                <span id="boat-model-year" style="font-size:0.75rem;color:#475569">Year: —</span>
+                <span id="boat-model-price" style="font-size:0.75rem;color:#1d4ed8;font-weight:700">Price: —</span>
               </div>
+              <div style="margin-top:4px"><span id="boat-model-status" style="font-size:0.75rem;color:#64748b">Select a boat model to use Boat Model pricing.</span></div>
+            </div>
+            <div class="marine-mode-panel" id="marine-mode-custom">
+              <label class="panel-label" for="marine-shape-select" id="shape-select-label">Choose Your Boat Mattress Shape</label>
+              <select class="shape-select" id="marine-shape-select">
+                <option value=""> — Select a shape — </option>
+              </select>
             </div>
           </div>
+          <div id="marine-custom-block" style="display:none;">
           <!-- Schematic Diagram -->
           <div class="shape-guide" id="shape-guide-wrap">
             <img src="" alt="Shape diagram" id="shape-guide-img" style="display:none;">
@@ -351,6 +363,7 @@
           <div class="area-warning" id="area-warning" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; margin-bottom:12px; color:#b91c1c; font-size:0.875rem; font-weight:600; line-height:1.5;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.
+          </div>
           </div>
           <div class="price-row" style="margin-bottom:12px;">
             <span class="price-label">Estimated Price</span>
@@ -411,7 +424,7 @@
         <div class="reviews-summary" id="product-review-summary">
           <div class="summary-score" id="product-review-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars" id="product-review-stars">â˜…â˜…â˜…â˜…â˜…</div>
+            <div class="summary-stars" id="product-review-stars">★★★★★</div>
             <div class="summary-text" id="product-review-count">Loading reviews...</div>
           </div>
         </div>
@@ -490,7 +503,7 @@
       var toast=document.getElementById('fav-toast');
       if(!btn)return;
       var isFav=MildMateCampaigns.isFavorite(productSlug);
-      btn.innerHTML=isFav?'â™¥':'â™¡';
+      btn.innerHTML=isFav?'♥':'♡';
       btn.className=isFav?'favorite-btn active':'favorite-btn';
       btn.title=isFav?'Remove from favorites':'Save to favorites';
     }
@@ -498,7 +511,7 @@
       var isFav=MildMateCampaigns.toggleFavorite(productSlug,productName);
       updateFavUI();
       var toast=document.getElementById('fav-toast');
-      if(toast){toast.textContent=isFav?'â™¥ Saved!':'';toast.style.color='#dc2626'}
+      if(toast){toast.textContent=isFav?'♥ Saved!':'';toast.style.color='#dc2626'}
       if(window.MildMateCampaigns&&typeof MildMateCampaigns.toggleFavoriteServer==='function'){
         var result=await MildMateCampaigns.toggleFavoriteServer(productSlug,productName);
         if(!result.ok){MildMateCampaigns.toggleFavorite(productSlug,productName);updateFavUI()}
@@ -690,18 +703,23 @@
       var priceTopSub = document.getElementById('price-top-sub');
       var unitWarningNote = document.getElementById('unit-warning-note');
       var addToCartBtn = document.getElementById('add-to-cart');
-      var boatModelInput = document.getElementById('boat-model-input');
-      var boatModelList = document.getElementById('boat-model-list');
-      var boatModelApplyBtn = document.getElementById('boat-model-apply-btn');
+      var boatModelSelect = document.getElementById('boat-model-select');
       var boatModelStatus = document.getElementById('boat-model-status');
+      var boatModelYear = document.getElementById('boat-model-year');
+      var boatModelPrice = document.getElementById('boat-model-price');
+      var standardModeTab = document.getElementById('marine-tab-standard');
+      var customModeTab = document.getElementById('marine-tab-custom');
+      var standardModePanel = document.getElementById('marine-mode-standard');
+      var customModePanel = document.getElementById('marine-mode-custom');
+      var marineCustomBlock = document.getElementById('marine-custom-block');
       var currentQuotePriceThb = 0;
       var currentQuotePriceUsd = 0;
       var boatModels = [];
       var activeBoatModel = null;
-
-      function normalizeModelText(v){
-        return String(v || '').trim().toLowerCase().replace(/[_\s-]+/g, ' ').trim();
-      }
+      var marineMode = 'boat_model';
+      var defaultAreaWarningHtml = '';
+      var areaWarningElement = document.getElementById('area-warning');
+      if(areaWarningElement) defaultAreaWarningHtml = areaWarningElement.innerHTML;
 
       function setBoatModelStatus(text, isError){
         if(!boatModelStatus) return;
@@ -709,57 +727,177 @@
         boatModelStatus.style.color = isError ? '#b91c1c' : '#64748b';
       }
 
-      function findBoatModelByInput(value){
-        var needle = normalizeModelText(value);
+      function findBoatModelByKey(key){
+        var needle = String(key || '').trim().toLowerCase();
         if(!needle) return null;
         for(var i=0;i<boatModels.length;i++){
           var m = boatModels[i];
-          var byName = normalizeModelText(m.model_name);
-          var byKey = normalizeModelText(String(m.model_key || '').replace(/_/g, ' '));
-          if(needle === byName || needle === byKey) return m;
+          if(String(m.model_key || '').trim().toLowerCase() === needle) return m;
         }
         return null;
       }
 
-      function fillDimensionsFromModel(model){
-        if(!model || !model.dimensions) return;
-        Object.keys(model.dimensions).forEach(function(k){
-          var el = document.getElementById('dim-' + String(k).toUpperCase());
-          if(!el) return;
-          var n = Number(model.dimensions[k]);
-          if(!isFinite(n) || n <= 0) return;
-          if(currentUnit === 'in') el.value = (n / 2.54).toFixed(1);
-          else el.value = Math.round(n * 100) / 100;
+      function getBoatModelAdjustedUsd(model){
+        var base = model && model.price_usd ? Number(model.price_usd) : 0;
+        if(!isFinite(base) || base <= 0) base = 0;
+        if(!isMarineProtector) return Math.round(base * 100) / 100;
+        var protectorUsd = base * (1 + MARINE_PROTECTOR_MARGIN_RATE);
+        return Math.round(protectorUsd * 100) / 100;
+      }
+
+      function getModelDim(vals, key){
+        if(!vals || typeof vals !== 'object') return 0;
+        var v = Number(vals[key]);
+        if(!isFinite(v) || v <= 0){
+          v = Number(vals[String(key).toLowerCase()]);
+        }
+        return isFinite(v) && v > 0 ? v : 0;
+      }
+
+      function getTopAreaFromValues(shapeCode, vals){
+        if(!shapeCode) return 0;
+        var A=getModelDim(vals,'A'),B=getModelDim(vals,'B'),C=getModelDim(vals,'C'),D=getModelDim(vals,'D'),
+            E=getModelDim(vals,'E'),F=getModelDim(vals,'F'),W=getModelDim(vals,'W'),L=getModelDim(vals,'L');
+        switch(shapeCode){
+          case '01': return ((A + D) / 2) * L;
+          case '02': return ((A + D) / 2) * L;
+          case '03': return ((A + C) / 2) * L;
+          case '04': return ((C + E + A) / 2) * D;
+          case '05': return W * L;
+          case '06': {
+            var L1 = getModelDim(vals,'L1'), L2 = getModelDim(vals,'L2');
+            return Math.max(0, ((W + A) / 2) * L1 + (W * C) + (W * L2 / 2));
+          }
+          case '07': {
+            var W1 = getModelDim(vals,'W1'), W2 = getModelDim(vals,'W2');
+            var L1_07 = getModelDim(vals,'L1'), L2_07 = getModelDim(vals,'L2');
+            return Math.max(0, ((W1 + A) / 2) * L1_07 + ((W1 + W2) / 2) * C + ((W2 + E) / 2) * L2_07);
+          }
+          case '09': return Math.max(0, C * D + ((D + A) / 2) * (E - C));
+          case '10': return Math.max(0, D * L - (L - C) * (D - A));
+          case '12': return ((B + D) / 2) * C;
+          case '13': return Math.max(0, W * L - ((L - C) * (W - A)) / 2 - ((L - F) * (W - D)) / 2);
+          case '14': return Math.max(0, A * getModelDim(vals,'H') - D * C);
+          default: return A * B;
+        }
+      }
+
+      function renderBoatModelOptions(rows){
+        if(!boatModelSelect) return;
+        var opts = ['<option value="">Select boat model</option>'];
+        (rows || []).forEach(function(m){
+          var key = String(m.model_key || '');
+          var label = String(m.model_label || m.model_name || key);
+          opts.push('<option value="' + key.replace(/"/g, '&quot;') + '">' + label.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</option>');
+        });
+        boatModelSelect.innerHTML = opts.join('');
+      }
+
+      function updateBoatModelMeta(model){
+        if(boatModelYear){
+          boatModelYear.textContent = 'Year: ' + (model && model.model_year ? model.model_year : '—');
+        }
+        if(boatModelPrice){
+          var p = getBoatModelAdjustedUsd(model);
+          boatModelPrice.textContent = p > 0 ? ('Price: $' + p.toFixed(2) + ' USD') : 'Price: —';
+        }
+      }
+
+      function resetCustomShapeState(){
+        if(shapeSelect) shapeSelect.value = '';
+        if(guideImg){
+          guideImg.removeAttribute('src');
+          guideImg.style.display = 'none';
+        }
+        if(guideCaption){
+          guideCaption.textContent = '';
+          guideCaption.style.display = 'none';
+        }
+        if(guidePlaceholder) guidePlaceholder.style.display = 'block';
+        if(comingSoon) comingSoon.style.display = 'none';
+        if(dimsContainer) dimsContainer.innerHTML = '';
+        var bfNote = document.getElementById('bf-note');
+        if(bfNote) bfNote.style.display = 'none';
+        var warningEl = document.getElementById('area-warning');
+        if(warningEl){
+          warningEl.style.display = 'none';
+          if(defaultAreaWarningHtml) warningEl.innerHTML = defaultAreaWarningHtml;
+        }
+      }
+
+      function clearBoatModelSelection(silent){
+        activeBoatModel = null;
+        if(boatModelSelect) boatModelSelect.value = '';
+        updateBoatModelMeta(null);
+        if(!silent){
+          setBoatModelStatus('No model selected. Choose a boat model to use Boat Model pricing.', false);
+        }
+      }
+
+      function applyBoatModel(model, opts){
+        var options = opts || {};
+        activeBoatModel = model || null;
+        updateBoatModelMeta(activeBoatModel);
+        if(activeBoatModel){
+          setBoatModelStatus((isMarineProtector ? 'Using Boat Model price + Protector Marine Margin for ' : 'Using fixed price for ') + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key) + '.', false);
+        } else if(!options.silentEmpty){
+          setBoatModelStatus('No model selected. Choose a boat model to use Boat Model pricing.', false);
+        }
+        if(!options.skipPriceUpdate) updatePrice();
+      }
+
+      function setMarineMode(mode){
+        marineMode = mode === 'custom_dimensions' ? 'custom_dimensions' : 'boat_model';
+        var isStandardMode = marineMode === 'boat_model';
+        if(standardModeTab){
+          standardModeTab.classList.toggle('active', isStandardMode);
+          standardModeTab.setAttribute('aria-selected', isStandardMode ? 'true' : 'false');
+        }
+        if(customModeTab){
+          customModeTab.classList.toggle('active', !isStandardMode);
+          customModeTab.setAttribute('aria-selected', !isStandardMode ? 'true' : 'false');
+        }
+        if(standardModePanel) standardModePanel.classList.toggle('active', isStandardMode);
+        if(customModePanel) customModePanel.classList.toggle('active', !isStandardMode);
+        if(marineCustomBlock) marineCustomBlock.style.display = isStandardMode ? 'none' : 'block';
+
+        if(isStandardMode){
+          resetCustomShapeState();
+          if(!activeBoatModel){
+            setBoatModelStatus('No model selected. Choose a boat model to use Boat Model pricing.', false);
+          }
+        } else {
+          clearBoatModelSelection(true);
+          setBoatModelStatus('Mattress Shape mode active. Select a shape and enter dimensions below.', false);
+          ensureShapeOptionsPopulated();
+        }
+        updatePrice();
+      }
+
+      function ensureShapeOptionsPopulated(){
+        if(!shapeSelect) return;
+        if(shapeSelect.options.length > 1) return;
+        shapeSelect.innerHTML = '<option value=""> — Select a shape — </option>';
+        shapes.forEach(function(s){
+          var opt = document.createElement('option');
+          opt.value = s.code;
+          opt.textContent = s.code + '. ' + s.name + (s.comingSoon ? ' (Coming Soon)' : '');
+          if(s.comingSoon) opt.disabled = true;
+          shapeSelect.appendChild(opt);
         });
       }
 
-      function applyBoatModel(model){
-        if(!model) return;
-        if(!shapeFields[model.shape_code]){
-          setBoatModelStatus('Model shape is not supported on this page yet.', true);
-          return;
-        }
-        shapeSelect.value = model.shape_code;
-        shapeSelect.dispatchEvent(new Event('change'));
-        fillDimensionsFromModel(model);
-        autoComputeShape10();
-        updatePrice();
-        activeBoatModel = model;
-        setBoatModelStatus('Applied: ' + (model.model_name || model.model_key), false);
-      }
-
       function loadBoatModels(){
-        if(!boatModelList) return;
-        fetch('/api/boat-models')
+        if(!boatModelSelect) return;
+        var endpoint = '/api/boat-models';
+        fetch(endpoint)
           .then(function(r){ return r.ok ? r.json() : null; })
           .then(function(payload){
             var rows = payload && Array.isArray(payload.models) ? payload.models : [];
             boatModels = rows;
-            boatModelList.innerHTML = rows.map(function(m){
-              var label = m.model_name || m.model_key || '';
-              return '<option value="' + String(label).replace(/"/g, '&quot;') + '"></option>';
-            }).join('');
-            setBoatModelStatus(rows.length ? (rows.length + ' boat models available') : 'No saved boat models yet', false);
+            renderBoatModelOptions(rows);
+            updateBoatModelMeta(null);
+            setBoatModelStatus(rows.length ? 'Choose a boat model to apply fixed Boat Model pricing.' : 'No saved boat models yet. Use Mattress Shape instead.', false);
           })
           .catch(function(){
             setBoatModelStatus('Boat model lookup unavailable right now.', true);
@@ -767,29 +905,20 @@
       }
 
       /* Populate shape dropdown */
-      shapes.forEach(function(s){
-        var opt = document.createElement('option');
-        opt.value = s.code;
-        opt.textContent = s.code + '. ' + s.name + (s.comingSoon ? ' (Coming Soon)' : '');
-        if(s.comingSoon) opt.disabled = true;
-        shapeSelect.appendChild(opt);
-      });
+      ensureShapeOptionsPopulated();
 
-      if(boatModelApplyBtn){
-        boatModelApplyBtn.addEventListener('click', function(){
-          var model = findBoatModelByInput(boatModelInput && boatModelInput.value);
-          if(!model){
-            setBoatModelStatus('Model not found. Please pick from suggestions.', true);
-            return;
-          }
+      if(boatModelSelect){
+        boatModelSelect.addEventListener('change', function(){
+          setMarineMode('boat_model');
+          var model = findBoatModelByKey(boatModelSelect.value);
           applyBoatModel(model);
         });
       }
-      if(boatModelInput){
-        boatModelInput.addEventListener('change', function(){
-          var model = findBoatModelByInput(boatModelInput.value);
-          if(model) setBoatModelStatus('Found model. Click "Use this model".', false);
-        });
+      if(standardModeTab){
+        standardModeTab.addEventListener('click', function(){ setMarineMode('boat_model'); });
+      }
+      if(customModeTab){
+        customModeTab.addEventListener('click', function(){ setMarineMode('custom_dimensions'); });
       }
 
       /* â”€â”€ Dimension field definitions per shape â”€â”€ */
@@ -1149,6 +1278,7 @@
       var isMarineProtector = productSlug === 'marine-mattress-protector';
       var quoteFabricKey = isMarineProtector ? 'tpu' : 'cloudsoft';
       var quoteFabricLabel = isMarineProtector ? '3-Layer Waterproof Protector' : 'CloudSoft';
+      var quoteColorValue = isMarineProtector ? 'white' : '';
       var shapeSelectLabelEl = document.getElementById('shape-select-label');
       var materialBadgeEl = document.getElementById('material-badge');
       var materialSpecsEl = document.getElementById('material-specs');
@@ -1383,6 +1513,14 @@
           .then(function(r){ return r.ok ? r.json() : null; })
           .then(function(payload){
             applyMarinePricingParams(payload);
+            if(boatModels && boatModels.length){
+              renderBoatModelOptions(boatModels);
+              if(activeBoatModel && activeBoatModel.model_key){
+                var synced = findBoatModelByKey(activeBoatModel.model_key);
+                if(synced) activeBoatModel = synced;
+              }
+              updateBoatModelMeta(activeBoatModel);
+            }
             updatePrice();
           })
           .catch(function(){});
@@ -1396,10 +1534,58 @@
         var usd = Math.round(priceThb / THB_PER_USD);
         return '$' + usd.toLocaleString();
       }
+      function formatBoatModelPrice(usd){
+        var n = Number(usd || 0);
+        if(!isFinite(n) || n <= 0) return ' — ';
+        var isThai = document.documentElement.lang === 'th';
+        if(isThai){
+          return 'à¸¿' + Math.round(n * THB_PER_USD).toLocaleString();
+        }
+        return '$' + n.toFixed(2);
+      }
 
       function updatePrice(){
         var code = shapeSelect.value;
         var warningEl = document.getElementById('area-warning');
+        if(warningEl && defaultAreaWarningHtml && warningEl.style.display === 'none' && warningEl.innerHTML !== defaultAreaWarningHtml){
+          warningEl.innerHTML = defaultAreaWarningHtml;
+        }
+        var fixedModelUsd = getBoatModelAdjustedUsd(activeBoatModel);
+        if(marineMode === 'boat_model'){
+          if(activeBoatModel && fixedModelUsd > 0){
+            var fixedUsd = fixedModelUsd;
+            var fixedThb = Math.round(fixedUsd * THB_PER_USD);
+            var fixedDisplay = formatBoatModelPrice(fixedUsd);
+            customPrice.textContent = fixedDisplay;
+            priceDisplay.textContent = fixedDisplay;
+            priceDisplayTop.textContent = fixedDisplay;
+            priceTopSub.textContent = isMarineProtector
+              ? 'Boat Model price + Protector Marine Margin'
+              : 'Fixed price for selected boat model';
+            currentQuotePriceUsd = fixedUsd;
+            currentQuotePriceThb = fixedThb;
+            renderPriceBreakdown(null);
+            addToCartBtn.disabled = false;
+            if(warningEl) warningEl.style.display = 'none';
+            return;
+          }
+          customPrice.textContent = ' — ';
+          priceDisplay.textContent = ' — ';
+          priceDisplayTop.textContent = ' — ';
+          priceTopSub.textContent = isMarineProtector
+            ? 'Select a boat model to see Boat Model + margin pricing'
+            : 'Select a boat model to see fixed pricing';
+          currentQuotePriceThb = 0;
+          currentQuotePriceUsd = 0;
+          renderPriceBreakdown(null);
+          addToCartBtn.disabled = true;
+          if(warningEl) warningEl.style.display = 'none';
+          return;
+        }
+        if(activeBoatModel){
+          activeBoatModel = null;
+          updateBoatModelMeta(null);
+        }
         if(!code || shapeFields[code] === undefined){
           customPrice.textContent = ' — ';
           priceDisplay.textContent = ' — ';
@@ -1504,8 +1690,15 @@
       }
 
       shapeSelect.addEventListener('change', function(){
+        if(marineMode !== 'custom_dimensions'){
+          setMarineMode('custom_dimensions');
+        }
         var code = shapeSelect.value;
-        if(!code) return;
+        if(!code){
+          resetCustomShapeState();
+          updatePrice();
+          return;
+        }
 
         var shape = shapes.find(function(s){return s.code===code});
 
@@ -1547,7 +1740,7 @@
         var lEl = document.getElementById('dim-L');
         var lVal = parseFloat(lEl?.value) || 0;
         if(code === '01'){
-          /* Shape 01: B = C = âˆš(((A-D)/2)^2 + L^2), but allow manual B/C edits */
+          /* Shape 01: B = C = √(((A-D)/2)^2 + L^2), but allow manual B/C edits */
           if(sourceId === 'dim-B' || sourceId === 'dim-C') return;
           var aEl = document.getElementById('dim-A');
           var dEl = document.getElementById('dim-D');
@@ -1565,7 +1758,7 @@
         } else if(code === '02'){
           /* Shape 02: use Estimate button for B/F/C/E defaults (manual values stay editable) */
         } else if(code === '03'){
-          /* Shape 03: B = D = âˆš(((A-C)/2)^2 + L^2), but allow manual B/D edits */
+          /* Shape 03: B = D = √(((A-C)/2)^2 + L^2), but allow manual B/D edits */
           if(sourceId === 'dim-B' || sourceId === 'dim-D') return;
           var aEl = document.getElementById('dim-A');
           var cEl = document.getElementById('dim-C');
@@ -1674,7 +1867,7 @@
             }
           }
         } else if(code === '09'){
-          /* Shape 09: auto-fill B = âˆš((D-A)² + (E-C)²) */
+          /* Shape 09: auto-fill B = √((D-A)² + (E-C)²) */
           var aEl = document.getElementById('dim-A');
           var dEl = document.getElementById('dim-D');
           var cEl = document.getElementById('dim-C');
@@ -1691,7 +1884,7 @@
             }
           }
         } else if(code === '12'){
-          /* Shape 12: auto-fill A = âˆš(C² + ((B-D)/2)²) */
+          /* Shape 12: auto-fill A = √(C² + ((B-D)/2)²) */
           var bEl_ = document.getElementById('dim-B');
           var dEl_ = document.getElementById('dim-D');
           var cEl_ = document.getElementById('dim-C');
@@ -1707,7 +1900,7 @@
             }
           }
         } else if(code === '13'){
-          /* Shape 13: auto-fill B = âˆš((W-A)²+(L-C)²), E = âˆš((W-D)²+(L-F)²) */
+          /* Shape 13: auto-fill B = √((W-A)²+(L-C)²), E = √((W-D)²+(L-F)²) */
           var wEl = document.getElementById('dim-W');
           var lEl = document.getElementById('dim-L');
           var aEl = document.getElementById('dim-A');
@@ -1904,11 +2097,13 @@
         return null;
       }
       function getSelectedMarineColorEl(){
+        if(isMarineProtector) return null;
         var group = getActiveMarineColorGroup();
         if(!group) return null;
         return group.querySelector('.color-option.selected') || group.querySelector('.color-option');
       }
       function getSelectedMarineColor(){
+        if(isMarineProtector) return quoteColorValue;
         var el = getSelectedMarineColorEl();
         return el ? (el.getAttribute('data-color') || el.getAttribute('title') || '') : '';
       }
@@ -2048,6 +2243,26 @@
         return d.innerHTML;
       }
       function collectMarineQuoteData(){
+        var boatModelUsd = getBoatModelAdjustedUsd(activeBoatModel);
+        if(marineMode === 'boat_model'){
+          if(!activeBoatModel || boatModelUsd <= 0) return null;
+          return {
+            source: 'boat_model',
+            shapeCode: activeBoatModel.shape_code || '',
+            shapeName: 'Boat Model Price',
+            areaCm2: null,
+            values: {},
+            detailsList: [
+              'Model: ' + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key || ''),
+              'Year: ' + (activeBoatModel.model_year || '—'),
+              'Price: $' + boatModelUsd.toFixed(2) + ' USD'
+            ]
+          };
+        }
+        if(activeBoatModel){
+          activeBoatModel = null;
+          updateBoatModelMeta(null);
+        }
         var code = shapeSelect.value;
         if(!code) return null;
         var shape = shapes.find(function(s){ return s.code === code; });
@@ -2116,7 +2331,9 @@
         var data = collectMarineQuoteData();
         if(!data){
           updatePrice();
-          alert('Please complete valid dimensions before requesting a quote.');
+          alert(marineMode === 'boat_model'
+            ? 'Please select a boat model before requesting a quote.'
+            : 'Please choose a shape and complete valid dimensions before requesting a quote.');
           return;
         }
         if(quoteOverlay){
@@ -2155,7 +2372,9 @@
           var quoteData = collectMarineQuoteData();
           if(!quoteData){
             valid = false;
-            alert('Please complete valid dimensions before submitting the quote.');
+            alert(marineMode === 'boat_model'
+              ? 'Please select a boat model before submitting the quote.'
+              : 'Please choose a shape and complete valid dimensions before submitting the quote.');
           }
           var turnstileToken = getTurnstileToken(document.getElementById('quote-form'));
           if (!turnstileToken) {
@@ -2179,15 +2398,18 @@
               address: (document.getElementById('qf-address') || {}).value || undefined,
               telephone: (document.getElementById('qf-phone') || {}).value || undefined,
               product_slug: productSlug,
-              dimensions: {
-                unit: 'cm',
-                shape_code: quoteData.shapeCode,
-                shape_name: quoteData.shapeName,
-                boat_model_name: activeBoatModel ? activeBoatModel.model_name : undefined,
-                boat_model_key: activeBoatModel ? activeBoatModel.model_key : undefined,
-                area_cm2: quoteData.areaCm2,
-                values: quoteData.values
-              },
+              dimensions: (quoteData.source === 'boat_model')
+                ? {
+                    boat_model_name: activeBoatModel ? (activeBoatModel.model_label || activeBoatModel.model_name) : undefined,
+                    boat_model_key: activeBoatModel ? activeBoatModel.model_key : undefined
+                  }
+                : {
+                    unit: 'cm',
+                    shape_code: quoteData.shapeCode,
+                    shape_name: quoteData.shapeName,
+                    area_cm2: quoteData.areaCm2,
+                    values: quoteData.values
+                  },
               fabric: quoteFabricKey,
               color: getSelectedMarineColor() || undefined,
               quoted_price_thb: currentQuotePriceThb || undefined,
@@ -2211,14 +2433,23 @@
             var confirmDetails = document.getElementById('confirm-details');
             if(confirmText) confirmText.innerHTML = 'We\'ll email <strong>' + escHtml(email) + '</strong> within 24 hours.';
             if(confirmDetails){
-              confirmDetails.innerHTML =
-                '<strong>Shape:</strong> ' + escHtml(quoteData.shapeCode + '. ' + quoteData.shapeName) + '<br>' +
-                '<strong>Dimensions:</strong> ' + escHtml(quoteData.detailsList.join(', ')) + '<br>' +
-                '<strong>Area:</strong> ' + quoteData.areaCm2.toLocaleString() + ' cm²<br>' +
-                '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
-                '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || '—') + '<br>' +
-                (currentQuotePriceUsd ? '<strong>Price:</strong> $' + Number(currentQuotePriceUsd).toFixed(2) + ' USD<br>' : '') +
-                '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || '—');
+              if(quoteData.source === 'boat_model'){
+                confirmDetails.innerHTML =
+                  '<strong>Boat Model:</strong> ' + escHtml(activeBoatModel ? (activeBoatModel.model_label || activeBoatModel.model_name) : '—') + '<br>' +
+                  '<strong>Year:</strong> ' + escHtml(activeBoatModel && activeBoatModel.model_year ? String(activeBoatModel.model_year) : '—') + '<br>' +
+                  '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
+                  '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || '—') + '<br>' +
+                  (currentQuotePriceUsd ? '<strong>Price:</strong> $' + Number(currentQuotePriceUsd).toFixed(2) + ' USD<br>' : '') +
+                  '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || '—');
+              } else {
+                confirmDetails.innerHTML =
+                  '<strong>Shape:</strong> ' + escHtml(quoteData.shapeCode + '. ' + quoteData.shapeName) + '<br>' +
+                  '<strong>Dimensions:</strong> ' + escHtml(quoteData.detailsList.join(', ')) + '<br>' +
+                  '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
+                  '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || '—') + '<br>' +
+                  (currentQuotePriceUsd ? '<strong>Price:</strong> $' + Number(currentQuotePriceUsd).toFixed(2) + ' USD<br>' : '') +
+                  '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || '—');
+              }
             }
             if(confirmOverlay) confirmOverlay.classList.add('open');
           })
@@ -2309,5 +2540,6 @@
   </script>
 </body>
 </html>
+
 
 

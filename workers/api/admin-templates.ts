@@ -3,11 +3,16 @@
 // PUT  /api/admin/templates     → update template (body: { key, html })
 
 import { getAllTemplates, updateTemplate } from "../shared/chrome";
-import { authorizeAdmin } from "./clerk-verify";
+import { authorizeAdmin } from "./admin-auth";
 
 export async function handleAdminTemplates(request: Request, env: any): Promise<Response> {
   const auth = await authorizeAdmin(request, env);
-  if (auth) return auth;
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   const method = request.method.toUpperCase();
 

@@ -1,0 +1,104 @@
+# MildMate Marketing Analysis API — Reference (Phase 04)
+
+**Date:** 2026-09-07 · **Handler:** `workers/api/admin-analysis.ts` · **Registered in:** `functions/api/[[path]].ts` (`/api/admin/analysis*`) · **Runtime bundles:** `public/_worker.js` + `public/index.js` (rebuilt via `npx wrangler pages functions build`)
+
+Read-only. Reads ONLY the `analysis_*` views (migration 042) plus `products` for display titles. No PII exists in these sources. GET only (405 otherwise).
+
+## Authentication
+
+Same pattern as `/api/admin/stats`:
+1. `Authorization: Bearer <Clerk session token>` → JWT verified (JWKS) → admin role claim or email in `ADMIN_EMAILS` (Clerk API enrichment fallback).
+2. Fallback `X-Admin-Secret` header — rejected on production hosts unless `ADMIN_SECRET_ALLOW_PROD=true`; used for local dev.
+- No credentials → `401`. Valid JWT without admin role → `403`.
+
+## Error schema (machine-readable)
+
+```json
+{ "success": false, "error_code": "INVALID_START_DATE", "message": "start must be YYYY-MM-DD." }
+```
+
+Codes: `UNAUTHORIZED`, `METHOD_NOT_ALLOWED`, `ROUTE_NOT_FOUND`, `PRODUCT_NOT_FOUND`, `INVALID_START_DATE`, `INVALID_END_DATE`, `INVALID_DATE_RANGE`, `INVALID_CHANNEL`, `INVALID_PRODUCT_ID`, `INVALID_STATUS`, `INVALID_REVENUE_STATUS`, `INVALID_LIMIT`, `INVALID_OFFSET`, `DATA_QUALITY_UNAVAILABLE`.
+
+## Common query parameters
+
+| Param | Format | Applies to |
+|---|---|---|
+| `start`, `end` | `YYYY-MM-DD` (inclusive, on `order_day`) | summary, sales, products, channels |
+| `channel` | `^[a-z0-9-]{1,30}$` (normalized source_system) | summary, sales, products |
+| `product_id` | positive integer | sales |
+| `status` | `paid|processing|shipped|completed` (commercial only) | sales |
+| `revenue_status` | `EXACT|UNALLOCATED` | sales |
+| `mapping` | `Mapped|Partial|Unmapped|Itemless` (case-insensitive, filters `derived_mapping_status`; added Phase 05) | sales |
+| `limit` / `offset` | 1–200 (default 50) / ≥0 | sales |
+
+## Endpoints
+
+### GET `/api/admin/analysis/summary`
+KPI header (M1–M4, M16, M18/M19). Empty period returns zeros with `null` for aov/percentages (never fake 0%).
+```json
+{ "success": true, "filters": {...}, "summary": { "orders": 7, "order_revenue": 20872, "currency": "THB",
+  "units": 13, "aov": 2981.71, "mapped_orders": 7, "mapped_order_pct": 100,
+  "exact_items": 0, "unallocated_items": 9, "exact_item_pct": 0, "unallocated_item_pct": 100 } }
+```
+
+### GET `/api/admin/analysis/sales`
+Item-level Sales Detail rows (paginated, newest first): `order_day, channel_norm, source_system, source_order_id, status, order_total, currency, product_id, product_title, quantity, raw_item_text, line_revenue, revenue_status, derived_mapping_status` + `pagination: { total, limit, offset }`.
+
+### GET `/api/admin/analysis/products`
+Per-product participation (date/channel-filterable; aggregated live from `analysis_active_items` using identical contract logic since views can't take parameters): participation fields + `revenue_coverage_pct`, `top_channel` (from `analysis_product_channel`), `orders_28d`, `growth_vs_previous_28d` (from `analysis_sales_28d`). Unmapped items appear as a `product_id: null` "(unmapped)" row.
+
+### GET `/api/admin/analysis/product/:id`
+Product drill-down: `product` (id/slug/title/type/active), `participation`, `channels[]`, `window_28d`, `window_90d`, `co_purchase[]` (partner product, co_orders, `attach_rate_pct` vs this anchor). 404 if the product id does not exist.
+
+### GET `/api/admin/analysis/channels`
+Per channel: `orders, order_revenue, units, aov, mapped_orders, mapped_pct`.
+
+### GET `/api/admin/analysis/data-quality`
+`analysis_data_quality` row + computed `freshness_minutes` (M22), `mapped_order_pct`, `mapped_item_pct`, `exact_item_pct`, `unallocated_item_pct`, and M30 roll-up `status: ok|warning|critical` with human-readable `warnings[]`.
+Thresholds: critical = no/failed sync or invalid product refs; warning = freshness > 30 min, sync errors 7d, missing Product_IDs, itemless orders, missing dates, unknown status/source labels, null/zero order totals.
+**Phase 06 additions:** response also includes `data_quality.zero_total_orders` (computed live), `thresholds` (documented freshness rules), `recent_runs[]` (last 10 `sync_runs` rows, error text truncated to 300 chars), and `channel_freshness[]` (per channel: `last_order_day`, `days_since_last_order`, `orders`).
+**Phase 09 additions:** response includes `gsc_freshness` (`available`, `total_rows`, `latest_report_date`, `days_since_latest_report`, `last_success_sync_at`, `last_sync_at`, `last_sync_status`, `sync_errors_7d`, `status`, `caveat`). If migration 046 is not present in the environment, `available=false` and sales data-quality behavior remains unchanged.
+**Phase 10 additions:** response includes `ga4_freshness` (`available`, `total_rows`, `latest_report_date`, `days_since_latest_report`, `last_success_sync_at`, `last_sync_at`, `last_sync_status`, `sync_errors_7d`, `status`, `caveat`). If migration 048 is not present in the environment, `available=false` and sales/gsc data-quality behavior remains unchanged.
+
+### GET `/api/admin/analysis/gsc` (Phase 09)
+Query params: `start`, `end`, optional `product_id`.
+
+Returns:
+- `summary` — queries, pages, clicks, impressions, CTR%, weighted avg position, mapped coverage counters
+- `trend_28d` — current 28-day vs previous 28-day clicks/impressions/CTR/position with growth %
+- `freshness` — latest GSC report date + collector sync health from `sync_runs` (`source LIKE 'gsc-%'` after migration 047)
+- `top_pages` — click-ranked landing pages (with Product_ID/title where defensibly mapped)
+- `top_queries` — click-ranked queries
+
+Mapping rule: only `/product/{slug}` and `/th/product/{slug}` URLs are mapped to Product_ID; all other URLs stay unmapped by design.
+
+### GET `/api/admin/analysis/ga4` (Phase 10)
+Query params: `start`, `end`, optional `product_id`.
+
+Returns:
+- `summary` — sessions/users/engaged sessions/product views/add-to-cart/checkout/purchases/GA4 purchase revenue + rate metrics
+- `trend_28d` — current 28-day vs previous 28-day sessions/purchases/revenue directional trend
+- `freshness` — latest GA4 report date + collector sync health from `sync_runs` (`source LIKE 'ga4-%'`)
+- `top_pages` — session-ranked landing/page paths (with Product_ID/title where defensibly mapped)
+- `top_sources` — session-ranked source/medium aggregates
+
+Guardrail: GA4 purchase revenue is directional funnel telemetry only and must not be merged into canonical unified sales revenue facts.
+
+### GET `/api/admin/analysis/data-quality/exceptions?type=...` (Phase 06)
+PII-free drill-down of affected records, LIMIT 100 (`truncated` flag when capped). Response: `{success, type, description, count, truncated, rows[]}`.
+Valid `type` values: `missing_product_id`, `unmapped_orders`, `itemless_orders`, `zero_totals`, `invalid_product_refs`, `unknown_sources`, `unknown_status`, `sync_errors`. Invalid type → 400 `INVALID_EXCEPTION_TYPE`.
+
+## Test results (local `wrangler pages dev`, 2026-09-07)
+
+| Test | Result |
+|---|---|
+| No auth → 401 · bad date → 400 · reversed range → 400 · bad route → 404 · product 999 → 404 | ✅ |
+| Summary all-time and date+channel filtered | ✅ consistent with local views |
+| Sales pagination (total stable across pages), product_id / revenue_status filters | ✅ |
+| Products list with coverage %, top channel, 28d trend; product/26 detail with EXACT ฿500 | ✅ |
+| Empty period → zeros with null aov/pcts | ✅ |
+| No PII fields in any response | ✅ |
+
+## Deployment note
+
+Views (migration 042) are already applied to production D1. The API goes live with the next Pages deploy (bundle already synced). Production browser calls must use the Clerk admin session (secret fallback is blocked on `www.mildmate.com`).

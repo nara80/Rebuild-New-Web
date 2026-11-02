@@ -16,3 +16,19 @@ node_modules/
 
 # Local backups
 *.backup
+
+# Customer PII — raw order exports must never enter the repo
+01_MildMate_Marketing/07_Historical_Backfill/input/
+
+# Notion product mapper local state + run logs (may contain order metadata)
+scripts/.notion-mapper-state.json
+logs/
+
+# Isolated release worktrees (local deploy staging only)
+.release-*/
+
+# Windows shell junk
+desktop.ini
+
+# Full D1 backups must never enter the repo (customer PII)
+marketing-sync-worker/backup_mildmate_db_before_*.sql

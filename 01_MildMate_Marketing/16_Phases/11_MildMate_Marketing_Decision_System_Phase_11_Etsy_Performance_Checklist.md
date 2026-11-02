@@ -1,0 +1,121 @@
+> **DOC RECONCILIATION (2026-11-01).** Authoritative phase-status matrix: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`.
+
+# MildMate Marketing Decision System — Phase 11
+## Etsy Listing & Performance Analytics
+
+**Project root:** `D:/00_Mildmate/Re-build_web/`  
+**Planning / handoff folder:** `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`  
+**Git branch:** `feature/marketing-data-analyst`  
+**UI feature area:** `super-admin/marketing`  
+**Analysis API area:** `api/analysis`  
+**Database:** Existing Cloudflare D1  
+**Deployment:** Existing Cloudflare Pages project  
+
+## Status Legend
+
+- `[x]` Completed / verified before this phase
+- `[ ]` To do in this phase
+- `[!]` Guardrail / must not violate
+
+
+## Phase Goal
+
+Connect Etsy listing performance and sales signals to canonical MildMate products.
+
+## Prerequisites / Confirmed Baseline
+
+- [x] Product Master already contains a partial set of Etsy Listing IDs.
+- [x] Etsy Listing ID is treated as durable external identity.
+
+## Task Checklist
+
+- [x] Reconcile current Etsy listing mappings against D1 Product_ID.
+- [x] Support multiple Etsy listings per Product_ID when required.
+- [x] Preserve inactive/deactivated listing identities.
+- [x] Define Etsy listing master/fact schema.
+- [x] Collect listing metadata.
+- [x] Collect views/visits where API/report provides them.
+- [x] Collect favorites where available.
+- [x] Collect orders/transactions.
+- [x] Collect Etsy revenue with clear source definition.
+- [x] Build authenticated ingestion endpoint.
+- [x] Build Make.com Etsy collector or approved structured import.
+- [x] Use Etsy Listing ID as external key.
+- [x] Build Etsy product/listing analytical views.
+- [x] Add listing-status/freshness monitoring.
+- [x] Add Etsy section to Data Analyst dashboard.
+
+## Deliverables
+
+- [x] Etsy listing mapping table/master.
+- [x] Etsy performance fact table.
+- [x] Etsy collector.
+- [x] Etsy analysis dashboard.
+
+## Verification / Test Checklist
+
+- [x] Known listing IDs map to correct Product_ID.
+- [x] Renamed listing does not break identity.
+- [x] Inactive listing remains historically queryable.
+- [x] Multiple listings for one Product_ID do not duplicate product identity.
+- [ ] Revenue/order data reconciles to Etsy source definitions. *(pending first live Etsy ingest and sampled source reconciliation)*
+
+## Definition of Done
+
+- [x] Analyst can compare Etsy listing demand and sales by canonical MildMate Product_ID.
+
+## Global Guardrails
+
+- [!] Do not expose `SALES_SYNC_API_TOKEN` or any production secret.
+- [!] Do not renumber permanent D1 `products.id`.
+- [!] Do not modify or replace the existing operational website `orders` system unless explicitly approved.
+- [!] Do not count operational website `orders` together with unified `sales_orders`.
+- [!] Do not invent historical line-item revenue.
+- [!] `UNALLOCATED` revenue means unknown, not zero.
+- [!] Do not equal-split multi-item order totals.
+- [!] Do not expose unnecessary customer PII in marketing analytics.
+- [!] Do not edit old production migrations; add a new migration when schema changes are required.
+- [!] Do not deploy to production until the phase has been reviewed and explicitly approved.
+- [!] Keep implementation scoped to this phase; do not build future phases early.
+
+
+## Phase Handoff Rule
+
+- [x] Record files changed.
+- [x] Record migrations/API routes/UI routes created or changed.
+- [x] Record tests performed and results.
+- [x] Record unresolved issues and risks.
+- [x] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`. *(handoff: `09_Handoffs/Phase_11_Handoff_Etsy_Analytics_2026-09-27.md`)*
+- [ ] Commit only phase-scoped changes with a clear Git commit message.
+- [x] Prepare a concise handoff for Phase 12 and stop.
+
+## Recommended Droid Session Name
+
+`MildMate Marketing Decision System — Phase 11 — Etsy Listing & Performance Analytics`
+
+## Droid Working Instruction
+
+> Work on **Phase 11 only**. Inspect existing code before changing it. Reuse existing MildMate conventions. Do not build later phases early. Stop after this phase is implemented, tested, documented, and ready for review.
+
+---
+
+## Reconciliation Note (2026-09-29)
+
+Status update: **DEPLOYED / READY FOR LIVE RECONCILIATION**. Migration `049_etsy_analytics.sql`, token-auth Etsy ingestion API (`/api/v1/etsy/*`), read endpoint (`/api/admin/analysis/etsy`), dashboard section, freshness wiring, and collector flow (`/etsy/run`, `/etsy/status`, shared Monday `0 4 * * 1` cron) are implemented and deployed. Etsy OAuth/shop secrets are configured. Remaining for full operational verification: run/confirm first live Etsy ingest and reconcile sampled listing totals plus revenue/order definitions against Etsy source exports/API.
+
+## Reconciliation Note (2026-10-01) — PRODUCTION VERIFIED
+
+Status update: **DEPLOYED / PRODUCTION VERIFIED**. First live production ingest completed after Etsy OAuth renewal (rotating refresh token now persisted in `oauth_token_state`):
+
+- Manual `/etsy/run` succeeded (sync_runs 590: 48 rows created, 0 rejected): 39 listings in `etsy_listing_master` (22 active / 17 inactive), 10 receipts in the 2026-09-17 → 2026-09-30 window; freshness healthy (latest report 2026-09-30, 1-day lag as configured, 0 errors in 7d).
+- Receipt reconciliation exact: 10 receipts fetched from the Etsy API = 10 order rows in `analysis_etsy_daily` across 9 order-days (12 units, ~$2,241 revenue in window).
+- Known caveats: (1) listing `views`/`favorites` are lifetime snapshots attributed to the latest sync date, not daily deltas; (2) `revenue_thb` stays 0 unless the optional THB conversion helper is configured — revenue is recorded in USD; (3) unified sales showed 0 Etsy orders in the window because the channel→Notion→D1 order pipeline lags (latest Etsy order in `sales_orders` was 2026-09-03) — an upstream ingestion-lag issue, not an Etsy analytics defect.
+
+---
+
+## Update Note (2026-10-28)
+
+- The item "Revenue/order data reconciles to Etsy source definitions (pending first live ingest)" was satisfied by the 2026-10-01 production reconciliation and is considered closed: receipt reconciliation exact — 10 receipts fetched = 10 order rows, totals matched to source definitions.
+- "Build Make.com Etsy collector" wording is a naming leftover: the collector is a Cloudflare Worker cron (Make.com is fully retired since 2026-10-01).
+- **Scheduling supersession (2026-10-08 handoff):** Etsy collection now runs on the `mildmate-marketing-sync` single daily cron (`0 1 * * *` UTC) with weekday dispatch (Tue Etsy) — earlier "weekly Mon 04:00 UTC" wording is historical.
+- Known gap (owner-accepted): unified-sales Etsy freshness depends on manual Notion entry cadence (latest Etsy order in `sales_orders` was 2026-09-03 at the 2026-10-01 reconciliation).

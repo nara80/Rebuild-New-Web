@@ -1,4 +1,4 @@
-// MildMate Quote Magic Link Page
+﻿// MildMate Quote Magic Link Page
 // Renders /quote/QT-XXXXX/ — shows locked custom quote with "Add to Cart" button
 
 export const onRequest: PagesFunction<{
@@ -19,7 +19,7 @@ export const onRequest: PagesFunction<{
   try {
     quote = await env.DB.prepare(
       `SELECT quote_id, customer_name, product_slug, dimensions, fabric, color,
-              status, quoted_price, quoted_price_usd, expires_at, created_at
+              status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
@@ -65,6 +65,20 @@ export const onRequest: PagesFunction<{
   const hasPrice = !!((priceThb && priceThb > 0) || (priceUsd && priceUsd > 0));
   const isCheckoutReady = !isExpired && hasPrice;
 
+  // Host-aware CSP: production quote pages allow ONLY Clerk Production domains
+  // (fail-closed); dev/preview pages allow the Development instance.
+  const clerkOrigins = (function (requestUrl: string): string {
+    try {
+      const h = new URL(requestUrl).hostname.toLowerCase();
+      if (h.endsWith(".pages.dev") || h === "localhost" || h === "127.0.0.1") {
+        return "https://kind-joey-29.clerk.accounts.dev";
+      }
+    } catch {}
+    return "https://clerk.mildmate.com https://accounts.mildmate.com";
+  })(request.url);
+
+  const securityCsp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://cdn.protect.clerk.com " + clerkOrigins + " https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.co.th data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.co.th https://cdn.protect.clerk.com " + clerkOrigins + " https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com " + clerkOrigins + " https://challenges.cloudflare.com; upgrade-insecure-requests;";
+
   function esc(s: string) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
@@ -76,8 +90,9 @@ export const onRequest: PagesFunction<{
   // Build cart item JSON for the "Add to Cart" button
   const cartItem = quote ? {
     id: "quote-" + quoteId + "-" + Date.now(),
-    type: quote.product_slug,
+    type: "custom_quote",
     product_slug: quote.product_slug,
+    product_name: productTitle,
     title: productTitle,
     dimensions,
     fabric: quote.fabric,
@@ -85,6 +100,8 @@ export const onRequest: PagesFunction<{
     qty: 1,
     is_quote: true,
     quote_id: quoteId,
+    free_shipping: Number(quote.free_shipping || 0) === 1,
+    quote_currency: isUsdQuoted ? "USD" : "THB",
     price_thb: priceThb,
     price_usd: priceUsd,
   } : null;
@@ -103,6 +120,29 @@ export const onRequest: PagesFunction<{
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
+  <script src="/js/analytics-env.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
+    (function () {
+      // Sanitize the measured page URL before any analytics loads. The quote
+      // magic-link path segment is a bearer credential and must never reach
+      // measurement endpoints as page_location (GA4/GTM honor a dataLayer
+      // page_location override pushed before container init).
+      try {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ page_location: 'https://www.mildmate.com/quote/' });
+      } catch (e) {}
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
+      } else {
+        bootMildmateAnalytics();
+      }
+    })();
+  </script>
   <style>
     :root {
       --color-primary: #2c96f4;
@@ -211,6 +251,7 @@ export const onRequest: PagesFunction<{
   </style>
 </head>
 <body>
+  <noscript id="gtm-noscript"></noscript>
   <main>
     ${quote ? `
       <section class="card quote-hero">
@@ -278,7 +319,7 @@ export const onRequest: PagesFunction<{
           ` : ""}
           <p class="fine-print">Product price only. Shipping and tax are calculated at checkout.</p>
           ${isCheckoutReady ? `
-          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return i.type===item.type&&i.fabric===item.fabric&&JSON.stringify(i.dimensions)===JSON.stringify(item.dimensions);});if(ex){ex.qty=(ex.qty||1)+1;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Review &amp; Pay';this.style.background='var(--color-success)';this.onclick=function(){window.location.href='/checkout/';};}catch(e){}}return false;">Add to Cart</button>
+          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return String(i.quote_id||'')===String(item.quote_id||'');});if(ex){ex.qty=(ex.qty||1)+1;ex.price_usd=item.price_usd;ex.price_thb=item.price_thb;ex.quote_currency=item.quote_currency;ex.free_shipping=item.free_shipping;ex.dimensions=item.dimensions;ex.fabric=item.fabric;ex.color=item.color;ex.product_slug=item.product_slug;ex.product_name=item.product_name||ex.product_name;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Redirecting...';this.style.background='var(--color-success)';this.disabled=true;window.location.href='/checkout/';}catch(e){}}return false;">Add to Cart</button>
           ` : `<div class="transaction-note">${isExpired ? "This quote has expired. Please request a new quote." : "This quote will become checkout-ready once pricing is added."}</div>`}
         </aside>
       </div>
@@ -295,8 +336,104 @@ export const onRequest: PagesFunction<{
   <script id="quote-cart-data" type="application/json">${cartItemJson}</script>
   <script src="/js/cart.js"></script>
   <script>
+    function ensureGa4Stub() {
+      window.dataLayer = window.dataLayer || [];
+      if (typeof window.gtag !== 'function') {
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+      }
+    }
+
+    function sendGa4Event(name, params) {
+      try {
+        var payload = params || {};
+        if (typeof window.__mildmateTrackEvent === 'function') {
+          window.__mildmateTrackEvent(name, payload);
+          return;
+        }
+        ensureGa4Stub();
+        window.gtag('event', name, payload);
+      } catch (e) {}
+    }
+
+    function sendGa4EventTokenized(name, params, tokenField, rawToken) {
+      var payload = params || {};
+      payload[tokenField] = '';
+      var attempted = false;
+      function emit(tokenHash) {
+        if (attempted) return;
+        attempted = true;
+        payload[tokenField] = tokenHash;
+        sendGa4Event(name, payload);
+      }
+      try {
+        if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+          crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(rawToken || ''))).then(function (buf) {
+            var hex = '';
+            var bytes = new Uint8Array(buf);
+            for (var i = 0; i < 8 && i < bytes.length; i++) {
+              hex += ('0' + bytes[i].toString(16)).slice(-2);
+            }
+            emit(hex || 'token-unavailable');
+          }).catch(function () { emit('token-unavailable'); });
+          setTimeout(function () { emit('token-unavailable'); }, 800);
+          return;
+        }
+      } catch (e) {}
+      emit('token-unavailable');
+    }
+
+    function trackViewQuote(meta) {
+      if (!meta || !meta.quote_id) return;
+      var dedupeKey = 'mildmate-view-quote-' + meta.quote_id;
+      try {
+        if (sessionStorage.getItem(dedupeKey) === '1') return;
+      } catch (e) {}
+      var payload = {
+        quote_id: '',
+        product_name: meta.product_name || 'Custom Product',
+        currency: meta.currency || 'USD',
+        value: Math.round((Number(meta.value || 0) || 0) * 100) / 100
+      };
+      sendGa4EventTokenized('view_quote', payload, 'quote_id', meta.quote_id);
+      try {
+        sessionStorage.setItem(dedupeKey, '1');
+      } catch (e2) {}
+    }
+
+    function trackQuoteAddToCart(item) {
+      if (!item || !item.quote_id) return;
+      var currency = item.quote_currency === 'THB' ? 'THB' : 'USD';
+      var unitPrice = currency === 'THB'
+        ? Number(item.price_thb || 0)
+        : Number(item.price_usd || 0);
+      var payload = {
+        quote_id: '',
+        currency: currency,
+        value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+        items: [{
+          item_id: item.product_slug || 'custom-quote',
+          item_name: item.product_name || item.title || 'Custom Quote',
+          price: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+          quantity: Number(item.qty || 1) || 1
+        }]
+      };
+      sendGa4EventTokenized('add_to_cart', payload, 'quote_id', item.quote_id);
+    }
+
     var _quoteCartItem = null;
     var _quoteIsAdded = false;
+    var _quoteEventMeta = ${JSON.stringify(
+      quote && isCheckoutReady
+        ? {
+            quote_id: String(quoteId),
+            product_name: productTitle,
+            currency: isUsdQuoted ? "USD" : "THB",
+            value: isUsdQuoted ? Number(priceUsd || 0) : Number(priceThb || 0),
+          }
+        : null
+    )};
     try {
       var _dataEl = document.getElementById('quote-cart-data');
       _quoteCartItem = _dataEl ? JSON.parse(_dataEl.textContent || 'null') : null;
@@ -316,21 +453,42 @@ export const onRequest: PagesFunction<{
           var cart = JSON.parse(raw);
           cart.items = Array.isArray(cart.items) ? cart.items : [];
           var existing = cart.items.find(function(i) {
+            // Quote lines are identified by quote_id — never merge a different
+            // quote that happens to share dimensions/fabric/color.
+            if (_quoteCartItem.quote_id) {
+              return String(i.quote_id || '') === String(_quoteCartItem.quote_id);
+            }
             return i.type === _quoteCartItem.type && i.fabric === _quoteCartItem.fabric &&
               JSON.stringify(i.dimensions) === JSON.stringify(_quoteCartItem.dimensions);
           });
-          if (existing) existing.qty = (existing.qty || 1) + 1;
-          else cart.items.push(_quoteCartItem);
+          if (existing) {
+            existing.qty = (existing.qty || 1) + 1;
+            // Refresh the line with the latest approved quote render (admin may
+            // have re-priced since the line was first added).
+            existing.price_usd = _quoteCartItem.price_usd;
+            existing.price_thb = _quoteCartItem.price_thb;
+            existing.quote_currency = _quoteCartItem.quote_currency;
+            existing.free_shipping = _quoteCartItem.free_shipping;
+            existing.dimensions = _quoteCartItem.dimensions;
+            existing.fabric = _quoteCartItem.fabric;
+            existing.color = _quoteCartItem.color;
+            existing.product_slug = _quoteCartItem.product_slug;
+            existing.product_name = _quoteCartItem.product_name || existing.product_name;
+          } else {
+            cart.items.push(_quoteCartItem);
+          }
           localStorage.setItem(key, JSON.stringify(cart));
         }
+        trackQuoteAddToCart(_quoteCartItem);
         _quoteIsAdded = true;
-        showToast('Added to cart');
+        showToast('Added to cart. Redirecting...');
         var btn = document.getElementById('quote-cta');
         if (btn) {
-          btn.textContent = 'Review & Pay';
+          btn.textContent = 'Redirecting...';
           btn.style.background = 'var(--color-success)';
-          btn.onclick = function() { window.location.href = '/checkout/'; };
+          btn.disabled = true;
         }
+        window.location.href = '/checkout/';
       } catch (e) {
         showToast('Could not add to cart');
       }
@@ -338,10 +496,15 @@ export const onRequest: PagesFunction<{
 
     window.switchLang = function switchLang(lang) {
       sessionStorage.setItem('lang', lang);
+      // The double backslash below is REQUIRED: this file is one big template
+      // literal, and a single backslash is cooked away by esbuild, which used
+      // to emit a broken regex into the served page — a syntax error that
+      // killed the ENTIRE inline script block (Add to Cart survived only via
+      // the onclick fallback, and view_quote tracking never ran).
       if (lang === 'th') {
-        window.location.href = '/th' + window.location.pathname.replace(/^\/th/, '');
+        window.location.href = '/th' + window.location.pathname.replace(/^\\/th/, '');
       } else {
-        window.location.href = window.location.pathname.replace(/^\/th/, '') || '/';
+        window.location.href = window.location.pathname.replace(/^\\/th/, '') || '/';
       }
     };
 
@@ -355,6 +518,7 @@ export const onRequest: PagesFunction<{
 
     var _cta = document.getElementById('quote-cta');
     if (_cta) _cta.addEventListener('click', window.addQuoteToCart);
+    if (_quoteEventMeta && _quoteEventMeta.quote_id) trackViewQuote(_quoteEventMeta);
 
   </script>
 </body>
@@ -364,6 +528,7 @@ export const onRequest: PagesFunction<{
     headers: {
       "Content-Type": "text/html;charset=utf-8",
       "Cache-Control": "no-cache",
+      "Content-Security-Policy": securityCsp,
     },
   });
 };

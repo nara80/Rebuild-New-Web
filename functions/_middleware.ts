@@ -5,6 +5,7 @@
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
 let _cache: { header?: string; footer?: string; fetchedAt: number } = { fetchedAt: 0 };
 
+
 const FALLBACK_HEADER = `<header class="site-header">
     <div class="container header-inner">
 
@@ -376,6 +377,144 @@ const SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
 const SHARED_FAVICON_LINKS = `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
 <link rel="apple-touch-icon" href="/images/logo.png">`;
 const LISTING_IMAGE_SYNC_SCRIPT = `<script src="/js/listing-images-sync.js"></script>`;
+const CATALOG_CAMPAIGN_INLINE_FALLBACK = `<script id="catalog-campaign-inline-fallback">
+(function(){
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (window.__MildMateCatalogCampaignUiLoaded) return;
+  window.__MildMateCatalogCampaignFallbackLoaded = true;
+
+  function isThaiPage() {
+    try {
+      var lang = (document.documentElement && document.documentElement.lang || '').toLowerCase();
+      var path = window.location.pathname || '';
+      return lang === 'th' || path.indexOf('/th/') === 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function toNumber(v) {
+    var n = Number(v);
+    return isFinite(n) ? n : 0;
+  }
+
+  function getProductSlug(card) {
+    var link = card.querySelector('a[href*="/product/"]');
+    if (!link) return '';
+    var href = link.getAttribute('href') || '';
+    var parts = href.split('/').filter(function (s) { return s; });
+    return parts.length ? parts[parts.length - 1] : '';
+  }
+
+  function formatBasePrice(usd, thb, isThai) {
+    return isThai ? ('เริ่มต้น ฿' + Math.round(thb).toLocaleString()) : ('From US$' + Math.round(usd));
+  }
+
+  function ensureStyles() {
+    if (document.getElementById('catalog-campaign-ui-style')) return;
+    var style = document.createElement('style');
+    style.id = 'catalog-campaign-ui-style';
+    style.textContent =
+      '.product-price .price-strike{color:#94a3b8;text-decoration:line-through;font-weight:600;margin-right:6px}' +
+      '.product-price .price-sale{color:#dc2626;font-weight:800}' +
+      '.catalog-sale-meta{display:flex;align-items:center;gap:8px;margin-top:6px;min-height:20px;flex-wrap:wrap}' +
+      '.catalog-sale-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;letter-spacing:.02em;line-height:1.2}' +
+      '.catalog-sale-countdown{font-size:12px;color:#64748b;font-weight:600;line-height:1.3}' +
+      '@media (max-width:768px){.catalog-sale-meta{gap:6px}.catalog-sale-badge{font-size:10px;padding:2px 7px}.catalog-sale-countdown{display:block;width:100%;font-size:11px}}';
+    document.head.appendChild(style);
+  }
+
+  function renderAll() {
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.product-card'));
+    if (!cards.length) return;
+    var isThai = isThaiPage();
+
+    cards.forEach(function(card) {
+      var priceEl = card.querySelector('.product-price');
+      if (!priceEl) return;
+      var usd = toNumber(priceEl.getAttribute('data-usd'));
+      var thb = toNumber(priceEl.getAttribute('data-thb'));
+      if (!usd && !thb) return;
+
+      var slug = getProductSlug(card);
+      var discountInfo = (typeof MildMateCampaigns !== 'undefined' && slug)
+        ? MildMateCampaigns.getDiscountForProduct(slug)
+        : { discount: 0 };
+      var discount = toNumber(discountInfo && discountInfo.discount);
+
+      var meta = card.querySelector('.catalog-sale-meta');
+      if (!meta) {
+        meta = document.createElement('div');
+        meta.className = 'catalog-sale-meta';
+        priceEl.insertAdjacentElement('afterend', meta);
+      }
+
+      if (discount > 0) {
+        var saleUsd = Math.max(1, Math.round(usd * (1 - discount / 100)));
+        var saleThb = Math.max(1, Math.round(thb * (1 - discount / 100)));
+        var baseLabel = formatBasePrice(usd, thb, isThai);
+        var saleLabel = formatBasePrice(saleUsd, saleThb, isThai);
+        priceEl.innerHTML = '<span class="price-strike">' + baseLabel + '</span><span class="price-sale">' + saleLabel + '</span>';
+
+        var countdown = (typeof MildMateCampaigns !== 'undefined' && slug)
+          ? MildMateCampaigns.getCampaignCountdown(slug)
+          : null;
+        var countdownText = '';
+        if (countdown) {
+          countdownText = isThai
+            ? ('หมดเขตใน ' + countdown.days + ' วัน ' + countdown.hours + ' ชม. ' + countdown.mins + ' นาที')
+            : ('Ends in ' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm');
+        }
+        meta.innerHTML = (isThai
+          ? ('<span class="catalog-sale-badge">ลด ' + discount + '%</span>')
+          : ('<span class="catalog-sale-badge">-' + discount + '% SALE</span>')) +
+          (countdownText ? '<span class="catalog-sale-countdown">' + countdownText + '</span>' : '');
+      } else {
+        priceEl.textContent = formatBasePrice(usd, thb, isThai);
+        meta.innerHTML = '';
+      }
+    });
+  }
+
+  function init() {
+    ensureStyles();
+    renderAll();
+    if (typeof MildMateCampaigns !== 'undefined' && typeof MildMateCampaigns.loadStorefrontCampaigns === 'function') {
+      MildMateCampaigns.loadStorefrontCampaigns(false).finally(renderAll);
+    }
+    window.addEventListener('mildmate:campaigns-updated', renderAll);
+    window.setInterval(renderAll, 60000);
+  }
+
+  init();
+})();
+</script>`;
+
+function isProductionHost(hostname: string): boolean {
+  const host = String(hostname || '').toLowerCase();
+  return host === 'www.mildmate.com' || host === 'mildmate.com';
+}
+
+function buildAnalyticsRuntimeConfigScript(request: Request, env: any): string {
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost(host);
+  const runtimeEnv = String(env?.ANALYTICS_ENV || (prodHost ? 'production' : 'staging')).trim().toLowerCase();
+  const nonProdEnabled = String(env?.ANALYTICS_NON_PROD_ENABLED || '').trim().toLowerCase() === 'true';
+  const nonProdGtm = String(env?.ANALYTICS_NON_PROD_GTM_ID || '').trim();
+  const nonProdGa4 = String(env?.ANALYTICS_NON_PROD_GA4_ID || '').trim();
+
+  const cfg: any = { environment: runtimeEnv };
+  if (!prodHost) {
+    cfg.nonProductionApproved = nonProdEnabled;
+    if (nonProdEnabled) {
+      if (nonProdGtm) cfg.gtmId = nonProdGtm;
+      if (nonProdGa4) cfg.ga4Id = nonProdGa4;
+      cfg.enabled = true;
+    }
+  }
+  const json = JSON.stringify(cfg);
+  return `<script id="runtime-analytics-config">window.__MILDMATE_ANALYTICS_CONFIG = ${json};</script>`;
+}
 
 async function ensureCache(db: any): Promise<void> {
   const now = Date.now();
@@ -412,7 +551,7 @@ async function getChrome(db: any, key: 'header' | 'footer'): Promise<string | nu
     .replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, '');
 }
 
-const SKIP_PREFIXES = ['/admin/', '/super-admin/', '/api/', '/r2/', '/images/', '/css/', '/js/', '/fonts/'];
+const SKIP_PREFIXES = ['/admin/', '/super-admin/', '/api/', '/v1/', '/r2/', '/images/', '/css/', '/js/', '/fonts/'];
 const SKIP_EXTENSIONS = ['.js', '.css', '.png', '.jpg', '.webp', '.svg', '.ico', '.woff2', '.json', '.xml', '.map'];
 const CANONICAL_PRODUCT_SLUGS = new Set([
   'standard-fitted-sheet',
@@ -425,6 +564,7 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'flat-sheet-standard',
   'flat-sheet-extra-deep-pocket',
   '3-sided-duvet',
+  'weighted-duvet-cover',
   'pet-owner-duvet-cover',
   'duvet-cover-marine',
   'duvet-cover-rv',
@@ -438,6 +578,7 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'mattress-protector-family',
   'mattress-protector-deep-pocket',
   'pet-proof-mattress-protector',
+  'custom-waterproof-cushion-protector',
   'mattress-encasement-general',
   'rv-truck-mattress-encasement',
   'pillow-protector-general',
@@ -704,8 +845,11 @@ export async function onRequest(context: any): Promise<Response> {
   const url = new URL(context.request.url);
   const path = url.pathname;
 
+  // Normalize bare directory paths (e.g. /super-admin) so middleware-generated
+  // responses on the no-trailing-slash variant are skipped like their /…/ form.
+  const prefixPath = path.endsWith('/') ? path : `${path}/`;
   for (const prefix of SKIP_PREFIXES) {
-    if (path.startsWith(prefix)) return context.next();
+    if (prefixPath.startsWith(prefix)) return context.next();
   }
   for (const ext of SKIP_EXTENSIONS) {
     if (path.endsWith(ext)) return context.next();
@@ -828,12 +972,29 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(/>Language:</g, '>ภาษา:<')
       // Reviews nav link
       .replace(/>Reviews</g, '>รีวิว<')
+      // Product page UI localization fallback
+      .replace(/id="price-top-sub">Starting from<\/span>/g, 'id="price-top-sub">ราคาเริ่มต้น</span>')
+      .replace(/>Standard Sizes<\/button>/g, '>ขนาดมาตรฐาน</button>')
+      .replace(/>Custom Size<\/button>/g, '>ขนาดสั่งทำ</button>')
+      .replace(/>Select Mattress Size<\/div>/g, '>เลือกขนาดที่นอน</div>')
+      .replace(/>Enter your exact mattress dimensions<\/strong>/g, '>กรอกขนาดที่นอนจริงของคุณ</strong>')
+      .replace(/>Add to Cart<\/button>/g, '>เพิ่มลงตะกร้า</button>')
+      .replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, '$1 เพิ่มลงตะกร้า')
+      .replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, '$1 เพิ่มลงตะกร้า')
+      .replace(/data-info-tab="description">Description<\/button>/g, 'data-info-tab="description">รายละเอียด</button>')
+      .replace(/data-info-tab="faq">FAQs<\/button>/g, 'data-info-tab="faq">คำถามที่พบบ่อย</button>')
+      .replace(/>Premium Quality<\/span>/g, '>คุณภาพพรีเมียม</span>')
+      .replace(/>Custom Fit<\/div>/g, '>ตัดเย็บตามขนาด</div>')
+      .replace(/>Human Safe<\/div>/g, '>ปลอดภัยต่อการใช้งาน</div>')
+      .replace(/>Pet Resist<\/div>/g, '>เหมาะกับบ้านที่มีสัตว์เลี้ยง</div>')
       // Search placeholder
       .replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="ค้นหาเครื่องนอน ผ้า ขนาด..."')
       // Rewrite hrefs to /th/ for pages that have Thai versions
       .replace(/href="\/products\/?"/g, 'href="/th/products/"')
       .replace(/href="\/about\/?"/g, 'href="/th/about/"')
       .replace(/href="\/contact\/?"/g, 'href="/th/contact/"')
+      .replace(/href="\/wholesale\/?"/g, 'href="/th/wholesale/"')
+      .replace(/href="\/checkout\/?"/g, 'href="/th/checkout/"')
       .replace(/href="\/faq\/?"/g, 'href="/th/faq/"')
       .replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"')
       .replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"')
@@ -872,6 +1033,10 @@ export async function onRequest(context: any): Promise<Response> {
   if (hasProductCards && !html.includes('/js/listing-images-sync.js')) {
     html = html.replace(/<\/body>/i, `${LISTING_IMAGE_SYNC_SCRIPT}\n</body>`);
   }
+  const hasCatalogCampaignScriptRef = html.includes('/js/catalog-campaign-ui.js');
+  if (hasProductCards && hasCatalogCampaignScriptRef && !html.includes('id="catalog-campaign-inline-fallback"')) {
+    html = html.replace(/<\/body>/i, `${CATALOG_CAMPAIGN_INLINE_FALLBACK}\n</body>`);
+  }
 
   // ── JSON-LD injection ──────────────────────────────────────────────
   // Organization + WebSite: every page
@@ -884,5 +1049,44 @@ export async function onRequest(context: any): Promise<Response> {
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}\n</head>`);
   }
 
-  return new Response(html, { status: response.status, headers: response.headers });
+  if (!html.includes('id="runtime-analytics-config"')) {
+    const analyticsRuntimeScript = buildAnalyticsRuntimeConfigScript(context.request, context.env || {});
+    html = html.replace(/<\/head>/i, `${analyticsRuntimeScript}\n</head>`);
+  }
+
+  // ── Clerk CSP host split ──
+  // `public/_headers` ships a production-only CSP (Clerk Production domains
+  // only, fail-closed on www.mildmate.com). Development/preview hosts get the
+  // Development Clerk instance origins re-injected here, so dev rehearsals
+  // keep working without ever weakening the production CSP.
+  let finalHeaders = response.headers;
+  if (isDevCspHost(context.request.url)) {
+    const csp = response.headers.get('Content-Security-Policy');
+    if (csp) {
+      finalHeaders = new Headers(response.headers);
+      finalHeaders.set('Content-Security-Policy', allowDevClerkOrigins(csp));
+    }
+  }
+
+  return new Response(html, { status: response.status, headers: finalHeaders });
+}
+
+function isDevCspHost(requestUrl: string): boolean {
+  try {
+    const h = new URL(requestUrl).hostname.toLowerCase();
+    if (h.endsWith('.pages.dev')) return true;
+    if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function allowDevClerkOrigins(csp: string): string {
+  const DEV_ORIGIN = 'https://kind-joey-29.clerk.accounts.dev';
+  if (!csp || csp.includes(DEV_ORIGIN)) return csp;
+  return csp
+    .replace('script-src ', `script-src ${DEV_ORIGIN} `)
+    .replace('connect-src ', `connect-src ${DEV_ORIGIN} `)
+    .replace('frame-src ', `frame-src ${DEV_ORIGIN} `);
 }

@@ -40,6 +40,8 @@ import { handleAdminUpload } from "../../workers/api/admin-upload";
 import { handleAdminOrders } from "../../workers/api/admin-orders";
 import { handleAdminCustomers } from "../../workers/api/admin-customers";
 import { handleAdminStats } from "../../workers/api/admin-stats";
+import { handleAdminAnalysis } from "../../workers/api/admin-analysis";
+import { handleAdminCostModel } from "../../workers/api/admin-cost-model";
 import { handleAdminShippingRates, handleAdminShippingProductTiers, handleAdminShippingAddRates } from "../../workers/api/admin-shipping";
 import { handleAdminQuotes } from "../../workers/api/admin-quotes";
 import { handleDiscountValidate, handleDiscountClaim } from "../../workers/api/discount";
@@ -54,6 +56,9 @@ import { handleAdminRecoveryTest } from "../../workers/api/admin-recovery-test";
 import { handleAdminThankyouDispatch } from "../../workers/api/admin-thankyou-dispatch";
 import { handleAdminOffers } from "../../workers/api/admin-offers";
 import { handleAdminCampaigns } from "../../workers/api/admin-campaigns";
+import { handleCampaigns } from "../../workers/api/campaigns";
+import { handleAdminAccounts } from "../../workers/api/admin-accounts";
+import { handleAdminColorInventory } from "../../workers/api/admin-color-inventory";
 import { handleFavorites } from "../../workers/api/favorites";
 import { handleCheckout } from "../../workers/api/checkout";
 import { handleShippingCalculate } from "../../workers/api/shipping";
@@ -61,6 +66,13 @@ import { handleStripeWebhook } from "../../workers/api/webhook";
 import { handleAuth } from "../../workers/api/auth";
 import { handleCustomers } from "../../workers/api/customers";
 import { handleOrderConfirmed } from "../../workers/api/order-confirmed";
+import { handleColorInventory } from "../../workers/api/color-inventory";
+import { handleSalesApi } from "../../workers/api/sales";
+import { handleGscApi } from "../../workers/api/gsc";
+import { handleGa4Api } from "../../workers/api/ga4";
+import { handleEtsyApi } from "../../workers/api/etsy";
+import { handleGoogleAdsApi } from "../../workers/api/google-ads";
+import { authorizeAdminForRoute, classifyAdminApiPath, normalizeAdminApiPath } from "../../workers/api/admin-auth";
 
 export const onRequest: PagesFunction<{
   DB: D1Database;
@@ -71,6 +83,62 @@ export const onRequest: PagesFunction<{
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+  const normalizedPath = normalizeAdminApiPath(path);
+  const adminRouteMode = classifyAdminApiPath(normalizedPath);
+
+  // Centralized /api/admin/* authorization gate for the actual live router.
+  // - OPTIONS: safe CORS preflight only (no business operation).
+  // - Non-OPTIONS: route-aware auth (browser-admin vs approved machine route).
+  if (adminRouteMode !== "not_admin") {
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret",
+        },
+      });
+    }
+
+    const auth = await authorizeAdminForRoute(request, env, normalizedPath);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // Phase 09 — GSC collector API under /api/v1/gsc/*
+  if (path.startsWith("/api/v1/gsc")) {
+    const gscRes = await handleGscApi(request, env);
+    if (gscRes) return gscRes;
+  }
+
+  // Phase 10 — GA4 collector API under /api/v1/ga4/*
+  if (path.startsWith("/api/v1/ga4")) {
+    const ga4Res = await handleGa4Api(request, env);
+    if (ga4Res) return ga4Res;
+  }
+
+  // Phase 11 — Etsy listing analytics collector API under /api/v1/etsy/*
+  if (path.startsWith("/api/v1/etsy")) {
+    const etsyRes = await handleEtsyApi(request, env);
+    if (etsyRes) return etsyRes;
+  }
+
+  // Phase 12 — Google Ads paid-media collector API under /api/v1/google-ads/*
+  if (path.startsWith("/api/v1/google-ads")) {
+    const googleAdsRes = await handleGoogleAdsApi(request, env);
+    if (googleAdsRes) return googleAdsRes;
+  }
+
+  // Unified sales API under /api/v1/*
+  if (path.startsWith("/api/v1/") || path === "/api/v1") {
+    const salesRes = await handleSalesApi(request, env);
+    if (salesRes) return salesRes;
+  }
 
   // Health check
   if (path === "/api/health") {
@@ -116,6 +184,11 @@ export const onRequest: PagesFunction<{
     return handleCountries(request, env);
   }
 
+  // Public color inventory for swatch OOS state
+  if (path === "/api/color-inventory" || path === "/api/color-inventory/") {
+    return handleColorInventory(request, env);
+  }
+
   // Subscribe
   if (path === "/api/subscribe" || path === "/api/subscribe/") {
     return handleSubscribe(request, env);
@@ -159,6 +232,16 @@ export const onRequest: PagesFunction<{
   // Admin listing performance stats
   if (path === "/api/admin/stats" || path === "/api/admin/stats/") {
     return handleAdminStats(request, env);
+  }
+
+  // Admin marketing analysis (read-only, Marketing Decision System)
+  if (path.startsWith("/api/admin/analysis")) {
+    return handleAdminAnalysis(request, env);
+  }
+
+  // Admin profitability cost model (Phase 13)
+  if (path.startsWith("/api/admin/cost-model")) {
+    return handleAdminCostModel(request, env);
   }
 
   // Admin shipping rates
@@ -229,6 +312,21 @@ export const onRequest: PagesFunction<{
     return handleAdminCampaigns(request, env);
   }
 
+  // Public active campaigns for storefront sale rendering
+  if (path === "/api/campaigns" || path === "/api/campaigns/") {
+    return handleCampaigns(request, env);
+  }
+
+  // Admin color inventory
+  if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
+    return handleAdminColorInventory(request, env);
+  }
+
+  // Admin accounts
+  if (path === "/api/admin/accounts" || path === "/api/admin/accounts/") {
+    return handleAdminAccounts(request, env);
+  }
+
   // Admin thankyou queue dispatch — manual send for due items
   if (path === "/api/admin/thankyou-dispatch" || path === "/api/admin/thankyou-dispatch/") {
     return handleAdminThankyouDispatch(request, env);
@@ -277,10 +375,6 @@ export const onRequest: PagesFunction<{
 
   // Admin subscribers
   if (path === "/api/admin/subscribers" || path === "/api/admin/subscribers/") {
-    const secret = request.headers.get("X-Admin-Secret");
-    if (secret !== (env.ADMIN_SECRET || "admin")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
-    }
     // DELETE — remove a subscriber by ID
     if (request.method === "DELETE") {
       const id = url.searchParams.get("id");
@@ -289,6 +383,9 @@ export const onRequest: PagesFunction<{
       }
       await env.DB.prepare("DELETE FROM subscribers WHERE id = ?").bind(Number(id)).run();
       return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
+    }
+    if (request.method !== "GET") {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { "Content-Type": "application/json" } });
     }
     // GET — list subscribers
     const fmt = url.searchParams.get("format");

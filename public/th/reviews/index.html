@@ -83,7 +83,6 @@
     <script>
     (function () {
       var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
 
       function loadScript(src, async) {
         var s = document.createElement('script');
@@ -96,11 +95,7 @@
         if (window.__mildmateAnalyticsLoaded) return;
         window.__mildmateAnalyticsLoaded = true;
         window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
         window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
       }
 
@@ -148,6 +143,12 @@
       <div class="reviews-hero-inner">
         <h1>รีวิวจากลูกค้า</h1>
         <p class="hero-sub">คำติชมจริงจากผู้ซื้อที่ได้รับการยืนยันทั่วโลก</p>
+      </div>
+    </section>
+
+    <section class="section" style="padding:40px 24px 0;">
+      <div class="container" style="max-width:760px;">
+        <p style="font-size:1.0625rem; line-height:1.7; color:var(--color-muted);">รีวิวเหล่านี้มาจากลูกค้า MildMate ที่ได้รับการยืนยันผ่านช่องทาง marketplace ของเรา (Etsy, eBay, Shopee, Lazada, TikTok Shop) และการสั่งซื้อโดยตรงผ่าน mildmate.com รีวิวส่วนใหญ่จะมีรูปภาพจากผู้ซื้อของผ้าปู ผ้ารองกันเปื้อน หรือปลอกหมอนในสภาพการใช้งานจริงบนเตียง เรือ หรือรถบ้าน เราเชี่ยวชาญเครื่องนอนสั่งตัดสำหรับที่นอนที่ไม่ได้มาตรฐาน ได้แก่ ผ้าปูที่นอน ปลอกผ้านวม ผ้ารองกันเปื้อน ทรง V-Berth เรือยอชต์ รถบ้านและรถบรรทุก และการนอนร่วมกันในครอบครัว ดังนั้นคำติชมที่นี่จึงมีความเฉพาะเจาะจงเกี่ยวกับขนาด สัมผัสของเนื้อผ้า และการใช้งานจริงในบ้านเหล่านั้น</p>
       </div>
     </section>
 

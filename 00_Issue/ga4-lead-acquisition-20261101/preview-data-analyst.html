@@ -1,0 +1,2135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>MildMate — Marketing Data Analyst</title>
+<script>if(location.search.indexOf('dev=1')>=0){window.__SKIP_CLERK=1;}</script>
+<script src="/js/clerk.js"></script>
+<style>
+:root{--c-blue:#2c96f4;--c-dark:#1E293B;--c-text:#1E293B;--c-surface:#F8FAFC;--c-border:#e2e8f0;--c-muted:#64748b;--c-green:#16a34a;--c-red:#dc2626;--c-amber:#d97706;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:var(--c-text);line-height:1.5;min-height:100vh}
+.toolbar{background:#fff;border-bottom:1px solid var(--c-border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+.toolbar h1{font-size:1.125rem;font-weight:600;display:flex;align-items:center;gap:10px}
+.toolbar .dot{width:10px;height:10px;border-radius:50%;background:var(--c-blue);flex-shrink:0}
+.toolbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.back-link{color:var(--c-muted);text-decoration:none;font-size:0.8125rem;font-weight:600}
+.back-link:hover{color:var(--c-blue)}
+.content{padding:24px;max-width:1400px;margin:0 auto}
+.card{background:var(--c-surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);margin-bottom:20px}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--c-border);font-weight:600;font-size:0.9375rem;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.card-body{padding:16px 20px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--c-surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);padding:16px 20px}
+.stat-label{font-size:0.6875rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.stat-value{font-size:1.5rem;font-weight:700;color:var(--c-dark);word-break:break-word}
+.stat-sub{font-size:0.75rem;color:var(--c-muted);margin-top:4px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.8125rem}
+th{text-align:left;padding:9px 12px;background:var(--c-surface);font-weight:600;color:var(--c-muted);font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--c-border);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--c-border);color:var(--c-text);vertical-align:middle;white-space:nowrap}
+tr:hover td{background:#f8fafc}
+td.num,th.num{text-align:right}
+.btn{padding:8px 16px;border-radius:var(--radius);font-size:0.8125rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;background:transparent}
+.btn-primary{background:var(--c-blue);color:#fff}.btn-primary:hover{background:#1a7fd4}
+.btn-outline{border-color:var(--c-border);color:var(--c-text)}.btn-outline:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.btn-sm{padding:4px 10px;font-size:0.75rem}
+.btn:disabled{opacity:0.4;cursor:default}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:0.6875rem;font-weight:600}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-amber{background:#fef3c7;color:#92400e}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-grey{background:#e2e8f0;color:#475569}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.filters label{display:block;font-size:0.6875rem;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.filters input,.filters select{width:100%;padding:8px 10px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.8125rem;color:var(--c-text);background:#fff;font-family:inherit}
+.filters input:focus,.filters select:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+.dq-banner{margin-bottom:20px;padding:12px 16px;border-radius:var(--radius);font-size:0.8125rem;border:1px solid}
+.dq-ok{border-color:#16a34a;background:#f0fdf4;color:#166534}
+.dq-warning{border-color:#f59e0b;background:#fffbeb;color:#92400e}
+.dq-critical{border-color:#ef4444;background:#fef2f2;color:#991b1b}
+.dq-banner ul{margin:6px 0 0 18px}
+.state{padding:32px 20px;text-align:center;color:var(--c-muted);font-size:0.875rem}
+.state.error{color:var(--c-red)}
+.pager{display:flex;align-items:center;gap:10px;font-size:0.75rem;color:var(--c-muted)}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:0.75rem}
+.muted{color:var(--c-muted)}
+.gate{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;padding:24px;text-align:center}
+.tab-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.tab-btn{border:1px solid var(--c-border);background:#fff;color:var(--c-muted);padding:8px 12px;border-radius:999px;font-size:0.75rem;font-weight:600;cursor:pointer;line-height:1.2}
+.tab-btn:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.tab-btn.active{background:var(--c-blue);border-color:var(--c-blue);color:#fff}
+.tab-btn:focus-visible{outline:2px solid rgba(44,150,244,.35);outline-offset:2px}
+.phase5-order-table{table-layout:fixed;min-width:980px}
+.phase5-order-table th,.phase5-order-table td{vertical-align:top}
+.phase5-order-table .col-orders,.phase5-order-table .col-paid{width:82px}
+.phase5-order-table .col-quote-id{width:140px}
+.phase5-order-table .col-quote-status{width:130px}
+.phase5-order-table .col-order-ids{width:220px}
+.phase5-order-table .col-items{min-width:420px}
+.phase5-order-table td.col-quote-id,.phase5-order-table td.col-quote-status,.phase5-order-table td.col-order-ids,.phase5-order-table td.col-items{white-space:normal}
+.phase5-order-table td.col-quote-id,.phase5-order-table td.col-order-ids,.phase5-order-table td.col-items{overflow-wrap:anywhere;word-break:break-word}
+.phase5-order-table .quote-id-token{display:block;max-width:100%;overflow-wrap:anywhere;word-break:break-word;line-height:1.35}
+.phase5-order-table .quote-status-text{display:inline-block;line-height:1.35}
+.phase5-order-table td.col-order-ids,.phase5-order-table td.col-items{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+.phase5-order-table .mono-token{display:inline-block;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+#runs-table table{table-layout:fixed;min-width:1380px}
+#runs-table th,#runs-table td{white-space:normal;vertical-align:top;line-height:1.35;overflow-wrap:anywhere;word-break:break-word}
+#runs-table th.num,#runs-table td.num{white-space:nowrap}
+#runs-table .sync-run-source{font-size:0.75rem;line-height:1.35}
+#runs-table .sync-run-source .mono{display:inline-block;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+#runs-table .sync-run-note{font-size:0.6875rem;margin-top:4px}
+#runs-table .sync-run-details{margin-top:6px}
+#runs-table .sync-run-details summary{font-size:0.6875rem;color:var(--c-blue);cursor:pointer;list-style:disclosure-closed}
+#runs-table .sync-run-details[open] summary{list-style:disclosure-open}
+#runs-table .sync-run-details summary:focus-visible{outline:2px solid rgba(44,150,244,.35);outline-offset:2px;border-radius:4px}
+#runs-table .sync-run-details .sync-run-chunk-wrap{margin-top:6px;overflow-x:auto}
+#runs-table .sync-run-details table{min-width:1080px}
+#growth-signals-table table{table-layout:fixed;min-width:1260px}
+#growth-signals-table th,#growth-signals-table td{white-space:normal;vertical-align:top;overflow-wrap:break-word;word-break:break-word;line-height:1.4}
+#growth-signals-table th.num,#growth-signals-table td.num{white-space:nowrap}
+#growth-signals-table th:nth-child(1),#growth-signals-table td:nth-child(1){min-width:150px}
+#growth-signals-table th:nth-child(2),#growth-signals-table td:nth-child(2){min-width:130px}
+#growth-signals-table th:nth-child(3),#growth-signals-table td:nth-child(3){min-width:260px}
+#growth-signals-table th:nth-child(4),#growth-signals-table td:nth-child(4){min-width:240px}
+#growth-signals-table th:nth-child(5),#growth-signals-table td:nth-child(5){min-width:200px}
+#growth-signals-table th:nth-child(6),#growth-signals-table td:nth-child(6){min-width:130px}
+#growth-signals-table th:nth-child(7),#growth-signals-table td:nth-child(7){min-width:340px}
+#growth-signals-table .gs-summary{font-size:0.75rem;line-height:1.45}
+#growth-signals-table .gs-summary.muted{font-style:italic}
+#growth-signals-table .gs-details{margin-top:6px}
+#growth-signals-table .gs-details summary{font-size:0.6875rem;color:var(--c-blue);cursor:pointer;list-style:disclosure-closed}
+#growth-signals-table .gs-details[open] summary{list-style:disclosure-open}
+#growth-signals-table .gs-details summary:focus-visible{outline:2px solid rgba(44,150,244,.35);outline-offset:2px;border-radius:4px}
+#growth-signals-table .gs-details pre{margin-top:6px;padding:8px;border:1px solid var(--c-border);border-radius:6px;background:#f8fafc;font-family:ui-monospace,Consolas,monospace;font-size:0.6875rem;line-height:1.5;max-height:220px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.stats-grid{grid-template-columns:1fr}.content{padding:14px}.toolbar{padding:12px 14px}}
+</style>
+</head>
+<body>
+
+<div id="auth-gate" class="gate">
+  <div class="stat-value">Marketing Data Analyst</div>
+  <div class="muted" id="gate-msg">Checking sign-in…</div>
+  <button class="btn btn-primary" id="gate-signin" style="display:none" onclick="location.href='/super-admin/'">Open Super Admin to sign in</button>
+</div>
+
+<div id="app" style="display:none">
+  <div class="toolbar">
+    <h1><span class="dot"></span> Marketing — Data Analyst</h1>
+    <div class="toolbar-actions">
+      <span id="freshness-badge" class="badge badge-grey">sync: …</span>
+      <button class="btn btn-outline btn-sm" onclick="loadAll()">↻ Refresh</button>
+      <a class="back-link" href="/super-admin/">← Super Admin</a>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="dq-banner" data-tab-group="overview data-quality"></div>
+
+    <div class="tab-nav" id="dashboard-tab-nav" role="tablist" aria-label="Data Analyst sections">
+      <button type="button" class="tab-btn active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button type="button" class="tab-btn" data-tab="sales" role="tab" aria-selected="false">Sales</button>
+      <button type="button" class="tab-btn" data-tab="seo" role="tab" aria-selected="false">SEO &amp; Website</button>
+      <button type="button" class="tab-btn" data-tab="etsy" role="tab" aria-selected="false">Etsy</button>
+      <button type="button" class="tab-btn" data-tab="google-ads" role="tab" aria-selected="false">Google Ads</button>
+      <button type="button" class="tab-btn" data-tab="growth" role="tab" aria-selected="false">Growth</button>
+      <button type="button" class="tab-btn" data-tab="data-quality" role="tab" aria-selected="false">Data Quality</button>
+    </div>
+
+    <div class="stats-grid" id="kpi-grid" data-tab-group="overview">
+      <div class="stat-card"><div class="stat-label">Commercial Orders</div><div class="stat-value" id="kpi-orders">…</div><div class="stat-sub" id="kpi-orders-sub"></div></div>
+      <div class="stat-card"><div class="stat-label">Order Revenue</div><div class="stat-value" id="kpi-revenue">…</div><div class="stat-sub">THB · order totals, never estimated</div></div>
+      <div class="stat-card"><div class="stat-label">Units</div><div class="stat-value" id="kpi-units">…</div><div class="stat-sub">active line-item quantities</div></div>
+      <div class="stat-card"><div class="stat-label">Average Order Value</div><div class="stat-value" id="kpi-aov">…</div><div class="stat-sub">THB</div></div>
+      <div class="stat-card"><div class="stat-label">Mapped Orders</div><div class="stat-value" id="kpi-mapped">…</div><div class="stat-sub">derived from item Product_IDs</div></div>
+      <div class="stat-card"><div class="stat-label">Unallocated Items</div><div class="stat-value" id="kpi-unalloc">…</div><div class="stat-sub" id="kpi-unalloc-sub">item revenue unknown ≠ zero</div></div>
+      <div class="stat-card"><div class="stat-label">Last Sales Sync</div><div class="stat-value" id="kpi-sync" style="font-size:1.05rem">…</div><div class="stat-sub" id="kpi-sync-sub"></div></div>
+      <div class="stat-card"><div class="stat-label">Data Quality</div><div class="stat-value" id="kpi-dq">…</div><div class="stat-sub" id="kpi-dq-sub"></div></div>
+    </div>
+
+    <div class="card" id="quote-funnel-card" data-tab-group="overview">
+      <div class="card-header"><span>Custom Quote Funnel (Tier 1)</span><span class="muted" style="font-size:0.75rem;font-weight:400">demand + conversion + expiry risk</span></div>
+      <div class="card-body">
+        <div id="quote-funnel-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Quoted Products</span><span class="muted" style="font-size:0.75rem;font-weight:400">quote demand and exact conversion by quote_id</span></div>
+      <div class="table-wrap"><div id="quote-top-products-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>At-Risk Approved Quotes</span><span class="muted" style="font-size:0.75rem;font-weight:400">unconverted quotes expiring in ≤7 days (no PII)</span></div>
+      <div class="table-wrap"><div id="quote-at-risk-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Acquisition Channels (Phase 5)</span><span class="muted" style="font-size:0.75rem;font-weight:400">first-touch and quote-session kept separate · attribution coverage begins 2026-10-30</span></div>
+      <div style="padding:12px 20px 4px">
+        <div id="quote-phase5-note" style="font-size:0.75rem;color:var(--c-muted);line-height:1.6"></div>
+        <div id="quote-ft-channels-table" style="padding-top:8px"><div class="state">Loading…</div></div>
+        <div id="quote-qs-channels-table" style="padding-top:8px"><div class="state">Loading…</div></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Quote → Paid Order Details (Phase 5)</span><span class="muted" style="font-size:0.75rem;font-weight:400">exact orders.quote_id matching · line grain: unit price × quantity (no PII)</span></div>
+      <div class="table-wrap"><div id="quote-order-details-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Paid Product Revenue (Phase 5)</span><span class="muted" style="font-size:0.75rem;font-weight:400">paid statuses only · ex-shipping · THB and USD separate · quoted_price never used</span></div>
+      <div class="table-wrap"><div id="quote-revenue-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Google Ads Efficiency (Phase 5)</span><span class="muted" style="font-size:0.75rem;font-weight:400">paid-click-id attribution only · Direct/Unknown never assigned to Ads · N/A at zero denominator</span></div>
+      <div class="table-wrap"><div id="quote-ads-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="filters-card" data-tab-group="overview">
+      <div class="card-header"><span>Filters</span><span class="muted" style="font-size:0.75rem;font-weight:400">dates apply to source order date (analytics day)</span></div>
+      <div class="card-body">
+        <div class="filters">
+          <div><label>From</label><input type="date" id="f-start"></div>
+          <div><label>To</label><input type="date" id="f-end"></div>
+          <div><label>Channel</label><select id="f-channel"><option value="">All channels</option></select></div>
+          <div><label>Product</label><select id="f-product"><option value="">All products</option></select></div>
+          <div><label>Order Status</label><select id="f-status"><option value="">All commercial</option><option>paid</option><option>processing</option><option>shipped</option><option>completed</option></select></div>
+          <div><label>Mapping</label><select id="f-mapping"><option value="">All</option><option>Mapped</option><option>Partial</option><option>Unmapped</option></select></div>
+          <div><label>Revenue Status</label><select id="f-revstatus"><option value="">All</option><option>EXACT</option><option>UNALLOCATED</option></select></div>
+          <div><button class="btn btn-primary" style="width:100%" onclick="applyFilters()">Apply</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="sales-card" data-tab-group="sales">
+      <div class="card-header"><span>Sales Detail <span class="muted" style="font-weight:400">(item level)</span></span>
+        <div class="pager">
+          <span id="sales-count"></span>
+          <button class="btn btn-outline btn-sm" id="sales-prev" onclick="salesPage(-1)">‹ Prev</button>
+          <button class="btn btn-outline btn-sm" id="sales-next" onclick="salesPage(1)">Next ›</button>
+        </div>
+      </div>
+      <div class="table-wrap"><div id="sales-table"></div></div>
+    </div>
+
+    <div class="card" id="products-card" data-tab-group="sales">
+      <div class="card-header"><span>Product Participation</span><span class="muted" style="font-size:0.75rem;font-weight:400">demand signal — works even when item revenue is UNALLOCATED</span></div>
+      <div class="table-wrap"><div id="products-table"></div></div>
+    </div>
+
+    <div class="card" id="channels-card" data-tab-group="sales">
+      <div class="card-header"><span>Channel Analysis</span></div>
+      <div class="table-wrap"><div id="channels-table"></div></div>
+    </div>
+
+    <div class="card" id="dq-card" data-tab-group="data-quality">
+      <div class="card-header"><span>Data Quality &amp; Sync Monitor</span><span class="muted" style="font-size:0.75rem;font-weight:400">warning &gt; 30 min since last sync · critical = failed sync / invalid product refs</span></div>
+      <div class="card-body">
+        <div id="dq-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+        <div id="exception-panel" style="display:none">
+          <div class="card-header" style="padding:10px 0;border-top:1px solid var(--c-border)">
+            <span id="exception-title" style="font-size:0.8125rem"></span>
+            <button class="btn btn-outline btn-sm" onclick="closeException()">✕ Close</button>
+          </div>
+          <div class="table-wrap"><div id="exception-table"></div></div>
+        </div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Recent Sync Runs</span><span class="muted" id="runs-summary-note" style="font-size:0.75rem;font-weight:400">grouped collector view</span></div>
+      <div class="table-wrap"><div id="runs-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Source Freshness by Channel</span><span class="muted" style="font-size:0.75rem;font-weight:400">latest commercial order per channel</span></div>
+      <div class="table-wrap"><div id="freshness-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="coverage-card" data-tab-group="data-quality">
+      <div class="card-header"><span>Historical Coverage</span><span class="muted" style="font-size:0.75rem;font-weight:400">order history span &amp; density — read early-period trends against order counts, not revenue alone</span></div>
+      <div class="card-body">
+        <div id="cov-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Coverage by Year</span><span class="muted" style="font-size:0.75rem;font-weight:400">commercial orders with a valid order date · thin = &lt;10 orders · partial = orders in &lt;6 months</span></div>
+      <div class="table-wrap"><div id="cov-year-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Coverage by Channel</span><span class="muted" style="font-size:0.75rem;font-weight:400">history start differs per channel — a channel's early months may not exist</span></div>
+      <div class="table-wrap"><div id="cov-channel-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="gsc-card" data-tab-group="seo">
+      <div class="card-header"><span>SEO / Google Search Console</span><span class="muted" style="font-size:0.75rem;font-weight:400">date + query + landing page grain; non-product pages remain unmapped by design</span></div>
+      <div class="card-body">
+        <div id="gsc-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>28d vs Previous 28d</span><span class="muted" style="font-size:0.75rem;font-weight:400">anchor = filter end date if set, else latest GSC report date</span></div>
+      <div class="table-wrap"><div id="gsc-trend-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Landing Pages</span><span class="muted" style="font-size:0.75rem;font-weight:400">click-ranked</span></div>
+      <div class="table-wrap"><div id="gsc-pages-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Queries</span><span class="muted" style="font-size:0.75rem;font-weight:400">click-ranked</span></div>
+      <div class="table-wrap"><div id="gsc-queries-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="ga4-card" data-tab-group="seo">
+      <div class="card-header"><span>Website Funnel / GA4</span><span class="muted" style="font-size:0.75rem;font-weight:400">date + landing/page + source/medium grain; purchase metrics are directional and never replace canonical sales revenue</span></div>
+      <div class="card-body">
+        <div id="ga4-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>28d vs Previous 28d</span><span class="muted" style="font-size:0.75rem;font-weight:400">anchor = filter end date if set, else latest GA4 report date</span></div>
+      <div class="table-wrap"><div id="ga4-trend-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Landing / Page Paths</span><span class="muted" style="font-size:0.75rem;font-weight:400">session-ranked</span></div>
+      <div class="table-wrap"><div id="ga4-pages-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Source / Medium</span><span class="muted" style="font-size:0.75rem;font-weight:400">session-ranked</span></div>
+      <div class="table-wrap"><div id="ga4-sources-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="ga4-lead-card" data-tab-group="seo">
+      <div class="card-header"><span>GA4 Lead Acquisition</span><span class="muted" style="font-size:0.75rem;font-weight:400">canonical website property 308922589 only; events are reported separately and never merged into a fabricated unique-lead total</span></div>
+      <div class="card-body">
+        <div id="ga4-lead-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div id="ga4-lead-notes" class="muted" style="font-size:0.75rem;line-height:1.6;margin-top:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Daily Trend</span><span class="muted" style="font-size:0.75rem;font-weight:400">event counts and event users (users show Unavailable when GA4 does not return them)</span></div>
+      <div class="table-wrap"><div id="ga4-lead-trend-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Acquisition Source / Medium</span><span class="muted" style="font-size:0.75rem;font-weight:400">session-level acquisition context; not paid-click proof</span></div>
+      <div class="table-wrap"><div id="ga4-lead-sources-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Acquisition Campaign</span><span class="muted" style="font-size:0.75rem;font-weight:400">session campaign from GA4; missing campaign stays Unavailable</span></div>
+      <div class="table-wrap"><div id="ga4-lead-campaigns-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="etsy-card" data-tab-group="etsy">
+      <div class="card-header"><span>Marketplace / Etsy</span><span class="muted" style="font-size:0.75rem;font-weight:400">daily listing grain; listing id is durable identity and may map multiple listings to one Product_ID</span></div>
+      <div class="card-body">
+        <div id="etsy-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>28d vs Previous 28d</span><span class="muted" style="font-size:0.75rem;font-weight:400">anchor = filter end date if set, else latest Etsy report date</span></div>
+      <div class="table-wrap"><div id="etsy-trend-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Listing Status Snapshot</span><span class="muted" style="font-size:0.75rem;font-weight:400">active/inactive + mapping coverage</span></div>
+      <div class="table-wrap"><div id="etsy-status-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Listings</span><span class="muted" style="font-size:0.75rem;font-weight:400">view-ranked</span></div>
+      <div class="table-wrap"><div id="etsy-listings-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Products from Etsy</span><span class="muted" style="font-size:0.75rem;font-weight:400">aggregated by canonical Product_ID</span></div>
+      <div class="table-wrap"><div id="etsy-products-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="google-ads-card" data-tab-group="google-ads">
+      <div class="card-header"><span>Paid Media / Google Ads</span><span class="muted" style="font-size:0.75rem;font-weight:400">daily campaign/ad-group grain; platform-attributed conversion value is directional and separate from canonical sales revenue</span></div>
+      <div class="card-body">
+        <div id="google-ads-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>28d vs Previous 28d</span><span class="muted" style="font-size:0.75rem;font-weight:400">anchor = filter end date if set, else latest Google Ads report date</span></div>
+      <div class="table-wrap"><div id="google-ads-trend-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Campaigns / Ad Groups</span><span class="muted" style="font-size:0.75rem;font-weight:400">spend-ranked</span></div>
+      <div class="table-wrap"><div id="google-ads-campaigns-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Products from Google Ads</span><span class="muted" style="font-size:0.75rem;font-weight:400">aggregated by canonical Product_ID when mapping is verified</span></div>
+      <div class="table-wrap"><div id="google-ads-products-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="growth-card" data-tab-group="growth">
+      <div class="card-header"><span>Sales Growth Signals (Phase 13)</span><span class="muted" style="font-size:0.75rem;font-weight:400">signal contract v1 (no ranking here): demand, momentum, conversion availability, channel context, freshness, mapping, confidence, profitability guardrail</span></div>
+      <div class="card-body">
+        <div id="growth-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="table-wrap"><div id="growth-signals-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="profit-card" data-tab-group="growth">
+      <div class="card-header"><span>Profitability / Contribution Margin</span><span class="muted" style="font-size:0.75rem;font-weight:400">THB only; margins cover only orders with full cost inputs — missing cost is never zero; estimates stay labelled</span></div>
+      <div class="card-body">
+        <div id="profit-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+          <button type="button" id="profit-recalc-btn" onclick="recalcFormulaCosts()" style="font-size:0.75rem;padding:4px 10px;cursor:pointer">Recalculate formula costs</button>
+          <span id="profit-recalc-status" class="muted" style="font-size:0.75rem"></span>
+        </div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>By Channel</span><span class="muted" style="font-size:0.75rem;font-weight:400">covered revenue is each margin’s own base</span></div>
+      <div class="table-wrap"><div id="profit-channels-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Monthly Trend</span><span class="muted" style="font-size:0.75rem;font-weight:400">latest 24 months</span></div>
+      <div class="table-wrap"><div id="profit-monthly-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Product Margin (before order-level fees)</span><span class="muted" style="font-size:0.75rem;font-weight:400">EXACT line revenue − production cost; order-level fees/shipping are not line-attributed</span></div>
+      <div class="table-wrap"><div id="profit-products-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Contribution After Advertising</span><span class="muted" style="font-size:0.75rem;font-weight:400">month aggregate: contribution (before shipping) − Google Ads spend; never attributed per order</span></div>
+      <div class="table-wrap"><div id="profit-after-ads-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <div class="card" id="opportunity-card" data-tab-group="growth">
+      <div class="card-header"><span>Opportunity Engine (Phase 14)</span><span class="muted" style="font-size:0.75rem;font-weight:400">product × channel ranking; MODELED margins (ESTIMATED); missing components redistribute weight, never zero</span></div>
+      <div class="card-body">
+        <div id="opp-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+          <button type="button" id="opp-recompute-btn" onclick="recomputeOpportunity()" style="font-size:0.75rem;padding:4px 10px;cursor:pointer">Recompute scores</button>
+          <span id="opp-recompute-status" class="muted" style="font-size:0.75rem"></span>
+        </div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Product Ranking (overall)</span><span class="muted" style="font-size:0.75rem;font-weight:400">score 0–100 · tier grades the score (HIGH ≥70 / MEDIUM ≥45 / LOW ≥25) · confidence ≥25 required to publish · reason</span></div>
+      <div class="table-wrap"><div id="opp-overall-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Product × Channel</span><span class="muted" style="font-size:0.75rem;font-weight:400">modeled contribution after effective-dated channel fees + ESTIMATED shipping; per-unit assumes a 1-unit order</span></div>
+      <div class="table-wrap"><div id="opp-channel-table"><div class="state">Loading…</div></div></div>
+    </div>
+
+    <p id="metric-contract-note" class="muted" style="font-size:0.6875rem;margin:4px 0 24px" data-tab-group="data-quality">
+      Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
+      “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
+      Growth signals (Phase 13): `growth_signal_contract: "v1"` is signal-only and does not rank opportunities; Google Ads sparse/zero business signal is neutral and represented through coverage/freshness/confidence metadata.
+      Profitability (Phase 13): costs are ESTIMATED formula-derived unless marked VERIFIED; shipping is ESTIMATED_SHIPPING_COST (D1 charge ÷ 1.05); cost inputs managed via /api/admin/cost-model.
+      Opportunity (Phase 14): *Profit = MODELED margin (formula price − Phase 13 cost at the approved reference size), ESTIMATED — never realized per-product margin. Missing components redistribute weight (never zero); INSUFFICIENT_DATA rows carry no score by design. Weights v1: momentum 30 / profit 30 / channel fit 20 / demand 15 / strategic 5 (undefined) / conversion 0.
+    </p>
+  </div>
+</div>
+
+<script>
+'use strict';
+var API = '/api/admin/analysis';
+var salesOffset = 0, salesLimit = 25, salesTotal = 0;
+var authTokenCache = { token: '', expiresAt: 0, inflight: null };
+var productFilterLoaded = false;
+var productFilterLoading = null;
+
+function esc(s){ return String(s === null || s === undefined ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtNum(n){ return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('en-US'); }
+function fmtBaht(n){ return (n === null || n === undefined) ? '—' : '฿' + Number(n).toLocaleString('en-US', {maximumFractionDigits: 2}); }
+function fmtPct(n){ return (n === null || n === undefined) ? '—' : (Math.round(Number(n) * 10) / 10) + '%'; }
+function fmtPos(n){ return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('en-US', {maximumFractionDigits: 2}); }
+
+function isProductionHost(){
+  try {
+    var h = (window.location && window.location.hostname ? window.location.hostname : '').toLowerCase();
+    return h === 'www.mildmate.com' || h === 'mildmate.com';
+  } catch(e) {
+    return false;
+  }
+}
+
+function canUseAdminSecretFallback(){
+  return !isProductionHost();
+}
+
+async function getAdminBearerToken(){
+  var now = Date.now();
+  if (authTokenCache.token && now < authTokenCache.expiresAt) return authTokenCache.token;
+  if (authTokenCache.inflight) return authTokenCache.inflight;
+  authTokenCache.inflight = (async function(){
+    var token = '';
+    try {
+      if (window.clerk && window.clerk.session && typeof window.clerk.session.getToken === 'function') {
+        token = await window.clerk.session.getToken();
+      }
+      if (!token && typeof window.getClerkToken === 'function') token = await window.getClerkToken();
+    } catch(e) {
+      token = '';
+    }
+    authTokenCache.token = token || '';
+    authTokenCache.expiresAt = Date.now() + (token ? 15000 : 1500);
+    return authTokenCache.token;
+  })().finally(function(){
+    authTokenCache.inflight = null;
+  });
+  return authTokenCache.inflight;
+}
+
+window.addEventListener('clerk:signed-in', function(){
+  authTokenCache.token = '';
+  authTokenCache.expiresAt = 0;
+});
+window.addEventListener('clerk:signed-out', function(){
+  authTokenCache.token = '';
+  authTokenCache.expiresAt = 0;
+});
+
+async function authHeaders(){
+  var headers = {};
+  try {
+    var token = await getAdminBearerToken();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+  } catch(e) {}
+  if (canUseAdminSecretFallback()) {
+    var secret = localStorage.getItem('admin_secret') || '';
+    if (secret) headers['X-Admin-Secret'] = secret;
+  }
+  return headers;
+}
+
+async function api(path){
+  var res = await fetch(API + path, { headers: await authHeaders() });
+  var body = null;
+  try { body = await res.json(); } catch(e) {}
+  if (!res.ok || !body || body.success === false) {
+    var msg = (body && (body.message || body.error_code)) || ('HTTP ' + res.status);
+    var err = new Error(msg); err.status = res.status; throw err;
+  }
+  return body;
+}
+
+function filterQS(extra){
+  var p = [];
+  var v;
+  v = document.getElementById('f-start').value; if (v) p.push('start=' + v);
+  v = document.getElementById('f-end').value; if (v) p.push('end=' + v);
+  v = document.getElementById('f-channel').value; if (v) p.push('channel=' + encodeURIComponent(v));
+  if (extra && extra.withProduct) { v = document.getElementById('f-product').value; if (v) p.push('product_id=' + v); }
+  if (extra && extra.withSalesFilters) {
+    v = document.getElementById('f-status').value; if (v) p.push('status=' + v);
+    v = document.getElementById('f-mapping').value; if (v) p.push('mapping=' + v);
+    v = document.getElementById('f-revstatus').value; if (v) p.push('revenue_status=' + v);
+  }
+  return p.length ? '&' + p.join('&') : '';
+}
+
+function setState(id, cls, msg){
+  document.getElementById(id).innerHTML = '<div class="state ' + (cls || '') + '">' + esc(msg) + '</div>';
+}
+
+// ── KPIs + DQ ──
+
+async function loadSummary(){
+  try {
+    var d = await api('/summary?' + filterQS().slice(1));
+    var s = d.summary;
+    document.getElementById('kpi-orders').textContent = fmtNum(s.orders);
+    document.getElementById('kpi-orders-sub').textContent = (d.filters.start || d.filters.end || d.filters.channel) ? 'filtered' : 'all time';
+    document.getElementById('kpi-revenue').textContent = fmtBaht(s.order_revenue);
+    document.getElementById('kpi-units').textContent = fmtNum(s.units);
+    document.getElementById('kpi-aov').textContent = fmtBaht(s.aov);
+    document.getElementById('kpi-mapped').textContent = fmtPct(s.mapped_order_pct);
+    document.getElementById('kpi-unalloc').textContent = fmtPct(s.unallocated_item_pct);
+    document.getElementById('kpi-unalloc-sub').textContent = fmtNum(s.unallocated_items) + ' of ' + fmtNum(s.exact_items + s.unallocated_items) + ' items · unknown ≠ zero';
+  } catch(e) {
+    document.getElementById('kpi-orders').textContent = '!';
+    document.getElementById('kpi-orders-sub').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadQuoteFunnel(){
+  var summaryEl = document.getElementById('quote-funnel-summary');
+  var topEl = document.getElementById('quote-top-products-table');
+  var riskEl = document.getElementById('quote-at-risk-table');
+  try {
+    var d = await api('/quotes?' + filterQS().slice(1));
+    var s = d.summary || {};
+    var c = d.conversion || {};
+    summaryEl.innerHTML =
+      '<span class="badge badge-blue">Total quotes: ' + fmtNum(s.total_quotes) + '</span>' +
+      '<span class="badge badge-blue">New 7d: ' + fmtNum(s.new_quotes_7d) + '</span>' +
+      '<span class="badge badge-blue">New 30d: ' + fmtNum(s.new_quotes_30d) + '</span>' +
+      '<span class="badge badge-green">Active: ' + fmtNum(s.active_quotes) + '</span>' +
+      '<span class="badge badge-amber">Expiring ≤7d: ' + fmtNum(s.expiring_7d) + '</span>' +
+      '<span class="badge badge-red">Expired: ' + fmtNum(s.expired_quotes) + '</span>' +
+      '<span class="badge badge-grey">Approved: ' + fmtNum(s.approved_quotes) + '</span>' +
+      '<span class="badge badge-amber">Approved unconverted: ' + fmtNum(s.approved_unconverted) + '</span>' +
+      '<span class="badge badge-green">Exact conversion: ' + fmtPct(c.exact_conversion_pct) + '</span>' +
+      '<span class="badge badge-grey">Legacy email-matched: ' + fmtNum(c.legacy_email_matched_quotes) + '</span>';
+
+    var top = d.top_products || [];
+    if (!top.length) {
+      setState('quote-top-products-table', '', 'No quote rows in current filter.');
+    } else {
+      var topHtml = '<table><thead><tr><th>Product Slug</th><th class="num">Quotes</th><th class="num">Exact Converted</th><th class="num">Exact Conversion %</th></tr></thead><tbody>';
+      top.forEach(function(r){
+        topHtml += '<tr>' +
+          '<td>' + esc(r.product_slug || '(unknown)') + '</td>' +
+          '<td class="num">' + fmtNum(r.quote_count) + '</td>' +
+          '<td class="num">' + fmtNum(r.exact_converted) + '</td>' +
+          '<td class="num">' + fmtPct(r.exact_conversion_pct) + '</td>' +
+          '</tr>';
+      });
+      topEl.innerHTML = topHtml + '</tbody></table>';
+    }
+
+    var risk = d.at_risk || [];
+    if (!risk.length) {
+      setState('quote-at-risk-table', '', 'No at-risk approved quotes in current filter.');
+    } else {
+      var riskHtml = '<table><thead><tr><th>Quote ID</th><th>Product Slug</th><th class="num">Price (USD)</th><th class="num">Price (THB)</th><th>Created</th><th>Expires</th></tr></thead><tbody>';
+      risk.forEach(function(r){
+        riskHtml += '<tr>' +
+          '<td class="mono">' + esc(r.quote_id) + '</td>' +
+          '<td>' + esc(r.product_slug || '(unknown)') + '</td>' +
+          '<td class="num">' + (r.quoted_price_usd ? ('$' + fmtNum(r.quoted_price_usd)) : '<span class="muted">—</span>') + '</td>' +
+          '<td class="num">' + (r.quoted_price_thb ? ('฿' + fmtNum(r.quoted_price_thb)) : '<span class="muted">—</span>') + '</td>' +
+          '<td>' + (r.created_at ? esc(r.created_at) : '<span class="muted">—</span>') + '</td>' +
+          '<td>' + (r.expires_at ? esc(r.expires_at) : '<span class="muted">—</span>') + '</td>' +
+          '</tr>';
+      });
+      riskEl.innerHTML = riskHtml + '</tbody></table>';
+    }
+
+    renderPhase5QuoteFunnel(d.phase5 || null);
+  } catch(e) {
+    summaryEl.innerHTML = '<span class="badge badge-red">quote funnel unavailable</span><span class="muted" style="font-size:0.75rem">Error: ' + esc(e.message) + '</span>';
+    setState('quote-top-products-table', 'error', 'Could not load quote funnel: ' + e.message);
+    setState('quote-at-risk-table', 'error', 'Could not load quote funnel: ' + e.message);
+    renderPhase5QuoteFunnel(null, e);
+  }
+}
+
+// ── Phase 5 — Custom Quote Funnel extension UI (additive; consumes the
+//    approved Milestone 1 `phase5` API block verbatim — no client-side
+//    recalculation, no invented metrics, no invented timestamps) ──
+
+var PHASE5_CONTAINERS = ['quote-ft-channels-table','quote-qs-channels-table','quote-order-details-table','quote-revenue-table','quote-ads-table'];
+
+function phase5Money(cur, n){
+  if (n === null || n === undefined) return '<span class="muted">—</span>';
+  return (cur === 'USD' ? '$' : cur === 'THB' ? '฿' : '') + fmtNum(n);
+}
+
+function phase5ChannelTable(elId, caption, rows, emptyMsg){
+  if (!rows || !rows.length) {
+    setState(elId, '', emptyMsg);
+    return;
+  }
+  var h = '<div class="muted" style="font-size:0.75rem;font-weight:600;margin-bottom:6px">' + esc(caption) + '</div>';
+  h += '<table><thead><tr><th>Channel (source/medium)</th><th class="num">Quotes</th><th class="num">Unique Customers</th><th class="num">Approved</th><th class="num">Paid-Click Quotes</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    h += '<tr>' +
+      '<td>' + esc(r.channel || '(none)') + '</td>' +
+      '<td class="num">' + fmtNum(r.quotes) + '</td>' +
+      '<td class="num">' + fmtNum(r.unique_customers) + '</td>' +
+      '<td class="num">' + fmtNum(r.approved) + '</td>' +
+      '<td class="num">' + fmtNum(r.paid_click_quotes) + '</td>' +
+      '</tr>';
+  });
+  h += '</tbody></table>';
+  document.getElementById(elId).innerHTML = h;
+}
+
+function renderPhase5QuoteFunnel(p5, err){
+  try {
+    renderPhase5QuoteFunnelInner(p5, err);
+  } catch (e) {
+    // Unexpected/malformed API shape — degrade cleanly (M3 resilience);
+    // legacy Tier 1 blocks above are already rendered and stay intact.
+    var noteEl0 = document.getElementById('quote-phase5-note');
+    if (noteEl0) noteEl0.innerHTML = '<span class="badge badge-amber">Phase 5 blocks unavailable: unexpected response shape</span> <span class="muted" style="font-size:0.75rem">Legacy Tier 1 metrics above remain valid. Detail: ' + esc(e && e.message ? e.message : 'unknown') + '</span>';
+    PHASE5_CONTAINERS.forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="state error">Phase 5 blocks unavailable (see note above).</div>';
+    });
+  }
+}
+
+function renderPhase5QuoteFunnelInner(p5, err){
+  var noteEl = document.getElementById('quote-phase5-note');
+  // API failure or extension not deployed: fail gracefully, never break the
+  // legacy Tier 1 blocks.
+  if (!p5) {
+    if (noteEl) noteEl.innerHTML = '<span class="badge badge-grey">Phase 5 extension data not available in this response</span>';
+    setState('quote-ft-channels-table', 'error', err ? 'Could not load Phase 5 acquisition channels: ' + err.message : 'Phase 5 data not available.');
+    setState('quote-qs-channels-table', 'error', err ? 'Could not load Phase 5 acquisition channels: ' + err.message : 'Phase 5 data not available.');
+    setState('quote-order-details-table', 'error', err ? 'Could not load Phase 5 order details: ' + err.message : 'Phase 5 data not available.');
+    setState('quote-revenue-table', 'error', err ? 'Could not load Phase 5 revenue: ' + err.message : 'Phase 5 data not available.');
+    setState('quote-ads-table', 'error', err ? 'Could not load Phase 5 Google Ads efficiency: ' + err.message : 'Phase 5 data not available.');
+    return;
+  }
+  if (p5.available === false) {
+    if (noteEl) noteEl.innerHTML = '<span class="badge badge-amber">Phase 5 blocks unavailable: ' + esc(p5.message || 'internal error') + '</span> <span class="muted" style="font-size:0.75rem">Legacy Tier 1 metrics above remain valid.</span>';
+    setState('quote-ft-channels-table', 'error', 'Phase 5 blocks unavailable (see note above).');
+    setState('quote-qs-channels-table', 'error', 'Phase 5 blocks unavailable (see note above).');
+    setState('quote-order-details-table', 'error', 'Phase 5 blocks unavailable (see note above).');
+    setState('quote-revenue-table', 'error', 'Phase 5 blocks unavailable (see note above).');
+    setState('quote-ads-table', 'error', 'Phase 5 blocks unavailable (see note above).');
+    return;
+  }
+
+  // Integrity footnote — all labels come from the API contract; nothing invented.
+  var excl = p5.exclusions || {};
+  var note =
+    '<div><strong>Coverage:</strong> attribution coverage begins <strong>' + esc(p5.coverage_start || '2026-10-30') + '</strong> (Phase 3 deploy). ' +
+    'Missing attribution is <strong>Unavailable</strong>, never Direct.</div>' +
+    '<div><strong>Exclusions:</strong> ' + esc((excl.denylist || []).join(', ')) + ' + ' + esc((excl.patterns || []).join(', ')) + ' patterns — excluded from Phase 5 metrics only; legacy KPI definitions above remain unchanged.</div>' +
+    '<div><strong>Caution:</strong> channel-level unique-customer totals may overlap — do not sum across channels.</div>';
+  noteEl.innerHTML = note;
+
+  var un = (p5.acquisition && p5.acquisition.unavailable) || {};
+  phase5ChannelTable('quote-ft-channels-table',
+    'First-Touch Channels (unavailable: ' + fmtNum(un.first_touch_quotes || 0) + ')',
+    p5.acquisition && p5.acquisition.first_touch,
+    'No attributed quotes in current filter.');
+  phase5ChannelTable('quote-qs-channels-table',
+    'Quote-Session Channels (unavailable: ' + fmtNum(un.quote_session_quotes || 0) + ')',
+    p5.acquisition && p5.acquisition.quote_session,
+    'No attributed quotes in current filter.');
+
+  // Quote → Paid Order Details
+  var byQuote = (p5.orders && p5.orders.by_quote) || [];
+  if (!byQuote.length) {
+    setState('quote-order-details-table', '', 'No quote-attributed orders in current filter.');
+  } else {
+    var oh = '<table class="phase5-order-table"><thead><tr><th class="col-quote-id">Quote ID</th><th class="col-quote-status">Quote Status</th><th class="num col-orders">Orders</th><th class="col-paid">Paid</th><th class="col-order-ids">Order IDs</th><th class="col-items">Items (product × qty · unit · line)</th></tr></thead><tbody>';
+    byQuote.forEach(function(q){
+      var itemsHtml = (q.items || []).map(function(i){
+        return esc(i.product_title || i.product_slug || '(unknown)') + ' × ' + fmtNum(i.quantity) +
+          ' · ' + phase5Money(i.currency, i.unit_price) + ' → <strong>' + phase5Money(i.currency, i.line_revenue) + '</strong>' +
+          (i.status ? ' <span class="badge ' + (i.status === 'refunded' || i.status === 'cancelled' ? 'badge-red' : 'badge-grey') + '">' + esc(i.status) + '</span>' : '');
+      }).join('<br>');
+      oh += '<tr>' +
+        '<td class="mono col-quote-id"><span class="quote-id-token">' + esc(q.quote_id) + '</span></td>' +
+        '<td class="col-quote-status"><span class="quote-status-text">' + esc(q.quote_status || '—') + '</span></td>' +
+        '<td class="num col-orders">' + fmtNum(q.order_count) + '</td>' +
+        '<td class="col-paid">' + (q.paid ? '<span class="badge badge-green">paid</span>' : '<span class="badge badge-grey">unpaid</span>') + '</td>' +
+        '<td class="mono col-order-ids">' + (q.order_ids || []).map(function(id){ return '<span class="mono-token">' + esc(id) + '</span>'; }).join('<br>') + '</td>' +
+        '<td class="col-items">' + itemsHtml + '</td>' +
+        '</tr>';
+    });
+    document.getElementById('quote-order-details-table').innerHTML = oh + '</tbody></table>';
+  }
+
+  // Paid Product Revenue (per currency; never blended)
+  var rev = p5.revenue || {};
+  var revRows = [];
+  if (rev.thb && (rev.thb.items > 0 || rev.thb.orders > 0)) revRows.push(['THB', rev.thb]);
+  if (rev.usd && (rev.usd.items > 0 || rev.usd.orders > 0)) revRows.push(['USD', rev.usd]);
+  if (!revRows.length) {
+    setState('quote-revenue-table', '', 'No paid quote-attributed revenue in current filter. ' + (rev.basis ? esc(rev.basis) : ''));
+  } else {
+    var rh = '<table><thead><tr><th>Currency</th><th class="num">Line Revenue (ex-shipping)</th><th class="num">Orders</th><th class="num">Items</th><th class="num">Quantity</th></tr></thead><tbody>';
+    revRows.forEach(function(pair){
+      rh += '<tr>' +
+        '<td>' + esc(pair[0]) + '</td>' +
+        '<td class="num">' + phase5Money(pair[0], pair[1].line_revenue) + '</td>' +
+        '<td class="num">' + fmtNum(pair[1].orders) + '</td>' +
+        '<td class="num">' + fmtNum(pair[1].items) + '</td>' +
+        '<td class="num">' + fmtNum(pair[1].quantity) + '</td>' +
+        '</tr>';
+    });
+    rh += '</tbody></table>';
+    if (Number(rev.excluded_non_paid_rows || 0) > 0) {
+      rh += '<div style="padding-top:8px"><span class="badge badge-amber">' + fmtNum(rev.excluded_non_paid_rows) + ' non-paid/refunded row(s) excluded</span></div>';
+    }
+    document.getElementById('quote-revenue-table').innerHTML = rh;
+  }
+
+  // Google Ads Efficiency (N/A at zero denominator; freshness from API only)
+  var ads = p5.google_ads || {};
+  var fr = ads.freshness || {};
+  var frCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+  // M3: readable status word beside the date — never color alone. The word
+  // maps the API-provided status (OK / Warning / No Data); unexpected API
+  // status values are shown verbatim (escaped), never invented.
+  var frWord = fr.status === 'empty' ? 'No Data'
+    : fr.status === 'warning' ? 'Warning'
+    : fr.status === 'ok' ? 'OK'
+    : esc(String(fr.status || 'No Data'));
+  var frTxt = fr.status === 'empty'
+    ? 'No Data'
+    : frWord + ' · ' + (fr.latest_report_date ? esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)' : 'no report date available');
+  var ah = '<table><thead><tr><th class="num">Ads-Attributable Quotes</th><th>Cost (per source currency)</th><th>Cost per Attributable Quote</th><th>Cost Freshness</th></tr></thead><tbody>';
+  ah += '<tr>' +
+    '<td class="num">' + fmtNum(ads.ads_attributable_quotes) + '</td>' +
+    '<td>' + ((ads.cost || []).length
+      ? ads.cost.map(function(c){ return phase5Money(c.currency, c.cost) + '<span class="muted"> (' + esc(c.currency || '?') + ')</span>'; }).join('<br>')
+      : '<span class="muted">no cost data</span>') + '</td>' +
+    '<td>' + (ads.cost_per_attributable_quote
+      ? ads.cost_per_attributable_quote.map(function(c){ return phase5Money(c.currency, c.cost_per_attributable_quote) + '<span class="muted"> (' + esc(c.currency || '?') + ')</span>'; }).join('<br>')
+      : '<span class="badge badge-grey">N/A</span>' + (ads.na_reason ? '<div class="muted" style="font-size:0.75rem;white-space:normal;max-width:320px">' + esc(ads.na_reason) + '</div>' : '')) + '</td>' +
+    '<td><span class="badge ' + frCls + '">' + frTxt + '</span></td>' +
+    '</tr></tbody></table>';
+  ah += '<div class="muted" style="font-size:0.75rem;padding-top:8px;line-height:1.6">' +
+    'Attribution basis: recorded paid click id (gclid/gbraid/wbraid) in quote attribution only — Direct/Unknown quotes are never assigned to Ads.<br>' +
+    'Cost scope: ' + esc(ads.cost_scope || 'google_ads_campaign_daily over the filter window') + ' (platform-attributed, directional only).</div>';
+  document.getElementById('quote-ads-table').innerHTML = ah;
+}
+
+async function loadDQ(){
+  try {
+    var d = await api('/data-quality');
+    var q = d.data_quality;
+    var badge = document.getElementById('freshness-badge');
+    var mins = q.freshness_minutes;
+    var syncLabel = (mins === null || mins === undefined) ? 'never' : (mins < 60 ? mins + ' min ago' : (Math.round(mins/60*10)/10) + ' hr ago');
+    badge.textContent = 'sync: ' + syncLabel;
+    badge.className = 'badge ' + (q.status === 'ok' ? 'badge-green' : q.status === 'warning' ? 'badge-amber' : 'badge-red');
+
+    document.getElementById('kpi-sync').textContent = q.last_success_sync_at ? new Date(q.last_success_sync_at).toLocaleString() : 'never';
+    document.getElementById('kpi-sync-sub').textContent = syncLabel + ' · last run: ' + (q.last_sync_status || '—');
+    document.getElementById('kpi-dq').textContent = q.status.toUpperCase();
+    document.getElementById('kpi-dq').style.color = q.status === 'ok' ? 'var(--c-green)' : q.status === 'warning' ? 'var(--c-amber)' : 'var(--c-red)';
+    document.getElementById('kpi-dq-sub').textContent = q.warnings.length + ' warning(s)';
+
+    var el = document.getElementById('dq-banner');
+    if (q.status === 'ok') {
+      el.innerHTML = '<div class="dq-banner dq-ok"><strong>Data Quality: OK</strong> · ' + fmtNum(q.commercial_orders) + ' commercial orders · mapped ' + fmtPct(q.mapped_order_pct) + ' · EXACT item revenue ' + fmtPct(q.exact_item_pct) + '</div>';
+    } else {
+      var cls = q.status === 'warning' ? 'dq-warning' : 'dq-critical';
+      el.innerHTML = '<div class="dq-banner ' + cls + '"><strong>Data Quality: ' + q.status.toUpperCase() + '</strong>' +
+        '<ul>' + q.warnings.map(function(w){ return '<li>' + esc(w) + '</li>'; }).join('') + '</ul></div>';
+    }
+    renderDQChips(q);
+    renderSyncRuns(d.recent_run_groups || [], d.recent_runs_window || null, d.recent_runs || []);
+    renderFreshness(d.channel_freshness || []);
+    renderCoverage(d.coverage);
+  } catch(e) {
+    document.getElementById('dq-banner').innerHTML = '<div class="dq-banner dq-critical"><strong>Data Quality unavailable:</strong> ' + esc(e.message) + '</div>';
+    document.getElementById('kpi-dq').textContent = '!';
+    var runsNote = document.getElementById('runs-summary-note');
+    if (runsNote) runsNote.textContent = 'grouping unavailable';
+    setState('runs-table', 'error', 'Could not load sync runs: ' + e.message);
+    setState('freshness-table', 'error', 'Could not load channel freshness: ' + e.message);
+    var covCard = document.getElementById('coverage-card');
+    if (covCard) covCard.style.display = 'none';
+  }
+}
+
+// ── Data Quality & Sync Monitor (Phase 06) ──
+
+var EXCEPTION_CHIPS = [
+  { type: 'missing_product_id', label: 'Missing Product_ID items', key: 'missing_product_id_items', sev: 'warn' },
+  { type: 'unmapped_orders', label: 'Unmapped orders', key: 'unmapped_orders', sev: 'warn' },
+  { type: 'itemless_orders', label: 'Itemless orders', key: 'itemless_orders', sev: 'warn' },
+  { type: 'zero_totals', label: 'Null/zero totals', key: 'zero_total_orders', sev: 'warn' },
+  { type: 'invalid_product_refs', label: 'Invalid product refs', key: 'invalid_product_refs', sev: 'crit' },
+  { type: 'unknown_sources', label: 'Unknown source labels', key: 'unknown_source_labels', sev: 'warn' },
+  { type: 'unknown_status', label: 'Unknown status orders', key: 'unknown_status_orders', sev: 'warn' },
+  { type: 'sync_errors', label: 'Sync errors (7d)', key: 'sync_errors_7d', sev: 'crit' }
+];
+
+function renderDQChips(q){
+  var h = '';
+  EXCEPTION_CHIPS.forEach(function(c){
+    var n = Number(q[c.key] || 0);
+    var cls = n === 0 ? 'badge-green' : (c.sev === 'crit' ? 'badge-red' : 'badge-amber');
+    h += '<button class="btn btn-outline btn-sm" ' + (n > 0 ? 'onclick="loadException(\'' + c.type + '\')"' : 'disabled') + ' title="' + esc(c.label) + '">' +
+      esc(c.label) + ' <span class="badge ' + cls + '">' + n + '</span></button>';
+  });
+  document.getElementById('dq-chips').innerHTML = h;
+}
+
+async function loadException(type){
+  var panel = document.getElementById('exception-panel');
+  panel.style.display = 'block';
+  setState('exception-table', '', 'Loading…');
+  try {
+    var d = await api('/data-quality/exceptions?type=' + type);
+    document.getElementById('exception-title').textContent = d.description + ' — ' + d.count + ' record(s)' + (d.truncated ? ' (first 100)' : '');
+    if (!d.rows.length) { setState('exception-table', '', 'No affected records.'); return; }
+    var cols = Object.keys(d.rows[0]);
+    var h = '<table><thead><tr>' + cols.map(function(c){ return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    d.rows.forEach(function(r){
+      h += '<tr>' + cols.map(function(c){
+        var v = r[c];
+        return '<td>' + (v === null || v === undefined || v === '' ? '<span class="muted">—</span>' : esc(v)) + '</td>';
+      }).join('') + '</tr>';
+    });
+    document.getElementById('exception-table').innerHTML = h + '</tbody></table>';
+  } catch(e) {
+    setState('exception-table', 'error', 'Could not load records: ' + e.message);
+  }
+}
+
+function closeException(){
+  document.getElementById('exception-panel').style.display = 'none';
+}
+
+function syncRunStatusBadge(status){
+  var s = String(status || '').toLowerCase();
+  if (s === 'success') return '<span class="badge badge-green">success</span>';
+  if (s === 'partial') return '<span class="badge badge-amber">partial</span>';
+  if (s === 'failed' || s === 'error') return '<span class="badge badge-red">' + esc(s || 'failed') + '</span>';
+  if (!s) return '<span class="badge badge-grey">unknown</span>';
+  return '<span class="badge badge-grey">' + esc(s) + '</span>';
+}
+
+function updateRunsSummaryNote(meta){
+  var el = document.getElementById('runs-summary-note');
+  if (!el) return;
+  if (!meta || typeof meta !== 'object') {
+    el.textContent = 'grouped collector view';
+    return;
+  }
+  var txt = 'grouped from latest ' + fmtNum(meta.rows_fetched) + ' rows';
+  if (Number(meta.inferred_groups || 0) > 0) txt += ' · inferred GSC groups';
+  if (meta.window_truncated) txt += ' · capped window';
+  el.textContent = txt;
+}
+
+function renderSyncRunGroupSource(g){
+  var notes = [];
+  if (g.inferred_grouping) notes.push('<span class="badge badge-blue">inferred group</span>');
+  if (g.incomplete_window) notes.push('<span class="badge badge-amber">incomplete window</span>');
+  return '<div class="sync-run-source">' +
+    '<div><strong>' + esc(g.source || '—') + '</strong></div>' +
+    '<div class="mono">' + esc(g.scenario || '—') + '</div>' +
+    (notes.length ? '<div class="sync-run-note">' + notes.join(' ') + '</div>' : '') +
+    '</div>';
+}
+
+function renderSyncRunChunkDetails(g){
+  if (!g || !Array.isArray(g.chunks) || !g.chunks.length) return '<span class="muted">—</span>';
+  var h = '<details class="sync-run-details"><summary>View chunks (' + fmtNum(g.chunk_count || g.chunks.length) + ')</summary>';
+  h += '<div class="sync-run-chunk-wrap"><table><thead><tr><th>ID</th><th>Started</th><th>Finished</th><th>Status</th><th class="num">Received</th><th class="num">Created</th><th class="num">Updated</th><th class="num">Unchanged</th><th class="num">Rejected</th><th>Error</th></tr></thead><tbody>';
+  g.chunks.forEach(function(c){
+    h += '<tr>' +
+      '<td class="num">' + fmtNum(c.id) + '</td>' +
+      '<td>' + esc(c.started_at || '—') + '</td>' +
+      '<td>' + esc(c.finished_at || '—') + '</td>' +
+      '<td>' + syncRunStatusBadge(c.status) + '</td>' +
+      '<td class="num">' + fmtNum(c.records_received) + '</td>' +
+      '<td class="num">' + fmtNum(c.records_created) + '</td>' +
+      '<td class="num">' + fmtNum(c.records_updated) + '</td>' +
+      '<td class="num">' + fmtNum(c.records_unchanged) + '</td>' +
+      '<td class="num">' + fmtNum(c.records_rejected) + '</td>' +
+      '<td>' + (c.error_message ? esc(c.error_message) : '<span class="muted">—</span>') + '</td>' +
+      '</tr>';
+  });
+  h += '</tbody></table></div></details>';
+  return h;
+}
+
+function normalizeSyncRunGroups(groupsOrRows){
+  if (!Array.isArray(groupsOrRows)) return [];
+  if (groupsOrRows.length === 0) return [];
+  var first = groupsOrRows[0] || {};
+  if (first && (first.chunk_count !== undefined || Array.isArray(first.chunks))) return groupsOrRows;
+  return groupsOrRows.map(function(r){
+    return {
+      group_id: 'raw-' + String(r.id || ''),
+      source: r.source,
+      scenario: r.scenario,
+      started_at: r.started_at,
+      finished_at: r.finished_at,
+      status: r.status,
+      chunk_count: 1,
+      records_received: r.records_received,
+      records_created: r.records_created,
+      records_updated: r.records_updated,
+      records_unchanged: r.records_unchanged,
+      records_rejected: r.records_rejected,
+      error_message: r.error_message,
+      inferred_grouping: false,
+      incomplete_window: false,
+      chunks: [r]
+    };
+  });
+}
+
+function renderSyncRuns(groupsOrRows, meta, fallbackRows){
+  var groups = normalizeSyncRunGroups(groupsOrRows);
+  if (!groups.length && Array.isArray(fallbackRows) && fallbackRows.length) {
+    groups = normalizeSyncRunGroups(fallbackRows);
+  }
+  updateRunsSummaryNote(meta);
+  if (!groups.length) { setState('runs-table', '', 'No sync runs recorded yet.'); return; }
+
+  var notes = (meta && Array.isArray(meta.notes)) ? meta.notes : [];
+  var h = '';
+  if (notes.length) {
+    h += '<div class="muted" style="font-size:0.75rem;padding:10px 12px;line-height:1.5">' + notes.map(function(n){ return '• ' + esc(n); }).join('<br>') + '</div>';
+  }
+  h += '<table><thead><tr><th>Started</th><th>Finished</th><th>Source / Scenario</th><th>Status</th><th class="num">Chunks</th><th class="num">Received</th><th class="num">Created</th><th class="num">Updated</th><th class="num">Unchanged</th><th class="num">Rejected</th><th>Chunk Details</th><th>Error</th></tr></thead><tbody>';
+  groups.forEach(function(g){
+    h += '<tr>' +
+      '<td>' + esc(g.started_at || '—') + '</td>' +
+      '<td>' + esc(g.finished_at || '—') + '</td>' +
+      '<td>' + renderSyncRunGroupSource(g) + '</td>' +
+      '<td>' + syncRunStatusBadge(g.status) + '</td>' +
+      '<td class="num">' + fmtNum(g.chunk_count) + '</td>' +
+      '<td class="num">' + fmtNum(g.records_received) + '</td>' +
+      '<td class="num">' + fmtNum(g.records_created) + '</td>' +
+      '<td class="num">' + fmtNum(g.records_updated) + '</td>' +
+      '<td class="num">' + fmtNum(g.records_unchanged) + '</td>' +
+      '<td class="num">' + fmtNum(g.records_rejected) + '</td>' +
+      '<td>' + renderSyncRunChunkDetails(g) + '</td>' +
+      '<td>' + (g.error_message ? esc(g.error_message) : '<span class="muted">—</span>') + '</td>' +
+      '</tr>';
+  });
+  document.getElementById('runs-table').innerHTML = h + '</tbody></table>';
+}
+
+function renderFreshness(rows){
+  if (!rows.length) { setState('freshness-table', '', 'No commercial orders yet.'); return; }
+  var h = '<table><thead><tr><th>Channel</th><th>Last Order Day</th><th class="num">Days Since</th><th class="num">Orders</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var days = r.days_since_last_order;
+    var cls = (days === null || days === undefined) ? 'badge-grey' : days <= 7 ? 'badge-green' : days <= 30 ? 'badge-amber' : 'badge-grey';
+    h += '<tr><td>' + esc(r.channel_norm) + '</td><td>' + esc(r.last_order_day) + '</td>' +
+      '<td class="num"><span class="badge ' + cls + '">' + fmtNum(days) + '</span></td>' +
+      '<td class="num">' + fmtNum(r.orders) + '</td></tr>';
+  });
+  document.getElementById('freshness-table').innerHTML = h + '</tbody></table>';
+}
+
+// ── Historical Coverage (Phase 08) ──
+
+function renderCoverage(cov){
+  var card = document.getElementById('coverage-card');
+  if (!card) return;
+  if (!cov || !cov.by_year) { card.style.display = 'none'; return; }
+
+  document.getElementById('cov-summary').innerHTML =
+    '<span class="badge badge-grey">First order: ' + esc(cov.first_order_day || '—') + '</span>' +
+    '<span class="badge badge-grey">Last order: ' + esc(cov.last_order_day || '—') + '</span>' +
+    '<span class="badge badge-blue">' + fmtNum(cov.total_orders) + ' commercial orders</span>' +
+    '<span class="badge badge-blue">' + fmtNum(cov.channels) + ' channels</span>';
+
+  var y = cov.by_year || [];
+  if (!y.length) {
+    setState('cov-year-table', '', 'No commercial orders with a valid order date.');
+  } else {
+    var h = '<table><thead><tr><th>Year</th><th class="num">Orders</th><th class="num">Mapped</th><th class="num">Mapped %</th><th class="num">Months with Orders</th><th>Coverage</th><th>First Order</th><th>Last Order</th></tr></thead><tbody>';
+    y.forEach(function(r){
+      var orders = Number(r.orders || 0);
+      var months = Number(r.months_with_orders || 0);
+      var pct = orders > 0 ? (Math.round(Number(r.mapped_orders || 0) * 1000 / orders) / 10) : null;
+      var badge = orders < 10 ? '<span class="badge badge-amber">thin</span>'
+        : months < 6 ? '<span class="badge badge-amber">partial</span>'
+        : '<span class="badge badge-green">ok</span>';
+      h += '<tr>' +
+        '<td>' + esc(r.year) + '</td>' +
+        '<td class="num">' + fmtNum(r.orders) + '</td>' +
+        '<td class="num">' + fmtNum(r.mapped_orders) + '</td>' +
+        '<td class="num">' + fmtPct(pct) + '</td>' +
+        '<td class="num">' + fmtNum(r.months_with_orders) + '</td>' +
+        '<td>' + badge + '</td>' +
+        '<td>' + esc(r.first_day || '—') + '</td>' +
+        '<td>' + esc(r.last_day || '—') + '</td>' +
+        '</tr>';
+    });
+    document.getElementById('cov-year-table').innerHTML = h + '</tbody></table>';
+  }
+
+  var c = cov.by_channel || [];
+  if (!c.length) {
+    setState('cov-channel-table', '', 'No commercial orders yet.');
+  } else {
+    var total = cov.total_orders || 0;
+    var h2 = '<table><thead><tr><th>Channel</th><th class="num">Orders</th><th class="num">Share</th><th class="num">Mapped</th><th>First Order</th><th>Last Order</th></tr></thead><tbody>';
+    c.forEach(function(r){
+      var share = total > 0 ? (Math.round(Number(r.orders || 0) * 1000 / total) / 10) : null;
+      h2 += '<tr>' +
+        '<td>' + esc(r.channel_norm) + '</td>' +
+        '<td class="num">' + fmtNum(r.orders) + '</td>' +
+        '<td class="num">' + fmtPct(share) + '</td>' +
+        '<td class="num">' + fmtNum(r.mapped_orders) + '</td>' +
+        '<td>' + esc(r.first_day || '—') + '</td>' +
+        '<td>' + esc(r.last_day || '—') + '</td>' +
+        '</tr>';
+    });
+    document.getElementById('cov-channel-table').innerHTML = h2 + '</tbody></table>';
+  }
+}
+
+// ── SEO / GSC (Phase 09) ──
+
+async function loadGsc(){
+  setState('gsc-trend-table', '', 'Loading…');
+  setState('gsc-pages-table', '', 'Loading…');
+  setState('gsc-queries-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v;
+    v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    v = document.getElementById('f-product').value; if (v) qs.push('product_id=' + v);
+    var d = await api('/gsc' + (qs.length ? '?' + qs.join('&') : ''));
+
+    if (!d.available) {
+      document.getElementById('gsc-summary').innerHTML =
+        '<span class="badge badge-grey">GSC schema not available in this environment yet</span>';
+      setState('gsc-trend-table', '', d.message || 'Apply migration 046_gsc_analytics.sql first.');
+      setState('gsc-pages-table', '', 'No GSC rows yet.');
+      setState('gsc-queries-table', '', 'No GSC rows yet.');
+      return;
+    }
+
+    var s = d.summary || {};
+    var fr = d.freshness || {};
+    var t = d.trend_28d || {};
+    var mappedImprPct = Number(s.impressions || 0) > 0 ? (Number(s.mapped_impressions || 0) * 100 / Number(s.impressions || 0)) : null;
+    var freshCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+
+    document.getElementById('gsc-summary').innerHTML =
+      '<span class="badge badge-blue">Clicks: ' + fmtNum(s.clicks) + '</span>' +
+      '<span class="badge badge-blue">Impressions: ' + fmtNum(s.impressions) + '</span>' +
+      '<span class="badge badge-grey">CTR: ' + fmtPct(s.ctr_pct) + '</span>' +
+      '<span class="badge badge-grey">Avg Position: ' + fmtPos(s.avg_position) + '</span>' +
+      '<span class="badge badge-grey">Queries: ' + fmtNum(s.queries) + '</span>' +
+      '<span class="badge badge-grey">Landing pages: ' + fmtNum(s.pages) + '</span>' +
+      '<span class="badge badge-grey">Mapped impression coverage: ' + fmtPct(mappedImprPct) + '</span>' +
+      '<span class="badge ' + freshCls + '">Freshness: ' + (fr.latest_report_date ? (esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)') : 'no data') + '</span>';
+
+    var trendHtml = '<table><thead><tr><th>Window</th><th class="num">Clicks</th><th class="num">Impressions</th><th class="num">CTR</th><th class="num">Avg Position</th></tr></thead><tbody>';
+    trendHtml += '<tr><td>Current 28d</td><td class="num">' + fmtNum(t.clicks_28d) + '</td><td class="num">' + fmtNum(t.impressions_28d) + '</td><td class="num">' + fmtPct(t.ctr_28d) + '</td><td class="num">' + fmtPos(t.avg_position_28d) + '</td></tr>';
+    trendHtml += '<tr><td>Previous 28d</td><td class="num">' + fmtNum(t.clicks_prev_28d) + '</td><td class="num">' + fmtNum(t.impressions_prev_28d) + '</td><td class="num">' + fmtPct(t.ctr_prev_28d) + '</td><td class="num">' + fmtPos(t.avg_position_prev_28d) + '</td></tr>';
+    trendHtml += '<tr><td><strong>Growth</strong></td>' +
+      '<td class="num">' + (t.clicks_growth_pct === null || t.clicks_growth_pct === undefined ? '—' : ((t.clicks_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.clicks_growth_pct)))) + '</td>' +
+      '<td class="num">' + (t.impressions_growth_pct === null || t.impressions_growth_pct === undefined ? '—' : ((t.impressions_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.impressions_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td><td class="num"><span class="muted">—</span></td></tr>';
+    trendHtml += '</tbody></table>';
+    document.getElementById('gsc-trend-table').innerHTML = trendHtml;
+
+    var pages = d.top_pages || [];
+    if (!pages.length) {
+      setState('gsc-pages-table', '', 'No GSC page rows for the selected filters.');
+    } else {
+      var p = '<table><thead><tr><th>Landing Page</th><th>Product</th><th class="num">Queries</th><th class="num">Clicks</th><th class="num">Impressions</th><th class="num">CTR</th><th class="num">Avg Position</th></tr></thead><tbody>';
+      pages.forEach(function(r){
+        p += '<tr>' +
+          '<td class="mono">' + esc(r.page_path) + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="muted">—</span>' : ('#' + esc(r.product_id) + ' — ' + esc(r.product_title || ''))) + '</td>' +
+          '<td class="num">' + fmtNum(r.queries) + '</td>' +
+          '<td class="num">' + fmtNum(r.clicks) + '</td>' +
+          '<td class="num">' + fmtNum(r.impressions) + '</td>' +
+          '<td class="num">' + fmtPct(r.ctr_pct) + '</td>' +
+          '<td class="num">' + fmtPos(r.avg_position) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('gsc-pages-table').innerHTML = p + '</tbody></table>';
+    }
+
+    var queries = d.top_queries || [];
+    if (!queries.length) {
+      setState('gsc-queries-table', '', 'No GSC query rows for the selected filters.');
+    } else {
+      var q = '<table><thead><tr><th>Query</th><th class="num">Pages</th><th class="num">Clicks</th><th class="num">Impressions</th><th class="num">CTR</th><th class="num">Avg Position</th></tr></thead><tbody>';
+      queries.forEach(function(r){
+        q += '<tr>' +
+          '<td>' + esc(r.query_text) + '</td>' +
+          '<td class="num">' + fmtNum(r.pages) + '</td>' +
+          '<td class="num">' + fmtNum(r.clicks) + '</td>' +
+          '<td class="num">' + fmtNum(r.impressions) + '</td>' +
+          '<td class="num">' + fmtPct(r.ctr_pct) + '</td>' +
+          '<td class="num">' + fmtPos(r.avg_position) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('gsc-queries-table').innerHTML = q + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('gsc-summary').innerHTML = '<span class="badge badge-red">GSC unavailable</span>';
+    setState('gsc-trend-table', 'error', 'Could not load GSC trend: ' + e.message);
+    setState('gsc-pages-table', 'error', 'Could not load GSC pages: ' + e.message);
+    setState('gsc-queries-table', 'error', 'Could not load GSC queries: ' + e.message);
+  }
+}
+
+// ── Website Funnel / GA4 (Phase 10) ──
+
+async function loadGa4(){
+  setState('ga4-trend-table', '', 'Loading…');
+  setState('ga4-pages-table', '', 'Loading…');
+  setState('ga4-sources-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v;
+    v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    v = document.getElementById('f-product').value; if (v) qs.push('product_id=' + v);
+    var d = await api('/ga4' + (qs.length ? '?' + qs.join('&') : ''));
+
+    if (!d.available) {
+      document.getElementById('ga4-summary').innerHTML =
+        '<span class="badge badge-grey">GA4 schema not available in this environment yet</span>';
+      setState('ga4-trend-table', '', d.message || 'Apply migration 048_ga4_analytics.sql first.');
+      setState('ga4-pages-table', '', 'No GA4 rows yet.');
+      setState('ga4-sources-table', '', 'No GA4 rows yet.');
+      return;
+    }
+
+    var s = d.summary || {};
+    var fr = d.freshness || {};
+    var t = d.trend_28d || {};
+    var mappedSessionPct = Number(s.sessions || 0) > 0 ? (Number(s.mapped_sessions || 0) * 100 / Number(s.sessions || 0)) : null;
+    var freshCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+
+    document.getElementById('ga4-summary').innerHTML =
+      '<span class="badge badge-blue">Sessions: ' + fmtNum(s.sessions) + '</span>' +
+      '<span class="badge badge-blue">Users: ' + fmtNum(s.users) + '</span>' +
+      '<span class="badge badge-grey">Engaged Sessions: ' + fmtNum(s.engaged_sessions) + '</span>' +
+      '<span class="badge badge-grey">Product Views: ' + fmtNum(s.product_views) + '</span>' +
+      '<span class="badge badge-grey">Add to Cart: ' + fmtNum(s.add_to_cart) + '</span>' +
+      '<span class="badge badge-grey">Checkout: ' + fmtNum(s.begin_checkout) + '</span>' +
+      '<span class="badge badge-grey">Purchases: ' + fmtNum(s.purchases) + '</span>' +
+      '<span class="badge badge-grey">Purchase Rev (GA4): ' + fmtBaht(s.purchase_revenue) + '</span>' +
+      '<span class="badge badge-grey">ATC Rate: ' + fmtPct(s.add_to_cart_rate_pct) + '</span>' +
+      '<span class="badge badge-grey">Purchase Rate: ' + fmtPct(s.purchase_rate_pct) + '</span>' +
+      '<span class="badge badge-grey">Mapped session coverage: ' + fmtPct(mappedSessionPct) + '</span>' +
+      '<span class="badge ' + freshCls + '">Freshness: ' + (fr.latest_report_date ? (esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)') : 'no data') + '</span>';
+
+    var trendHtml = '<table><thead><tr><th>Window</th><th class="num">Sessions</th><th class="num">Product Views</th><th class="num">Add to Cart</th><th class="num">Checkout</th><th class="num">Purchases</th><th class="num">Purchase Rev (GA4)</th></tr></thead><tbody>';
+    trendHtml += '<tr><td>Current 28d</td><td class="num">' + fmtNum(t.sessions_28d) + '</td><td class="num">' + fmtNum(t.product_views_28d) + '</td><td class="num">' + fmtNum(t.add_to_cart_28d) + '</td><td class="num">' + fmtNum(t.begin_checkout_28d) + '</td><td class="num">' + fmtNum(t.purchases_28d) + '</td><td class="num">' + fmtBaht(t.purchase_revenue_28d) + '</td></tr>';
+    trendHtml += '<tr><td>Previous 28d</td><td class="num">' + fmtNum(t.sessions_prev_28d) + '</td><td class="num">' + fmtNum(t.product_views_prev_28d) + '</td><td class="num">' + fmtNum(t.add_to_cart_prev_28d) + '</td><td class="num">' + fmtNum(t.begin_checkout_prev_28d) + '</td><td class="num">' + fmtNum(t.purchases_prev_28d) + '</td><td class="num">' + fmtBaht(t.purchase_revenue_prev_28d) + '</td></tr>';
+    trendHtml += '<tr><td><strong>Growth</strong></td>' +
+      '<td class="num">' + (t.sessions_growth_pct === null || t.sessions_growth_pct === undefined ? '—' : ((t.sessions_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.sessions_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num">' + (t.purchases_growth_pct === null || t.purchases_growth_pct === undefined ? '—' : ((t.purchases_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.purchases_growth_pct)))) + '</td>' +
+      '<td class="num">' + (t.purchase_revenue_growth_pct === null || t.purchase_revenue_growth_pct === undefined ? '—' : ((t.purchase_revenue_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.purchase_revenue_growth_pct)))) + '</td>' +
+      '</tr>';
+    trendHtml += '</tbody></table>';
+    document.getElementById('ga4-trend-table').innerHTML = trendHtml;
+
+    var pages = d.top_pages || [];
+    if (!pages.length) {
+      setState('ga4-pages-table', '', 'No GA4 page rows for the selected filters.');
+    } else {
+      var p = '<table><thead><tr><th>Landing Page</th><th>Page Path</th><th>Product</th><th class="num">Sessions</th><th class="num">Product Views</th><th class="num">Add to Cart</th><th class="num">Checkout</th><th class="num">Purchases</th><th class="num">Purchase Rate</th><th class="num">Purchase Rev (GA4)</th></tr></thead><tbody>';
+      pages.forEach(function(r){
+        p += '<tr>' +
+          '<td class="mono">' + (r.landing_page_path ? esc(r.landing_page_path) : '<span class="muted">—</span>') + '</td>' +
+          '<td class="mono">' + (r.page_path ? esc(r.page_path) : '<span class="muted">—</span>') + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="muted">—</span>' : ('#' + esc(r.product_id) + ' — ' + esc(r.product_title || ''))) + '</td>' +
+          '<td class="num">' + fmtNum(r.sessions) + '</td>' +
+          '<td class="num">' + fmtNum(r.product_views) + '</td>' +
+          '<td class="num">' + fmtNum(r.add_to_cart) + '</td>' +
+          '<td class="num">' + fmtNum(r.begin_checkout) + '</td>' +
+          '<td class="num">' + fmtNum(r.purchases) + '</td>' +
+          '<td class="num">' + fmtPct(r.purchase_rate_pct) + '</td>' +
+          '<td class="num">' + fmtBaht(r.purchase_revenue) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('ga4-pages-table').innerHTML = p + '</tbody></table>';
+    }
+
+    var sources = d.top_sources || [];
+    if (!sources.length) {
+      setState('ga4-sources-table', '', 'No GA4 source rows for the selected filters.');
+    } else {
+      var src = '<table><thead><tr><th>Source / Medium</th><th class="num">Sessions</th><th class="num">Purchases</th><th class="num">Purchase Rate</th><th class="num">Purchase Rev (GA4)</th></tr></thead><tbody>';
+      sources.forEach(function(r){
+        var rate = Number(r.sessions || 0) > 0 ? (Number(r.purchases || 0) * 100 / Number(r.sessions || 0)) : null;
+        src += '<tr>' +
+          '<td>' + esc(r.source_medium || '(direct)') + '</td>' +
+          '<td class="num">' + fmtNum(r.sessions) + '</td>' +
+          '<td class="num">' + fmtNum(r.purchases) + '</td>' +
+          '<td class="num">' + fmtPct(rate) + '</td>' +
+          '<td class="num">' + fmtBaht(r.purchase_revenue) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('ga4-sources-table').innerHTML = src + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('ga4-summary').innerHTML = '<span class="badge badge-red">GA4 unavailable</span>';
+    setState('ga4-trend-table', 'error', 'Could not load GA4 trend: ' + e.message);
+    setState('ga4-pages-table', 'error', 'Could not load GA4 pages: ' + e.message);
+    setState('ga4-sources-table', 'error', 'Could not load GA4 sources: ' + e.message);
+  }
+}
+
+async function loadGa4LeadAcquisition(){
+  setState('ga4-lead-trend-table', '', 'Loading…');
+  setState('ga4-lead-sources-table', '', 'Loading…');
+  setState('ga4-lead-campaigns-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v;
+    v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    var d = await api('/ga4-leads' + (qs.length ? '?' + qs.join('&') : ''));
+
+    if (!d.available) {
+      document.getElementById('ga4-lead-summary').innerHTML =
+        '<span class="badge badge-grey">GA4 lead-acquisition schema not available in this environment yet</span>';
+      document.getElementById('ga4-lead-notes').textContent = d.message || 'Apply migration 061_ga4_lead_acquisition.sql first.';
+      setState('ga4-lead-trend-table', '', d.message || 'No GA4 lead-acquisition rows yet.');
+      setState('ga4-lead-sources-table', '', 'No GA4 lead-acquisition source rows yet.');
+      setState('ga4-lead-campaigns-table', '', 'No GA4 lead-acquisition campaign rows yet.');
+      return;
+    }
+
+    var s = d.summary || {};
+    var fr = d.freshness || {};
+    var cov = d.coverage || {};
+    var prop = d.property || {};
+    var freshCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+    var usersLabel = function(value, available){
+      return available ? fmtNum(value) : '<span class="muted">Unavailable</span>';
+    };
+
+    document.getElementById('ga4-lead-summary').innerHTML =
+      '<span class="badge badge-blue">generate_lead events: ' + fmtNum(s.generate_lead_events) + '</span>' +
+      '<span class="badge badge-grey">generate_lead users: ' + usersLabel(s.generate_lead_users, s.generate_lead_users_available) + '</span>' +
+      '<span class="badge badge-blue">quote_request events: ' + fmtNum(s.quote_request_events) + '</span>' +
+      '<span class="badge badge-grey">quote_request users: ' + usersLabel(s.quote_request_users, s.quote_request_users_available) + '</span>' +
+      '<span class="badge badge-grey">Property: ' + esc(prop.canonical_property_id || '308922589') + '</span>' +
+      '<span class="badge ' + freshCls + '">Freshness: ' + (fr.latest_report_date ? (esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)') : 'no data') + '</span>';
+
+    var limits = d.limitations || [];
+    var note = '<div><strong>Coverage:</strong> ' + esc(cov.min_report_date || '—') + ' → ' + esc(cov.max_report_date || '—') + ' (' + fmtNum(cov.rows_n || 0) + ' rows)</div>';
+    if (prop.overlap_days) {
+      note += '<div><strong>Historical overlap warning:</strong> website GA4 property overlap detected for ' + fmtNum(prop.overlap_days) + ' day(s) (' + esc(prop.overlap_start || '—') + ' → ' + esc(prop.overlap_end || '—') + ').</div>';
+    }
+    if (limits.length) {
+      note += '<ul style="margin:6px 0 0 16px;padding:0">' + limits.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>';
+    }
+    document.getElementById('ga4-lead-notes').innerHTML = note;
+
+    var trend = d.trend_daily || [];
+    if (!trend.length) {
+      setState('ga4-lead-trend-table', '', 'No GA4 lead-acquisition rows for the selected filters.');
+    } else {
+      var th = '<table><thead><tr><th>Date</th><th class="num">generate_lead events</th><th class="num">generate_lead users</th><th class="num">quote_request events</th><th class="num">quote_request users</th></tr></thead><tbody>';
+      trend.forEach(function(r){
+        th += '<tr>' +
+          '<td>' + esc(r.report_date || '—') + '</td>' +
+          '<td class="num">' + fmtNum(r.generate_lead_events) + '</td>' +
+          '<td class="num">' + (r.generate_lead_users_available ? fmtNum(r.generate_lead_users) : '<span class="muted">Unavailable</span>') + '</td>' +
+          '<td class="num">' + fmtNum(r.quote_request_events) + '</td>' +
+          '<td class="num">' + (r.quote_request_users_available ? fmtNum(r.quote_request_users) : '<span class="muted">Unavailable</span>') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('ga4-lead-trend-table').innerHTML = th + '</tbody></table>';
+    }
+
+    var sources = d.top_sources || [];
+    if (!sources.length) {
+      setState('ga4-lead-sources-table', '', 'No GA4 lead source/medium rows for the selected filters.');
+    } else {
+      var sh = '<table><thead><tr><th>Source / Medium</th><th class="num">generate_lead events</th><th class="num">generate_lead users</th><th class="num">quote_request events</th><th class="num">quote_request users</th></tr></thead><tbody>';
+      sources.forEach(function(r){
+        sh += '<tr>' +
+          '<td>' + esc(r.source_medium || '(unavailable) / (unavailable)') + '</td>' +
+          '<td class="num">' + fmtNum(r.generate_lead_events) + '</td>' +
+          '<td class="num">' + (r.generate_lead_users_available ? fmtNum(r.generate_lead_users) : '<span class="muted">Unavailable</span>') + '</td>' +
+          '<td class="num">' + fmtNum(r.quote_request_events) + '</td>' +
+          '<td class="num">' + (r.quote_request_users_available ? fmtNum(r.quote_request_users) : '<span class="muted">Unavailable</span>') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('ga4-lead-sources-table').innerHTML = sh + '</tbody></table>';
+    }
+
+    var campaigns = d.top_campaigns || [];
+    if (!campaigns.length) {
+      setState('ga4-lead-campaigns-table', '', 'No GA4 lead campaign rows for the selected filters.');
+    } else {
+      var ch = '<table><thead><tr><th>Campaign</th><th class="num">generate_lead events</th><th class="num">generate_lead users</th><th class="num">quote_request events</th><th class="num">quote_request users</th></tr></thead><tbody>';
+      campaigns.forEach(function(r){
+        ch += '<tr>' +
+          '<td>' + esc(r.campaign || '(unavailable)') + '</td>' +
+          '<td class="num">' + fmtNum(r.generate_lead_events) + '</td>' +
+          '<td class="num">' + (r.generate_lead_users_available ? fmtNum(r.generate_lead_users) : '<span class="muted">Unavailable</span>') + '</td>' +
+          '<td class="num">' + fmtNum(r.quote_request_events) + '</td>' +
+          '<td class="num">' + (r.quote_request_users_available ? fmtNum(r.quote_request_users) : '<span class="muted">Unavailable</span>') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('ga4-lead-campaigns-table').innerHTML = ch + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('ga4-lead-summary').innerHTML = '<span class="badge badge-red">GA4 Lead Acquisition unavailable</span>';
+    document.getElementById('ga4-lead-notes').innerHTML = '<span class="muted">Error: ' + esc(e.message) + '</span>';
+    setState('ga4-lead-trend-table', 'error', 'Could not load GA4 lead trend: ' + e.message);
+    setState('ga4-lead-sources-table', 'error', 'Could not load GA4 lead source/medium rows: ' + e.message);
+    setState('ga4-lead-campaigns-table', 'error', 'Could not load GA4 lead campaign rows: ' + e.message);
+  }
+}
+
+// ── Marketplace / Etsy (Phase 11) ──
+
+async function loadEtsy(){
+  setState('etsy-trend-table', '', 'Loading…');
+  setState('etsy-status-table', '', 'Loading…');
+  setState('etsy-listings-table', '', 'Loading…');
+  setState('etsy-products-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v;
+    v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    v = document.getElementById('f-product').value; if (v) qs.push('product_id=' + v);
+    var d = await api('/etsy' + (qs.length ? '?' + qs.join('&') : ''));
+
+    if (!d.available) {
+      document.getElementById('etsy-summary').innerHTML =
+        '<span class="badge badge-grey">Etsy schema not available in this environment yet</span>';
+      setState('etsy-trend-table', '', d.message || 'Apply migration 049_etsy_analytics.sql first.');
+      setState('etsy-status-table', '', 'No Etsy listing rows yet.');
+      setState('etsy-listings-table', '', 'No Etsy listing rows yet.');
+      setState('etsy-products-table', '', 'No Etsy product rows yet.');
+      return;
+    }
+
+    var s = d.summary || {};
+    var fr = d.freshness || {};
+    var t = d.trend_28d || {};
+    var ls = d.listing_status || {};
+    var mappedViewPct = Number(s.views || 0) > 0 ? (Number(s.mapped_views || 0) * 100 / Number(s.views || 0)) : null;
+    var freshCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+
+    document.getElementById('etsy-summary').innerHTML =
+      '<span class="badge badge-blue">Listings: ' + fmtNum(s.listings) + '</span>' +
+      '<span class="badge badge-blue">Active Listings: ' + fmtNum(s.active_listings) + '</span>' +
+      '<span class="badge badge-grey">Views: ' + fmtNum(s.views) + '</span>' +
+      '<span class="badge badge-grey">Favorites: ' + fmtNum(s.favorites) + '</span>' +
+      '<span class="badge badge-grey">Orders: ' + fmtNum(s.orders) + '</span>' +
+      '<span class="badge badge-grey">Transactions: ' + fmtNum(s.transactions) + '</span>' +
+      '<span class="badge badge-grey">Units Sold: ' + fmtNum(s.units_sold) + '</span>' +
+      '<span class="badge badge-grey">Revenue (THB): ' + fmtBaht(s.revenue_thb) + '</span>' +
+      '<span class="badge badge-grey">Mapped View Coverage: ' + fmtPct(mappedViewPct) + '</span>' +
+      '<span class="badge ' + freshCls + '">Freshness: ' + (fr.latest_report_date ? (esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)') : 'no data') + '</span>';
+
+    var trendHtml = '<table><thead><tr><th>Window</th><th class="num">Views</th><th class="num">Favorites</th><th class="num">Orders</th><th class="num">Transactions</th><th class="num">Units</th><th class="num">Revenue (THB)</th></tr></thead><tbody>';
+    trendHtml += '<tr><td>Current 28d</td><td class="num">' + fmtNum(t.views_28d) + '</td><td class="num">' + fmtNum(t.favorites_28d) + '</td><td class="num">' + fmtNum(t.orders_28d) + '</td><td class="num">' + fmtNum(t.transactions_28d) + '</td><td class="num">' + fmtNum(t.units_sold_28d) + '</td><td class="num">' + fmtBaht(t.revenue_thb_28d) + '</td></tr>';
+    trendHtml += '<tr><td>Previous 28d</td><td class="num">' + fmtNum(t.views_prev_28d) + '</td><td class="num">' + fmtNum(t.favorites_prev_28d) + '</td><td class="num">' + fmtNum(t.orders_prev_28d) + '</td><td class="num">' + fmtNum(t.transactions_prev_28d) + '</td><td class="num">' + fmtNum(t.units_sold_prev_28d) + '</td><td class="num">' + fmtBaht(t.revenue_thb_prev_28d) + '</td></tr>';
+    trendHtml += '<tr><td><strong>Growth</strong></td>' +
+      '<td class="num">' + (t.views_growth_pct === null || t.views_growth_pct === undefined ? '—' : ((t.views_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.views_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num">' + (t.orders_growth_pct === null || t.orders_growth_pct === undefined ? '—' : ((t.orders_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.orders_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num">' + (t.revenue_growth_pct === null || t.revenue_growth_pct === undefined ? '—' : ((t.revenue_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.revenue_growth_pct)))) + '</td>' +
+      '</tr>';
+    trendHtml += '</tbody></table>';
+    document.getElementById('etsy-trend-table').innerHTML = trendHtml;
+
+    var st = ls.by_state || [];
+    var sh = '<table><thead><tr><th>Summary</th><th class="num">Count</th></tr></thead><tbody>';
+    sh += '<tr><td>Total listings</td><td class="num">' + fmtNum(ls.total_listings) + '</td></tr>';
+    sh += '<tr><td>Active listings</td><td class="num">' + fmtNum(ls.active_listings) + '</td></tr>';
+    sh += '<tr><td>Inactive listings</td><td class="num">' + fmtNum(ls.inactive_listings) + '</td></tr>';
+    sh += '<tr><td>Mapped listings</td><td class="num">' + fmtNum(ls.mapped_listings) + '</td></tr>';
+    sh += '<tr><td>Unmapped listings</td><td class="num">' + fmtNum(ls.unmapped_listings) + '</td></tr>';
+    sh += '</tbody></table>';
+    if (st.length) {
+      sh += '<table style="margin-top:10px"><thead><tr><th>Listing State</th><th>Active</th><th class="num">Listings</th><th class="num">Mapped</th></tr></thead><tbody>';
+      st.forEach(function(r){
+        sh += '<tr><td>' + esc(r.listing_state || '(blank)') + '</td><td>' + (Number(r.is_active || 0) === 1 ? 'yes' : 'no') + '</td><td class="num">' + fmtNum(r.listings) + '</td><td class="num">' + fmtNum(r.mapped_listings) + '</td></tr>';
+      });
+      sh += '</tbody></table>';
+    }
+    document.getElementById('etsy-status-table').innerHTML = sh;
+
+    var listings = d.top_listings || [];
+    if (!listings.length) {
+      setState('etsy-listings-table', '', 'No Etsy listing rows for the selected filters.');
+    } else {
+      var lh = '<table><thead><tr><th>Listing ID</th><th>Title</th><th>State</th><th>Product</th><th class="num">Views</th><th class="num">Favorites</th><th class="num">Orders</th><th class="num">Transactions</th><th class="num">Units</th><th class="num">Revenue (THB)</th></tr></thead><tbody>';
+      listings.forEach(function(r){
+        lh += '<tr>' +
+          '<td class="mono">' + esc(r.listing_id) + '</td>' +
+          '<td>' + esc(r.listing_title || '—') + '</td>' +
+          '<td>' + esc(r.listing_state || '—') + (Number(r.is_active || 0) === 1 ? '' : ' <span class="badge badge-grey">inactive</span>') + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="muted">—</span>' : ('#' + esc(r.product_id) + ' — ' + esc(r.product_title || ''))) + '</td>' +
+          '<td class="num">' + fmtNum(r.views) + '</td>' +
+          '<td class="num">' + fmtNum(r.favorites) + '</td>' +
+          '<td class="num">' + fmtNum(r.orders) + '</td>' +
+          '<td class="num">' + fmtNum(r.transactions) + '</td>' +
+          '<td class="num">' + fmtNum(r.units_sold) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue_thb) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('etsy-listings-table').innerHTML = lh + '</tbody></table>';
+    }
+
+    var products = d.top_products || [];
+    if (!products.length) {
+      setState('etsy-products-table', '', 'No mapped Etsy product rows for the selected filters.');
+    } else {
+      var ph = '<table><thead><tr><th>Product</th><th class="num">Listings</th><th class="num">Views</th><th class="num">Favorites</th><th class="num">Orders</th><th class="num">Transactions</th><th class="num">Units</th><th class="num">Revenue (THB)</th></tr></thead><tbody>';
+      products.forEach(function(r){
+        ph += '<tr>' +
+          '<td>#' + esc(r.product_id) + ' — ' + esc(r.product_title || '') + '</td>' +
+          '<td class="num">' + fmtNum(r.listing_count) + '</td>' +
+          '<td class="num">' + fmtNum(r.views) + '</td>' +
+          '<td class="num">' + fmtNum(r.favorites) + '</td>' +
+          '<td class="num">' + fmtNum(r.orders) + '</td>' +
+          '<td class="num">' + fmtNum(r.transactions) + '</td>' +
+          '<td class="num">' + fmtNum(r.units_sold) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue_thb) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('etsy-products-table').innerHTML = ph + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('etsy-summary').innerHTML = '<span class="badge badge-red">Etsy unavailable</span>';
+    setState('etsy-trend-table', 'error', 'Could not load Etsy trend: ' + e.message);
+    setState('etsy-status-table', 'error', 'Could not load Etsy listing status: ' + e.message);
+    setState('etsy-listings-table', 'error', 'Could not load Etsy listings: ' + e.message);
+    setState('etsy-products-table', 'error', 'Could not load Etsy products: ' + e.message);
+  }
+}
+
+// ── Paid Media / Google Ads (Phase 12) ──
+
+async function loadGoogleAds(){
+  setState('google-ads-trend-table', '', 'Loading…');
+  setState('google-ads-campaigns-table', '', 'Loading…');
+  setState('google-ads-products-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v;
+    v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    v = document.getElementById('f-product').value; if (v) qs.push('product_id=' + v);
+    var d = await api('/google-ads' + (qs.length ? '?' + qs.join('&') : ''));
+
+    if (!d.available) {
+      document.getElementById('google-ads-summary').innerHTML =
+        '<span class="badge badge-grey">Google Ads schema not available in this environment yet</span>';
+      setState('google-ads-trend-table', '', d.message || 'Apply migration 050_google_ads_analytics.sql first.');
+      setState('google-ads-campaigns-table', '', 'No Google Ads rows yet.');
+      setState('google-ads-products-table', '', 'No mapped Google Ads product rows yet.');
+      return;
+    }
+
+    var s = d.summary || {};
+    var fr = d.freshness || {};
+    var t = d.trend_28d || {};
+    var mappedCostPct = Number(s.cost || 0) > 0 ? (Number(s.mapped_cost || 0) * 100 / Number(s.cost || 0)) : null;
+    var freshCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+
+    document.getElementById('google-ads-summary').innerHTML =
+      '<span class="badge badge-blue">Spend: ' + fmtBaht(s.cost) + '</span>' +
+      '<span class="badge badge-blue">Conv Value: ' + fmtBaht(s.conversion_value) + '</span>' +
+      '<span class="badge badge-grey">Impressions: ' + fmtNum(s.impressions) + '</span>' +
+      '<span class="badge badge-grey">Clicks: ' + fmtNum(s.clicks) + '</span>' +
+      '<span class="badge badge-grey">CTR: ' + fmtPct(s.ctr_pct) + '</span>' +
+      '<span class="badge badge-grey">CPC: ' + fmtBaht(s.cpc) + '</span>' +
+      '<span class="badge badge-grey">Conversions: ' + fmtNum(s.conversions) + '</span>' +
+      '<span class="badge badge-grey">CPA: ' + fmtBaht(s.cpa) + '</span>' +
+      '<span class="badge badge-grey">ROAS: ' + (s.roas === null || s.roas === undefined ? '—' : Number(s.roas).toFixed(2) + 'x') + '</span>' +
+      '<span class="badge badge-grey">Mapped spend coverage: ' + fmtPct(mappedCostPct) + '</span>' +
+      '<span class="badge ' + freshCls + '">Freshness: ' + (fr.latest_report_date ? (esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)') : 'no data') + '</span>';
+
+    var trendHtml = '<table><thead><tr><th>Window</th><th class="num">Spend</th><th class="num">Impressions</th><th class="num">Clicks</th><th class="num">Conversions</th><th class="num">Conv Value</th><th class="num">CPA</th><th class="num">ROAS</th></tr></thead><tbody>';
+    trendHtml += '<tr><td>Current 28d</td><td class="num">' + fmtBaht(t.cost_28d) + '</td><td class="num">' + fmtNum(t.impressions_28d) + '</td><td class="num">' + fmtNum(t.clicks_28d) + '</td><td class="num">' + fmtNum(t.conversions_28d) + '</td><td class="num">' + fmtBaht(t.conversion_value_28d) + '</td><td class="num">' + fmtBaht(t.cpa_28d) + '</td><td class="num">' + (t.roas_28d === null || t.roas_28d === undefined ? '—' : Number(t.roas_28d).toFixed(2) + 'x') + '</td></tr>';
+    trendHtml += '<tr><td>Previous 28d</td><td class="num">' + fmtBaht(t.cost_prev_28d) + '</td><td class="num">' + fmtNum(t.impressions_prev_28d) + '</td><td class="num">' + fmtNum(t.clicks_prev_28d) + '</td><td class="num">' + fmtNum(t.conversions_prev_28d) + '</td><td class="num">' + fmtBaht(t.conversion_value_prev_28d) + '</td><td class="num">' + fmtBaht(t.cpa_prev_28d) + '</td><td class="num">' + (t.roas_prev_28d === null || t.roas_prev_28d === undefined ? '—' : Number(t.roas_prev_28d).toFixed(2) + 'x') + '</td></tr>';
+    trendHtml += '<tr><td><strong>Growth</strong></td>' +
+      '<td class="num">' + (t.cost_growth_pct === null || t.cost_growth_pct === undefined ? '—' : ((t.cost_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.cost_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num">' + (t.conversions_growth_pct === null || t.conversions_growth_pct === undefined ? '—' : ((t.conversions_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.conversions_growth_pct)))) + '</td>' +
+      '<td class="num">' + (t.conversion_value_growth_pct === null || t.conversion_value_growth_pct === undefined ? '—' : ((t.conversion_value_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.conversion_value_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td><td class="num"><span class="muted">—</span></td></tr>';
+    trendHtml += '</tbody></table>';
+    document.getElementById('google-ads-trend-table').innerHTML = trendHtml;
+
+    var campaigns = d.top_campaigns || [];
+    if (!campaigns.length) {
+      setState('google-ads-campaigns-table', '', 'No Google Ads campaign rows for the selected filters.');
+    } else {
+      var ch = '<table><thead><tr><th>Campaign</th><th>Ad Group</th><th>Product</th><th class="num">Spend</th><th class="num">Impr</th><th class="num">Clicks</th><th class="num">CTR</th><th class="num">CPC</th><th class="num">Conversions</th><th class="num">CPA</th><th class="num">Conv Value</th><th class="num">ROAS</th></tr></thead><tbody>';
+      campaigns.forEach(function(r){
+        ch += '<tr>' +
+          '<td><span class="mono">' + esc(r.campaign_id) + '</span>' + (r.campaign_name ? ('<br><span class="muted">' + esc(r.campaign_name) + '</span>') : '') + '</td>' +
+          '<td>' + (r.ad_group_id ? ('<span class="mono">' + esc(r.ad_group_id) + '</span>' + (r.ad_group_name ? ('<br><span class="muted">' + esc(r.ad_group_name) + '</span>') : '')) : '<span class="muted">—</span>') + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="muted">—</span>' : ('#' + esc(r.product_id) + ' — ' + esc(r.product_title || ''))) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cost) + '</td>' +
+          '<td class="num">' + fmtNum(r.impressions) + '</td>' +
+          '<td class="num">' + fmtNum(r.clicks) + '</td>' +
+          '<td class="num">' + fmtPct(r.ctr_pct) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cpc) + '</td>' +
+          '<td class="num">' + fmtNum(r.conversions) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cpa) + '</td>' +
+          '<td class="num">' + fmtBaht(r.conversion_value) + '</td>' +
+          '<td class="num">' + (r.roas === null || r.roas === undefined ? '—' : Number(r.roas).toFixed(2) + 'x') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('google-ads-campaigns-table').innerHTML = ch + '</tbody></table>';
+    }
+
+    var products = d.top_products || [];
+    if (!products.length) {
+      setState('google-ads-products-table', '', 'No mapped Google Ads product rows for the selected filters.');
+    } else {
+      var ph = '<table><thead><tr><th>Product</th><th class="num">Campaigns</th><th class="num">Ad Groups</th><th class="num">Spend</th><th class="num">Impr</th><th class="num">Clicks</th><th class="num">CTR</th><th class="num">CPC</th><th class="num">Conversions</th><th class="num">CPA</th><th class="num">Conv Value</th><th class="num">ROAS</th></tr></thead><tbody>';
+      products.forEach(function(r){
+        ph += '<tr>' +
+          '<td>#' + esc(r.product_id) + ' — ' + esc(r.product_title || '') + '</td>' +
+          '<td class="num">' + fmtNum(r.campaign_count) + '</td>' +
+          '<td class="num">' + fmtNum(r.ad_group_count) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cost) + '</td>' +
+          '<td class="num">' + fmtNum(r.impressions) + '</td>' +
+          '<td class="num">' + fmtNum(r.clicks) + '</td>' +
+          '<td class="num">' + fmtPct(r.ctr_pct) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cpc) + '</td>' +
+          '<td class="num">' + fmtNum(r.conversions) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cpa) + '</td>' +
+          '<td class="num">' + fmtBaht(r.conversion_value) + '</td>' +
+          '<td class="num">' + (r.roas === null || r.roas === undefined ? '—' : Number(r.roas).toFixed(2) + 'x') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('google-ads-products-table').innerHTML = ph + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('google-ads-summary').innerHTML = '<span class="badge badge-red">Google Ads unavailable</span>';
+    setState('google-ads-trend-table', 'error', 'Could not load Google Ads trend: ' + e.message);
+    setState('google-ads-campaigns-table', 'error', 'Could not load Google Ads campaigns: ' + e.message);
+    setState('google-ads-products-table', 'error', 'Could not load Google Ads products: ' + e.message);
+  }
+}
+
+// ── Sales Growth Signals (Phase 13) ──
+
+function growthStatusBadge(status){
+  if (status === 'sufficient') return '<span class="badge badge-green">SUFFICIENT</span>';
+  if (status === 'neutral') return '<span class="badge badge-grey">NEUTRAL</span>';
+  if (status === 'mapping_gap') return '<span class="badge badge-amber">MAPPING_GAP</span>';
+  if (status === 'stale_source') return '<span class="badge badge-amber">STALE_SOURCE</span>';
+  if (status === 'secondary_guardrail') return '<span class="badge badge-blue">SECONDARY_GUARDRAIL</span>';
+  return '<span class="badge badge-red">INSUFFICIENT_SIGNAL</span>';
+}
+
+function growthShortText(v, maxLen){
+  var text = String(v === null || v === undefined ? '' : v);
+  if (!maxLen || text.length <= maxLen) return text;
+  return text.slice(0, Math.max(0, maxLen - 1)) + '…';
+}
+
+function growthSummaryToken(v){
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'number') return Number.isFinite(v) ? String(v) : '—';
+  if (typeof v === 'boolean') return v ? 'true' : 'false';
+  if (typeof v === 'string') return growthShortText(v.trim() || '(empty)', 40);
+  if (Array.isArray(v)) return '[' + v.length + ' items]';
+  if (typeof v === 'object') return '{…}';
+  return growthShortText(String(v), 40);
+}
+
+function growthSummaryText(v){
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'number') return fmtNum(v);
+  if (typeof v === 'boolean') return v ? 'true' : 'false';
+  if (typeof v === 'string') return growthShortText(v.trim() || '(empty)', 160);
+  if (Array.isArray(v)) {
+    if (!v.length) return '(empty array)';
+    var arrParts = v.slice(0, 3).map(growthSummaryToken);
+    if (v.length > 3) arrParts.push('+' + (v.length - 3) + ' more');
+    return arrParts.join(' · ');
+  }
+  if (typeof v === 'object') {
+    var keys = Object.keys(v);
+    if (!keys.length) return '(empty object)';
+    var bits = keys.slice(0, 4).map(function(k){
+      return k + ': ' + growthSummaryToken(v[k]);
+    });
+    if (keys.length > 4) bits.push('+' + (keys.length - 4) + ' more');
+    return bits.join(' · ');
+  }
+  return growthShortText(String(v), 160);
+}
+
+function growthDetailsHtml(v, detailsLabel){
+  if (v === null || v === undefined) return '';
+  if (Array.isArray(v) || typeof v === 'object') {
+    var isArray = Array.isArray(v);
+    var count = isArray ? v.length + ' item' + (v.length === 1 ? '' : 's') : Object.keys(v).length + ' keys';
+    var summary = detailsLabel || ('Full JSON (' + count + ')');
+    var pretty = JSON.stringify(v, null, 2);
+    return '<details class="gs-details"><summary>' + esc(summary) + '</summary><pre>' + esc(pretty) + '</pre></details>';
+  }
+  if (typeof v === 'string' && v.length > 180) {
+    return '<details class="gs-details"><summary>' + esc(detailsLabel || 'Full text') + '</summary><pre>' + esc(v) + '</pre></details>';
+  }
+  return '';
+}
+
+function growthCellHtml(v, opts){
+  opts = opts || {};
+  var summaryText = growthSummaryText(v);
+  var muted = summaryText === '—';
+  var html = '<div class="gs-summary' + (muted ? ' muted' : '') + '">' + esc(summaryText) + '</div>';
+  var details = growthDetailsHtml(v, opts.detailsLabel);
+  if (details) html += details;
+  return html;
+}
+
+function growthReasonHtml(reason){
+  if (reason === null || reason === undefined || reason === '') return '<div class="gs-summary muted">—</div>';
+  return growthCellHtml(String(reason), { detailsLabel: 'Full reason' });
+}
+
+async function loadGrowthSignals(){
+  setState('growth-signals-table', '', 'Loading…');
+  try {
+    var d = await api('/growth-signals?' + filterQS({withProduct:true}).slice(1));
+    var s = d.signals || {};
+    var policy = d.google_ads_policy || {};
+
+    document.getElementById('growth-summary').innerHTML =
+      '<span class="badge badge-blue">Contract: ' + esc(d.growth_signal_contract || 'v1') + '</span>' +
+      '<span class="badge badge-grey">Window: ' + esc((d.window && d.window.current_start) || '—') + ' → ' + esc((d.window && d.window.current_end) || '—') + '</span>' +
+      '<span class="badge badge-grey">Google Ads: ' + esc(policy.business_signal || 'insufficient_or_sparse') + ' (neutral)</span>' +
+      '<span class="badge badge-grey">Confidence: ' + fmtNum(s.confidence && s.confidence.value) + '</span>';
+
+    var rows = [
+      ['demand', s.demand],
+      ['momentum', s.momentum],
+      ['conversion availability', s.conversion_availability],
+      ['channel context', s.channel_context],
+      ['source freshness', s.source_freshness],
+      ['mapping coverage', s.mapping_coverage],
+      ['confidence', s.confidence],
+      ['profitability guardrail', s.profitability_guardrail]
+    ];
+
+    var h = '<table><thead><tr><th>Signal</th><th>Status</th><th>Value</th><th>Coverage</th><th>Freshness Days</th><th class="num">Confidence Impact</th><th>Reason</th></tr></thead><tbody>';
+    rows.forEach(function(pair){
+      var label = pair[0];
+      var sig = pair[1] || {};
+      h += '<tr>' +
+        '<td>' + esc(label) + '</td>' +
+        '<td>' + growthStatusBadge(sig.status || 'insufficient_signal') + '</td>' +
+        '<td>' + growthCellHtml(sig.value, { detailsLabel: 'Full value JSON' }) + '</td>' +
+        '<td>' + growthCellHtml(sig.coverage, { detailsLabel: 'Full coverage JSON' }) + '</td>' +
+        '<td>' + growthCellHtml(sig.freshness_days, { detailsLabel: 'Full freshness JSON' }) + '</td>' +
+        '<td class="num">' + fmtNum(sig.confidence_impact) + '</td>' +
+        '<td>' + growthReasonHtml(sig.reason) + '</td>' +
+      '</tr>';
+    });
+    h += '</tbody></table>';
+    document.getElementById('growth-signals-table').innerHTML = h;
+  } catch(e) {
+    document.getElementById('growth-summary').innerHTML = '<span class="badge badge-red">Growth signals unavailable</span>';
+    setState('growth-signals-table', 'error', 'Could not load growth signals: ' + e.message);
+  }
+}
+
+// ── Profitability (Phase 13) ──
+
+async function loadProfitability(){
+  setState('profit-channels-table', '', 'Loading…');
+  setState('profit-monthly-table', '', 'Loading…');
+  setState('profit-products-table', '', 'Loading…');
+  setState('profit-after-ads-table', '', 'Loading…');
+  try {
+    var d = await api('/profitability?' + filterQS().slice(1));
+    var s = d.summary || {};
+    var cov = d.coverage || {};
+
+    var badges =
+      '<span class="badge">Revenue ' + fmtBaht(s.revenue) + '</span>' +
+      '<span class="badge badge-green">Gross margin ' + fmtBaht(s.gross_margin_thb) + (s.gross_margin_pct !== null && s.gross_margin_pct !== undefined ? ' (' + fmtPct(s.gross_margin_pct) + ')' : '') + '</span>' +
+      '<span class="badge">Contribution (before ship) ' + fmtBaht(s.contribution_before_shipping_thb) + (s.contribution_before_shipping_pct !== null && s.contribution_before_shipping_pct !== undefined ? ' (' + fmtPct(s.contribution_before_shipping_pct) + ')' : '') + '</span>' +
+      '<span class="badge">Contribution margin ' + fmtBaht(s.contribution_margin_thb) + (s.contribution_margin_pct !== null && s.contribution_margin_pct !== undefined ? ' (' + fmtPct(s.contribution_margin_pct) + ')' : '') + '</span>' +
+      '<span class="badge ' + (Number(s.full_cost_orders) === Number(s.orders) ? 'badge-green' : 'badge-amber') + '">Cost coverage ' + fmtNum(s.full_cost_orders) + '/' + fmtNum(s.orders) + ' orders</span>' +
+      (s.contains_estimates ? '<span class="badge badge-amber">contains estimates</span>' : '') +
+      '<span class="badge">Products with cost ' + fmtNum(cov.products_with_cost) + '/' + fmtNum(cov.active_products) + '</span>' +
+      '<span class="badge">Shipping config ' + fmtNum(cov.channels_with_shipping) + ' channel(s)</span>';
+    document.getElementById('profit-summary').innerHTML = badges;
+
+    if (!d.channels || !d.channels.length) {
+      setState('profit-channels-table', '', 'No commercial orders for the selected filters.');
+    } else {
+      var ch = '<table><thead><tr><th>Channel</th><th class="num">Orders</th><th class="num">Revenue</th><th class="num">Full-cost orders</th><th class="num">Gross margin</th><th class="num">Covered rev.</th><th class="num">Contribution (b.ship)</th><th class="num">Contribution</th></tr></thead><tbody>';
+      d.channels.forEach(function(r){
+        ch += '<tr>' +
+          '<td>' + esc(r.channel_norm) + (r.shipping_missing ? ' <span class="badge badge-amber" title="No shipping estimate — contribution margin unavailable">no ship est.</span>' : '') + '</td>' +
+          '<td class="num">' + fmtNum(r.orders) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue) + '</td>' +
+          '<td class="num">' + fmtNum(r.full_cost_orders) + '</td>' +
+          '<td class="num">' + fmtBaht(r.gross_margin_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.gross_covered_revenue) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_before_shipping_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_margin_thb) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('profit-channels-table').innerHTML = ch + '</tbody></table>';
+    }
+
+    if (!d.monthly || !d.monthly.length) {
+      setState('profit-monthly-table', '', 'No monthly profitability rows for the selected filters.');
+    } else {
+      var mh = '<table><thead><tr><th>Month</th><th class="num">Orders</th><th class="num">Revenue</th><th class="num">Gross margin</th><th class="num">Contribution (b.ship)</th><th class="num">Contribution</th><th>Estimates</th></tr></thead><tbody>';
+      d.monthly.forEach(function(r){
+        mh += '<tr>' +
+          '<td class="mono">' + esc(r.month) + '</td>' +
+          '<td class="num">' + fmtNum(r.orders) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue) + '</td>' +
+          '<td class="num">' + fmtBaht(r.gross_margin_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_before_shipping_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_margin_thb) + '</td>' +
+          '<td>' + (r.contains_estimates ? '<span class="badge badge-amber">est.</span>' : '<span class="badge badge-green">exact</span>') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('profit-monthly-table').innerHTML = mh + '</tbody></table>';
+    }
+
+    if (!d.products || !d.products.length) {
+      setState('profit-products-table', '', 'No product rows for the selected filters.');
+    } else {
+      var ph = '<table><thead><tr><th>Product_ID</th><th>Product</th><th class="num">Units</th><th class="num">Exact revenue</th><th class="num">Production cost</th><th class="num">Margin (before fees)</th><th>Cost basis</th></tr></thead><tbody>';
+      d.products.forEach(function(r){
+        ph += '<tr>' +
+          '<td class="mono">' + (r.product_id === null ? '—' : esc(r.product_id)) + '</td>' +
+          '<td>' + esc(r.product_title) + '</td>' +
+          '<td class="num">' + fmtNum(r.units) + '</td>' +
+          '<td class="num">' + fmtBaht(r.exact_revenue) + '</td>' +
+          '<td class="num">' + fmtBaht(r.production_cost_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.line_margin_before_fees_thb) + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="badge badge-red">unmapped</span>' : (r.costed_items ? (r.cost_is_estimate ? '<span class="badge badge-amber">estimate</span>' : '<span class="badge badge-green">verified</span>') : '<span class="badge badge-red">no cost</span>')) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('profit-products-table').innerHTML = ph + '</tbody></table>';
+    }
+
+    if (!d.after_ads || !d.after_ads.length) {
+      setState('profit-after-ads-table', '', 'No monthly rows yet.');
+    } else {
+      var ah = '<table><thead><tr><th>Month</th><th class="num">Revenue</th><th class="num">Contribution (b.ship)</th><th class="num">Ads spend</th><th class="num">Contribution after ads</th></tr></thead><tbody>';
+      d.after_ads.forEach(function(r){
+        ah += '<tr>' +
+          '<td class="mono">' + esc(r.month) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_before_shipping_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.ads_cost_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_after_ads_thb) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('profit-after-ads-table').innerHTML = ah + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('profit-summary').innerHTML = '<span class="badge badge-red">Profitability unavailable</span>';
+    setState('profit-channels-table', 'error', 'Could not load profitability: ' + e.message);
+    setState('profit-monthly-table', 'error', e.status === 500 ? 'Apply migration 053_profitability_layer.sql first.' : ('Could not load: ' + e.message));
+    setState('profit-products-table', '', '—');
+    setState('profit-after-ads-table', '', '—');
+  }
+}
+
+async function recalcFormulaCosts(){
+  var btn = document.getElementById('profit-recalc-btn');
+  var status = document.getElementById('profit-recalc-status');
+  btn.disabled = true;
+  status.textContent = 'Recalculating…';
+  try {
+    var res = await fetch('/api/admin/cost-model/recalculate', { method: 'POST', headers: await authHeaders() });
+    var body = null;
+    try { body = await res.json(); } catch(e) {}
+    if (!res.ok || !body || body.success === false) {
+      throw new Error((body && (body.message || body.error_code)) || ('HTTP ' + res.status));
+    }
+    status.textContent = 'Done: ' + body.updated_count + ' product cost(s) refreshed, ' + body.skipped_count + ' skipped (need verified cost).';
+    loadProfitability();
+  } catch(e) {
+    status.textContent = 'Failed: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Sales Detail ──
+
+async function loadSales(){
+  setState('sales-table', '', 'Loading…');
+  try {
+    var d = await api('/sales?limit=' + salesLimit + '&offset=' + salesOffset + filterQS({withProduct:true, withSalesFilters:true}));
+    salesTotal = d.pagination.total;
+    document.getElementById('sales-count').textContent = salesTotal === 0 ? '0 rows' :
+      (salesOffset + 1) + '–' + Math.min(salesOffset + salesLimit, salesTotal) + ' of ' + salesTotal;
+    document.getElementById('sales-prev').disabled = salesOffset <= 0;
+    document.getElementById('sales-next').disabled = salesOffset + salesLimit >= salesTotal;
+
+    if (!d.rows.length) { setState('sales-table', '', 'No sales rows for the selected filters.'); return; }
+    var displayRows = collapseIdenticalLineItems(d.rows || []);
+    var h = '<table><thead><tr><th>Date</th><th>Channel</th><th>Order</th><th>Status</th><th class="num">Order Total</th><th>Product_ID</th><th>Product</th><th class="num">Qty</th><th class="num">Line Revenue</th><th>Revenue</th><th>Mapping</th></tr></thead><tbody>';
+    displayRows.forEach(function(r){
+      var mapBadge = r.derived_mapping_status === 'Mapped' ? 'badge-green' : r.derived_mapping_status === 'Partial' ? 'badge-amber' : 'badge-red';
+      var qtyHtml = fmtNum(r.quantity);
+      var lineIds = (r._line_keys || []).filter(Boolean);
+      var orderTitle = lineIds.length > 0 ? ('Line identities: ' + lineIds.join(', ')) : '';
+      if ((r._line_count || 1) > 1) {
+        qtyHtml += ' <span class="badge badge-grey" title="Collapsed identical item rows for display">×' + fmtNum(r._line_count) + ' lines</span>';
+      }
+      h += '<tr>' +
+        '<td>' + esc(r.order_day) + '</td>' +
+        '<td>' + esc(r.channel_norm) + '</td>' +
+        '<td class="mono"' + (orderTitle ? (' title="' + esc(orderTitle) + '"') : '') + '>' + esc(r.source_order_id) + '</td>' +
+        '<td>' + esc(r.status) + '</td>' +
+        '<td class="num">' + fmtBaht(r.order_total) + '</td>' +
+        '<td class="mono">' + (r.product_id === null ? '—' : esc(r.product_id)) + '</td>' +
+        '<td>' + esc(r.product_title) + '</td>' +
+        '<td class="num">' + qtyHtml + '</td>' +
+        '<td class="num">' + fmtBaht(r.line_revenue) + '</td>' +
+        '<td><span class="badge ' + (r.revenue_status === 'EXACT' ? 'badge-blue' : 'badge-grey') + '">' + esc(r.revenue_status) + '</span></td>' +
+        '<td><span class="badge ' + mapBadge + '">' + esc(r.derived_mapping_status || '—') + '</span></td>' +
+        '</tr>';
+    });
+    document.getElementById('sales-table').innerHTML = h + '</tbody></table>';
+  } catch(e) {
+    setState('sales-table', 'error', 'Could not load sales: ' + e.message);
+  }
+}
+
+function collapseIdenticalLineItems(rows){
+  var out = [];
+  var map = {};
+  (rows || []).forEach(function(r){
+    var key = [
+      r.order_day || '',
+      r.channel_norm || '',
+      r.source_system || '',
+      r.source_order_id || '',
+      r.status || '',
+      String(r.order_total == null ? '' : r.order_total),
+      String(r.product_id == null ? '' : r.product_id),
+      r.product_title || '',
+      r.raw_item_text || '',
+      r.revenue_status || '',
+      String(r.line_revenue == null ? '' : r.line_revenue),
+      r.derived_mapping_status || ''
+    ].join('|');
+    if (!map[key]) {
+      var copy = Object.assign({}, r);
+      copy._line_count = 1;
+      var baseOrder = String(r.source_order_id || 'order');
+      copy._line_keys = [r.source_item_key ? String(r.source_item_key) : (baseOrder + '-line1')];
+      map[key] = copy;
+      out.push(copy);
+      return;
+    }
+    map[key]._line_count += 1;
+    map[key].quantity = Number(map[key].quantity || 0) + Number(r.quantity || 0);
+    var baseOrder2 = String(r.source_order_id || 'order');
+    var fallbackLineId = baseOrder2 + '-line' + String(map[key]._line_count);
+    map[key]._line_keys.push(r.source_item_key ? String(r.source_item_key) : fallbackLineId);
+  });
+  return out;
+}
+
+function salesPage(dir){
+  var next = salesOffset + dir * salesLimit;
+  if (next < 0 || next >= salesTotal) return;
+  salesOffset = next;
+  loadSales();
+}
+
+// ── Product Participation ──
+
+async function loadProducts(){
+  setState('products-table', '', 'Loading…');
+  try {
+    var d = await api('/products?' + filterQS().slice(1));
+    if (!d.products.length) { setState('products-table', '', 'No product activity for the selected filters.'); return; }
+    var h = '<table><thead><tr><th>Product_ID</th><th>Product</th><th class="num">Orders</th><th class="num">Units</th><th>Top Channel</th><th class="num">Channels</th><th>28d Trend</th><th class="num">Exact Revenue</th><th class="num">Revenue Coverage</th></tr></thead><tbody>';
+    d.products.forEach(function(p){
+      var g = p.growth_vs_previous_28d;
+      var trend = (g === null || g === undefined)
+        ? '<span class="muted">n/a</span>'
+        : (g >= 0 ? '<span style="color:var(--c-green)">▲ ' : '<span style="color:var(--c-red)">▼ ') + Math.abs(Math.round(g * 100)) + '%</span>';
+      h += '<tr>' +
+        '<td class="mono">' + (p.product_id === null ? '—' : esc(p.product_id)) + '</td>' +
+        '<td>' + esc(p.product_title) + '</td>' +
+        '<td class="num">' + fmtNum(p.orders_containing_product) + '</td>' +
+        '<td class="num">' + fmtNum(p.quantity) + '</td>' +
+        '<td>' + esc(p.top_channel || '—') + '</td>' +
+        '<td class="num">' + fmtNum(p.channel_count) + '</td>' +
+        '<td>' + trend + '</td>' +
+        '<td class="num">' + fmtBaht(p.exact_revenue) + '</td>' +
+        '<td class="num">' + fmtPct(p.revenue_coverage_pct) + '</td>' +
+        '</tr>';
+    });
+    document.getElementById('products-table').innerHTML = h + '</tbody></table>';
+  } catch(e) {
+    setState('products-table', 'error', 'Could not load products: ' + e.message);
+  }
+}
+
+// ── Channel Analysis ──
+
+async function loadChannels(){
+  setState('channels-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    var d = await api('/channels' + (qs.length ? '?' + qs.join('&') : ''));
+    if (!d.channels.length) { setState('channels-table', '', 'No channel activity for the selected period.'); return; }
+    var h = '<table><thead><tr><th>Channel</th><th class="num">Orders</th><th class="num">Revenue</th><th class="num">Units</th><th class="num">AOV</th><th class="num">Mapped %</th></tr></thead><tbody>';
+    d.channels.forEach(function(c){
+      h += '<tr><td>' + esc(c.channel_norm) + '</td><td class="num">' + fmtNum(c.orders) + '</td><td class="num">' + fmtBaht(c.order_revenue) + '</td><td class="num">' + fmtNum(c.units) + '</td><td class="num">' + fmtBaht(c.aov) + '</td><td class="num">' + fmtPct(c.mapped_pct) + '</td></tr>';
+    });
+    document.getElementById('channels-table').innerHTML = h + '</tbody></table>';
+
+    // Populate the channel filter on first load
+    var sel = document.getElementById('f-channel');
+    if (sel.options.length <= 1) {
+      d.channels.forEach(function(c){
+        var o = document.createElement('option'); o.value = c.channel_norm; o.textContent = c.channel_norm;
+        sel.appendChild(o);
+      });
+    }
+  } catch(e) {
+    setState('channels-table', 'error', 'Could not load channels: ' + e.message);
+  }
+}
+
+async function populateProductFilter(){
+  var sel = document.getElementById('f-product');
+  if (!sel) return;
+  if (productFilterLoaded || sel.options.length > 1) {
+    productFilterLoaded = true;
+    return;
+  }
+  if (productFilterLoading) return productFilterLoading;
+  productFilterLoading = (async function(){
+    try {
+      var d = await api('/products');
+      if (sel.options.length > 1) {
+        productFilterLoaded = true;
+        return;
+      }
+      d.products.forEach(function(p){
+        if (p.product_id === null) return;
+        var o = document.createElement('option');
+        o.value = p.product_id;
+        o.textContent = '#' + p.product_id + ' — ' + p.product_title;
+        sel.appendChild(o);
+      });
+      productFilterLoaded = sel.options.length > 1;
+    } catch(e) {}
+  })().finally(function(){
+    productFilterLoading = null;
+  });
+  try {
+    await productFilterLoading;
+  } catch(e) {}
+}
+
+// ── Opportunity Engine (Phase 14) ──
+
+function oppTierBadge(tier){
+  if (tier === 'HIGH') return '<span class="badge badge-green">HIGH</span>';
+  if (tier === 'MEDIUM') return '<span class="badge badge-amber">MEDIUM</span>';
+  if (tier === 'LOW') return '<span class="badge">LOW</span>';
+  return '<span class="badge badge-red">INSUFFICIENT_DATA</span>';
+}
+
+function oppComponentLine(c){
+  if (!c) return '—';
+  if (c.normalized === null || c.normalized === undefined) return '<span class="muted">missing' + (c.flags ? ' (' + esc(c.flags) + ')' : '') + '</span>';
+  return 'p' + fmtNum(c.normalized);
+}
+
+function renderOppRows(rows, withChannel){
+  if (!rows.length) return '<div class="state">No rows</div>';
+  var head = '<table><thead><tr>' +
+    (withChannel ? '<th>Channel</th>' : '') +
+    '<th>Rank</th><th>Product</th><th class="num">Score</th><th>Tier</th><th class="num">Confidence</th>' +
+    '<th class="num">Momentum</th><th class="num">Profit*</th><th class="num">ChannelFit</th><th class="num">Demand</th>' +
+    '<th>Available w</th><th>Missing</th><th>Reason</th></tr></thead><tbody>';
+  var body = rows.map(function(r){
+    var comps = {};
+    try { comps = JSON.parse(r.components_json || '{}'); } catch(e) {}
+    var missing = r.missing_components ? esc(r.missing_components) : '—';
+    return '<tr>' +
+      (withChannel ? '<td>' + esc(r.channel || '') + '</td>' : '') +
+      '<td>' + (r.rank === null || r.rank === undefined ? '—' : '#' + r.rank) + '</td>' +
+      '<td>' + esc(r.title_en || r.slug || ('#' + r.product_id)) + '</td>' +
+      '<td class="num">' + (r.score === null || r.score === undefined ? '—' : fmtNum(r.score)) + '</td>' +
+      '<td>' + oppTierBadge(r.tier) + '</td>' +
+      '<td class="num">' + fmtNum(r.confidence) + '</td>' +
+      '<td class="num">' + oppComponentLine(comps.momentum) + '</td>' +
+      '<td class="num">' + oppComponentLine(comps.profitability) + '</td>' +
+      '<td class="num">' + oppComponentLine(comps.channel_fit) + '</td>' +
+      '<td class="num">' + oppComponentLine(comps.demand) + '</td>' +
+      '<td>' + fmtNum(r.available_weight) + '</td>' +
+      '<td style="max-width:220px;font-size:0.6875rem">' + missing + '</td>' +
+      '<td style="max-width:340px;font-size:0.6875rem">' + esc(r.reasons || '') + '</td>' +
+      '</tr>';
+  }).join('');
+  return head + body + '</tbody></table>';
+}
+
+async function loadOpportunity(){
+  var summary = document.getElementById('opp-summary');
+  var overall = document.getElementById('opp-overall-table');
+  var channel = document.getElementById('opp-channel-table');
+  try {
+    var body = await api('/opportunity');
+    if (!body.latest_score_date) {
+      summary.innerHTML = '<span class="badge badge-amber">No snapshot yet</span><span class="muted" style="font-size:0.75rem">Click “Recompute scores” to generate the first snapshot (weekly cron also runs Monday 05:00 UTC).</span>';
+      overall.innerHTML = '<div class="state">No snapshot yet</div>';
+      channel.innerHTML = '<div class="state">No snapshot yet</div>';
+      return;
+    }
+    var badges = '<span class="badge">Model ' + esc(body.model_version) + '</span>' +
+      '<span class="badge">Snapshot ' + esc(body.latest_score_date) + '</span>' +
+      '<span class="badge">' + fmtNum(body.row_counts.total) + ' rows (' + fmtNum(body.row_counts.scored) + ' scored, ' + fmtNum(body.row_counts.insufficient) + ' insufficient)</span>';
+    summary.innerHTML = badges;
+    overall.innerHTML = renderOppRows(body.overall || [], false);
+    channel.innerHTML = renderOppRows(body.by_channel || [], true);
+  } catch(e) {
+    summary.innerHTML = '<span class="badge badge-red">error</span>';
+    overall.innerHTML = '<div class="state">Error: ' + esc(e.message) + '</div>';
+    channel.innerHTML = '<div class="state">Error</div>';
+  }
+}
+
+async function recomputeOpportunity(){
+  var btn = document.getElementById('opp-recompute-btn');
+  var status = document.getElementById('opp-recompute-status');
+  btn.disabled = true;
+  status.textContent = 'Recomputing…';
+  try {
+    var res = await fetch(API + '/opportunity/recompute', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({}) });
+    var body = null;
+    try { body = await res.json(); } catch(e) {}
+    if (!res.ok || !body || body.success === false) {
+      throw new Error((body && (body.message || body.error_code)) || ('HTTP ' + res.status));
+    }
+    status.textContent = 'Done: ' + body.scored_count + ' scored, ' + body.insufficient_count + ' insufficient of ' + body.rows_total + ' rows (model ' + body.model_version + ', ' + body.score_date + ').';
+    loadOpportunity();
+  } catch(e) {
+    status.textContent = 'Failed: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+var DASHBOARD_TABS = [
+  { key: 'overview' },
+  { key: 'sales' },
+  { key: 'seo' },
+  { key: 'etsy' },
+  { key: 'google-ads' },
+  { key: 'growth' },
+  { key: 'data-quality' }
+];
+
+function setDashboardTab(tabKey){
+  var key = (tabKey || '').toLowerCase();
+  if (!DASHBOARD_TABS.some(function(t){ return t.key === key; })) key = 'overview';
+  var panels = document.querySelectorAll('[data-tab-group]');
+  for (var i = 0; i < panels.length; i++) {
+    var groups = String(panels[i].getAttribute('data-tab-group') || '')
+      .split(/\s+/)
+      .filter(function(v){ return !!v; });
+    panels[i].style.display = groups.indexOf(key) >= 0 ? '' : 'none';
+  }
+  var btns = document.querySelectorAll('#dashboard-tab-nav .tab-btn');
+  for (var j = 0; j < btns.length; j++) {
+    var active = btns[j].getAttribute('data-tab') === key;
+    btns[j].classList.toggle('active', active);
+    btns[j].setAttribute('aria-selected', active ? 'true' : 'false');
+  }
+  try { localStorage.setItem('data_analyst_active_tab', key); } catch(e) {}
+}
+
+function initDashboardTabs(){
+  var nav = document.getElementById('dashboard-tab-nav');
+  if (!nav) return;
+  nav.addEventListener('click', function(ev){
+    var target = ev.target;
+    var btn = target && target.closest ? target.closest('button[data-tab]') : null;
+    if (!btn) return;
+    setDashboardTab(btn.getAttribute('data-tab'));
+  });
+  var startTab = 'overview';
+  try {
+    var saved = localStorage.getItem('data_analyst_active_tab');
+    if (saved && DASHBOARD_TABS.some(function(t){ return t.key === saved; })) startTab = saved;
+  } catch(e) {}
+  setDashboardTab(startTab);
+}
+
+// ── Orchestration ──
+
+function applyFilters(){
+  salesOffset = 0;
+  loadSummary(); loadQuoteFunnel(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadGa4LeadAcquisition(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability();
+}
+
+function loadAll(){
+  loadDQ(); loadSummary(); loadQuoteFunnel(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadGa4LeadAcquisition(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability(); loadOpportunity(); populateProductFilter();
+}
+
+async function boot(){
+  // Server-side middleware gates this page in production; the client gate
+  // mirrors the SPA behavior for pages.dev/localhost where cookies are absent.
+  var hasLocalSecret = false;
+  try { hasLocalSecret = !!localStorage.getItem('admin_secret'); } catch(e) {}
+  var skip = !!window.__SKIP_CLERK || (canUseAdminSecretFallback() && hasLocalSecret);
+  if (!skip) {
+    var tries = 0;
+    while (tries < 40 && !(window.clerk && window.clerk.session)) {
+      await new Promise(function(r){ setTimeout(r, 250); });
+      tries++;
+    }
+    if (!(window.clerk && window.clerk.session)) {
+      document.getElementById('gate-msg').textContent = 'You are not signed in. Sign in through Super Admin first, then return here.';
+      document.getElementById('gate-signin').style.display = 'inline-flex';
+      return;
+    }
+  }
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initDashboardTabs();
+  loadAll();
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -31,13 +31,39 @@
 
     add: function (item) {
       const cart = loadCart();
+      const isQuoteItem = item.type === 'custom_quote' || !!item.is_quote;
       const existing = cart.items.find(function (i) {
+        if (isQuoteItem) {
+          // Quote lines are identified by their approved quote_id: two different
+          // quotes never merge, even with identical dimensions/fabric/color.
+          if (item.quote_id) {
+            return String(i.quote_id || '') === String(item.quote_id);
+          }
+          // Defensive fallback for malformed quote items: also require the same slug.
+          return i.type === item.type && i.product_slug === item.product_slug &&
+            (i.color || '').toLowerCase().trim() === (item.color || '').toLowerCase().trim() &&
+            JSON.stringify(i.dimensions) === JSON.stringify(item.dimensions);
+        }
+        // Non-quote products keep the existing dedupe behavior.
         return i.type === item.type && i.fabric === item.fabric &&
           (i.color || '').toLowerCase().trim() === (item.color || '').toLowerCase().trim() &&
           JSON.stringify(i.dimensions) === JSON.stringify(item.dimensions);
       });
       if (existing) {
         existing.qty = (existing.qty || 1) + 1;
+        if (isQuoteItem && item.quote_id) {
+          // Keep the line in sync with the latest approved quote render —
+          // admin may have re-priced the quote since the line was first added.
+          existing.price_usd = item.price_usd;
+          existing.price_thb = item.price_thb;
+          existing.quote_currency = item.quote_currency;
+          existing.free_shipping = item.free_shipping;
+          existing.dimensions = item.dimensions;
+          existing.fabric = item.fabric;
+          existing.color = item.color;
+          existing.product_slug = item.product_slug;
+          existing.product_name = item.product_name || existing.product_name;
+        }
       } else {
         cart.items.push(item);
       }
@@ -151,6 +177,10 @@
             var merged = localCart.items.slice();
             data.items.forEach(function(sItem) {
               var found = merged.some(function(lItem) {
+                // Quote lines match on quote_id (same identity rule as add()).
+                if (sItem.quote_id) {
+                  return String(lItem.quote_id || '') === String(sItem.quote_id);
+                }
                 return lItem.type === sItem.type &&
                   lItem.product_slug === sItem.product_slug &&
                   (lItem.color || '').toLowerCase().trim() === (sItem.color || '').toLowerCase().trim() &&

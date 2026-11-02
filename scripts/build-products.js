@@ -158,8 +158,12 @@ function buildFabricHTML(p) {
     grid += '</div>';
     return grid;
   }
-  // TPU encasement / pillow protector â€” single-layer TPU specs
-  if (p.productType === 'encasement' || p.productType === 'pillow-protector') {
+  // TPU encasement / pillow protector / TPU-only cushion protector â€” material specs
+  if (
+    p.productType === 'encasement' ||
+    p.productType === 'pillow-protector' ||
+    (p.productType === 'fitted-sheet' && p.lockedFabric === 'tpu')
+  ) {
     const tpuSpecs = [
       { label: 'Material', value: 'TPU Waterproof Membrane' },
       { label: 'Protects', value: 'Water Spills &amp; Accidents' },
@@ -189,6 +193,9 @@ function buildFabricHTML(p) {
 
 // Generate colors HTML (empty for now)
 function buildColorsHTML(p) {
+  // TPU-only products use a fixed white appearance (no color selector)
+  if (p.lockedFabric === 'tpu' && (p.productType === 'fitted-sheet' || p.productType === 'marine' || p.productType === 'protector')) return '';
+
   // Only render color selector for products that have fabric choices
   const colorProductTypes = ['fitted-sheet', 'flat-sheet', 'duvet', 'pillowcase', 'marine'];
   if (!colorProductTypes.includes(p.productType)) return '';
@@ -303,6 +310,8 @@ function buildCustomizable(slug, p, prod) {
     '{{SIZE_PLACEHOLDER}}': sizePlaceholders[pt] || 'Choose size',
     '{{NEEDS_DEPTH}}': String(p.needsDepth === true),
     '{{DIM_LABEL}}': dimLabels[pt] || 'product',
+    '{{DIM_DIAGRAM_ALT}}': 'Mattress dimension diagram: Width (W), Length (L), Depth (D)',
+    '{{DIM_DIAGRAM_CAPTION}}': 'Measure your mattress at its widest, longest, and deepest points',
     '{{MAX_WIDTH}}': String(dims.width),
     '{{MAX_LENGTH}}': String(dims.length),
     '{{MAX_DEPTH}}': dims.depth !== null ? String(dims.depth) : '0',
@@ -346,20 +355,44 @@ function buildCustomizable(slug, p, prod) {
   // Dim diagram image: per product type
   if (slug === 'marine-fitted-sheet') {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-VBerth-diagram.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Marine mattress diagram: Head Width (HW), Length (L), Depth (D), and Foot Width (FW)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your boat mattress shape and enter HW, L, D, and FW where shown';
     replacements['{{DIM_INPUTS_CLASS}}'] = ' vberth';
   } else if (pt === 'duvet') {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Duvet.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Duvet or blanket dimensions diagram: Width (W) and Length (L)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your duvet or blanket at its widest and longest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   } else if (pt === 'pillowcase' || pt === 'pillow-protector') {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Pillowcase.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Pillow dimensions diagram: Width (W) and Length (L)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your pillow at its widest and longest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   } else {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram-01.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Mattress dimension diagram: Width (W), Length (L), Depth (D)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your mattress at its widest, longest, and deepest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
+  }
+
+  // Cushion protector keeps fitted-sheet pricing logic but needs cushion wording in UI.
+  if (slug === 'custom-waterproof-cushion-protector') {
+    replacements['{{SIZE_LABEL}}'] = 'Select Cushion Size';
+    replacements['{{DIM_LABEL}}'] = 'cushion';
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-cushion-diagram-01.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your cushion at its longest, widest, and thickest points';
+    replacements['{{DEPTH_FIELD_HTML}}'] = replacements['{{DEPTH_FIELD_HTML}}'].replace('Depth (D)', 'Thickness (T)');
   }
 
   for (const [key, value] of Object.entries(replacements)) {
     html = html.split(key).join(value);
+  }
+
+  if (slug === 'custom-waterproof-cushion-protector') {
+    html = html
+      .replace(/>\s*Pet Resist\s*<\/div>/gi, '>Pet Accident Protection</div>')
+      .replace(/Measure the cushion itself and provide width,\s*length,\s*and thickness\.\s*Do not use mattress dimensions\./gi, 'Measure the cushion itself and provide width, length, and thickness.');
   }
 
   return normalizeMojibake(html);
@@ -383,6 +416,7 @@ function buildFixed(slug, p, prod) {
     '{{RELATED_PRODUCTS}}': buildRelatedHTML(p.relatedSlugs),
     '{{TAGS_HTML}}': buildTagsHTML(p.tags),
     '{{PRODUCT_SLUG}}': slug,
+    '{{PRICE_DISPLAY}}': p.priceDisplay || (prod.priceUsd ? 'USD ' + prod.priceUsd.toFixed(2) : 'USD 0.00'),
   };
 
   // Build fixed pricing HTML
@@ -506,7 +540,7 @@ function buildFixedPricingHTML(slug, p, prod) {
   } else {
     // BedBridge or Bed Lifter: simple price display
     html += '<div class="one-size-badge">One Size</div>';
-    html += '<div class="price-display">' + (p.priceDisplay || ('USD ' + (p.priceUsd || 0).toFixed(2))) + '</div>';
+    html += '<div class="price-display" id="price-display">' + (p.priceDisplay || ('USD ' + (p.priceUsd || 0).toFixed(2))) + '</div>';
     html += '<div class="price-note">Excludes shipping &amp; import tariff</div>';
 
     // Specs if available
@@ -566,8 +600,8 @@ function buildFixedContentHTML(slug, p) {
     
     // Overview
     html += '<div style="margin-bottom:40px;">';
-    html += '<h2 style="font-size:1.8rem; margin-bottom:12px; color:var(--color-heading);">Split Mattresses? Sleep on a Seamless New Bed.</h2>';
-    html += '<p style="font-size:1.1rem; color:var(--color-muted); line-height:1.6; max-width:800px;">The MildMate BedBridge Connector is the ultimate solution for bridging the uncomfortable gap between two split mattresses (such as two Twin XL or Double beds). It instantly transforms separate beds into one large, seamless sleeping surface. Perfect for couples with different mattress preferences, families who co-sleep, or guest room conversions.</p>';
+    html += '<h2 style="font-size:1.8rem; margin-bottom:12px; color:var(--color-heading);">Turn Two Mattresses Into One Smoother Joined Bed</h2>';
+    html += '<p style="font-size:1.1rem; color:var(--color-muted); line-height:1.6; max-width:800px;">The MildMate BedBridge Connector is a universal T-shaped mattress gap filler designed to soften the centre join between two closely aligned mattresses. Use the same 190 × 30 × 20 cm BedBridge across many Twin, Twin XL, King split-bed, guest-room, and family co-sleep setups. For unusual joined-bed sizes, the fitted sheet is normally the part to customize — not the BedBridge.</p>';
     html += '</div>';
 
     // How it works
@@ -578,19 +612,19 @@ function buildFixedContentHTML(slug, p) {
     html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
     html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">1</span>';
     html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Position the Wedge</h4>';
-    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Place the T-shaped wedge between the two mattresses. The center stem slides deep into the crevice, while the wide top panel lays flat on the bed surfaces.</p>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Place the T-shaped connector between the two mattresses. The 20 cm centre stem sits inside the gap while the top panel rests across both sleep surfaces.</p>';
     html += '</div>';
 
     html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
     html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">2</span>';
     html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Push Beds Together</h4>';
-    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Push the mattresses flush. The high-density fiber compresses slightly to seal the gap and stay locked in place through natural friction—no straps needed.</p>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Push the mattresses closely together. Mattress compression helps hold the centre stem in position without wraparound straps or buckles.</p>';
     html += '</div>';
 
     html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
     html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">3</span>';
     html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Cover with a Sheet</h4>';
-    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Cover both mattresses with a single fitted sheet. We recommend a MildMate elastic deep-pocket fitted sheet to pull everything together for a secure, zero-slip fit.</p>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Cover both mattresses and the BedBridge with one fitted sheet. Fitted-sheet tension adds stability and helps create a smoother joined sleeping surface.</p>';
     html += '</div>';
 
     html += '</div>';
@@ -603,24 +637,24 @@ function buildFixedContentHTML(slug, p) {
 
     const benefits = [
       {
-        title: 'Seamless Sleep for Couples (Split-to-Seamless Conversion)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> When partners use two different mattresses for individual comfort, a deep "valley" or gap forms in the middle, preventing closeness.<br><strong style="color:var(--color-heading);">The Solution:</strong> Our T-shaped wedge slides deep into the center crevice while the wide top panel rests flush against both mattresses, bridging the divide to create one continuous, level sleeping plane.'
+        title: 'One Universal Size for Many Joined-Bed Setups',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> BedBridge is supplied in one universal size: 190 cm length, 30 cm top width, and 20 cm centre depth.<br><strong style="color:var(--color-heading);">Why it matters:</strong> You normally do not need custom BedBridge sizing. For 200–203 cm mattresses, centre the BedBridge along the join; a small uncovered area near the head and foot is normal.'
       },
       {
-        title: 'Strap-Free, Tool-Free Setup (No-Strap Friction System)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Traditional bed connectors rely on annoying nylon straps wrapped around the entire mattress perimeter, which are difficult to hide and prone to loosening.<br><strong style="color:var(--color-heading);">The Solution:</strong> The bridge stays locked in place through compression alone. The density and shape of the T-profile are naturally "sandwiched" by mattress pressure and the tension of your fitted sheet.'
+        title: '20 cm Centre Stem Works Across Many Mattress Depths',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> The centre stem is designed to sit inside the gap and does not need to match full mattress depth.<br><strong style="color:var(--color-heading);">Why it matters:</strong> A deeper mattress (for example 27 cm) does not require a deeper custom BedBridge.'
       },
       {
-        title: 'Twin XL-to-King Versatility (Standard-to-King Bridge)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Buying a dedicated King mattress for a guest room limits flexibility if you later need separate beds for individual guests.<br><strong style="color:var(--color-heading);">The Solution:</strong> At 190cm (75") long, this bridge provides full-length coverage for standard mattresses. It lets you create an "on-demand" King configuration that can be disassembled and stored in minutes.'
+        title: 'Strap-Free Practical Setup',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> No wraparound straps are required in normal use.<br><strong style="color:var(--color-heading);">Why it matters:</strong> Mattress compression plus fitted-sheet tension help keep the BedBridge in position while softening the centre join.'
       },
       {
-        title: 'Zero Humps or Ridges (True-Flush Surface Leveling)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Bulky, poorly designed bridges are too thick on top, creating a raised ridge in the center of the bed that is felt through the sheets.<br><strong style="color:var(--color-heading);">The Solution:</strong> The bridge features a thin, tapered edge design on the top flange. This ensures the transition from mattress to bridge is nearly imperceptible under your sheets.'
+        title: 'Works Best Under One Correctly Sized Fitted Sheet',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> Cover both mattresses and the BedBridge with one fitted sheet with full-perimeter elastic and adequate pocket depth.<br><strong style="color:var(--color-heading);">Why it matters:</strong> For unusual combined sizes, customize the fitted sheet dimensions — not the BedBridge.'
       },
       {
-        title: 'Designed for Deep-Pocket Bedding (Systemic Anchoring)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Even the best bed bridge can shift or wiggle if the top sheet is loose or shallow.<br><strong style="color:var(--color-heading);">The Solution:</strong> The bridge is optimized for use with 360-degree elasticated deep-pocket sheets. The deep pockets pull the mattresses inward, while the elastic provides the downward force to keep the bridge firmly seated.'
+        title: 'Family and Floor-Bed Friendly Guidance',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> BedBridge can be used for family/co-sleep floor-bed setups when mattresses are aligned and the centre gap is about 2.5 cm (1 in) or less.<br><strong style="color:var(--color-heading);">Why it matters:</strong> If mattresses slide on smooth floors, adding a suitable non-slip underlay beneath them can improve stability.'
       }
     ];
 
@@ -635,6 +669,10 @@ function buildFixedContentHTML(slug, p) {
     });
 
     html += '</div>';
+    html += '</div>';
+
+    html += '<div style="margin-bottom:32px; background:#fff; border:1px solid var(--color-border); border-radius:6px; padding:16px 18px;">';
+    html += '<p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.6;"><strong style="color:var(--color-heading);">Important:</strong> BedBridge helps create a smoother transition between two mattresses, but it does not permanently lock mattresses together or guarantee that the centre join will be completely undetectable.</p>';
     html += '</div>';
 
     // Care Instructions
@@ -750,9 +788,170 @@ function buildFixedContentHTML(slug, p) {
   return '';
 }
 
+// ===== Thai variant generation =====
+const TH_PUBLIC_DIR = path.join(ROOT, 'public', 'th', 'product');
+
+// Generic Thai FAQ block for non-marine customizable products.
+// 4 standard questions matching the EN template; links rewritten to /th/...
+const TH_FAQ_BLOCK = `<details class="faq-item" open>
+            <summary>จะเลือกขนาดที่นอนได้อย่างไร?</summary>
+            <p>ดู<a href="/th/sizeguide/">คู่มือขนาด</a>ของเราสำหรับขนาดมาตรฐาน หรือกรอกขนาดจริงของคุณในแบบฟอร์มสั่งตัดตามออเดอร์</p>
+          </details>
+          <details class="faq-item">
+            <summary>สามารถสั่งตัดตามขนาดพิเศษได้หรือไม่?</summary>
+            <p>ได้ คลิก <strong>ขนาดที่นอนแบบกำหนดเอง</strong> กรอกขนาดของคุณ แล้วส่งคำขอใบเสนอราคาสั่งตัด</p>
+          </details>
+          <details class="faq-item">
+            <summary>ควรทราบรายละเอียดเกี่ยวกับเนื้อผ้าและการดูแลรักษาอย่างไร?</summary>
+            <p>ผ้าทุกชนิดของ MildMate ซักเครื่องได้ที่อุณหภูมิปานกลาง (40°C / 104°F) ห้ามใช้น้ำยาฟอกขาว แนะนำให้ตากแห้งในที่ร่มเพื่อรักษาคุณภาพเส้นใยระยะยาว</p>
+          </details>
+          <details class="faq-item">
+            <summary>ใช้เวลาจัดส่งนานเท่าไหร่?</summary>
+            <p>ผลิตแบบสั่งตัดตามออเดอร์ที่โรงงานในประเทศไทย ระยะเวลาจัดส่งขึ้นอยู่กับปลายทางและจะแจ้งให้ทราบในอีเมลใบเสนอราคาหรือคำสั่งซื้อของคุณ</p>
+          </details>`;
+
+// Thai FAQ block for marine products (V-Berth sheets + marine mattress protector).
+const TH_MARINE_FAQ_BLOCK = `<details class="faq-item" open>
+            <summary>ควรทราบรายละเอียดเกี่ยวกับเนื้อผ้าและการดูแลรักษาอย่างไร?</summary>
+            <p>ผ้า CloudSoft ของเราซักเครื่องได้ แห้งเร็ว ทนทานต่อสภาพแวดล้อมทางทะเล ห้ามใช้น้ำยาฟอกขาว แนะนำให้ตากแห้งในที่ร่มเพื่อรักษาคุณภาพเส้นใยระยะยาว</p>
+          </details>
+          <details class="faq-item">
+            <summary>วัดขนาดที่นอนเรืออย่างไร?</summary>
+            <p>ใช้<a href="/th/sizeguide/">คู่มือขนาด</a>ของเราเป็นข้อมูลอ้างอิง เลือกรูปทรงเตียงเรือของคุณด้านบน แล้วกรอกความยาวของแต่ละด้านให้ตรงตามที่วัดได้จริง ระบุความหนาของที่นอนเพื่อให้ตัดเย็บพอดีแบบกำหนดเอง</p>
+          </details>
+          <details class="faq-item">
+            <summary>ใช้เวลาผลิตและจัดส่งนานเท่าไหร่?</summary>
+            <p>ผลิตแบบสั่งตัดตามออเดอร์ตามรูปทรงและขนาดจริงของคุณ ใช้เวลาผลิต 5–7 วันทำการ ระยะเวลาจัดส่งขึ้นอยู่กับปลายทาง คุณจะได้รับหมายเลขพัสดุเมื่อจัดส่งแล้ว</p>
+          </details>
+          <details class="faq-item">
+            <summary>ถ้ารูปทรงไม่อยู่ในลิสต์ล่ะ?</summary>
+            <p>เลือกรูปทรงที่ใกล้เคียงที่สุดและเพิ่มหมายเหตุในแบบฟอร์มขอใบเสนอราคา — เราผลิตตามแบบจริงของคุณ หรือ<a href="/th/contact/">ติดต่อเรา</a>โดยตรงพร้อมแนบภาพวาดหรือรูปถ่ายที่นอนเรือของคุณ</p>
+          </details>`;
+
+// Marine product slugs that should receive the marine-specific FAQ block.
+const MARINE_SLUGS = new Set(['marine-fitted-sheet', 'marine-top-sheet', 'marine-mattress-protector']);
+
+// Thai chrome word substitutions (mirrors functions/_middleware.ts Thai locale pass).
+// These are applied to the static HTML so the chrome is Thai even though the file is static.
+const TH_CHROME_REPLACEMENTS = [
+  // Desktop nav
+  ['"nav-link">Shop</a>', '"nav-link">สินค้า</a>'],
+  ['"nav-link">Fabrics</a>', '"nav-link">เนื้อผ้า</a>'],
+  ['"nav-link">Size Guide</a>', '"nav-link">คู่มือขนาด</a>'],
+  ['"nav-link">Blog</a>', '"nav-link">บทความ</a>'],
+  // Mobile drawer nav (no class)
+  ['<a href="/products/?">Shop</a>', '<a href="/products/">สินค้า</a>'],
+  ['<a href="/fabric/?">Fabrics</a>', '<a href="/fabric/">เนื้อผ้า</a>'],
+  ['<a href="/sizeguide/?">Size Guide</a>', '<a href="/sizeguide/">คู่มือขนาด</a>'],
+  ['<a href="/blogs/?">Blog</a>', '<a href="/blogs/">บทความ</a>'],
+  // Sign in / Cart
+  ['>Sign In<', '>เข้าสู่ระบบ<'],
+  // Footer headings
+  ['>Quick Links</h3>', '>ลิงก์ด่วน</h3>'],
+  ['>Customer Service</h3>', '>บริการลูกค้า</h3>'],
+  ['>FAQ</h3>', '>คำถามที่พบบ่อย</h3>'],
+  ['>Size Guide</h3>', '>คู่มือขนาด</h3>'],
+  ['>Blog</h3>', '>บทความ</h3>'],
+  ['>Shop With Us</h3>', '>สั่งซือกับเรา</h3>'],
+  ['>Contact</h3>', '>ติดต่อเรา</h3>'],
+  // Footer links
+  ['>About Us</a>', '>เกี่ยอบกับเรา</a>'],
+  ['>Contact Us</a>', '>ติดต่อเรา</a>'],
+  ['>Reviews</a>', '>รีวิว</a>'],
+  ['>FAQ</a>', '>คำถามที่พบบ่อย</a>'],
+  ['>Privacy Policy</a>', '>นโยบายความเป็นส่วนตัว</a>'],
+  ['>Returns &amp; Delivery</a>', '>การคืนสินค้าและการจัดส่ง</a>'],
+  // Breadcrumb category labels (matches {{BREADCRUMB_CATEGORY_LABEL}} substitution)
+  ['>Fitted Sheets<', '>ผ้าปูที่นอนรัดมุม<'],
+  ['>Pillowcases<', '>ปลอกหมอน<'],
+  ['>Protection<', '>ผลิตภัณฑ์ปกป้อง<'],
+  ['>Duvet Covers<', '>ปลอกผ้าห่ม<'],
+  ['>Sheets<', '>ผ้าปูที่นอน<']
+];
+
+// Pick the best Thai title for a product. Some products.json entries store
+// nameTh as plain Thai text, others store double-mojibake UTF-8 bytes that need
+// a Latin-1 round-trip to recover. If we can't recover readable Thai, fall back
+// to the English name with a "(Thai)" suffix so the page is still distinct.
+function pickThaiTitle(raw, fallbackName) {
+  if (!raw) return fallbackName + ' (Thai)';
+  // Heuristic: a clean Thai string should be dominated by Thai script or ASCII.
+  // Anything containing classic Latin-1-of-UTF-8 markers (Ã Â â € etc.) is
+  // almost certainly mojibake; recover it via Latin-1 round-trip and check
+  // whether the result actually decodes to Thai script. If not, fall back.
+  const looksLikeMojibake = /[\u00c2\u00c3\u00c4\u00c5\u00e2\u20ac]/.test(raw);
+  if (!looksLikeMojibake && /[\u0e00-\u0e7f]/.test(raw)) {
+    return normalizeMojibake(raw);
+  }
+  try {
+    const recovered = Buffer.from(raw, 'latin1').toString('utf8');
+    if (/[\u0e00-\u0e7f]/.test(recovered)) {
+      return normalizeMojibake(recovered);
+    }
+  } catch (_) { /* fall through */ }
+  // Fall back to the English name. Adding "(Thai)" suffix keeps the title
+  // distinguishable from the EN page while preserving SEO routing.
+  return fallbackName + ' (Thai)';
+}
+
+// Apply Thai chrome replacements and tag the document lang=th, plus add canonical hreflang.
+function buildThaiFor(enHtml, slug, prod) {
+  const fallbackName = prod.name || slug;
+  const titleForThai = pickThaiTitle(prod.nameTh, fallbackName);
+
+  let html = enHtml;
+
+  // 1. Set lang="th" on html and inject Sarabun font fallback near head
+  html = html
+    .replace(/<html lang="en">/i, '<html lang="th">')
+    .replace('<link href="/css/fonts.css?v=2" rel="stylesheet">', '<link href="/css/fonts.css?v=2" rel="stylesheet">')
+    .replace(/<link href="\/css\/fonts\.css" rel="stylesheet">/i, '<link href="/css/fonts.css?v=2" rel="stylesheet">');
+
+  // 2. Title: prefer recoverable Thai title; otherwise EN + (Thai)
+  html = html.replace(
+    /<title>[^<]*<\/title>/,
+    '<title>' + titleForThai + ' \u2014 MildMate</title>'
+  );
+
+  // 3. Add canonical + alternate hreflang
+  const canonical = '<link rel="canonical" href="https://www.mildmate.com/th/product/' + slug + '/">';
+  const altEn = '<link rel="alternate" hreflang="en" href="https://www.mildmate.com/product/' + slug + '/">';
+  const altTh = '<link rel="alternate" hreflang="th" href="https://www.mildmate.com/th/product/' + slug + '/">';
+  // Insert canonical before </head> (only if not already present)
+  if (!html.includes('rel="canonical"') && html.indexOf('</head>') !== -1) {
+    html = html.replace('</head>', '  ' + canonical + '\n  ' + altEn + '\n  ' + altTh + '\n</head>');
+  }
+
+  // 4. Apply Thai chrome word substitutions
+  for (const pair of TH_CHROME_REPLACEMENTS) {
+    html = html.split(pair[0]).join(pair[1]);
+  }
+
+  // 5. Inject Thai FAQ block. The Pages Function will override this with D1's
+  // faq_th when one is set, so this acts as the default for any product that
+  // doesn't have a hand-curated Thai FAQ in D1.
+  const faqBlock = MARINE_SLUGS.has(slug) ? TH_MARINE_FAQ_BLOCK : TH_FAQ_BLOCK;
+  // Match the entire <div class="info-panel" id="info-panel-faq">...</div> block.
+  // Captures: opening div tag (group 1), inner contents (group 2), closing div tags (group 3).
+  const faqPanelRe = /(<div\s+class="info-panel"\s+id="info-panel-faq"[^>]*>)([\s\S]*?)(<\/div>\s*<\/div>)/i;
+  if (faqPanelRe.test(html)) {
+    html = html.replace(faqPanelRe, (_m, open, _inner, close) => open + '\n          ' + faqBlock + '\n        ' + close);
+  }
+
+  // 6. Rewrite FAQ internal links to /th/ paths for TH variant.
+  // (Other internal links in nav/footer are already handled by middleware + chrome rewrites.)
+  html = html
+    .replace(/href="\/sizeguide\/(?![a-z])/g, 'href="/th/sizeguide/')
+    .replace(/href="\/contact\/(?![a-z])/g, 'href="/th/contact/')
+    .replace(/href="\/products\/(?![a-z])/g, 'href="/th/products/');
+
+  return html;
+}
+
 // ===== MAIN BUILD =====
 console.log('Building product pages...');
 let builtCount = 0;
+let builtThCount = 0;
 
 // Process all products from products.json
 products.products.forEach(prod => {
@@ -775,7 +974,7 @@ products.products.forEach(prod => {
     outHtml = buildCustomizable(slug, p, prod);
   }
 
-  // Write output
+  // Write EN output
   const outDir = path.join(PUBLIC_DIR, slug);
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
@@ -784,6 +983,17 @@ products.products.forEach(prod => {
   fs.writeFileSync(outPath, outHtml, 'utf8');
   console.log('  BUILT: ' + slug + ' â†’ ' + outPath);
   builtCount++;
+
+  // Write TH output (mirror dir under public/th/product/{slug}/)
+  const thHtml = buildThaiFor(outHtml, slug, prod);
+  const thDir = path.join(TH_PUBLIC_DIR, slug);
+  if (!fs.existsSync(thDir)) {
+    fs.mkdirSync(thDir, { recursive: true });
+  }
+  const thPath = path.join(thDir, 'index.html');
+  fs.writeFileSync(thPath, thHtml, 'utf8');
+  console.log('  BUILT (TH): ' + slug + ' â†’ ' + thPath);
+  builtThCount++;
 });
 
-console.log('\nDone! Built ' + builtCount + ' product pages.');
+console.log('\nDone! Built ' + builtCount + ' EN product pages and ' + builtThCount + ' TH product pages.');

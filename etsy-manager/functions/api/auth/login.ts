@@ -1,4 +1,4 @@
-interface Env {
+﻿interface Env {
   ETSY_CLIENT_ID: string;
   ETSY_REDIRECT_URI: string;
 }
@@ -42,7 +42,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
   // 3. Build authorization URL
   const state = "mildmate-etsy-oauth";
-  const scopes = "listings_w listings_r profile_r shops_r email_r";
+  const scopes = "listings_w listings_r profile_r shops_r email_r transactions_r";
   
   const authUrl = `https://www.etsy.com/oauth/connect` +
     `?response_type=code` +
@@ -62,3 +62,4 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     }
   });
 };
+

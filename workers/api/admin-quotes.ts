@@ -135,6 +135,7 @@ async function ensureQuoteSchema(env: any): Promise<void> {
       if (!existing.has("status")) alters.push("ALTER TABLE custom_quotes ADD COLUMN status TEXT DEFAULT 'pending'");
       if (!existing.has("quoted_price")) alters.push("ALTER TABLE custom_quotes ADD COLUMN quoted_price INTEGER");
       if (!existing.has("quoted_price_usd")) alters.push("ALTER TABLE custom_quotes ADD COLUMN quoted_price_usd INTEGER");
+      if (!existing.has("free_shipping")) alters.push("ALTER TABLE custom_quotes ADD COLUMN free_shipping INTEGER DEFAULT 0");
       if (!existing.has("expires_at")) alters.push("ALTER TABLE custom_quotes ADD COLUMN expires_at DATETIME");
       if (!existing.has("created_at")) alters.push("ALTER TABLE custom_quotes ADD COLUMN created_at DATETIME");
       for (const sql of alters) await env.DB.prepare(sql).run();
@@ -253,40 +254,141 @@ async function sendMagicLinkEmail(env: any, request: Request, quote: any): Promi
     ? `$${priceUsd.toLocaleString()} USD`
     : `฿${priceThb.toLocaleString()} THB`;
 
-  const body = [
-    `Hi ${quote.customer_name || "there"},`,
+  // Helper for HTML-escaping strings
+  const esc = (s: string) =>
+    String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  const customerName = String(quote.customer_name || "there").trim() || "there";
+  const headingText = "Ready to Order?";
+  const ctaText = "View Quote & Order";
+
+  const specsText = specsLines.join("\n");
+  const expiryLineText = expiryText ? `\nThis quote is valid until ${expiryText}.\n` : "";
+
+  // ── Plain text version (multipart-style fallback, guarantees content for spam scoring + text-only clients) ──
+  const textBody = [
+    `Hi ${customerName},`,
     "",
     "Your custom quote is ready.",
     "",
     "━━━ Your Order ━━━",
-    ...specsLines,
+    specsText,
     "",
-    "The website configurator provides an estimated price. This quotation reflects the confirmed production price based on your selected specifications.",
-    "",
-    "━━━ Your Quote ━━━",
     `Confirmed Price: ${priceLine}`,
-    "Shipping: Included (Thailand orders)",
-    "Shipping: Calculated at checkout (all other destinations)",
+    "Shipping: Included for Thailand orders / Calculated at checkout (all other destinations).",
+    "Made to order within 5–7 business days before dispatch.",
     "",
     "Please review your measurements carefully before ordering — this item will be made specifically for you.",
     "",
-    "Made to order within 5–7 business days before dispatch.",
+    "━━━ Ready to Order? ━━━",
+    `${ctaText}: ${quoteLink}`,
+    expiryLineText,
+    "How to Order:",
+    "1. Open your custom quote.",
+    "2. Click Add to Cart.",
+    "3. Proceed to Checkout and complete payment.",
     "",
-    "━━━ Your Quote Link ━━━",
-    `>>> ${quoteLink} <<<`,
-    expiryText ? `(Valid until: ${expiryText})` : "",
+    "If the button doesn't work, copy and paste the link above into your browser.",
     "",
     "Need help or have a measurement question? Simply reply to this email — we're here to help.",
     "",
-    "MildMate Team",
+    "— The MildMate Team",
   ].filter(Boolean).join("\n");
+
+  // ── HTML version (inline CSS only, no remote assets, table-based for Outlook compatibility) ──
+  // Inline CSS is required because some email gateways strip <style> blocks and external fonts.
+  const ctaUrl = esc(quoteLink);
+  const htmlBody =
+`<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no">
+<title>${esc(ctaText)} — MildMate Quote ${esc(String(quote.quote_id || ""))}</title>
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;color:#1e293b;-webkit-text-size-adjust:100%">
+<span style="display:none;visibility:hidden;mso-hide:all;font-size:1px;color:#f8fafc;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden">${esc(headingText)} Open your MildMate quote, review your custom details, and complete your order in three quick steps.</span>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f8fafc">
+<tr><td align="center" style="padding:24px 12px">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
+<tr><td style="padding:28px 24px 8px 24px;text-align:center">
+<div style="font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#2c96f4">MildMate Custom Quote</div>
+<h1 style="margin:8px 0 4px 0;font-size:22px;line-height:1.3;font-weight:700;color:#0f172a">Hi ${esc(customerName)}, your quote is ready</h1>
+<p style="margin:0;font-size:14px;color:#64748b">Quote ID: ${esc(String(quote.quote_id || ""))}</p>
+</td></tr>
+<tr><td style="padding:16px 24px">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+<tr><td style="padding:16px 18px">
+<div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Your Order</div>
+${specsLines
+  .map(
+    (l) =>
+      `<div style="font-size:14px;color:#1e293b;line-height:1.55;margin:0"><strong style="color:#0f172a">${
+        l.split(":")[0]
+      }</strong>:${
+        l.indexOf(":") >= 0 ? esc(l.slice(l.indexOf(":") + 1)) : ""
+      }</div>`
+  )
+  .join("")}
+<div style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:16px;font-weight:700;color:#0f172a">Confirmed Price: ${esc(priceLine)}</div>
+<div style="font-size:13px;color:#64748b;line-height:1.5;margin-top:6px">Shipping: Included for Thailand orders · Calculated at checkout (all other destinations).</div>
+<div style="font-size:13px;color:#64748b;line-height:1.5;margin-top:4px">Made to order within 5–7 business days before dispatch.</div>
+</td></tr>
+</table>
+</td></tr>
+<tr><td align="center" style="padding:20px 24px 8px 24px">
+<div style="font-size:13px;font-weight:700;color:#0f172a;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px">${esc(headingText)}</div>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+<tr><td align="center" style="border-radius:8px;background:#2c96f4">
+<a href="${ctaUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:18px 36px;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;line-height:1.2;letter-spacing:0.01em">${esc(ctaText)}</a>
+</td></tr>
+</table>
+<div style="font-size:12px;color:#64748b;margin-top:14px;line-height:1.5;word-break:break-all">Or copy this link:<br><a href="${ctaUrl}" target="_blank" rel="noopener" style="color:#1a7fd4;text-decoration:underline">${esc(quoteLink)}</a></div>
+</td></tr>
+<tr><td style="padding:20px 24px 12px 24px">
+<div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:10px">How to Order</div>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+${[
+  { n: "1", label: "Open your custom quote using the button above." },
+  { n: "2", label: "Click <strong>Add to Cart</strong> on the quote page." },
+  { n: "3", label: "Proceed to <strong>Checkout</strong> and complete payment." },
+].map(
+  (s) =>
+    `<tr><td width="32" valign="top" style="padding:6px 0"><div style="display:inline-block;width:24px;height:24px;line-height:24px;border-radius:12px;background:#2c96f4;color:#ffffff;font-size:13px;font-weight:700;text-align:center">${s.n}</div></td><td style="padding:6px 0 6px 10px;font-size:14px;color:#1e293b;line-height:1.5">${s.label}</td></tr>`
+).join("")}
+</table>
+</td></tr>
+${
+  expiryText
+    ? `<tr><td style="padding:8px 24px 24px 24px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px"><tr><td style="padding:12px 16px;font-size:13px;color:#1e3a8a;line-height:1.45">This quote is valid until <strong>${esc(expiryText)}</strong>. After that, please request a fresh quote.</td></tr></table></td></tr>`
+    : ""
+}
+<tr><td style="padding:8px 24px 24px 24px;font-size:12px;color:#64748b;line-height:1.5;text-align:center">
+Need help or have a measurement question? Simply reply to this email — we're here to help.<br><br>
+<strong style="color:#0f172a">The MildMate Team</strong><br>
+<a href="${esc(quoteLink)}" target="_blank" rel="noopener" style="color:#1a7fd4;text-decoration:underline">${esc(quoteLink)}</a>
+</td></tr>
+</table>
+<div style="font-size:11px;color:#94a3b8;margin-top:14px;text-align:center">Sent because you requested a custom quote on mildmate.com.</div>
+</td></tr>
+</table>
+</body>
+</html>`;
 
   const result = await sendEmail(env, {
     to: String(quote.email).trim().toLowerCase(),
     from: env.QUOTE_FROM_EMAIL || "MildMate <orders@mildmate.com>",
     replyTo: env.QUOTE_REPLY_TO || "orders@mildmate.com",
-    subject: `Your MildMate Quote — ${quote.quote_id} Ready for Review`,
-    text: body,
+    subject: `${ctaText} — your MildMate Quote ${quote.quote_id}`,
+    text: textBody,
+    html: htmlBody,
   });
   return { success: result.success, error: result.error };
 }
@@ -303,34 +405,80 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
   const method = request.method;
 
   if (method === "GET") {
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
-    const statusFilter = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const q = String(url.searchParams.get("q") || "").trim();
+    const rawStatus = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const archivedParam = String(url.searchParams.get("archived") || "").trim().toLowerCase();
+    const fromDate = String(url.searchParams.get("from") || "").trim();
+    const toDate = String(url.searchParams.get("to") || "").trim();
+    const sort = String(url.searchParams.get("sort") || "created_at_desc").trim().toLowerCase();
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const requestedPageSize = Number(url.searchParams.get("page_size") || 25);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+    const allowedPageSizes = new Set([10, 25, 50, 100]);
+    const pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 25;
+    const offset = (page - 1) * pageSize;
+
     const allowedStatus = new Set(["pending", "approved", "rejected", "expired", "archived"]);
+    const statuses = rawStatus
+      ? rawStatus.split(",").map((s) => s.trim().toLowerCase()).filter((s) => allowedStatus.has(s))
+      : [];
+
+    const archivedMode = archivedParam === "all" || archivedParam === "archived" || archivedParam === "active"
+      ? archivedParam
+      : "active";
     const where: string[] = [];
     const binds: any[] = [];
-    if (statusFilter && statusFilter !== "all" && allowedStatus.has(statusFilter)) {
-      where.push("LOWER(COALESCE(status,'pending')) = ?");
-      binds.push(statusFilter);
-    } else if (!statusFilter || statusFilter === "all") {
-      // Default "All" view excludes archived — use "Archived" filter to see deleted quotes
+    if (archivedMode === "active") {
       where.push("LOWER(COALESCE(status,'pending')) != 'archived'");
+    } else if (archivedMode === "archived") {
+      where.push("LOWER(COALESCE(status,'pending')) = 'archived'");
     }
-    const whereSql = where.length ? ` WHERE ${where.join(" AND ")}` : "";
-    const limit = 50;
-    const offset = (page - 1) * limit;
 
-    const rows = await db.prepare(
-      `SELECT id, quote_id, customer_name, email, telephone, address, product_slug, dimensions, fabric, color,
-              status, quoted_price, quoted_price_usd, expires_at, created_at
-       FROM custom_quotes
-       ${whereSql}
-       ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC
-       LIMIT ${limit} OFFSET ${offset}`
-    ).bind(...binds).all();
+    if (statuses.length) {
+      where.push(`LOWER(COALESCE(status,'pending')) IN (${statuses.map(() => "?").join(",")})`);
+      binds.push(...statuses);
+    }
+    if (fromDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) >= ?");
+      binds.push(fromDate);
+    }
+    if (toDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) <= ?");
+      binds.push(toDate);
+    }
+    if (q) {
+      const qLike = `%${q}%`;
+      where.push(`(
+        quote_id LIKE ?
+        OR customer_name LIKE ?
+        OR email LIKE ?
+        OR telephone LIKE ?
+        OR product_slug LIKE ?
+        OR fabric LIKE ?
+        OR color LIKE ?
+      )`);
+      binds.push(qLike, qLike, qLike, qLike, qLike, qLike, qLike);
+    }
+
+    const whereSql = where.length ? ` WHERE ${where.join(" AND ")}` : "";
+    const orderSql = sort === "created_at_asc"
+      ? "ORDER BY COALESCE(created_at, datetime('now')) ASC, id ASC"
+      : "ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC";
 
     const totalRow = await db.prepare(
       `SELECT COUNT(*) as cnt FROM custom_quotes ${whereSql}`
     ).bind(...binds).first();
+    const total = Number(totalRow?.cnt || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const rows = await db.prepare(
+      `SELECT id, quote_id, customer_name, email, telephone, address, product_slug, dimensions, fabric, color,
+              status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
+       FROM custom_quotes
+       ${whereSql}
+       ${orderSql}
+       LIMIT ?
+       OFFSET ?`
+    ).bind(...binds, pageSize, offset).all();
 
     const quotes = (rows.results || []).map((r: any) => {
       let dims = r.dimensions;
@@ -355,6 +503,7 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
         quoted_price_thb: priceThb,
         quoted_price_usd: priceUsd,
         quoted_price_currency: hasExplicitUsd ? "USD" : (priceThb ? "THB" : null),
+        free_shipping: Number(r.free_shipping || 0) === 1,
         expires_at: r.expires_at || null,
         created_at: r.created_at || null,
         size_text: dims && typeof dims === "object" ? (dims.size_text || "") : "",
@@ -364,9 +513,18 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
 
     return json({
       quotes,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages,
+      },
+      // Backward compatibility
       page,
-      total: totalRow?.cnt || 0,
-      status: statusFilter || "all",
+      total,
+      status: rawStatus || "all",
+      archived: archivedMode,
+      sort,
     });
   }
 
@@ -388,6 +546,7 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
     const status = String(body.status || "pending").trim().toLowerCase();
     const quoteCurrency = String(body.quoted_price_currency || "").trim().toUpperCase();
     const isUsdQuote = quoteCurrency === "USD";
+    const freeShipping = body.free_shipping === true || body.free_shipping === 1 || body.free_shipping === "1";
     let quotedPriceThb: number | null = null;
     let quotedPriceUsd: number | null = null;
 
@@ -427,9 +586,9 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
     const quoteId = await generateQuoteId(db);
     await db.prepare(
       `INSERT INTO custom_quotes
-        (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, status, quoted_price, quoted_price_usd, expires_at, created_at)
+        (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at)
        VALUES
-        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, datetime('now'))`
+        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, datetime('now'))`
     ).bind(
       quoteId,
       customerName,
@@ -443,6 +602,7 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
       status,
       quotedPriceThb,
       quotedPriceUsd,
+      freeShipping ? 1 : 0,
       expiresAt
     ).run();
 
@@ -526,6 +686,11 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
     if (body.color !== undefined) {
       updates.push("color = ?");
       binds.push(String(body.color || "").trim() || null);
+    }
+    if (body.free_shipping !== undefined) {
+      const freeShipping = body.free_shipping === true || body.free_shipping === 1 || body.free_shipping === "1";
+      updates.push("free_shipping = ?");
+      binds.push(freeShipping ? 1 : 0);
     }
     if (body.dimensions !== undefined || body.size_text !== undefined) {
       let dims: any = {};

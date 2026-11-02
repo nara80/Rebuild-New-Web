@@ -1,4 +1,4 @@
-/* ============================================
+﻿/* ============================================
    MildMate Product Configurator — Phase 4+
    Fitted sheet real pricing formula
    Hybrid: standard size presets + custom W—L—D
@@ -6,26 +6,66 @@
    ============================================ */
 
 (async function () {
+  // -- Locale helper for TH/EN UI strings --
+  function isThaiPage() {
+    var html = document.documentElement;
+    var lang = (html && html.lang) ? html.lang.toLowerCase() : 'en';
+    var path = (window.location && window.location.pathname) || '';
+    return lang === 'th' || path.indexOf('/th/') === 0;
+  }
+  function t(en, th) {
+    return isThaiPage() ? th : en;
+  }
+  function getMetaContent(name) {
+    var el = document.querySelector('meta[name="' + name + '"]');
+    return el ? String(el.getAttribute('content') || '').trim() : '';
+  }
+  var PRODUCT_UI_LABELS = {
+    ctaPrimary: getMetaContent('mm-cta-primary'),
+    ctaCustom: getMetaContent('mm-cta-custom'),
+    ctaSizeHelp: getMetaContent('mm-cta-size-help')
+  };
+  function labelOr(defaultLabel, key) {
+    var val = PRODUCT_UI_LABELS[key];
+    return val && String(val).trim() ? String(val).trim() : defaultLabel;
+  }
+  var CART_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ';
+  function addToCartLabel(ready) {
+    // D1 cta_primary overrides are authored as pre-selection guidance
+    // ("เลือกขนาดและเนื้อผ้า") — valid only while the form is incomplete.
+    // Once every selection is made the button must read as the cart action.
+    var action = t('Add to Cart', 'เพิ่มลงตะกร้า');
+    return ready ? action : labelOr(action, 'ctaPrimary');
+  }
+
   // -- Detect product variant --
   var path = window.location.pathname;
   var isRVTruck = path.indexOf('rv-truck') !== -1;
   var isRVTruckFitted = path.indexOf('/product/rv-truck-fitted-sheet/') !== -1;
+  var isDeepPocketProduct =
+    path.indexOf('deep-pocket-fitted-sheet') !== -1 ||
+    path.indexOf('flat-sheet-extra-deep-pocket') !== -1 ||
+    path.indexOf('mattress-protector-deep-pocket') !== -1;
   var isFlatSheet = path.indexOf('flat-sheet') !== -1;
   var isEncasement = path.indexOf('encasement') !== -1;
   var isPetOwner = path.indexOf('pet-owner') !== -1;
   var isFamily = path.indexOf('family-fitted-sheet') !== -1;
   var isCoSleeping = path.indexOf('co-sleeping-top-sheet') !== -1;
   var isDuvet = path.indexOf('duvet') !== -1;
+  var isWeightedDuvet = path.indexOf('weighted-duvet-cover') !== -1;
   var isPillowProtector = path.indexOf('pillow-protector') !== -1;
+  var isCushionProtector = path.indexOf('custom-waterproof-cushion-protector') !== -1;
   var isMattressProtector = (path.indexOf('mattress-protector') !== -1 || path.indexOf('pet-proof-mattress-protector') !== -1) && path.indexOf('pillow-protector') === -1;
   var isProtectorStandard = path.indexOf('mattress-protector-standard') !== -1;
   var isProtectorFamily = path.indexOf('mattress-protector-family') !== -1;
   var isProtectorDeepPocket = path.indexOf('mattress-protector-deep-pocket') !== -1;
   var isProtectorPetProof = path.indexOf('pet-proof-mattress-protector') !== -1;
   var isPillowcase = path.indexOf('pillowcase') !== -1;
+  var hidePricingUI = isPillowcase;
   var isMarineFitted = path.indexOf('marine-fitted-sheet') !== -1;
   var isMarineTopSheet = path.indexOf('marine-top-sheet') !== -1;
   var isMarineShapeProduct = isMarineFitted || isMarineTopSheet;
+  var isAnyMattressProtector = isMattressProtector || path.indexOf('marine-mattress-protector') !== -1;
   var TURNSTILE_SITE_KEY = '0x4AAAAAADts338jUP9D3kg6';
 
   // Non-deep products — depth > 30 cm / 12″ should redirect to deep pocket variants
@@ -79,6 +119,16 @@
     return pVal(key, fallback) / 100;
   }
 
+  var DERIVED_MARKUP_PCT = isWeightedDuvet ? pVal('derived_markup_weighted-duvet-cover', 10) : 0;
+
+  function familyMarginRate() {
+    if (apiParams && apiParams.margins) {
+      if (apiParams.margins.family !== undefined) return apiParams.margins.family / 100;
+      if (apiParams.margins.protector_family !== undefined) return apiParams.margins.protector_family / 100;
+    }
+    return 0.50;
+  }
+
   // -- Pricing constants (from API or hardcoded fallbacks) --
   var SQCM_PER_YARD = pVal('sqcm_per_yard', 23744);
   var PACKING = pVal('packing_cost', 100);
@@ -88,18 +138,20 @@
   var CUSTOM_QUOTE_SURCHARGE = pctVal('custom_quote_surcharge', 15);
   var WASTE_FABRIC = 1 + pVal('waste_factor_fabric', 20) / 100;
   var ACCESSORIES_RATE = pctVal('accessories_rate', 10);
+  var FAMILY_MARGIN_RATE = familyMarginRate();
   var MARGIN_RATE = isMarineShapeProduct ? pctVal('marine', 680)
     : isRVTruck ? pctVal('rv_truck', 45)
-    : isFamily ? pctVal('family', 50)
+    : (isFamily || isCoSleeping) ? FAMILY_MARGIN_RATE
     : isEncasement ? pctVal('encasement', 50)
     : isDuvet ? pctVal('duvet', 30)
     : isPillowcase ? pctVal('pillow', 15)
     : isPillowProtector ? pctVal('pillow_protector', 35)
     : isMattressProtector ? (
-        isProtectorFamily ? pctVal('protector_family', 50)
+        isProtectorFamily ? FAMILY_MARGIN_RATE
         : isProtectorDeepPocket ? pctVal('protector_deep', 25)
         : pctVal('protector_standard', 15)
       )
+    : isCushionProtector ? pctVal('cushion_protector', 30)
     : pctVal('standard', 30);
   var MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE;
   var THB_TO_USD = pVal('exchange_usd', 30);   // default: 1/rate_per_thb for USD
@@ -120,7 +172,8 @@
     cloudsoft: pVal('cloudsoft', 100),
     breezeplus: pVal('breezeplus', 180),
     premacotton: pVal('premacotton', 180),
-    ecoluxe: pVal('ecoluxe', 180)
+    ecoluxe: pVal('ecoluxe', 180),
+    tpu: pVal('tpu', 120)
   };
 
   // -- Sewing tiers (from API or fallback) --
@@ -181,7 +234,7 @@
   var ENC_SEWING = pVal('encasement_sewing_cost', 300);
   var ZIPPER_RATE = pVal('zipper_rate', 0.4);
   var ENC_OP = OP_RATE;
-  var ENC_MKT = pctVal('encasement_mkt', 25);
+  var ENC_MKT = MKT_RATE;
   var ENC_MARGIN = pctVal('encasement', 50);
   var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN;
 
@@ -370,6 +423,7 @@
 
   function inchToCm(v) { return v * 2.54; }
   function cmToInch(v) { return v * 0.393701; }
+  function round1(v) { return Math.round(v * 10) / 10; }
 
   // -- DOM refs --
   var sizeSelect = document.getElementById('size-select');
@@ -383,15 +437,42 @@
     }).observe(priceDisplay, { characterData: true, childList: true, subtree: true });
   }
   var addToCartBtn = document.getElementById('add-to-cart');
+  var lastCtaReady = null;
+  var cartFeedbackActive = false;
   var customPrice = document.getElementById('custom-price');
   var mobileCtaPrice = document.getElementById('mobile-cta-price');
   var desktopStickyPriceBlock = document.querySelector('.desktop-cta-sticky .price-block');
+  var customPriceRow = customPrice ? customPrice.closest('.price-row') : null;
+  var mobilePriceWrap = mobileCtaPrice ? mobileCtaPrice.closest('.cta-price-wrap') : null;
+
+  function applyPricingVisibility() {
+    if (!hidePricingUI) return;
+    var priceSummary = document.getElementById('price-summary');
+    if (priceSummary) priceSummary.style.display = 'none';
+    if (customPriceRow) customPriceRow.style.display = 'none';
+    if (desktopStickyPriceBlock) desktopStickyPriceBlock.style.display = 'none';
+    if (mobilePriceWrap) mobilePriceWrap.style.display = 'none';
+  }
+  applyPricingVisibility();
 
   // Tab switching — Standard Sizes vs Custom Quote
   var configTabs = document.querySelectorAll('.config-tab');
   var tabStandard = document.getElementById('tab-standard');
   var tabCustom = document.getElementById('tab-custom');
+  var isCustomOnlyProduct = isCushionProtector;
+
+  // Translate static tab labels (Standard Sizes / Custom Size) on TH pages
+  if (isThaiPage()) {
+    configTabs.forEach(function(tab) {
+      if (tab.dataset && tab.dataset.tab === 'standard') tab.textContent = 'ขนาดมาตรฐาน';
+      if (tab.dataset && tab.dataset.tab === 'custom') tab.textContent = labelOr('ขนาดกำหนดเอง', 'ctaCustom');
+    });
+  }
   function syncTabAwarePriceUI() {
+    if (hidePricingUI) {
+      applyPricingVisibility();
+      return;
+    }
     var customActive = !!(tabCustom && tabCustom.classList.contains('active'));
     if (desktopStickyPriceBlock) desktopStickyPriceBlock.style.display = customActive ? 'none' : '';
     if (mobileCtaPrice) {
@@ -409,6 +490,7 @@
     syncTabAwarePriceUI();
   }
   function switchToTab(name) {
+    if (isCustomOnlyProduct && name === 'standard') name = 'custom';
     configTabs.forEach(function(t) { t.classList.toggle('active', t.dataset.tab === name); });
     document.querySelectorAll('.config-tab-content').forEach(function(c) { c.classList.toggle('active', c.id === 'tab-' + name); });
     if (name === 'standard') switchToStandard();
@@ -419,9 +501,10 @@
   });
   function switchToStandard() {
     var priceSummary = document.getElementById('price-summary');
-    if (priceSummary) priceSummary.style.display = '';
+    if (priceSummary) priceSummary.style.display = hidePricingUI ? 'none' : '';
     if (addToCartBtn) {
-      addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart';
+      lastCtaReady = null;
+      addToCartBtn.innerHTML = CART_ICON_SVG + addToCartLabel(false);
       addToCartBtn.style.background = '';
       addToCartBtn.style.color = '';
     }
@@ -432,13 +515,25 @@
     var priceSummary = document.getElementById('price-summary');
     if (priceSummary) priceSummary.style.display = 'none';
     if (addToCartBtn) {
-      addToCartBtn.innerHTML = 'Request Custom Quote';
+      addToCartBtn.innerHTML = labelOr(t('Request Custom Quote', 'ขอใบเสนอราคาแบบกำหนดเอง'), 'ctaCustom');
       addToCartBtn.disabled = false;
       addToCartBtn.style.background = '#f59e0b';
       addToCartBtn.style.color = '#fff';
     }
     syncTabAwarePriceUI();
     validateForm();
+  }
+
+  function applyCustomOnlyConfiguratorUI() {
+    if (!isCustomOnlyProduct) return;
+    var tabsWrap = document.querySelector('.config-tabs');
+    configTabs.forEach(function(tab) {
+      if (tab.dataset.tab === 'standard') tab.style.display = 'none';
+      if (tab.dataset.tab === 'custom') tab.textContent = labelOr(t('Custom Size', 'ขนาดกำหนดเอง'), 'ctaCustom');
+    });
+    if (tabsWrap) tabsWrap.style.display = 'none';
+    if (tabStandard) tabStandard.style.display = 'none';
+    switchToTab('custom');
   }
   // Helper for focusing first dim input after switching to custom tab
   var dimFirstInput = null;
@@ -485,14 +580,15 @@
     var hasColorSwatches = document.querySelectorAll('.color-option').length > 0;
     var activeGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
     var hasSelectedColor = activeGroup ? !!activeGroup.querySelector('.color-option.selected') : false;
-    var isPetOwnerOrMarine = isPetOwner || isMarineShapeProduct;
-    var noColorRequired = isPetOwnerOrMarine || noColorSwatches;
+    var isNoColorProduct = isPetOwner || isMarineShapeProduct || isCushionProtector;
+    var noColorRequired = isNoColorProduct || noColorSwatches;
     // Marine: shape select IS the size/region selector — region always passes
-    var noRegionRequired = isMarineShapeProduct;
+    var noRegionRequired = isMarineShapeProduct || isCustomOnlyProduct;
+    var noSizeRequired = isCustomOnlyProduct;
 
     return {
       region: noRegionRequired || !!state.region,
-      size: !!sizeSelect && sizeSelect.value !== '' && sizeSelect.value !== 'custom',
+      size: noSizeRequired || (!!sizeSelect && sizeSelect.value !== '' && sizeSelect.value !== 'custom'),
       fabric: !!state.fabric,
       color: noColorRequired || (hasColorSwatches && hasSelectedColor)
     };
@@ -528,14 +624,33 @@
     }
 
     if (addToCartBtn) {
-      addToCartBtn.disabled = !(v.region && v.size && v.fabric && v.color);
+      var ready = !!(v.region && v.size && v.fabric && v.color);
+      addToCartBtn.disabled = !ready;
+      // State-aware CTA: guidance label while incomplete, cart action once
+      // ready. Custom/quote tabs and marine shape flow manage their own label.
+      var customTabActive = !!(tabCustom && tabCustom.classList.contains('active'));
+      if (!customTabActive && !isMarineShapeProduct && !cartFeedbackActive && lastCtaReady !== ready) {
+        lastCtaReady = ready;
+        addToCartBtn.innerHTML = CART_ICON_SVG + addToCartLabel(ready);
+      }
     }
   }
 
-  if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner products: BreezePlus only
+  if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner fitted/duvet: BreezePlus only
+  if (isProtectorPetProof) state.fabric = 'tpu'; // Pet-Proof protector follows 3-layer TPU class
+  if (isCushionProtector) state.fabric = 'tpu'; // Custom cushion protector uses TPU cost class
+  if (isEncasement) state.fabric = 'tpu'; // 6-sided / RV encasements: TPU only (white)
+  if (isPillowProtector) state.fabric = 'tpu'; // Pillow protector: TPU only (white)
   if (isMarineShapeProduct) state.fabric = 'cloudsoft'; // Marine shape products: CloudSoft only
   if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
   if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only
+
+  applyCustomOnlyConfiguratorUI();
+  if (PRODUCT_UI_LABELS.ctaSizeHelp) {
+    document.querySelectorAll('.size-hint a').forEach(function(anchor) {
+      anchor.textContent = PRODUCT_UI_LABELS.ctaSizeHelp;
+    });
+  }
 
   // Duvet covers & pillow protectors only need W—L — hide the depth input
   if ((isDuvet || isPillowProtector || isPillowcase) && dimD) {
@@ -554,7 +669,7 @@
     var shapeSelect = document.getElementById('marine-shape-select');
     var shapeHint = document.getElementById('shape-dims-hint');
 
-    if (dimW) { var dimWLabel = dimW.parentElement.querySelector('label'); if (dimWLabel) dimWLabel.textContent = 'Head Width (HW)'; }
+    if (dimW) { var dimWLabel = dimW.parentElement.querySelector('label'); if (dimWLabel) dimWLabel.textContent = t('Head Width (HW)', 'ความกว้างหัวเตียง (HW)'); }
     if (dimL) {
       var dimLLabel = dimL.parentElement.querySelector('label');
       if (dimLLabel) {
@@ -579,15 +694,15 @@
 
         // Price display
         if (quoteOnly) {
-          priceDisplay.textContent = 'Custom Quote';
-          if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; }
+          priceDisplay.textContent = t('Custom Quote', 'ใบเสนอราคา');
+          if (addToCartBtn) { addToCartBtn.textContent = labelOr(t('Request Quote', 'ขอใบเสนอราคา'), 'ctaCustom'); addToCartBtn.style.background = '#f59e0b'; }
           state._dims = null;
           state._price = null;
         } else {
           var price = parseFloat(opt.dataset.price) || 0;
           var thb = Math.round(price * THB_TO_USD);
           priceDisplay.innerHTML = displayPrice(thb, price);
-          if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; }
+          if (addToCartBtn) { addToCartBtn.textContent = addToCartLabel(true); addToCartBtn.style.background = ''; }
           state._dims = { w: parseFloat(opt.dataset.headMin) || 0, l: parseFloat(opt.dataset.lengthMin) || 0, d: 30 };
           state._price = { thb: thb, usd: price };
           state.region = 'marine';  // Marine uses shape selector — mark region as set
@@ -620,7 +735,7 @@
     if (!sizes) return;
 
     var regionLabels = { us: '\uD83C\uDDFA\uD83C\uDDF8 US / CA', uk: '\uD83C\uDDEC\uD83C\uDDE7 UK', eu: '\uD83C\uDDEA\uD83C\uDDFA EU', th: '\uD83C\uDDF9\uD83C\uDDED TH', au: '\uD83C\uDDE6\uD83C\uDDFA AU', my: '\uD83C\uDDF2\uD83C\uDDFE MY / SG', jp: '\uD83C\uDDEF\uD83C\uDDF5 JP', in: '\uD83C\uDDEE\uD83C\uDDF3 IN' };
-    sizeSelect.innerHTML = '<option value="">\u2014 Choose size \u2014</option>';
+    sizeSelect.innerHTML = '<option value="">\u2014 ' + t('Choose size', 'เลือกขนาด') + ' \u2014</option>';
 
     for (var region in sizes) {
       if (!sizes.hasOwnProperty(region)) continue;
@@ -631,14 +746,18 @@
       optgroup.setAttribute('data-region', region);
       for (var i = 0; i < items.length; i++) {
         var s = items[i];
-        var depth = (typeof s.d === 'number' && isFinite(s.d)) ? s.d : 30;
+        var depth = isDeepPocketProduct
+          ? 51
+          : ((typeof s.d === 'number' && isFinite(s.d)) ? s.d : 30);
         var option = document.createElement('option');
         option.value = (typeKey === 'fitted-sheet' || typeKey === 'truck-fitted-sheet' || typeKey === 'family')
           ? s.w + 'x' + s.l + 'x' + depth
           : s.w + 'x' + s.l;
-        option.textContent = region === 'us'
-          ? s.label + ' ' + s.inch + '\u2033'
-          : s.label + ' \u2014 ' + s.cm + ' cm';
+        if (region === 'us') {
+          option.textContent = s.label + ' ' + s.inch + '\u2033' + (isDeepPocketProduct ? ' \u2022 20\u2033 pocket' : '');
+        } else {
+          option.textContent = s.label + ' \u2014 ' + s.cm + ' cm' + (isDeepPocketProduct ? ' \u00D7 51 cm pocket' : '');
+        }
         optgroup.appendChild(option);
       }
       sizeSelect.appendChild(optgroup);
@@ -905,7 +1024,7 @@
     '<div class="quote-overlay" id="quote-overlay">' +
       '<div class="quote-popup">' +
         '<button class="quote-close" id="quote-close">&times;</button>' +
-        '<h3 class="quote-popup-title">Custom Quote</h3>' +
+        '<h3 class="quote-popup-title">' + t('Custom Quote', 'ใบเสนอราคา') + '</h3>' +
         '<form id="quote-form" novalidate>' +
           '<label class="quote-field">Name <span class="quote-req">*</span>' +
             '<input type="text" id="qf-name" required placeholder="Your full name">' +
@@ -1009,13 +1128,36 @@
   }
 
   function updateSaleInfoDiv(discount, originalThb, originalUsd) {
-    var el = document.getElementById('sale-info');
-    if (!el) return;
-    if (!discount) { el.innerHTML = ''; return; }
+    function ensureTopSaleInfo() {
+      var summary = document.getElementById('price-summary');
+      if (!summary) return null;
+      var top = document.getElementById('sale-info-top');
+      if (!top) {
+        top = document.createElement('div');
+        top.id = 'sale-info-top';
+        top.style.marginTop = '8px';
+        summary.appendChild(top);
+      }
+      return top;
+    }
+    // Render only next to the price (#sale-info-top). The old #sale-info slot
+    // inside the size panel is retired — the countdown there interrupted the
+    // size-selection flow and duplicated the price-area badge.
+    // Neutralize the legacy embedded page script (templates' updateSaleDisplay):
+    // kill its 60s interval and clear the size-panel slot so it stays empty.
+    try { if (window._saleTimer) { clearInterval(window._saleTimer); window._saleTimer = null; } } catch (e) {}
+    var legacy = document.getElementById('sale-info');
+    if (legacy && legacy.innerHTML !== '') legacy.innerHTML = '';
+    var target = ensureTopSaleInfo();
+    if (!target) return;
+    if (!discount) {
+      target.innerHTML = '';
+      return;
+    }
     var countdown = typeof MildMateCampaigns !== 'undefined' ? MildMateCampaigns.getCampaignCountdown(window.location.pathname.split('/').filter(function(s){return s;}).pop()) : null;
     var html = '<div class="sale-badge">-' + discount + '% SALE</div>';
-    if (countdown) html += '<div class="sale-countdown">(' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)</div>';
-    el.innerHTML = html;
+    if (countdown) html += '<div class="sale-countdown" style="margin-left:8px">(' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)</div>';
+    target.innerHTML = html;
   }
 
   function displayPrice(thb, usd, priceEl) {
@@ -1025,6 +1167,202 @@
       return '<span class="price-strike">' + formatPrice(result.originalThb, result.originalUsd) + '</span><span class="price-sale">' + formatPrice(result.thb, result.usd) + '</span>';
     }
     return formatPrice(thb, usd);
+  }
+
+  function getStartingUsdPrice() {
+    var sources = [];
+    if (priceDisplayTop) sources.push(String(priceDisplayTop.textContent || ''));
+    if (priceDisplay) sources.push(String(priceDisplay.textContent || ''));
+    for (var i = 0; i < sources.length; i++) {
+      var match = sources[i].match(/(\d+(?:\.\d+)?)/);
+      if (match) {
+        var usd = parseFloat(match[1]);
+        if (isFinite(usd) && usd > 0) return usd;
+      }
+    }
+    return 0;
+  }
+
+  function renderStartingPriceWithCampaign() {
+    var baseUsd = getStartingUsdPrice();
+    if (!baseUsd) return false;
+    var baseThb = Math.round(baseUsd * THB_TO_USD);
+    var html = displayPrice(baseThb, baseUsd);
+    if (priceDisplayTop) priceDisplayTop.innerHTML = html;
+    if (priceDisplay) priceDisplay.innerHTML = html;
+    return true;
+  }
+
+  function ensureGa4Stub() {
+    window.dataLayer = window.dataLayer || [];
+    if (typeof window.gtag !== 'function') {
+      window.gtag = function () {
+        window.dataLayer.push(arguments);
+      };
+    }
+  }
+
+  function sendGa4Event(name, params) {
+    try {
+      var payload = params || {};
+      if (typeof window.__mildmateTrackEvent === 'function') {
+        window.__mildmateTrackEvent(name, payload);
+        return;
+      }
+      ensureGa4Stub();
+      window.gtag('event', name, payload);
+    } catch (e) {}
+  }
+
+  // Quote IDs are magic-link bearer credentials — analytics payloads carry
+  // the same 16-hex SHA-256 token scheme used on the quote page
+  // ('mildmate-quote:' + quote ID, first 16 hex chars).
+  function sendGa4EventTokenized(name, params, tokenField, rawToken) {
+    var payload = params || {};
+    payload[tokenField] = '';
+    var attempted = false;
+    function emit(tokenHash) {
+      if (attempted) return;
+      attempted = true;
+      payload[tokenField] = tokenHash;
+      sendGa4Event(name, payload);
+    }
+    try {
+      if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+        crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(rawToken || ''))).then(function (buf) {
+          var hex = '';
+          var bytes = new Uint8Array(buf);
+          for (var i = 0; i < 8 && i < bytes.length; i++) {
+            hex += ('0' + bytes[i].toString(16)).slice(-2);
+          }
+          emit(hex || 'token-unavailable');
+        }).catch(function () { emit('token-unavailable'); });
+        setTimeout(function () { emit('token-unavailable'); }, 800);
+        return;
+      }
+    } catch (e) {}
+    emit('token-unavailable');
+  }
+
+  function getGa4Currency() {
+    return isEN ? 'USD' : 'THB';
+  }
+
+  function getProductSlug() {
+    return window.location.pathname.split('/').filter(Boolean).slice(-1)[0] || 'product';
+  }
+
+  function getProductName() {
+    var titleEl = document.querySelector('.product-title');
+    return titleEl ? titleEl.textContent.trim() : getProductSlug().replace(/-/g, ' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
+  }
+
+  function getSelectedColorLabel() {
+    var activeColorGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
+    var selectedColorEl = activeColorGroup ? activeColorGroup.querySelector('.color-option.selected') : null;
+    return selectedColorEl ? formatColorName(selectedColorEl.getAttribute('title') || selectedColorEl.getAttribute('data-color') || '') : (getFixedProtectorColorLabel() || '');
+  }
+
+  function getSelectedSizeLabel() {
+    if (sizeSelect && sizeSelect.selectedOptions[0] && sizeSelect.value && sizeSelect.value !== 'custom') {
+      return sizeSelect.selectedOptions[0].text.trim();
+    }
+    if (isMarineShapeProduct) {
+      var ms = document.getElementById('marine-shape-select');
+      if (ms && ms.selectedOptions[0] && ms.value) return ms.selectedOptions[0].text.trim();
+    }
+    return '';
+  }
+
+  function buildGa4ItemFromCurrentState(quantity) {
+    var qty = Number(quantity || 1) || 1;
+    var unitPrice = isEN
+      ? Number((state._price && state._price.usd) || 0)
+      : Number((state._price && state._price.thb) || 0);
+    var item = {
+      item_id: getProductSlug(),
+      item_name: getProductName(),
+      price: unitPrice,
+      quantity: qty
+    };
+    return item;
+  }
+
+  var ga4ViewItemSent = false;
+  function trackViewItemOnce() {
+    if (ga4ViewItemSent) return;
+    var item = buildGa4ItemFromCurrentState(1);
+    var value = (Number(item.price || 0) || 0) * (Number(item.quantity || 1) || 1);
+    var payload = {
+      currency: getGa4Currency(),
+      value: Math.round(value * 100) / 100,
+      items: [item]
+    };
+    sendGa4Event('view_item', payload);
+    ga4ViewItemSent = true;
+  }
+
+  function trackAddToCart(item) {
+    if (!item) return;
+    var currency = getGa4Currency();
+    var qty = Number(item.qty || 1) || 1;
+    var unitPrice = currency === 'THB'
+      ? Number(item.price_thb || 0)
+      : Number(item.price_usd || item.price || 0);
+    if (!(unitPrice > 0) && state._price) {
+      unitPrice = currency === 'THB'
+        ? Number(state._price.thb || 0)
+        : Number(state._price.usd || 0);
+    }
+    var gaItem = {
+      item_id: item.product_slug || getProductSlug(),
+      item_name: item.product_name || getProductName(),
+      price: Number(unitPrice || 0) || 0,
+      quantity: qty
+    };
+    var value = gaItem.price * qty;
+    var payload = {
+      currency: currency,
+      value: Math.round(value * 100) / 100,
+      items: [gaItem]
+    };
+    sendGa4Event('add_to_cart', payload);
+  }
+
+  function trackQuoteRequest(meta) {
+    if (!meta || !meta.quote_id) return;
+    var currency = getGa4Currency();
+    var unitPrice = currency === 'THB'
+      ? Number(meta.price_thb || 0)
+      : Number(meta.price_usd || 0);
+    // One successful submission = one new quote row = one dispatch of each
+    // lead event. `quote_request` is the event the published GTM container
+    // routes today; `generate_lead` is the GA4 standard name (container
+    // change proposed separately, not applied here).
+    function buildPayload() {
+      return {
+        quote_id: '',
+        product_name: meta.product_name || getProductName(),
+        currency: currency,
+        value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+        items: [{
+          item_id: meta.product_slug || getProductSlug(),
+          item_name: meta.product_name || getProductName(),
+          price: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+          quantity: 1
+        }]
+      };
+    }
+    sendGa4EventTokenized('quote_request', buildPayload(), 'quote_id', meta.quote_id);
+    sendGa4EventTokenized('generate_lead', buildPayload(), 'quote_id', meta.quote_id);
+  }
+
+  function applyDerivedMarkupToResult(result) {
+    if (!result || !DERIVED_MARKUP_PCT) return result;
+    var factor = 1 + (DERIVED_MARKUP_PCT / 100);
+    result.thb = Math.ceil((result.thb * factor) / 100) * 100;
+    result.usd = Math.round((result.thb / THB_TO_USD) * 100) / 100;
+    return result;
   }
 
   // -- Update price from standard size --
@@ -1042,7 +1380,9 @@
     }
     var dims = parseSizeVal(val);
     if (!dims) {
-      priceDisplay.textContent = '—';
+      if (!renderStartingPriceWithCampaign()) {
+        priceDisplay.textContent = '—';
+      }
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
@@ -1085,6 +1425,7 @@
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
+    result = applyDerivedMarkupToResult(result);
     priceDisplay.innerHTML = displayPrice(result.thb, result.usd);
     validateForm();
     // Save for add-to-cart handler
@@ -1137,7 +1478,7 @@
       var dimFootW = document.getElementById('dim-foot-width');
       var fw = parseFloat(dimFootW && dimFootW.value) || 0;
       if (state.unit === 'in') fw = inchToCm(fw);
-      if (fw <= 0) { customPrice.textContent = 'Enter Foot Width (FW)'; customPrice.style.fontSize = '0.85rem'; if (addToCartBtn) addToCartBtn.disabled = true; return; }
+      if (fw <= 0) { customPrice.textContent = t('Enter Foot Width (FW)', 'กรอกความกว้างปลายเตียง (FW)'); customPrice.style.fontSize = '0.85rem'; if (addToCartBtn) addToCartBtn.disabled = true; return; }
       if (!dCm) {
         dCm = isMarineTopSheet ? (state.unit === 'in' ? 5 : 12.7) : (state.unit === 'in' ? 7 : 17.78);
       }
@@ -1147,6 +1488,7 @@
       var sf = 1 + CUSTOM_QUOTE_SURCHARGE;
       result.thb = Math.ceil((result.thb * sf) / 100) * 100;
       result.usd = Math.round((result.thb / THB_TO_USD) * 100) / 100;
+      result = applyDerivedMarkupToResult(result);
       state.quotePriceThb = result.thb;
       state.quotePriceUsd = result.usd;
       customPrice.innerHTML = displayPrice(result.thb, result.usd);
@@ -1189,6 +1531,7 @@
     var sf2 = 1 + CUSTOM_QUOTE_SURCHARGE;
     result.thb = Math.ceil((result.thb * sf2) / 100) * 100;
     result.usd = Math.round((result.thb / THB_TO_USD) * 100) / 100;
+    result = applyDerivedMarkupToResult(result);
     state.quotePriceThb = result.thb;
     state.quotePriceUsd = result.usd;
     customPrice.innerHTML = displayPrice(result.thb, result.usd);
@@ -1197,7 +1540,8 @@
   }
 
   function updateAllPrices() {
-    updateStandardPrice();
+    renderStartingPriceWithCampaign();
+    if (!isCustomOnlyProduct) updateStandardPrice();
     updateCustomPrice();
   }
 
@@ -1206,6 +1550,14 @@
     if (!txt) return '';
     txt = txt.replace(/[-_]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
     return txt.replace(/\b\w/g, function (m) { return m.toUpperCase(); });
+  }
+
+  function getFixedProtectorColor() {
+    return isAnyMattressProtector ? 'white' : '';
+  }
+
+  function getFixedProtectorColorLabel() {
+    return isAnyMattressProtector ? 'White' : '';
   }
 
   function updateSelectedColorName(groupEl) {
@@ -1311,7 +1663,9 @@
         focusFirstDimInput();
         alert((isDuvet || isPillowProtector || isPillowcase)
           ? 'Please enter your dimensions (Width, Length) before requesting a quote.'
-          : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
+          : isCushionProtector
+            ? 'Please enter your cushion dimensions (Length, Width, Thickness) before requesting a quote.'
+            : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
         if (dimW) dimW.focus();
         return;
       }
@@ -1339,6 +1693,20 @@
     if (e.target === confirmOverlay) confirmOverlay.classList.remove('open');
   });
 
+  // Resolve the fabric to submit with a quote. The live fabric UI wins over the
+  // startup default: D1 fabric_options may set the select programmatically (no
+  // change event fires) or collapse it to a single-fabric badge, leaving
+  // state.fabric stale on products without an explicit lock above.
+  function resolveQuoteFabric() {
+    var liveSelect = document.getElementById('fabric-select');
+    if (liveSelect && liveSelect.value) return liveSelect.value;
+    var badge = document.querySelector('.fabric-badge');
+    if (badge && badge.textContent && badge.textContent.trim()) {
+      return badge.textContent.trim().toLowerCase();
+    }
+    return state.fabric;
+  }
+
   // -- Form submit ? POST /api/quote --
   document.getElementById('quote-form').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -1357,13 +1725,15 @@
     if (!email || email.indexOf('@') === -1) { errEmail.textContent = 'Please enter a valid email'; errEmail.classList.add('show'); valid = false; }
     if (!valid) return;
 
-    // Collect dimensions
+    // Collect dimensions — keep the customer's entered values alongside converted cm
     var wCm = 0, lCm = 0, dCm = 0, dimDisplay = '';
+    var wRaw = 0, lRaw = 0, dRaw = 0;
     if (dimW && dimL) {
-      wCm = parseFloat(dimW.value) || 0;
-      lCm = parseFloat(dimL.value) || 0;
-      dCm = (isDuvet || isPillowProtector || isPillowcase || !dimD) ? 0 : (parseFloat(dimD.value) || 0);
-      if (state.unit === 'in') { wCm = inchToCm(wCm); lCm = inchToCm(lCm); dCm = inchToCm(dCm); }
+      wRaw = parseFloat(dimW.value) || 0;
+      lRaw = parseFloat(dimL.value) || 0;
+      dRaw = (isDuvet || isPillowProtector || isPillowcase || !dimD) ? 0 : (parseFloat(dimD.value) || 0);
+      wCm = wRaw; lCm = lRaw; dCm = dRaw;
+      if (state.unit === 'in') { wCm = inchToCm(wRaw); lCm = inchToCm(lRaw); dCm = inchToCm(dRaw); }
     }
 
     var dimsValid = (isDuvet || isPillowProtector || isPillowcase) ? (wCm > 0 && lCm > 0) : (wCm > 0 && lCm > 0 && dCm > 0);
@@ -1374,7 +1744,9 @@
       focusFirstDimInput();
       alert((isDuvet || isPillowProtector || isPillowcase)
         ? 'Please enter your dimensions (W \u00D7 L) before submitting the quote.'
-        : 'Please enter your mattress dimensions (W \u00D7 L \u00D7 D) before submitting the quote. Click "Custom Size" first.');
+        : isCushionProtector
+          ? 'Please enter your cushion dimensions (L \u00D7 W \u00D7 T) before submitting the quote. Click "Custom Size" first.'
+          : 'Please enter your mattress dimensions (W \u00D7 L \u00D7 D) before submitting the quote. Click "Custom Size" first.');
       return;
     }
     dimDisplay = (isDuvet || isPillowProtector || isPillowcase)
@@ -1386,6 +1758,7 @@
       : state.fabric;
 
     var productSlug = window.location.pathname.split('/').filter(Boolean).slice(-1)[0] || 'fitted-sheet';
+    var productName = getProductName();
     var turnstileToken = getTurnstileToken(document.getElementById('quote-form'));
     if (!turnstileToken) {
       alert('Please complete the security check.');
@@ -1399,6 +1772,10 @@
     var activeQuoteColorGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
     var selectedQuoteColorEl = activeQuoteColorGroup ? activeQuoteColorGroup.querySelector('.color-option.selected') : null;
     var selectedQuoteColor = selectedQuoteColorEl ? selectedQuoteColorEl.getAttribute('data-color') : undefined;
+    if (!selectedQuoteColor) {
+      var fixedQuoteColor = getFixedProtectorColor();
+      if (fixedQuoteColor) selectedQuoteColor = fixedQuoteColor;
+    }
 
     fetch('/api/quote', {
       method: 'POST',
@@ -1409,8 +1786,12 @@
         address: (document.getElementById('qf-address') ? document.getElementById('qf-address').value.trim() : '') || undefined,
         telephone: (document.getElementById('qf-phone') ? document.getElementById('qf-phone').value.trim() : '') || undefined,
         product_slug: productSlug,
-        dimensions: { w: wCm, l: lCm, d: dCm, unit: 'cm' },
-        fabric: state.fabric,
+        dimensions: (function () {
+          var dims = { w: round1(wCm), l: round1(lCm), d: round1(dCm), unit: 'cm' };
+          if (state.unit === 'in') dims.entered = { w: wRaw, l: lRaw, d: dRaw, unit: 'in' };
+          return dims;
+        })(),
+        fabric: resolveQuoteFabric(),
         color: selectedQuoteColor,
         marine_shape: (function () {
           if (!isMarineShapeProduct) return undefined;
@@ -1420,6 +1801,9 @@
         })(),
         quoted_price_thb: state.quotePriceThb,
         quoted_price_usd: state.quotePriceUsd,
+        attribution: (typeof window.__mildmateGetAttributionSnapshot === 'function')
+          ? window.__mildmateGetAttributionSnapshot('quote')
+          : undefined,
         turnstile_token: turnstileToken,
         _website: (document.querySelector('[name="_website"]') ? document.querySelector('[name="_website"]').value : '') || undefined
       })
@@ -1430,6 +1814,13 @@
       submitBtn.textContent = 'Submit';
 
       if (data.success) {
+        trackQuoteRequest({
+          quote_id: data.quote_id,
+          product_slug: productSlug,
+          product_name: productName,
+          price_usd: state.quotePriceUsd,
+          price_thb: state.quotePriceThb
+        });
         quoteOverlay.classList.remove('open');
         if (window.turnstile && typeof window.turnstile.reset === 'function') window.turnstile.reset();
         document.getElementById('confirm-text').innerHTML =
@@ -1437,7 +1828,7 @@
         document.getElementById('confirm-details').innerHTML =
           '<strong>Dimension:</strong> ' + dimDisplay + '<br>' +
           '<strong>Fabric:</strong> ' + fabricName + '<br>' +
-          '<strong>Color:</strong> ' + (selectedQuoteColorEl ? (selectedQuoteColorEl.getAttribute('title') || selectedQuoteColorEl.getAttribute('data-color') || '—') : '—') + '<br>' +
+          '<strong>Color:</strong> ' + (selectedQuoteColorEl ? (selectedQuoteColorEl.getAttribute('title') || selectedQuoteColorEl.getAttribute('data-color') || '—') : (getFixedProtectorColorLabel() || '—')) + '<br>' +
           (state.quotePriceUsd ? '<strong>Price:</strong> $' + state.quotePriceUsd.toFixed(2) + ' USD<br>' : '') +
           '<strong>Quote ID:</strong> ' + data.quote_id;
         confirmOverlay.classList.add('open');
@@ -1474,7 +1865,9 @@
           focusFirstDimInput();
           alert((isDuvet || isPillowProtector || isPillowcase)
             ? 'Please enter your dimensions (Width, Length) before requesting a quote.'
-            : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
+            : isCushionProtector
+              ? 'Please enter your cushion dimensions (Length, Width, Thickness) before requesting a quote.'
+              : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
           return;
         }
         quoteOverlay.classList.add('open');
@@ -1498,6 +1891,7 @@
       var activeColorGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
       var selectedColorEl = activeColorGroup ? activeColorGroup.querySelector('.color-option.selected') : null;
       var colorName = selectedColorEl ? formatColorName(selectedColorEl.getAttribute('title') || selectedColorEl.getAttribute('data-color') || '') : '';
+      if (!colorName) colorName = getFixedProtectorColorLabel();
 
       // Size label: capture the human-readable label (e.g., "US/CA · Twin 68×86″")
       var sizeLabel = '';
@@ -1511,6 +1905,9 @@
         }
       }
 
+      // Campaign sale: store the discounted price so cart + checkout display
+      // match the advertised sale; keep the original for server-side validation.
+      var salePrice = applyCampaignDiscount(state._price.thb, state._price.usd);
       var item = {
         type: 'product',
         id: 'cart-' + Date.now(),
@@ -1525,8 +1922,11 @@
         },
         fabric: fabricName,
         color: colorName,
-        price_usd: Math.round(state._price.usd),
-        price_thb: state._price.thb,
+        price_usd: Math.round(salePrice.usd),
+        price_thb: salePrice.thb,
+        original_price_usd: Math.round(state._price.usd),
+        original_price_thb: state._price.thb,
+        campaign_discount_pct: salePrice.discount || 0,
         qty: 1,
         image: (function() {
           var meta = document.querySelector('meta[name="product-image"]');
@@ -1537,12 +1937,16 @@
       if (window.MildMateCart) {
         window.MildMateCart.add(item);
       }
+      trackAddToCart(item);
 
       // Visual feedback
+      cartFeedbackActive = true;
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
       addToCartBtn.style.background = '#16a34a';
       setTimeout(function () {
-        addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart';
+        cartFeedbackActive = false;
+        lastCtaReady = true;
+        addToCartBtn.innerHTML = CART_ICON_SVG + addToCartLabel(true);
         addToCartBtn.style.background = '';
         addToCartBtn.disabled = false;
       }, 2000);
@@ -1580,6 +1984,22 @@
 
   // -- Init: default price --
   updateAllPrices();
+  window.addEventListener('mildmate:campaigns-updated', function () {
+    updateAllPrices();
+  });
+  if (typeof MildMateCampaigns !== 'undefined' && typeof MildMateCampaigns.loadStorefrontCampaigns === 'function') {
+    // The pricing-params await above can lose the startup race: if
+    // /api/campaigns resolved first, mildmate:campaigns-updated fired before
+    // this listener existed. loadStorefrontCampaigns(false) then returns the
+    // cached list WITHOUT re-emitting — so re-render once when it is already
+    // populated.
+    var campaignsAlreadyLoaded = MildMateCampaigns.getActiveCampaigns();
+    MildMateCampaigns.loadStorefrontCampaigns(false);
+    if (Array.isArray(campaignsAlreadyLoaded) && campaignsAlreadyLoaded.length) {
+      updateAllPrices();
+    }
+  }
+  trackViewItemOnce();
 
   // -- Color inventory: fetch and apply out-of-stock state --
   var colorInventory = {};

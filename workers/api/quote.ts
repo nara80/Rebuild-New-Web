@@ -4,9 +4,36 @@
 // Anti-spam: honeypot field + IP rate limit (3/hour)
 
 import { sendEmail } from "./email";
+import {
+  sanitizeAttributionPayload,
+  upsertQuoteAttributionFromQuote,
+} from "./attribution";
 
 const QUOTE_RATE_LIMIT = 5; // max per hour per IP
 const QUOTE_RATE_WINDOW = "-1 hour";
+const FIXED_WHITE_PROTECTOR_SLUGS = new Set([
+  "marine-mattress-protector",
+  "mattress-protector-standard",
+  "mattress-protector-family",
+  "mattress-protector-deep-pocket",
+  "pet-proof-mattress-protector",
+  // TPU-only, white-only encasements + pillow protector — client default fabric must never leak through
+  "mattress-encasement-general",
+  "rv-truck-mattress-encasement",
+  "pillow-protector-general",
+]);
+
+function normalizeQuoteFabric(slug: string, fabric: any): string | null {
+  if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "tpu";
+  const clean = typeof fabric === "string" ? fabric.trim().toLowerCase() : "";
+  return clean || null;
+}
+
+function normalizeQuoteColor(slug: string, color: any): string | null {
+  if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "white";
+  const clean = typeof color === "string" ? color.trim().toLowerCase() : "";
+  return clean || null;
+}
 
 async function checkRateLimit(db: any, ip: string, endpoint: string, max: number): Promise<boolean> {
   const row = await db.prepare(
@@ -64,7 +91,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     try {
       const row = await env.DB.prepare(
         `SELECT quote_id, customer_name, email, product_slug, dimensions, fabric, color,
-                status, quoted_price, expires_at, created_at
+                status, quoted_price, free_shipping, expires_at, created_at
          FROM custom_quotes
          WHERE quote_id = ?1`
       ).bind(quoteId).first();
@@ -106,6 +133,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
         status: row.status,
         quoted_price_thb: priceThb,
         quoted_price_usd: priceUsd,
+        free_shipping: Number((row as any).free_shipping || 0) === 1,
         expires_at: row.expires_at,
         created_at: row.created_at,
         is_expired: row.expires_at ? new Date(row.expires_at + "Z") < new Date() : false,
@@ -131,7 +159,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
 
   try {
     const body: any = await request.json();
-    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, _website } = body;
+    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, attribution, _website } = body;
     const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
 
     // ── Honeypot check — bots auto-fill hidden fields ──
@@ -203,9 +231,12 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     const cleanName = customer_name.trim();
     const cleanAddress = address?.trim() || "—";
     const cleanPhone = telephone?.trim() || "—";
-    const cleanFabric = fabric || "—";
-    const cleanColor = color || "—";
-    const cleanSlug = product_slug;
+    const cleanSlug = String(product_slug || "").trim().toLowerCase();
+    const normalizedFabric = normalizeQuoteFabric(cleanSlug, fabric);
+    const normalizedColor = normalizeQuoteColor(cleanSlug, color);
+    const cleanFabric = normalizedFabric || "—";
+    const cleanColor = normalizedColor || "—";
+    const quoteAttribution = sanitizeAttributionPayload(attribution, "quote");
 
     await env.DB.prepare(`
       INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price, quoted_price_usd)
@@ -213,10 +244,16 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     `).bind(
       quoteId, cleanName, cleanEmail,
       address?.trim() || null, telephone?.trim() || null,
-      cleanSlug, dimsJson, fabric || null, color || null,
+      cleanSlug, dimsJson, normalizedFabric, normalizedColor,
       quoted_price_thb || null,
       quoted_price_usd || null
     ).run();
+
+    try {
+      await upsertQuoteAttributionFromQuote(env, quoteId, cleanEmail, quoteAttribution);
+    } catch (e: any) {
+      console.error("Quote attribution persist failed:", e?.message || e);
+    }
 
     // Also save email to subscribers (dedup via UNIQUE constraint)
     await env.DB.prepare(
@@ -228,8 +265,17 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
       `INSERT INTO rate_limits (ip_address, endpoint) VALUES (?, 'quote')`
     ).bind(ip).run();
 
+    // Human-readable product title for the team email (fallback: slug)
+    let productTitle = "";
+    try {
+      const titleRow = await env.DB.prepare(
+        "SELECT title_en FROM products WHERE slug = ?1"
+      ).bind(cleanSlug).first();
+      if (titleRow?.title_en) productTitle = String(titleRow.title_en).trim();
+    } catch {}
+
     // Notify contact@mildmate.com via Resend
-    const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd);
+    const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd, productTitle);
     let emailStatus = "not_sent";
     try {
       const emailResult = await sendEmail(env, {
@@ -270,8 +316,10 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
 function buildQuoteEmail(
   name: string, email: string, address: string, phone: string,
   slug: string, dimsJson: string, fabric: string, color: string,
-  quoteId: string, priceThb: number | null, priceUsd: number | null
+  quoteId: string, priceThb: number | null, priceUsd: number | null,
+  productTitle?: string
 ): string {
+  const fmt1 = (n: any) => String(Math.round(Number(n) * 10) / 10);
   let dimStr = "—";
   let shapeLine = "";
   let areaLine = "";
@@ -303,7 +351,20 @@ function buildQuoteEmail(
           dimStr = JSON.stringify(d);
         }
       } else if (d.w && d.l) {
-        dimStr = d.d ? `${d.w} × ${d.l} × ${d.d} ${unit}` : `${d.w} × ${d.l} ${unit}`;
+        // Round converted cm values (kills FP noise like 248.92000000000002)
+        const cmStr = d.d
+          ? `${fmt1(d.w)} × ${fmt1(d.l)} × ${fmt1(d.d)} ${unit}`
+          : `${fmt1(d.w)} × ${fmt1(d.l)} ${unit}`;
+        // Customer-entered unit first (e.g. inches), converted cm in parentheses
+        const e = d.entered;
+        if (e && typeof e === "object" && e.w && e.l && e.unit && String(e.unit).toLowerCase() !== String(unit).toLowerCase()) {
+          const enteredStr = e.d
+            ? `${fmt1(e.w)} × ${fmt1(e.l)} × ${fmt1(e.d)} ${e.unit}`
+            : `${fmt1(e.w)} × ${fmt1(e.l)} ${e.unit}`;
+          dimStr = `${enteredStr} (${cmStr})`;
+        } else {
+          dimStr = cmStr;
+        }
       } else {
         dimStr = JSON.stringify(d);
       }
@@ -317,10 +378,12 @@ function buildQuoteEmail(
     priceLine = `$${usd} USD${thb}`;
   }
 
+  const productLine = productTitle ? `${productTitle} (${slug})` : slug;
+
   return `New custom quote submitted from MildMate website:
 
 Quote ID: ${quoteId}
-Product: ${slug}
+Product: ${productLine}
 
 ━━━ Customer ━━━
 Name: ${name}

@@ -34,6 +34,8 @@ import { handleAdminContacts } from "./admin-contacts";
 import { handleAdminTemplates } from "./admin-templates";
 import { handleAdminOffers } from "./admin-offers";
 import { handleAdminCampaigns } from "./admin-campaigns";
+import { handleCampaigns } from "./campaigns";
+import { authorizeAdmin } from "./admin-auth";
 import { handleFavorites } from "./favorites";
 import { handleReviews, handleAdminReviews } from "./reviews";
 import { handleCheckout } from "./checkout";
@@ -42,17 +44,63 @@ import { handleStripeWebhook } from "./webhook";
 import { handleAuth } from "./auth";
 import { handleCustomers } from "./customers";
 import { handleOrderConfirmed } from "./order-confirmed";
+import { handleSalesApi } from "./sales";
+import { handleGscApi } from "./gsc";
+import { handleGa4Api } from "./ga4";
+import { handleEtsyApi } from "./etsy";
+import { handleGoogleAdsApi } from "./google-ads";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
+    const isAdminPath = path.startsWith("/api/admin/");
+
+    if (isAdminPath && request.method !== "OPTIONS") {
+      const auth = await authorizeAdmin(request, env);
+      if (!auth.ok) {
+        return new Response(JSON.stringify({ error: auth.error }), {
+          status: auth.status,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Health check endpoint
     if (path === "/api/health") {
       return new Response(JSON.stringify({ status: "ok", project: "mildmate-new" }), {
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Phase 09 — GSC collector API (token-auth upsert under /v1/gsc/* and /api/v1/gsc/*)
+    if (path.startsWith("/v1/gsc") || path.startsWith("/api/v1/gsc")) {
+      const gscRes = await handleGscApi(request, env);
+      if (gscRes) return gscRes;
+    }
+
+    // Phase 10 — GA4 collector API (token-auth upsert under /v1/ga4/* and /api/v1/ga4/*)
+    if (path.startsWith("/v1/ga4") || path.startsWith("/api/v1/ga4")) {
+      const ga4Res = await handleGa4Api(request, env);
+      if (ga4Res) return ga4Res;
+    }
+
+    // Phase 11 — Etsy listing analytics collector API (token-auth upsert under /v1/etsy/* and /api/v1/etsy/*)
+    if (path.startsWith("/v1/etsy") || path.startsWith("/api/v1/etsy")) {
+      const etsyRes = await handleEtsyApi(request, env);
+      if (etsyRes) return etsyRes;
+    }
+
+    // Phase 12 — Google Ads paid-media collector API (token-auth upsert under /v1/google-ads/* and /api/v1/google-ads/*)
+    if (path.startsWith("/v1/google-ads") || path.startsWith("/api/v1/google-ads")) {
+      const googleAdsRes = await handleGoogleAdsApi(request, env);
+      if (googleAdsRes) return googleAdsRes;
+    }
+
+    // Unified sales API (supports /v1/* and /api/v1/*)
+    if (path.startsWith("/v1/") || path === "/v1" || path.startsWith("/api/v1/") || path === "/api/v1") {
+      const salesRes = await handleSalesApi(request, env);
+      if (salesRes) return salesRes;
     }
 
     // Products API
@@ -195,6 +243,10 @@ export default {
     if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
       return handleAdminCampaigns(request, env);
     }
+    // Public API — active campaigns for storefront sale rendering
+    if (path === "/api/campaigns" || path === "/api/campaigns/") {
+      return handleCampaigns(request, env);
+    }
 
     // Admin API — manual dispatch for due thank-you emails
     if (path === "/api/admin/thankyou-dispatch" || path === "/api/admin/thankyou-dispatch/") {
@@ -298,9 +350,9 @@ export default {
 };
 
 async function handleAdminSubscribers(request: Request, env: any): Promise<Response> {
-  const secret = request.headers.get("X-Admin-Secret");
-  if (secret !== (env.ADMIN_SECRET || "admin")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+  const auth = await authorizeAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: { "Content-Type": "application/json" } });
   }
   const url = new URL(request.url);
   // DELETE — remove a subscriber by ID

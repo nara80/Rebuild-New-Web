@@ -4,20 +4,175 @@
 // Requires STRIPE_SECRET_KEY set as Cloudflare secret
 
 import { calculateShippingQuote } from "./shipping";
+import {
+  extractUniqueQuoteIdsFromItems,
+  sanitizeAttributionPayload,
+  upsertQuoteAttributionFromCheckout,
+} from "./attribution";
 
 interface CartItem {
   type: string;           // 'product' | 'custom_quote'
   id?: string;
   product_slug: string;
-  product_name: string;
+  product_name?: string;
   dimensions: { w?: number; l?: number; d?: number; unit?: string; size_text?: string; label?: string };
   fabric: string;
   color: string;
   price_usd: number;
   price_thb: number;
+  original_price_usd?: number;  // pre-campaign price (client sends when a sale was applied)
+  original_price_thb?: number;
+  campaign_discount_pct?: number;
   qty: number;
   image?: string;
   quote_id?: string;      // only for custom_quote type
+  is_quote?: boolean;
+}
+
+// Server-authoritative campaign sale lookup: slug → highest active discount pct.
+// Client-sent prices are display-only; the charge is always recomputed from the
+// original price with the live campaign window checked here.
+async function getActiveCampaignDiscounts(env: any): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT discount_pct, product_slugs FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now')"
+    ).all();
+    for (const row of ((results || []) as any[])) {
+      const pct = Number(row.discount_pct || 0);
+      if (!(pct > 0)) continue;
+      let slugs: any[] = [];
+      try { slugs = JSON.parse(row.product_slugs || "[]"); } catch { slugs = []; }
+      for (const slug of slugs) {
+        const key = String(slug || "").trim();
+        if (key && pct > (map.get(key) || 0)) map.set(key, pct);
+      }
+    }
+  } catch (e: any) {
+    console.warn("Campaign discount lookup failed:", e?.message || e);
+  }
+  return map;
+}
+
+function isProductionHost(request: Request): boolean {
+  try {
+    const host = new URL(request.url).hostname.toLowerCase();
+    return host === "www.mildmate.com" || host === "mildmate.com";
+  } catch {
+    return false;
+  }
+}
+
+function inferStripeSecretMode(secret: string): "live" | "test" | "unknown" {
+  if (secret.startsWith("sk_live_")) return "live";
+  if (secret.startsWith("sk_test_")) return "test";
+  return "unknown";
+}
+
+function assertStripeRuntimeSafety(request: Request, env: any, stripeKey: string): string | null {
+  const prodHost = isProductionHost(request);
+  const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
+  const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
+  const stripeMode = inferStripeSecretMode(stripeKey);
+
+  if (prodHost) {
+    if (stripeMode === "test") return "Production host cannot use Stripe test secret key";
+    if (runtimeEnv && runtimeEnv !== "prod" && runtimeEnv !== "production") {
+      return "Production host runtime environment mismatch";
+    }
+    return null;
+  }
+
+  if (env.NON_PROD_STRIPE_ALLOWED !== "true") {
+    return "Non-production checkout disabled until NON_PROD_STRIPE_ALLOWED=true";
+  }
+  if (!runtimeEnv || runtimeEnv === "prod" || runtimeEnv === "production") {
+    return "Non-production runtime requires explicit non-production RUNTIME_ENV";
+  }
+  if (stripeMode !== "test") {
+    return "Non-production checkout requires Stripe test secret key";
+  }
+  if (!d1Label || d1Label === "prod" || d1Label === "production") {
+    return "Non-production runtime requires non-production D1_ENV_LABEL";
+  }
+  return null;
+}
+
+function humanizeSlug(slug: string): string {
+  return String(slug || "")
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function getItemName(item: CartItem): string {
+  const raw = String((item as any).product_name || (item as any).title || "").trim();
+  if (raw) return raw;
+  const fromSlug = humanizeSlug(item.product_slug || "");
+  return fromSlug || "Custom Product";
+}
+
+function normalizeFabricForSlug(slugRaw: any, fabricRaw: any): string | null {
+  const slug = String(slugRaw || "").trim().toLowerCase();
+  if (slug === "pet-proof-mattress-protector") return "tpu";
+  if (slug === "custom-waterproof-cushion-protector") return "tpu";
+  const fabric = String(fabricRaw || "").trim().toLowerCase();
+  return fabric || null;
+}
+
+function sanitizeMarineValues(valuesRaw: any): Record<string, number> | undefined {
+  if (!valuesRaw || typeof valuesRaw !== "object" || Array.isArray(valuesRaw)) return undefined;
+  const out: Record<string, number> = {};
+  Object.keys(valuesRaw).forEach((k) => {
+    const key = String(k || "").trim().toUpperCase();
+    if (!key) return;
+    const n = Number((valuesRaw as any)[k]);
+    if (Number.isFinite(n) && n > 0) out[key] = n;
+  });
+  return Object.keys(out).length ? out : undefined;
+}
+
+let checkoutSnapshotSchemaReady = false;
+let checkoutSnapshotSchemaPromise: Promise<boolean> | null = null;
+
+async function ensureCheckoutSnapshotSchema(env: any): Promise<boolean> {
+  if (checkoutSnapshotSchemaReady) return true;
+  if (!checkoutSnapshotSchemaPromise) {
+    checkoutSnapshotSchemaPromise = (async () => {
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS checkout_session_snapshots (
+             stripe_session_id TEXT PRIMARY KEY,
+             email TEXT,
+             currency TEXT,
+             items_json TEXT NOT NULL,
+             attribution_json TEXT,
+             quote_ids_json TEXT,
+             created_at DATETIME DEFAULT (datetime('now'))
+           )`
+        ).run();
+        try {
+          const tableInfo = await env.DB.prepare("PRAGMA table_info(checkout_session_snapshots)").all();
+          const existing = new Set(
+            (tableInfo.results || []).map((r: any) => String(r.name || "").toLowerCase())
+          );
+          const alters: string[] = [];
+          if (!existing.has("attribution_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN attribution_json TEXT");
+          if (!existing.has("quote_ids_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN quote_ids_json TEXT");
+          for (const sql of alters) await env.DB.prepare(sql).run();
+        } catch {}
+        checkoutSnapshotSchemaReady = true;
+        return true;
+      } catch (e: any) {
+        console.error("checkout snapshot schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!checkoutSnapshotSchemaReady) checkoutSnapshotSchemaPromise = null;
+    });
+  }
+  return await checkoutSnapshotSchemaPromise;
 }
 
 export async function handleCheckout(request: Request, env: any): Promise<Response> {
@@ -35,6 +190,13 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       headers: { "Content-Type": "application/json" },
     });
   }
+  const stripeSafetyError = assertStripeRuntimeSafety(request, env, stripeKey);
+  if (stripeSafetyError) {
+    return new Response(JSON.stringify({ error: stripeSafetyError }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   let body: any;
   try {
@@ -47,6 +209,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   }
 
   const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
+  const checkoutAttribution = sanitizeAttributionPayload(body.attribution, "checkout");
   const customerNoteTypeRaw = String(body.customer_note_type || "").trim().toLowerCase();
   const customerNoteRaw = String(body.customer_note || "").trim();
   const allowedNoteTypes = new Set(["delivery", "measurement", "gift", "other"]);
@@ -143,13 +306,22 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       headers: { "Content-Type": "application/json" },
     });
   }
+  const quoteIdsFromCart = extractUniqueQuoteIdsFromItems(items);
 
   // Check for custom-quote items that haven't been approved
-  const quoteItems = items.filter((i: CartItem) => i.type === "custom_quote" && i.quote_id);
+  const quoteItems = items.filter((i: CartItem) => !!i.quote_id && (i.type === "custom_quote" || !!i.is_quote));
+  // Authoritative approved prices per quote_id (D1 source of truth; client-sent
+  // prices for quote items are display-only and never charged).
+  const quoteAuthorizedPrices = new Map<string, { thb: number; usd: number }>();
   if (quoteItems.length > 0) {
+    const rateRow = await env.DB.prepare(
+      "SELECT param_value FROM pricing_params WHERE param_key = 'usd_rate'"
+    ).first().catch(() => null as any);
+    let usdRate = parseFloat(String((rateRow as any)?.param_value || ""));
+    if (!Number.isFinite(usdRate) || usdRate <= 0) usdRate = 30;
     for (const qi of quoteItems) {
       const quote = await env.DB.prepare(
-        "SELECT status, quoted_price FROM custom_quotes WHERE quote_id = ?1"
+        "SELECT status, quoted_price, quoted_price_usd, free_shipping FROM custom_quotes WHERE quote_id = ?1"
       ).bind(qi.quote_id).first();
       if (!quote || quote.status !== "approved") {
         return new Response(JSON.stringify({
@@ -159,6 +331,16 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
           headers: { "Content-Type": "application/json" },
         });
       }
+      if (Number((quote as any).free_shipping || 0) === 1) {
+        freeShipping = true;
+      }
+      const quoteThb = Math.max(0, Number((quote as any).quoted_price || 0));
+      let quoteUsd = Math.max(0, Number((quote as any).quoted_price_usd || 0));
+      if (!quoteUsd && quoteThb > 0) {
+        // Same derivation used at approval time (admin-quotes getUsdRate model).
+        quoteUsd = Math.round(quoteThb / usdRate);
+      }
+      quoteAuthorizedPrices.set(String(qi.quote_id), { thb: quoteThb, usd: quoteUsd });
     }
   }
 
@@ -197,14 +379,40 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   }
 
   // Build Stripe line items
+  const campaignDiscounts = await getActiveCampaignDiscounts(env);
   const lineItems = items.map((item: CartItem) => {
+    const itemName = getItemName(item);
+    const normalizedFabric = normalizeFabricForSlug(item.product_slug, item.fabric);
+    const isQuoteItem = item.type === "custom_quote" || !!item.is_quote;
+    // Quote items are always charged at the D1-approved quote price.
+    // Client-sent prices for quote items are display-only (trusted-source rule).
+    const authorized = isQuoteItem && item.quote_id
+      ? quoteAuthorizedPrices.get(String(item.quote_id)) || null
+      : null;
+    // Base price = pre-sale original when present (client stores the discounted
+    // price in price_usd/price_thb for display); legacy items carry the
+    // original in price_usd/price_thb directly.
+    const baseThb = authorized ? authorized.thb : Number(item.original_price_thb || item.price_thb || 0);
+    const baseUsd = authorized ? authorized.usd : Number(item.original_price_usd || item.price_usd || 0);
     const unitAmount = currency === "thb"
-      ? Math.round((item.price_thb || 0) * 100)
-      : Math.round((item.price_usd || 0) * 100);
+      ? Math.round(baseThb * 100)
+      : Math.round(baseUsd * 100);
+    // Campaign sales never apply to negotiated custom quotes.
+    const campaignPct = isQuoteItem ? 0 : (campaignDiscounts.get(String(item.product_slug || "").trim()) || 0);
+    const promoPct = discountApplied ? discountPct : 0;
+    // Non-stacking: apply the better of campaign sale vs discount code.
+    // Campaign rounds in whole currency units to match the advertised price.
+    let finalUnitAmount = unitAmount;
+    if (campaignPct > promoPct) {
+      const baseMajor = currency === "thb" ? baseThb : baseUsd;
+      finalUnitAmount = Math.round(baseMajor * (100 - campaignPct) / 100) * 100;
+    } else if (promoPct > 0) {
+      finalUnitAmount = Math.round(unitAmount * (100 - promoPct) / 100);
+    }
 
     const desc = [
-      item.product_name,
-      item.fabric ? `Fabric: ${item.fabric}` : "",
+      itemName,
+      normalizedFabric ? `Fabric: ${normalizedFabric}` : "",
       item.color ? `Color: ${item.color}` : "",
       item.dimensions
         ? `${item.dimensions.w}\u00D7${item.dimensions.l}${item.dimensions.d ? `\u00D7${item.dimensions.d}` : ""} ${item.dimensions.unit}`
@@ -215,10 +423,10 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       price_data: {
         currency: currency,
         product_data: {
-          name: item.product_name,
+          name: itemName,
           description: desc,
         },
-        unit_amount: discountApplied ? Math.round(unitAmount * (100 - discountPct) / 100) : unitAmount,
+        unit_amount: finalUnitAmount,
       },
       quantity: item.qty || 1,
     };
@@ -279,13 +487,54 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     const src = item.dimensions || {};
     const sizeText = String((src as any).size_text || (src as any).label || "").trim();
     const parsed = sizeText ? parseSizeText(sizeText) : {};
+    const shapeCode = String((src as any).shape_code || "").trim() || undefined;
+    const shapeName = String((src as any).shape_name || "").trim() || undefined;
+    const boatModelName = String((src as any).boat_model_name || "").trim() || undefined;
+    const boatModelKey = String((src as any).boat_model_key || "").trim() || undefined;
+    const areaCm2 = toNumber((src as any).area_cm2);
+    const values = sanitizeMarineValues((src as any).values);
     return {
       w: toNumber((src as any).w) ?? parsed.w,
       l: toNumber((src as any).l) ?? parsed.l,
       d: toNumber((src as any).d) ?? parsed.d,
       unit: String((src as any).unit || parsed.unit || "cm"),
       size_text: sizeText || undefined,
+      shape_code: shapeCode,
+      shape_name: shapeName,
+      boat_model_name: boatModelName,
+      boat_model_key: boatModelKey,
+      area_cm2: areaCm2,
+      values,
     };
+  }
+  function buildCompactDimText(dims: { w?: number; l?: number; d?: number; unit?: string; size_text?: string }): string {
+    const w = toNumber(dims?.w);
+    const l = toNumber(dims?.l);
+    const d = toNumber(dims?.d);
+    const unit = String(dims?.unit || "cm");
+    if (w && l) return `${w}×${l}${d ? `×${d}` : ""} ${unit}`;
+    const boatModelName = String((dims as any)?.boat_model_name || "").trim();
+    if (boatModelName) return `Model: ${boatModelName}`;
+    const shapeCode = String((dims as any)?.shape_code || "").trim();
+    const values = sanitizeMarineValues((dims as any)?.values);
+    if (shapeCode || values) {
+      const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+      const pairs = values
+        ? Object.keys(values)
+            .sort((a, b) => {
+              const ai = order.indexOf(a);
+              const bi = order.indexOf(b);
+              if (ai === -1 && bi === -1) return a.localeCompare(b);
+              if (ai === -1) return 1;
+              if (bi === -1) return -1;
+              return ai - bi;
+            })
+            .map((k) => `${k}:${values[k]}`)
+        : [];
+      return `Shape ${shapeCode || "Custom"}${pairs.length ? ` (${pairs.join(", ")} ${unit})` : ""}`;
+    }
+    const sizeText = String(dims?.size_text || "").replace(/^dimensions:\s*/i, "").trim();
+    return sizeText;
   }
 
   // Create Stripe Checkout Session
@@ -324,10 +573,14 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       params.append("metadata[discount_code]", discountCode);
       params.append("metadata[discount_percent]", String(discountPct));
     }
+    const checkoutTouch = checkoutAttribution.checkout_session;
+    if (checkoutTouch?.source) params.append("metadata[acq_source]", String(checkoutTouch.source));
+    if (checkoutTouch?.medium) params.append("metadata[acq_medium]", String(checkoutTouch.medium));
     const metadataItems = items.map((i: CartItem, idx: number) => ({
       slug: i.product_slug,
-      name: i.product_name,
-      fabric: i.fabric,
+      name: getItemName(i),
+      quote_id: i.quote_id || undefined,
+      fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
       color: i.color,
       dims: buildMetadataDims(i),
       qty: i.qty || 1,
@@ -338,10 +591,32 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     if (metadataItemsStr.length > 500) {
       const compactItems = items.map((i: CartItem, idx: number) => ({
         s: i.product_slug,
+        qi: i.quote_id || undefined,
+        f: normalizeFabricForSlug(i.product_slug, i.fabric),
+        c: i.color,
+        d: buildCompactDimText(buildMetadataDims(i)) || undefined,
         q: i.qty || 1,
         u: lineItems[idx]?.price_data?.unit_amount || 0,
       }));
       metadataItemsStr = JSON.stringify(compactItems);
+      if (metadataItemsStr.length > 500) {
+        const slimmerItems = items.map((i: CartItem, idx: number) => ({
+          s: i.product_slug,
+          qi: i.quote_id || undefined,
+          d: buildCompactDimText(buildMetadataDims(i)) || undefined,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0,
+        }));
+        metadataItemsStr = JSON.stringify(slimmerItems);
+      }
+      if (metadataItemsStr.length > 500) {
+        const minimalItems = items.map((i: CartItem, idx: number) => ({
+          s: i.product_slug,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0,
+        }));
+        metadataItemsStr = JSON.stringify(minimalItems);
+      }
     }
     params.append("metadata[items]", metadataItemsStr);
     const appliedShippingCountry = String(shippingQuote?.applied_country || "").toUpperCase();
@@ -388,6 +663,52 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Persist full cart snapshot in D1 keyed by Stripe session id (source of truth for webhook order writes)
+    try {
+      const schemaOk = await ensureCheckoutSnapshotSchema(env);
+      if (schemaOk && stripeData?.id) {
+        const snapshotItems = items.map((i: CartItem, idx: number) => ({
+          slug: i.product_slug,
+          name: getItemName(i),
+          quote_id: i.quote_id || undefined,
+          fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
+          color: i.color || null,
+          dims: buildMetadataDims(i),
+          qty: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0,
+        }));
+        await env.DB.prepare(
+          `INSERT OR REPLACE INTO checkout_session_snapshots (
+             stripe_session_id, email, currency, items_json, attribution_json, quote_ids_json, created_at
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))`
+        ).bind(
+          String(stripeData.id),
+          normalizedEmail,
+          String(currency || "").toLowerCase(),
+          JSON.stringify(snapshotItems),
+          JSON.stringify(checkoutAttribution),
+          JSON.stringify(quoteIdsFromCart)
+        ).run();
+      }
+    } catch (e: any) {
+      // Non-blocking: preserve checkout conversion; webhook still has metadata fallback path
+      console.error("checkout snapshot persist failed:", e?.message || e);
+    }
+
+    try {
+      if (stripeData?.id) {
+        await upsertQuoteAttributionFromCheckout(
+          env,
+          quoteIdsFromCart,
+          normalizedEmail,
+          checkoutAttribution,
+          String(stripeData.id)
+        );
+      }
+    } catch (e: any) {
+      console.error("checkout quote attribution persist failed:", e?.message || e);
     }
 
     return new Response(JSON.stringify({

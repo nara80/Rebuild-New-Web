@@ -1,4 +1,4 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -299,63 +299,25 @@
   <meta name="twitter:title" content="Checkout — MildMate">
   <meta name="twitter:description" content="MildMate Checkout — Complete your custom bedding order.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-    <script>
+  <script src="/js/analytics-env.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
-
-      function loadScript(src, async) {
-        var s = document.createElement('script');
-        s.src = src;
-        if (async) s.async = true;
-        document.head.appendChild(s);
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
       }
-
-      function loadAnalytics() {
-        if (window.__mildmateAnalyticsLoaded) return;
-        window.__mildmateAnalyticsLoaded = true;
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
-        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
-        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
-      }
-
-      window.__mildmateLoadAnalytics = loadAnalytics;
-
-      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-      if (!isMobile) {
-        loadAnalytics();
-        return;
-      }
-
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        loadAnalytics();
-      };
-
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
       } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+        bootMildmateAnalytics();
       }
     })();
   </script>
 </head>
 <body>
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
   <header class="checkout-header">
     <div class="checkout-header-inner">
       <span class="checkout-trust">
@@ -592,7 +554,7 @@
               </label>
               <p id="policy-consent-error" style="display:none;color:#ef4444;font-size:0.75rem;margin-top:6px;font-weight:600">Please confirm the order policy to proceed.</p>
             </div>
-            <button class="btn btn-primary" id="btn-pay" onclick="processPayment()" style="width:100%;margin-top:12px">
+            <button class="btn btn-primary" id="btn-pay" onclick="processPayment()" style="width:100%;margin-top:12px" disabled aria-disabled="true">
               <span id="pay-text">Pay Now</span>
               <span class="loading-spinner" id="pay-spinner" style="display:none"></span>
             </button>
@@ -610,7 +572,7 @@
           <span class="bar-total-label">Total</span>
           <span class="bar-total" id="bar-total-step3">—</span>
         </div>
-        <button class="btn btn-primary" id="btn-mobile-pay" onclick="processPayment()">
+        <button class="btn btn-primary" id="btn-mobile-pay" onclick="processPayment()" disabled aria-disabled="true">
           Pay Now
         </button>
       </div>
@@ -637,7 +599,10 @@
       var discountApplied = false;
       var discountCode = '';
       var discountPercent = 15; // actual % from validate API (default 15 for welcome codes)
-      var freeShipping = false; // set true when promo code has free_shipping=1
+      var promoFreeShipping = false; // set true when promo code has free_shipping=1
+      var quoteFreeShipping = false; // set true when any approved quote item has free_shipping=1
+      var quoteFreeShippingCache = {};
+      var quoteFreeShippingSeq = 0;
       var shippingState = {
         serviceLevel: 'standard',
         currency: 'USD',
@@ -661,6 +626,9 @@
       var externalScriptPromises = {};
       var geoDetectBound = false;
       var countrySelectsInitialized = false;
+      var ga4BeginCheckoutSent = false;
+      var ga4AddShippingInfoSent = false;
+      var ga4AddPaymentInfoSent = false;
 
       function loadScriptOnce(src) {
         if (externalScriptPromises[src]) return externalScriptPromises[src];
@@ -718,6 +686,196 @@
         return (window.MildMateGeo && window.MildMateGeo.currency === 'THB') ? 'THB' : 'USD';
       }
 
+      function ensureGa4Stub() {
+        window.dataLayer = window.dataLayer || [];
+        if (typeof window.gtag !== 'function') {
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+        }
+      }
+
+      function sendGa4Event(name, params, onDone) {
+        try {
+          ensureGa4Stub();
+          var payload = params && typeof params === 'object' ? Object.assign({}, params) : {};
+          if (typeof onDone === 'function') {
+            var doneCalled = false;
+            var done = function() {
+              if (doneCalled) return;
+              doneCalled = true;
+              try { onDone(); } catch (e) {}
+            };
+            payload.event_callback = done;
+            payload.event_timeout = 1200;
+            window.gtag('event', name, payload);
+            setTimeout(done, 1300);
+            return true;
+          }
+          window.gtag('event', name, payload);
+          return true;
+        } catch (e) {}
+        if (typeof onDone === 'function') {
+          try { onDone(); } catch (err) {}
+        }
+        return false;
+      }
+
+      var ga4QuoteTokenMap = {};
+
+      // Quote IDs are magic-link bearer credentials — analytics items carry
+      // the same 16-hex SHA-256 token scheme used across the quote journey
+      // ('mildmate-quote:' + quote ID, first 16 hex chars).
+      function sha256QuoteTokens(quoteIds, cb) {
+        var map = {};
+        var pending = quoteIds.length;
+        var settled = false;
+        function finish() {
+          if (settled) return;
+          settled = true;
+          cb(map);
+        }
+        if (!pending) { finish(); return; }
+        quoteIds.forEach(function (id) {
+          try {
+            crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(id))).then(function (buf) {
+              var hex = '';
+              var bytes = new Uint8Array(buf);
+              for (var i = 0; i < 8 && i < bytes.length; i++) {
+                hex += ('0' + bytes[i].toString(16)).slice(-2);
+              }
+              map[id] = hex || 'token-unavailable';
+              if (--pending === 0) finish();
+            }).catch(function () {
+              map[id] = 'token-unavailable';
+              if (--pending === 0) finish();
+            });
+          } catch (e) {
+            map[id] = 'token-unavailable';
+            if (--pending === 0) finish();
+          }
+        });
+        setTimeout(finish, 800);
+      }
+
+      function withQuoteTokens(fn) {
+        var ids = (cart.items || []).map(function (it) { return it.quote_id; })
+          .filter(function (v, i, a) { return v && a.indexOf(v) === i; });
+        var need = ids.filter(function (id) { return !ga4QuoteTokenMap[id]; });
+        if (!need.length) { fn(); return; }
+        sha256QuoteTokens(need, function (map) {
+          var k;
+          for (k in map) { ga4QuoteTokenMap[k] = map[k]; }
+          fn();
+        });
+      }
+
+      function buildGa4Items(currency) {
+        return (cart.items || []).map(function(item) {
+          var qty = Number(item.qty || 1) || 1;
+          var unit = currency === 'THB' ? Number(item.price_thb || 0) : Number(item.price_usd || item.price || 0);
+          var gaItem = {
+            item_id: item.product_slug || item.slug || item.id || 'product',
+            item_name: item.product_name || item.title || 'Product',
+            price: Number(unit || 0) || 0,
+            quantity: qty
+          };
+          if (item.quote_id && ga4QuoteTokenMap[item.quote_id]) {
+            gaItem.item_quote_id = ga4QuoteTokenMap[item.quote_id];
+          }
+          return gaItem;
+        });
+      }
+
+      function buildGa4CheckoutPayload(trigger, sessionId) {
+        var currency = getActiveCurrency();
+        var items = buildGa4Items(currency);
+        if (!items.length) return null;
+        var value = items.reduce(function(sum, it) {
+          return sum + ((Number(it.price || 0) || 0) * (Number(it.quantity || 1) || 1));
+        }, 0);
+        var payload = {
+          currency: currency,
+          value: Math.round(value * 100) / 100,
+          items: items
+        };
+        if (trigger) payload.checkout_trigger = String(trigger);
+        if (sessionId) payload.checkout_session_id = String(sessionId);
+        return payload;
+      }
+
+      function trackBeginCheckoutOnSessionCreate(sessionId, onDone, trigger) {
+        if (ga4BeginCheckoutSent) {
+          if (typeof onDone === 'function') {
+            try { onDone(); } catch (e) {}
+          }
+          return;
+        }
+        withQuoteTokens(function () {
+          var payload = buildGa4CheckoutPayload(trigger, sessionId);
+          if (!payload) {
+            if (typeof onDone === 'function') {
+              try { onDone(); } catch (e) {}
+            }
+            return;
+          }
+          sendGa4Event('begin_checkout', payload, onDone);
+          ga4BeginCheckoutSent = true;
+        });
+      }
+
+      function trackAddShippingInfoOnStep3(trigger) {
+        if (ga4AddShippingInfoSent) return;
+        withQuoteTokens(function () {
+          var payload = buildGa4CheckoutPayload(trigger || 'step3_view');
+          if (!payload) return;
+          if (shippingState && shippingState.serviceLevel) {
+            payload.shipping_tier = String(shippingState.serviceLevel);
+          }
+          sendGa4Event('add_shipping_info', payload);
+          ga4AddShippingInfoSent = true;
+        });
+      }
+
+      function trackAddPaymentInfoOnPay(trigger) {
+        if (ga4AddPaymentInfoSent) return;
+        withQuoteTokens(function () {
+          var payload = buildGa4CheckoutPayload(trigger || 'pay_click');
+          if (!payload) return;
+          payload.payment_type = 'stripe_checkout_redirect';
+          if (shippingState && shippingState.serviceLevel) {
+            payload.shipping_tier = String(shippingState.serviceLevel);
+          }
+          sendGa4Event('add_payment_info', payload);
+          ga4AddPaymentInfoSent = true;
+        });
+      }
+
+      function bindCheckoutLanguageToggle() {
+        var path = window.location.pathname;
+        var isThPage = path === '/th/checkout' || path === '/th/checkout/';
+        var langWrap = document.querySelector('.checkout-lang');
+        if (!langWrap) return;
+        var enEl = langWrap.querySelector('[data-lang="en"]');
+        var thEl = langWrap.querySelector('[data-lang="th"]');
+
+        if (enEl) enEl.className = isThPage ? 'inactive' : 'active';
+        if (thEl) thEl.className = isThPage ? 'active' : 'inactive';
+
+        if (enEl) {
+          enEl.addEventListener('click', function() {
+            if (!isThPage) return;
+            window.location.href = '/checkout/';
+          });
+        }
+        if (thEl) {
+          thEl.addEventListener('click', function() {
+            if (isThPage) return;
+            window.location.href = '/th/checkout/';
+          });
+        }
+      }
+
       function getSelectedCountryCode() {
         var countryEl = document.getElementById('cust-country');
         var selected = countryEl && countryEl.value ? countryEl.value : '';
@@ -750,6 +908,9 @@
       function setHTML(id, value) {
         var el = document.getElementById(id);
         if (el) el.innerHTML = value;
+      }
+      function hasEffectiveFreeShipping() {
+        return !!(promoFreeShipping || quoteFreeShipping);
       }
 
       var EU_COUNTRIES = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
@@ -819,11 +980,12 @@
         }, 0);
         var discountedSubtotal = discountApplied ? rawSubtotal * (100 - discountPercent) / 100 : rawSubtotal;
         var discountAmt = discountApplied ? rawSubtotal - discountedSubtotal : 0;
-        var shipping = freeShipping ? 0 : Number(shippingState.amount || 0);
-        var standardAmount = freeShipping ? 0 : (standardShippingQuote && !standardShippingQuote.lastError ? Number(standardShippingQuote.amount || 0) : shipping);
+        var effectiveFreeShipping = hasEffectiveFreeShipping();
+        var shipping = effectiveFreeShipping ? 0 : Number(shippingState.amount || 0);
+        var standardAmount = effectiveFreeShipping ? 0 : (standardShippingQuote && !standardShippingQuote.lastError ? Number(standardShippingQuote.amount || 0) : shipping);
         var total = (discountApplied ? discountedSubtotal : rawSubtotal) + shipping;
-        var shippingText = freeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(shipping, currency);
-        var standardShippingText = freeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(standardAmount, currency);
+        var shippingText = effectiveFreeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(shipping, currency);
+        var standardShippingText = effectiveFreeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(standardAmount, currency);
         var subtotalDisplay = rawSubtotal;
 
         setText('subtotal', formatMoney(subtotalDisplay, currency));
@@ -1001,6 +1163,50 @@
         applyTotalsFromState();
       }
 
+      async function refreshQuoteFreeShipping() {
+        var items = (cart.items || []);
+        var hasInlineQuoteFreeShipping = false;
+        var quoteIds = [];
+        var quoteSeen = {};
+        items.forEach(function(item) {
+          if (!item) return;
+          if (item.free_shipping === true || item.free_shipping === 1 || item.free_shipping === '1') {
+            hasInlineQuoteFreeShipping = true;
+          }
+          var qid = String(item.quote_id || '').trim();
+          if (!qid) return;
+          if (!quoteSeen[qid]) {
+            quoteSeen[qid] = true;
+            quoteIds.push(qid);
+          }
+        });
+
+        if (!quoteIds.length) {
+          quoteFreeShipping = hasInlineQuoteFreeShipping;
+          applyTotalsFromState();
+          return;
+        }
+
+        var uncached = quoteIds.filter(function(qid) { return quoteFreeShippingCache[qid] === undefined; });
+        var seq = ++quoteFreeShippingSeq;
+        if (uncached.length) {
+          await Promise.all(uncached.map(async function(qid) {
+            try {
+              var resp = await fetch('/api/quote?quote_id=' + encodeURIComponent(qid));
+              var data = await resp.json().catch(function() { return {}; });
+              var approved = data && data.is_approved === true;
+              var free = data && (data.free_shipping === true || data.free_shipping === 1);
+              quoteFreeShippingCache[qid] = !!(approved && free);
+            } catch (e) {
+              quoteFreeShippingCache[qid] = false;
+            }
+          }));
+        }
+        if (seq !== quoteFreeShippingSeq) return;
+        quoteFreeShipping = hasInlineQuoteFreeShipping || quoteIds.some(function(qid) { return quoteFreeShippingCache[qid] === true; });
+        applyTotalsFromState();
+      }
+
       window.selectShippingMethod = function(level) {
         var next = String(level || '').toLowerCase() === 'standard' ? 'standard' : 'express';
         var q = shippingMethodQuotes[next];
@@ -1019,6 +1225,27 @@
         var badge = document.getElementById('cart-count');
         var count = MildMateCart.get().items.reduce(function(s, i) { return s + (i.qty || 1); }, 0);
         if (badge) badge.textContent = count > 99 ? '99+' : count;
+      }
+      function updatePolicyConsentGate() {
+        var consentCb = document.getElementById('policy-consent-cb');
+        var consentErr = document.getElementById('policy-consent-error');
+        var mobileNote = document.getElementById('mobile-policy-consent-note');
+        var canPay = !!(consentCb && consentCb.checked);
+        var payBtn = document.getElementById('btn-pay');
+        var mobilePayBtn = document.getElementById('btn-mobile-pay');
+
+        if (payBtn) {
+          payBtn.disabled = !canPay;
+          payBtn.setAttribute('aria-disabled', canPay ? 'false' : 'true');
+        }
+        if (mobilePayBtn) {
+          mobilePayBtn.disabled = !canPay;
+          mobilePayBtn.setAttribute('aria-disabled', canPay ? 'false' : 'true');
+        }
+        if (canPay) {
+          if (consentErr) consentErr.style.display = 'none';
+          if (mobileNote) mobileNote.style.display = 'none';
+        }
       }
       updateBadge();
       var currentStep = 1;
@@ -1060,6 +1287,12 @@
 
       // Render cart
       step1();
+      updatePolicyConsentGate();
+      (function bindPolicyConsentGate() {
+        var consentCb = document.getElementById('policy-consent-cb');
+        if (!consentCb) return;
+        consentCb.addEventListener('change', updatePolicyConsentGate);
+      })();
 
       async function checkAuth(opts) {
         opts = opts || {};
@@ -1516,6 +1749,7 @@
           shippingState.lastError = '';
           shippingMethodQuotes = { standard: null, express: null };
           standardShippingQuote = null;
+          quoteFreeShipping = false;
           renderShippingMethodOptions();
           applyTotalsFromState();
           return;
@@ -1582,6 +1816,7 @@
           if (barBtn) barBtn.disabled = false;
         }
         applyTotalsFromState();
+        refreshQuoteFreeShipping();
       }
 
       window.changeQty = function(idx, delta) {
@@ -1698,7 +1933,15 @@
           }
           populateStep2Summary();
         }
-        if (step === 3) renderStep3();
+        if (step === 3) {
+          renderStep3();
+          if (typeof window.__mildmateLoadAnalytics === 'function') {
+            window.__mildmateLoadAnalytics();
+          }
+          trackAddShippingInfoOnStep3('step3_view');
+          trackBeginCheckoutOnSessionCreate('', null, 'step3');
+        }
+        if (step === 3) updatePolicyConsentGate();
       };
 
       function renderStep3() {
@@ -1745,9 +1988,9 @@
             discountApplied = true;
             discountCode = code;
             discountPercent = data.discount_percent || 15;
-            freeShipping = data.free_shipping === true;
+            promoFreeShipping = data.free_shipping === true || data.free_shipping === 1;
             var discountLabel = discountPercent > 0 ? discountPercent + '% discount' : '';
-            var shippingLabel = freeShipping ? (discountLabel ? ' + free shipping' : 'Free shipping') : '';
+            var shippingLabel = promoFreeShipping ? (discountLabel ? ' + free shipping' : 'Free shipping') : '';
             msg.style.color = "#16a34a";
             msg.innerHTML = (discountLabel + shippingLabel) + ' applied! <span id="remove-discount-btn" style="cursor:pointer;color:#ef4444;font-size:0.875rem;margin-left:8px;text-decoration:underline">Remove</span> (expires ' + (data.expires_at ? data.expires_at.substring(0,10) : "soon") + ')';
             document.getElementById("btn-apply-discount").disabled = true;
@@ -1768,7 +2011,7 @@
         discountApplied = false;
         discountCode = '';
         discountPercent = 15;
-        freeShipping = false;
+        promoFreeShipping = false;
         var input = document.getElementById('discount-input');
         var msg = document.getElementById('discount-msg');
         var btn = document.getElementById('btn-apply-discount');
@@ -1810,6 +2053,10 @@
         if (mSpin) mSpin.style.display = 'inline-block';
 
         try {
+          if (typeof window.__mildmateLoadAnalytics === 'function') {
+            window.__mildmateLoadAnalytics();
+          }
+          trackAddPaymentInfoOnPay('pay_click');
           var currencyPref = getActiveCurrency();
           var shippingCountryCode = getSelectedCountryCode();
 
@@ -1828,6 +2075,7 @@
               shipping_country: shippingCountryCode,
               shipping_service_level: shippingState.serviceLevel || 'express',
               discount_code: discountApplied ? discountCode : undefined,
+              attribution: (typeof window.__mildmateGetAttributionSnapshot === 'function') ? window.__mildmateGetAttributionSnapshot('checkout') : undefined,
               policy_consented_at: policyConsentedAt
             })
           });
@@ -1848,7 +2096,9 @@
           }
 
           if (resp.ok && data.url) {
-            window.location.href = data.url;
+            trackBeginCheckoutOnSessionCreate(data.session_id || '', function() {
+              window.location.href = data.url;
+            }, 'session_created');
           } else {
             // Humanize known Stripe error messages
             var errMsg = data.error || 'Payment setup failed. Please try again.';
@@ -1903,6 +2153,8 @@
       function escHtml(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       }
+
+      bindCheckoutLanguageToggle();
     })();
   </script>
 </body>

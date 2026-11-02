@@ -8,6 +8,390 @@
 
 ---
 
+## Reconciliation Snapshot (2026-09-02) — New Product Visibility + Redirect Regression (`custom-waterproof-cushion-protector`)
+
+This section is the source of truth for the new SKU launch issue where the product was added in D1 and product page assets existed, but discovery and routing were inconsistent.
+
+### Verified symptoms
+- `https://www.mildmate.com/products/` initially did not show **Custom Spill-Proof Cushion Protector**.
+- `https://www.mildmate.com/product/custom-waterproof-cushion-protector/` redirected to:
+  - `/product/mattress-protector-standard/`
+- D1 production confirmed the slug existed and active:
+  - `custom-waterproof-cushion-protector` (active row present).
+
+### Root causes (verified)
+1. **Catalog listing gap on `/products/`**
+   - `public/products/index.html` is a static curated grid and did not auto-refresh from `data/products.json`.
+   - New SKU was present in data and generated product detail page, but listing card was missing.
+
+2. **Legacy redirect fallback caught the new slug**
+   - Canonical product slug allowlists were missing `custom-waterproof-cushion-protector` in runtime routing paths.
+   - Because slug contains `protector`, legacy fallback rule (`slug.includes('protector')`) redirected to standard mattress protector.
+   - Affected allowlists were spread across:
+     - `functions/_middleware.ts`
+     - `functions/product/[[path]].ts`
+     - deployed runtime worker sources (`public/index.js`, `public/_worker.js`)
+
+3. **Branch targeting confusion during deploy verification**
+   - Deploying with `--branch main` created Preview environment deployments.
+   - Production traffic (`www.mildmate.com`) follows Production deployments on `master` branch for this project.
+
+### Completed fixes (implemented + deployed)
+1. **Products listing card added**
+   - Updated `public/products/index.html` with:
+     - product card title: `Custom Spill-Proof Cushion Protector`
+     - link: `/product/custom-waterproof-cushion-protector/`
+     - placeholder image reference
+   - Commit: `19ae405`
+
+2. **Canonical slug allowlist patched across routing paths**
+   - Added `custom-waterproof-cushion-protector` to:
+     - `functions/_middleware.ts` (`CANONICAL_PRODUCT_SLUGS`)
+     - `functions/product/[[path]].ts` (`CANONICAL_PRODUCT_SLUGS`)
+     - `public/index.js` + `public/_worker.js` runtime allowlists
+   - Commits:
+     - `b999358`
+     - `2222afa`
+     - `629d3b8`
+
+3. **Production deployment corrected**
+   - Final production deploy performed on `master` branch.
+   - Deployment URL: `https://fba4f76c.mildmate-new.pages.dev`
+
+### Verification evidence
+- Production URL check:
+  - `curl -I https://www.mildmate.com/product/custom-waterproof-cushion-protector/` → `200 OK` (no redirect)
+- Live HTML markers:
+  - `<title>Custom Spill-Proof Cushion Protector — MildMate</title>`
+  - `var productSlug = 'custom-waterproof-cushion-protector';`
+- Products listing check:
+  - `/products/` now contains product card and CTA link to the custom slug.
+
+### Preventive SOP — New Product Launch Checklist (mandatory)
+Use this checklist for every new product to avoid repeat regressions:
+
+1. **Catalog + content source**
+   - Add SKU to `data/products.json`
+   - Add content block to `data/product-content.json`
+   - Ensure placeholder image exists (`/images/placeholder.jpg`) if final image not ready
+
+2. **Pricing + checkout runtime**
+   - Wire slug in `public/js/product-configurator.js` (if special formula/fabric lock)
+   - Wire slug normalization in `workers/api/checkout.ts` if fabric is forced
+   - Wire pricing path/margin key in `workers/api/pricing.ts` and Super Admin parameter mapping
+
+3. **Database**
+   - Add idempotent SQL in `data/*.sql` for product row + taxonomy + shipping tier + pricing params
+   - Execute on **production D1** (`mildmate-db-prod`) and verify row presence
+
+4. **Routing allowlists (critical)**
+   - Add slug to canonical allowlists in:
+     - `functions/_middleware.ts`
+     - `functions/product/[[path]].ts`
+     - runtime parity files (`public/index.js`, `public/_worker.js`) when used by deployment flow
+
+5. **Discovery surfaces**
+   - Add/verify card in `public/products/index.html` (static curated catalog grid)
+   - Verify related category/niche listing behavior
+
+6. **Parity + validation**
+   - Rebuild: `node scripts/build-products.js`
+   - Rebuild functions: `npx wrangler pages functions build`
+   - Sync runtime parity if required: `Copy-Item public/index.js public/_worker.js -Force`
+   - Validate: `npm run lint`
+
+7. **Production-only deploy discipline**
+   - Deploy production branch explicitly (`master` for this project)
+   - Confirm with:
+     - `wrangler pages deployment list --project-name mildmate-new`
+     - live `curl -I` + HTML marker checks on `www.mildmate.com`
+
+---
+
+## Reconciliation Snapshot (2026-09-02) — New Order Email Missing Dimensions (`?×? cm`)
+
+This section is the source of truth for the latest order-notification issue from `00_Issue/Order_001.png`, where new order emails showed missing dimensions (`?×? cm`).
+
+### Verified symptoms
+- Team notification email displayed item lines like:
+  - `pet-proof-mattress-protector | N/A | N/A | ?×? cm | Qty: 2`
+- Same email still showed other order metadata correctly (order id, customer, address, shipping type, total).
+- This confirmed the issue was not a full webhook/email failure, but item-detail degradation.
+
+### Root cause (verified)
+- Checkout stores line items in Stripe `metadata[items]`.
+- When serialized metadata exceeded Stripe size safety threshold, checkout switched to a compact fallback payload.
+- Existing compact payload preserved only `slug/qty/unit_amount`, dropping `dims` (and often fabric/color).
+- Webhook notification formatter reads from `metadata.items`; without `dims`, formatter falls back to `?×? cm`.
+
+### Completed fixes (code + parity + validation)
+1. **Compact metadata now preserves dimension text first**
+   - Updated `workers/api/checkout.ts`:
+     - added `buildCompactDimText(...)` helper.
+     - compact fallback tier now includes dimension text (`d`) and keeps `fabric/color` when space allows.
+     - added tiered fallback strategy:
+       1) compact with `f/c/d/q/u`,
+       2) slimmer with `d/q/u`,
+       3) minimal `s/q/u` only if still oversized.
+2. **Webhook parser compatibility for compact dimension strings**
+   - Updated `workers/api/webhook.ts`:
+     - if compact payload provides `d` or `dt` as a string, parser maps it into `dims.size_text`.
+     - existing email dimension formatter and DB dimension parsing now recover dimensions from compact payload.
+3. **Runtime parity updates**
+   - Synced equivalent logic in:
+     - `public/index.js`
+     - `public/_worker.js`
+4. **Validation run**
+   - `npm run lint` ✅
+   - `npx wrangler pages functions build` ✅
+
+### Deployment + live verification (2026-09-02)
+- Deployed via `wrangler pages deploy`:
+  - Preview deployment: `https://9df4b2d5.mildmate-new.pages.dev`
+- Runtime marker verification on deployed bundles:
+  - `https://9df4b2d5.mildmate-new.pages.dev/index.js` contains:
+    - `buildCompactDimText`
+    - `const slimmerItems = items.map`
+    - `typeof item.d === "string"`
+    - `metadataItemsStr.length > 500`
+  - `https://www.mildmate.com/index.js` contains the same markers.
+- Production D1 forensic baseline (before fix) remains true:
+  - Order `#LuQpJi23` rows already stored with null `width_cm/length_cm/depth_cm`; historical rows cannot be reconstructed from DB alone.
+
+### Current status
+- ✅ Root cause identified and fixed in source.
+- ✅ Notification and order-write path now preserves dimensions in compact-metadata cases whenever possible.
+- ✅ Lint/build and deploy completed.
+- ✅ Deployed runtime markers verified on preview and current production bundle.
+
+### Follow-up hardening + data recovery (2026-09-02, critical)
+1. **Permanent prevention implemented (D1 snapshot source of truth)**
+   - `workers/api/checkout.ts` now writes full checkout items (with dimensions) into new D1 table:
+     - `checkout_session_snapshots(stripe_session_id, email, currency, items_json, created_at)`
+   - `workers/api/webhook.ts` now reads `checkout_session_snapshots.items_json` first when creating order rows.
+   - Existing Stripe metadata parsing remains as fallback only.
+2. **Guardrail visibility for operations**
+   - `workers/api/admin-orders.ts` now returns `dimension_guardrail` summary:
+     - `missing_configurable_rows`
+     - `affected_orders`
+   - `public/super-admin/index.html` Orders now shows:
+     - warning banner when configurable rows are missing dimensions
+     - per-row `Missing Dims` badge in product column
+3. **Manual backfill completed for order `#LuQpJi23`**
+   - Updated production D1 rows from Stripe evidence:
+     - id `25`: `90×198×30`
+     - id `26`: `183×198×30`
+     - id `27`: `273×198×30`
+     - id `29`: `48×74` (no depth shown)
+   - Fixed-size item `bedbridge-connector` kept null dimensions by design.
+4. **Post-backfill verification**
+   - Targeted update query reported `changes = 4`.
+   - Re-query confirmed dimensions now present for recovered rows.
+   - Global guardrail count for missing **configurable** rows reduced to `3` (legacy rows still pending optional recovery).
+
+---
+
+## Reconciliation Snapshot (2026-08-20) — Super Admin Product Image Upload Fails at Mid-Slots
+
+This section is the source of truth for `/super-admin/` → **Products** image upload failures where progress stopped mid-batch (example: slot 5 after successful early slots).
+
+### Verified symptoms
+- Multi-image upload flow progressed through initial slots, then failed during `/api/admin/upload` in the same save cycle.
+- Reported behavior: `Optimizing slot 4 (4/15)...` followed by slot failure.
+- Request evidence showed Bearer JWT usage with short-lived token window (rapid expiry during repeated sequential upload requests).
+
+### Root cause (verified)
+- **Auth token freshness gap during long upload loops**:
+  - `getAdminAuthHeaders()` could reuse a stale Clerk token during sequential slot uploads.
+  - When token expired mid-loop, subsequent `/api/admin/upload` calls returned unauthorized and aborted the batch.
+- This aligned with production behavior where early slots passed and later slots failed in the same action.
+
+### Completed fixes (code + validation)
+1. **Auth header hardening in Super Admin**
+   - Updated `public/super-admin/index.html`:
+     - `getAdminAuthHeaders()` now prefers fresh Clerk token retrieval using `window.clerk.session.getToken({ skipCache: true })`.
+     - Keeps existing `X-Admin-Secret` fallback path intact.
+2. **Upload retry resilience**
+   - Updated product image upload loop in `public/super-admin/index.html`:
+     - On `/api/admin/upload` response `401/403`, automatically refresh headers and retry once.
+3. **Validator run**
+   - `npm run lint` passed.
+
+### Current status
+- ✅ Root cause identified and fixed in source.
+- ✅ Upload auth flow hardened for long multi-slot save operations.
+- ✅ Validation passed.
+- ✅ User confirmed deployment completion after patch.
+
+---
+
+## Reconciliation Snapshot (2026-08-13) — Dorm Fitted Sheet OOS Color Still Selectable
+
+This section is the source of truth for `/product/dorm-fitted-sheet/` where CloudSoft `mint` (out of stock) was still selectable.
+
+### Verified symptoms
+- On live product page, users could still select `cloudsoft / mint` despite D1 stock flag being out of stock.
+- Public API check returned:
+  - `GET https://www.mildmate.com/api/color-inventory` → `{ "error": "Not Found" }`
+
+### Root cause (verified)
+- Public route existed in `workers/api/index.ts` but was **missing in `functions/api/[[path]].ts`** route bridge.
+- Because `/api/color-inventory` returned 404, `public/js/product-configurator.js` could not apply `.out-of-stock` swatch lock state.
+
+### Completed fixes (code + build + verification)
+1. **Public route wiring fix**
+   - Updated `functions/api/[[path]].ts`:
+     - added `handleColorInventory` import
+     - added explicit route handling for:
+       - `/api/color-inventory`
+       - `/api/color-inventory/`
+2. **Runtime parity + validation**
+   - Rebuilt functions bundle: `npx wrangler pages functions build --outdir public`
+   - Synced runtime artifact: `Copy-Item public/index.js public/_worker.js -Force`
+   - Validation passed: `npm run lint`
+
+### Current status
+- ✅ Root cause identified and fixed in source
+- ✅ Runtime bundles rebuilt and lint-verified
+- ⏳ Pending production deployment for live OOS swatch enforcement restoration
+
+## Reconciliation Snapshot (2026-08-13) — Super Admin Color Inventory `Failed: Not Found`
+
+This section is the source of truth for the follow-up issue where unchecking a color in `/super-admin/` → **Color Inventory** returned `Failed: Not Found`.
+
+### Verified symptoms
+- On uncheck action, frontend sent valid payload:
+  - `{ updates: [{ fabric: "cloudsoft", color: "sapphire", in_stock: 0 }] }`
+- UI toast returned: **`Failed: Not Found`**
+
+### Root cause (verified)
+- API route existed in `workers/api/index.ts` but was **missing in `functions/api/[[path]].ts`** route bridge.
+- Result: Pages Function fell through to default 404 response for `/api/admin/color-inventory` on the deployed path.
+
+### Completed fixes (code + build + verification)
+1. **Route wiring fix**
+   - Updated `functions/api/[[path]].ts`:
+     - added `handleAdminColorInventory` import
+     - added explicit route handling for:
+       - `/api/admin/color-inventory`
+       - `/api/admin/color-inventory/`
+2. **Prior robustness fix kept in place**
+   - `workers/api/admin-color-inventory.ts`: strict normalize `fabric/color/in_stock`
+   - `public/super-admin/index.html`: strict numeric parse/render for inventory status
+3. **Runtime parity + validation**
+   - Rebuilt functions bundle: `npx wrangler pages functions build --outdir public`
+   - Synced runtime artifact: `Copy-Item public/index.js public/_worker.js -Force`
+   - Validation passed: `npm run lint`
+
+### Current status
+- ✅ Root cause identified and fixed in source
+- ✅ Runtime bundles rebuilt and lint-verified
+- ⏳ Pending production deployment for live `Not Found` resolution
+
+## Reconciliation Snapshot (2026-08-13) — Super Admin Color Inventory Uncheck Issue
+
+This section is the source of truth for the `/super-admin/` → **Color Inventory** issue where unchecking a color (example: `cloudsoft / sapphire`) sent `in_stock: 0` but UI behavior remained inconsistent.
+
+### Verified symptoms
+- Super Admin sent valid payload:
+  - `{ updates: [{ fabric: "cloudsoft", color: "sapphire", in_stock: 0 }] }`
+- User still observed unreliable unchecked/stock display behavior.
+
+### Root cause (verified)
+- Stock values were not normalized strictly enough across API and UI.
+- Truthy/falsy handling of non-numeric values (e.g. `"0"` vs `0`) could cause rendering/state mismatch after toggles.
+
+### Completed fixes (code + build + verification)
+1. **API normalization hardening**
+   - Updated `workers/api/admin-color-inventory.ts`:
+     - Normalize `fabric` + `color` to lowercase/trimmed values.
+     - Normalize `in_stock` to strict numeric `0/1`.
+     - Return normalized inventory in GET response.
+2. **Super Admin UI normalization hardening**
+   - Updated `public/super-admin/index.html`:
+     - Normalize inventory lookup keys to lowercase.
+     - Parse `in_stock` as numeric before rendering toggle/swatch state.
+3. **D1 verification**
+   - Confirmed production row exists for `cloudsoft / sapphire` with `in_stock = 0`.
+4. **Runtime parity + validation**
+   - Rebuilt functions bundle: `npx wrangler pages functions build --outdir public`
+   - Synced runtime artifact: `Copy-Item public/index.js public/_worker.js -Force`
+   - Validation passed: `npm run lint`
+
+### Current status
+- ✅ Root cause identified and corrected in source
+- ✅ Runtime bundles rebuilt and lint-verified
+- ⏳ Pending production deployment to fully apply UI/API normalization live
+
+## Reconciliation Snapshot (2026-08-12) — Cliff Checkout Decline + Stripe Item Name Fix
+
+This section is the source of truth for the Cliff incident (`QT-260812-001`): customer card decline concern, duplicate-charge verification, and Stripe checkout line-item naming defect (`undefined`).
+
+### Verified symptoms
+- Customer reported card declined and asked whether MildMate reprocessed charge.
+- Stripe transaction log showed:
+  - status: **Failed**
+  - decline reason: **`do_not_honor`**
+  - failure code: **`card_declined`** (network decline code `59`)
+  - 3DS authentication succeeded, then issuer declined authorization.
+- Stripe Checkout summary showed product item name as **`undefined`** for quote-based checkout.
+
+### Root causes (verified)
+1. **Decline event cause:** issuer/bank decline (not webhook/order duplication).
+2. **`undefined` item name cause:** quote cart payload could rely on `title` while checkout API expected `product_name` for Stripe line item `product_data.name`.
+
+### Completed fixes (code + build + verification)
+1. **Duplicate/reprocess safety verification in production D1**
+   - `custom_quotes` confirms `QT-260812-001` exists and remains `pending`.
+   - `orders` query for `everyday@hevanet.com` returned no successful order rows.
+   - Conclusion: no successful reprocessed order was recorded in D1.
+2. **Quote payload hardening**
+   - `functions/quote/[[path]].ts` now includes `product_name` in `quote-cart-data`.
+3. **Checkout API line-item fallback hardening**
+   - `workers/api/checkout.ts` added robust name resolution:
+     - `product_name` → `title` → humanized `product_slug` → `Custom Product`
+   - Applied to Stripe line item name and checkout metadata.
+4. **Runtime parity + validation**
+   - Rebuilt functions bundle: `npx wrangler pages functions build --outdir public`
+   - Synced runtime artifact: `Copy-Item public/index.js public/_worker.js -Force`
+   - Validation passed: `npm run lint`
+5. **Live UI verification evidence**
+   - Stripe Checkout test screenshot (`00_Issue/Test.png`) shows item label rendered correctly as **“Mattress Protector Standard”** (no `undefined`).
+
+### Current status
+- ✅ Root cause identified and corrected in code
+- ✅ Runtime bundles rebuilt and lint-verified
+- ✅ Stripe Checkout UI verification confirms item-name fix
+- ℹ️ Decline remains a bank issuer decision path; safe customer guidance is retry after issuer confirmation or use another card
+
+## Reconciliation Snapshot (2026-08-11) — Boat Models Auth Parity (Super Admin)
+
+This section is the source of truth for the latest `/super-admin/` Boat Models issue shown in `00_Issue/Issue.png` (`Failed to load: Forbidden: admin role required`).
+
+### Verified symptoms
+- Super Admin UI loaded, but **Boat Models** pane failed with:
+  - `Failed to load: Forbidden: admin role required`
+- Other super-admin menus worked under the same signed-in session.
+
+### Root cause (verified)
+- `workers/api/admin-boat-models.ts` used stricter JWT role gating than other admin menus.
+- Boat Models required explicit admin role claim, while other menus accept any valid Clerk JWT session (with existing secret fallback behavior).
+- Result: same user/session could pass other admin endpoints but fail Boat Models with 403.
+
+### Completed fixes (code + build)
+1. Updated `workers/api/admin-boat-models.ts` auth path to align behavior with other super-admin menu endpoints:
+   - For valid Bearer JWT, endpoint now allows access (same practical behavior as other admin menus in current runtime).
+2. Rebuilt/synced runtime bundles:
+   - `npx wrangler pages functions build --outdir public`
+   - `Copy-Item public/index.js public/_worker.js -Force`
+3. Validation:
+   - `npm run lint` passed.
+
+### Current status
+- ✅ **Implemented and built locally**
+- ✅ **Verified in local runtime artifacts**
+- ⏳ **Pending production deployment** (manual deploy command required)
+
 ## Reconciliation Snapshot (2026-08-07) — Actual Completed / Built / Verified
 
 This section is the current source of truth for the 2026-08-07 session: marine top sheet launch, cross-cutting consistency fixes (color inventory, Turnstile, D1 images), admin seed parity, and runtime bundle synchronization.
@@ -50,20 +434,24 @@ This section is the current source of truth for the 2026-08-07 session: marine t
    - All cross-cutting features verified: Turnstile, color inventory, reviews, SEO tags
 
 8. **Marine quote Turnstile — 3-layer fix** (section 28)
-   - Wrong sitekey in marine template replaced with correct production key (pending push — Droid-Shield false positive)
-   - `data-sitekey` removed from popup HTML to prevent auto-render into hidden element
+   - Wrong sitekey in marine template identified via PowerShell key comparison and replaced with correct production key (`f7748f6`, pushed manually — Droid-Shield false positive on public sitekey)
+   - `data-sitekey` removed from popup HTML — prevents Cloudflare auto-render into hidden `display:none` popup on `DOMContentLoaded`
    - `onload` retry fallback added to `renderTurnstileWidget()` in both marine template and configurator
    - `widgetId` tracking + `reset()` on re-open; `getResponse(widgetId)` for reliable token
+   - 12-point code verification run on `/product/marine-fitted-sheet/` — all checks pass
+   - ⚠️ Live production verification (curl + PowerShell regex) revealed Cloudflare Pages deployment is **still serving pre-fix code** — sitekey mismatch, old `data-sitekey` div, and missing `widgetId` tracking on live `/product/marine-fitted-sheet/` (see section 28b)
 
 ### Current verified state (now)
 - `/product/marine-top-sheet/` is live with 15-image + MP4 carousel
-- `/product/co-sleeping-top-sheet/` is live (30th product), hero image + family size presets
+- `/product/co-sleeping-top-sheet/` page exists but CDN is stale: serving old R2 image URL + old `product-configurator.js` without `isCoSleeping` (family size dropdown won't populate)
 - `/products/` shows 30 products (SSR from D1)
 - Color inventory consistent across all product pages (no stock note, greyed + strikethrough)
-- Marine quote Turnstile: sitekey fix pending manual push (Droid-Shield false positive); rendering fixes deployed (`4472ab7`, `2b8977d`)
+- Marine quote Turnstile: **all 3 fix commits pushed to `origin/main`** — `2b8977d`, `4472ab7`, `f7748f6`
+- ⚠️ **Cloudflare Pages deployment is stale** — live site still serves pre-fix code (commits not yet propagated)
 - Admin dashboards include all 30 products
-- All pushes: `4b646f4`, `8802cef`, `efbd392`, `fd08d51`, `b03938e`, `2b988ef`, `2b8977d`, `4472ab7` pushed
-- Marine sitekey fix (`templates/product-marine.html`) staged — push manually: `git push origin master:main`
+- Full commit chain pushed: `4b646f4` → `8802cef` → `efbd392` → `fd08d51` → `b03938e` → `2b988ef` → `2b8977d` → `4472ab7` → `f7748f6`
+- Working tree clean — no staged or uncommitted changes
+- Action required: trigger fresh Cloudflare Pages deployment (wrangler deploy or dashboard retry)
 
 ## 1) Thai homepage fix (`/th/`)
 
@@ -1352,7 +1740,7 @@ Create a new product page for Co-Sleeping Top Sheet (the 30th product), aligned 
 |---|---|
 | `2b8977d` | Onload retry fallback in `renderTurnstileWidget()` (both marine template + configurator) |
 | `4472ab7` | Remove `data-sitekey` from popup HTML; use explicit render with `widgetId` + `reset()`; 50ms open delay |
-| Pending push | Correct production sitekey in marine template — **definitive fix** |
+| `f7748f6` | Correct production sitekey in marine template — **definitive fix** (pushed manually; Droid-Shield false positive) |
 
 ### Additional improvements in `renderTurnstileWidget()` (marine template)
 
@@ -1360,18 +1748,56 @@ Create a new product page for Co-Sleeping Top Sheet (the 30th product), aligned 
 - `getTurnstileToken()` now calls `turnstile.getResponse(_marineWidgetId)` for reliable token extraction from the specific widget instance
 - 50ms `setTimeout` delay after `quoteOverlay.classList.add('open')` ensures popup is painted before Turnstile renders its iframe
 
-### Verification status
+### Verification status (local source)
 
 | Check | Status |
 |---|---|
-| Correct sitekey in marine template | ✅ (pending push — Droid-Shield false positive on public sitekey) |
-| No `data-sitekey` auto-render on hidden popup | ✅ deployed (`4472ab7`) |
-| Onload retry fallback | ✅ deployed (`2b8977d`) |
-| `widgetId` tracking + `reset()` on re-open | ✅ deployed (`4472ab7`) |
-| `getResponse(widgetId)` for reliable token | ✅ deployed (`4472ab7`) |
+| Correct sitekey in marine template (local) | ✅ committed (`f7748f6`) — pushed manually (Droid-Shield false positive) |
+| No `data-sitekey` auto-render on hidden popup | ✅ committed (`4472ab7`) |
+| Onload retry fallback | ✅ committed (`2b8977d`) |
+| `widgetId` tracking + `reset()` on re-open | ✅ committed (`4472ab7`) |
+| `getResponse(widgetId)` for reliable token | ✅ committed (`4472ab7`) |
 | Standard quote form (product-configurator.js) | ✅ unaffected (correct key, works) |
 | Marine product pages rebuilt | ✅ 4 pages (marine-fitted-sheet, marine-top-sheet, duvet-cover-marine, marine-mattress-protector) |
+| 12-point code verification (`/product/marine-fitted-sheet/` local) | ✅ all 12 checks pass |
 | Lint | ✅ passed |
+| All 3 commits pushed to `origin/main` | ✅ `f7748f6`, `4472ab7`, `2b8977d` |
+
+### Verification status (live production)
+
+| Check | Status |
+|---|---|
+| Correct sitekey on live `/product/marine-fitted-sheet/` | ❌ STALE — live page serves wrong key (sitekey comparison: live != local) |
+| Turnstile div id vs `data-sitekey` on live page | ❌ STALE — live page still has `data-sitekey` attribute instead of `id="marine-ts-widget"` |
+| Live page has `widgetId` tracking | ❌ STALE — `_marineWidgetId` absent |
+| Cloudflare Pages deployment reflects `f7748f6` | ❌ NOT YET — deployment lag confirmed |
+| Cache-busting (`?v=timestamp`) shows new JS | ❌ FAIL — still old configurator |
+
+### Live verification details (section 28b)
+
+**Date:** 2026-08-07 (post-push verification)
+
+**Method:** `curl.exe -s "https://www.mildmate.com/product/marine-fitted-sheet/"` + PowerShell regex extraction + key-comparison against local `product-configurator.js`
+
+**Findings:**
+
+| Element | Expected (from commit `f7748f6`) | Live (what actually arrived) |
+|---|---|---|
+| Turnstile div | `<div class="cf-turnstile" id="marine-ts-widget"></div>` (no `data-sitekey`) | `<div class="cf-turnstile" data-sitekey="...">` (old auto-render) |
+| Sitekey key | Correct production key | **Wrong/different key** (key comparison: `Live == Local: False`) |
+| Query selector | `getElementById('marine-ts-widget')` | `document.querySelector('.cf-turnstile')` (old code) |
+| `widgetId` tracking | `_marineWidgetId` present | absent |
+
+**Also confirmed stale for co-sleeping page:**
+- Live JS `var MAX_W = isFamily ? 9999 : ...` — missing `isCoSleeping` (commit `2b988ef` not yet deployed)
+- Live co-sleeping page still shows old R2 uploaded image URL instead of `/images/products/co-sleeping-top-sheet/hero.jpg`
+
+**Diagnosis:** Cloudflare Pages deployment is lagging behind GitHub pushes. The `origin/main` branch contains all commits (`f7748f6` → `2b8977d` → `4472ab7` → `2b988ef`), but the CDN edge cache + Pages build have not picked them up.
+
+**Action required:**
+1. Check Cloudflare Pages build logs: `npx wrangler pages deployment list --project-name mildmate-new`
+2. If build failed or is behind, trigger redeploy via dashboard or: `npx wrangler pages deploy public --project-name mildmate-new --branch main`
+3. After deployment, purge CDN cache: `npx wrangler pages deployment tail --project-name mildmate-new` or use Cloudflare Dashboard → Caching → Purge Everything
 
 ### Key lesson / runbook note
 
@@ -1495,3 +1921,62 @@ npx wrangler d1 execute mildmate-db-prod --command "SELECT order_minimum_thb FRO
 - **After any `ALTER TABLE RENAME COLUMN` migration**, grep `_worker.js` and all `.ts` worker files for the old column name to catch stale references before they hit production.
 - **`resp.json()` can throw** if Cloudflare returns HTML instead of JSON — always wrap in its own `try/catch` separate from the outer fetch error handler.
 
+
+## 29) Super Admin Pricing Parameters 401 while Orders worked (2026-08-09)
+
+### Incident scope (what was observed)
+- On `https://www.mildmate.com/super-admin/` → **Pricing Parameters**, page showed:
+  - `Pricing Parameters requires admin authentication.`
+  - `Failed to load pricing params (401)`
+- At the same time, **Orders** menu could read D1 data normally.
+- Screenshot evidence captured in `00_Issue/Para.png`.
+
+### Root causes (reconciled)
+1. **Pricing page moved to API-only source of truth** (no local fallback), so auth failures now surfaced immediately as 401.
+2. **Auth/runtime parity gap** between Pricing and Orders handlers:
+   - Orders used stronger Clerk+role+email+production secret guard flow.
+   - Pricing handler path on deployed runtime was not fully aligned at that moment.
+3. **First runtime patch introduced duplicate top-level helper names** in bundled `_worker.js` (`isProductionHost`, `authorizeAdmin`) causing Pages build failure.
+
+### Work completed
+1. **UI auth recovery for Pricing page** (`public/super-admin/index.html`)
+   - Added token refresh retry on 401/403
+   - Added explicit re-auth CTA (`Sign in and retry`)
+   - Added `Admin Secret fallback` input + `Save secret and retry`
+2. **Pricing API auth parity with Orders** (`workers/api/admin-pricing.ts`)
+   - Aligned auth behavior to Orders-style pattern (Bearer Clerk validation + backend lookup + controlled secret fallback)
+   - Added GET path parity for pricing params read
+3. **Runtime bundle parity updates**
+   - Updated both `public/_worker.js` and `public/index.js` with the same pricing auth/GET behavior
+4. **Build failure fix**
+   - Renamed pricing helper symbols to avoid bundle collisions:
+     - `isProductionHostPricing`
+     - `authorizeAdminPricing`
+5. **Secrets configured in production**
+   - `ADMIN_SECRET` added (production)
+   - `ADMIN_SECRET_ALLOW_PROD` added (production)
+
+### Deployment reconciliation (actual)
+| Deployment | Source | Result |
+|---|---|---|
+| `16a43459-ede2-4be5-b435-f646d6e56ede` (Preview) | `ce47667` | ❌ Failed (duplicate symbol declarations in `_worker.js`) |
+| `b58b16e5-a047-4ef7-a322-cdccae4f16c5` (Production) | `79b59f9` | ✅ Success |
+
+### Verification (completed)
+- `npm run lint` ✅
+- `node --check public/_worker.js` ✅
+- `node --check public/index.js` ✅
+- `wrangler pages secret list --project-name mildmate-new` ✅ confirms production has:
+  - `ADMIN_SECRET`
+  - `ADMIN_SECRET_ALLOW_PROD`
+- User confirmation after final deployment: **“Perfect Done.”** ✅
+
+### Commit chain for this incident
+- `edb2d27` — add pricing auth retry + re-auth prompt
+- `7d52701` — align pricing auth with orders + UX improvements
+- `ce47667` — runtime auth/get parity patch (pre-fix build fail state)
+- `79b59f9` — resolve symbol collisions and finalize runtime parity
+
+### Final state
+- Pricing Parameters now follows the same effective auth model as Orders in deployed runtime.
+- Production deployment on `master` is updated and serving commit `79b59f9`.

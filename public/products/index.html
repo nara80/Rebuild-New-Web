@@ -94,7 +94,6 @@
     <script>
     (function () {
       var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
 
       function loadScript(src, async) {
         var s = document.createElement('script');
@@ -107,11 +106,7 @@
         if (window.__mildmateAnalyticsLoaded) return;
         window.__mildmateAnalyticsLoaded = true;
         window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
         window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
       }
 
@@ -570,6 +565,21 @@
             </div>
           </article>
 
+          <article class="product-card" data-categories="protection,marine,family,pets,deep-pocket,boarding-dorm,rv-truck" data-title="custom spill-proof cushion protector" data-price="38">
+            <div class="product-image">
+              <img src="/images/placeholder.jpg" alt="Custom Spill-Proof Cushion Protector" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <div class="product-tags" aria-label="Categories"><a href="/protection/" class="card-tag" style="text-decoration:none;">PROTECTION</a></div>
+              <h3 class="product-title">Custom Spill-Proof Cushion Protector</h3>
+              <div class="product-price" data-usd="38" data-thb="1345">From US$38</div>
+              <div class="product-price-note">Excludes shipping, tax & tariff</div>
+              <p class="product-benefit">Made-to-measure TPU cushion protector with 360° elastic fitted hold.</p>
+              <div class="product-fabrics-info">TPU waterproof &middot; Custom size</div>
+              <a href="/product/custom-waterproof-cushion-protector/" class="btn btn-primary" style="margin-top:auto;">Choose Size &amp; Fabric</a>
+            </div>
+          </article>
+
           <article class="product-card" data-categories="protection,marine,custom-shape" data-title="marine mattress protector" data-price="49">
             <div class="product-image">
               <img src="https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781748617971-bdh8v6.jpg" alt="Marine Mattress Protector" width="800" height="600" loading="lazy" decoding="async">
@@ -680,6 +690,7 @@
   <script src="/js/nav.js"></script>
   <script src="/js/clerk.js"></script>
   <script src="/js/cart.js"></script>
+  <script src="/js/campaign-state.js?v=20260601"></script>
   <script src="/js/cookie-consent.js"></script>
   <script>
     // Visual chip filter â€” multi-select/single-select with sort and pagination
@@ -693,12 +704,65 @@
       var noResults = document.getElementById('no-results');
       var loadMoreBtn = document.getElementById('load-more-btn');
       var loadMoreContainer = document.getElementById('load-more-container');
+      var saleRefreshTimer = null;
+
+      (function injectSaleStyles() {
+        var style = document.createElement('style');
+        style.textContent = '.product-price .price-strike{color:#94a3b8;text-decoration:line-through;font-weight:600;margin-right:6px}.product-price .price-sale{color:#dc2626;font-weight:800}.catalog-sale-meta{display:flex;align-items:center;gap:8px;margin-top:6px;min-height:20px}.catalog-sale-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;letter-spacing:.02em}.catalog-sale-countdown{font-size:12px;color:#64748b;font-weight:600}';
+        document.head.appendChild(style);
+      })();
+
+      function getProductSlug(card) {
+        var link = card.querySelector('a[href*="/product/"]');
+        if (!link) return '';
+        var href = link.getAttribute('href') || '';
+        var parts = href.split('/').filter(function (s) { return s; });
+        return parts.length ? parts[parts.length - 1] : '';
+      }
+
+      function renderCatalogSales() {
+        cards.forEach(function(card) {
+          var priceEl = card.querySelector('.product-price');
+          if (!priceEl) return;
+          var baseUsd = Number(priceEl.getAttribute('data-usd') || 0);
+          if (!baseUsd) return;
+          var slug = getProductSlug(card);
+          var discountInfo = (typeof MildMateCampaigns !== 'undefined' && slug)
+            ? MildMateCampaigns.getDiscountForProduct(slug)
+            : { discount: 0 };
+          var discount = Number(discountInfo && discountInfo.discount || 0);
+          var saleUsd = Math.max(1, Math.round(baseUsd * (1 - discount / 100)));
+          card.setAttribute('data-price', String(discount > 0 ? saleUsd : baseUsd));
+
+          var meta = card.querySelector('.catalog-sale-meta');
+          if (!meta) {
+            meta = document.createElement('div');
+            meta.className = 'catalog-sale-meta';
+            priceEl.insertAdjacentElement('afterend', meta);
+          }
+
+          if (discount > 0) {
+            priceEl.innerHTML = '<span class="price-strike">From US$' + baseUsd + '</span><span class="price-sale">From US$' + saleUsd + '</span>';
+            var countdown = (typeof MildMateCampaigns !== 'undefined' && slug)
+              ? MildMateCampaigns.getCampaignCountdown(slug)
+              : null;
+            var countdownText = countdown
+              ? ('Ends in ' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm')
+              : '';
+            meta.innerHTML = '<span class="catalog-sale-badge">-' + discount + '% SALE</span>' + (countdownText ? '<span class="catalog-sale-countdown">' + countdownText + '</span>' : '');
+          } else {
+            priceEl.textContent = 'From US$' + baseUsd;
+            meta.innerHTML = '';
+          }
+        });
+      }
       
       var itemsPerPage = 12;
       var visibleLimit = itemsPerPage;
       var activeFilters = { type: 'all', niche: 'all' };
 
       function updateGrid() {
+        renderCatalogSales();
         var filtered = [];
         
         cards.forEach(function(card) {
@@ -834,7 +898,14 @@
       });
 
       // Run initial load
-      updateGrid();})();
+      if (typeof MildMateCampaigns !== 'undefined' && typeof MildMateCampaigns.loadStorefrontCampaigns === 'function') {
+        MildMateCampaigns.loadStorefrontCampaigns(false).finally(updateGrid);
+      } else {
+        updateGrid();
+      }
+      window.addEventListener('mildmate:campaigns-updated', updateGrid);
+      saleRefreshTimer = window.setInterval(updateGrid, 60000);
+    })();
   </script>
 </body>
 </html>

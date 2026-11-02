@@ -73,6 +73,7 @@ const OPERATING_RATE = 0.15;
 const MARKETING_RATE = 0.20;
 const MARGIN_RATE = 0.30;
 const FAMILY_MARGIN_RATE = 0.50;
+const CUSHION_PROTECTOR_MARGIN_RATE = 0.30;
 const PILLOW_PROTECTOR_MARGIN_RATE = 0.35;
 const PILLOWCASE_MARGIN_RATE = 0.15;      // pillowcases: 15/25/15%
 
@@ -115,6 +116,11 @@ interface PriceBreakdown {
     roundedThb: number;
   };
 }
+
+const DERIVED_MARKUP_KEY_PREFIX = "derived_markup_";
+const DEFAULT_DERIVED_MARKUPS: Record<string, number> = {
+  "weighted-duvet-cover": 10,
+};
 
 function inchToCm(val: number): number {
   return val * 2.54;
@@ -545,6 +551,7 @@ function isFittedSheetProduct(product: string): boolean {
     "rv-truck-fitted-sheet",
     "pet-owner-fitted-sheet",
     "family-fitted-sheet",
+    "custom-waterproof-cushion-protector",
   ].includes(product);
 }
 
@@ -562,6 +569,7 @@ function isDuvetProduct(product: string): boolean {
     "duvet-cover-rv",
     "duvet-cover-marine",
     "pet-owner-duvet-cover",
+    "weighted-duvet-cover",
   ].includes(product);
 }
 
@@ -579,10 +587,24 @@ function isPillowcaseProduct(product: string): { isPillowcase: boolean; variant?
 export function calculatePrice(
   input: PricingInput,
   currency: "USD" | "THB" = "USD",
+  derivedMarkups: Record<string, number> = {},
 ): { price: number; breakdown?: PriceBreakdown["breakdown"] } {
   const product = input.product || "";
   const mode = input.mode || "sheet";
   const fabric = input.fabric || "cloudsoft";
+  const resolveMarkupPct = (): number => {
+    if (!product) return 0;
+    if (derivedMarkups[product] !== undefined) return Number(derivedMarkups[product]) || 0;
+    return DEFAULT_DERIVED_MARKUPS[product] || 0;
+  };
+  const applyDerivedMarkup = (basePrice: number): number => {
+    const pct = resolveMarkupPct();
+    if (!pct || !Number.isFinite(basePrice) || basePrice <= 0) return basePrice;
+    const marked = basePrice * (1 + (pct / 100));
+    return currency === "THB"
+      ? Math.ceil(marked / 100) * 100
+      : Math.round(marked * 100) / 100;
+  };
 
   // Pillowcase formula (envelope, zipper, sham) — regular fabric
   const pillowcase = isPillowcaseProduct(product);
@@ -602,7 +624,7 @@ export function calculatePrice(
     if (w > 0 && l > 0) {
       const result = calculatePillowcasePrice(w, l, fabric, pillowcase.variant!);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
       };
     }
@@ -626,7 +648,7 @@ export function calculatePrice(
     if (w > 0 && l > 0) {
       const result = calculatePillowProtectorPrice(w, l);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
       };
     }
@@ -646,7 +668,7 @@ export function calculatePrice(
     if (w > 0 && l > 0) {
       const result = calculateDuvetPrice(w, l, fabric);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
       };
     }
@@ -668,7 +690,7 @@ export function calculatePrice(
     if (w > 0 && l > 0 && d > 0) {
       const result = calculateFlatSheetPrice(w, l, d, fabric);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
       };
     }
@@ -692,15 +714,19 @@ export function calculatePrice(
       if (product !== "family-fitted-sheet" && w > MAX_WIDTH_CM) {
         const result = calculateFittedSheetPrice(w, l, d, fabric);
         return {
-          price: currency === "THB" ? result.priceThb : result.priceUsd,
+          price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
           breakdown: { ...result.breakdown!, roundedThb: -1 }, // -1 signals "requires family sheet"
         };
       }
 
-      const marginRate = product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : MARGIN_RATE;
+      const marginRate = product === "family-fitted-sheet"
+        ? FAMILY_MARGIN_RATE
+        : product === "custom-waterproof-cushion-protector"
+          ? CUSHION_PROTECTOR_MARGIN_RATE
+          : MARGIN_RATE;
       const result = calculateFittedSheetPrice(w, l, d, fabric, marginRate);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
       };
     }
@@ -720,7 +746,25 @@ export function calculatePrice(
     foot = inchToCm(foot);
   }
 
-  return { price: calculateLegacyPrice(mode, w, l, head, foot, fabric, currency) };
+  return { price: applyDerivedMarkup(calculateLegacyPrice(mode, w, l, head, foot, fabric, currency)) };
+}
+
+async function loadDerivedMarkupMap(env: any): Promise<Record<string, number>> {
+  const out: Record<string, number> = { ...DEFAULT_DERIVED_MARKUPS };
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT key, value FROM pricing_params WHERE key LIKE ?1"
+    ).bind(`${DERIVED_MARKUP_KEY_PREFIX}%`).all();
+    for (const row of ((results || []) as any[])) {
+      const key = String(row.key || "");
+      if (!key.startsWith(DERIVED_MARKUP_KEY_PREFIX)) continue;
+      const slug = key.slice(DERIVED_MARKUP_KEY_PREFIX.length).trim();
+      const pct = Number(row.value);
+      if (!slug || !Number.isFinite(pct)) continue;
+      out[slug] = pct;
+    }
+  } catch {}
+  return out;
 }
 
 export async function handlePricing(request: Request, env: any): Promise<Response> {
@@ -754,8 +798,9 @@ export async function handlePricing(request: Request, env: any): Promise<Respons
         };
       }
 
-      const resultUsd = calculatePrice(body, "USD");
-      const resultThb = calculatePrice(body, "THB");
+      const derivedMarkupMap = await loadDerivedMarkupMap(env);
+      const resultUsd = calculatePrice(body, "USD", derivedMarkupMap);
+      const resultThb = calculatePrice(body, "THB", derivedMarkupMap);
 
       let formulaType = "legacy";
       const pc = isPillowcaseProduct(body.product || "");
@@ -779,6 +824,7 @@ export async function handlePricing(request: Request, env: any): Promise<Respons
         fabric: body.fabric || "cloudsoft",
         unit: body.unit || "cm",
         formula: formulaType,
+        derived_markup_pct: body.product ? (derivedMarkupMap[body.product] || 0) : 0,
       };
 
       if (resultUsd.breakdown) {

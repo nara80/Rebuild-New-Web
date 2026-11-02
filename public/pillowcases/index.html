@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -87,9 +87,6 @@
     .custom-shape-cta .btn-outline:hover { background: #e8f4fd; }
     @media (max-width: 768px) { .brand-hero-inner h1 { font-size: 1.75rem; } .listing-desc-grid { grid-template-columns: 1fr; } .pricing-panel { padding: 20px; } }
     </style>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Custom pillowcases  -  envelope, zipper, and sham styles. All 4 fabric collections. OEKO-TEX certified options. Custom sizes available.">
-  <title>Pillowcases  -  Envelope, Zipper &amp; Sham  -  MildMate</title>
   <link href="/css/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
@@ -172,7 +169,6 @@
     <script>
     (function () {
       var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
 
       function loadScript(src, async) {
         var s = document.createElement('script');
@@ -185,11 +181,7 @@
         if (window.__mildmateAnalyticsLoaded) return;
         window.__mildmateAnalyticsLoaded = true;
         window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
         window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
       }
 
@@ -256,7 +248,7 @@
               <div class="product-price" data-usd="16" data-thb="565">From US$16</div>
               <div class="product-price-note">Excludes shipping, tax & tariff</div>
               <p class="product-benefit">Classic fold-over envelope design for easy pillow changing.</p>
-              <div class="product-fabrics-info">4 fabrics · 23 colors available</div>
+              <div class="product-fabrics-info">4 fabrics Â· 23 colors available</div>
               <a href="/product/pillowcase-envelope/" class="btn btn-primary" style="margin-top:auto;">Choose Size & Fabric</a>
             </div>
           </article>
@@ -271,7 +263,7 @@
               <div class="product-price" data-usd="18" data-thb="635">From US$18</div>
               <div class="product-price-note">Excludes shipping, tax & tariff</div>
               <p class="product-benefit">Fully zipped closure, protecting pillow against dust mites.</p>
-              <div class="product-fabrics-info">4 fabrics · 23 colors available</div>
+              <div class="product-fabrics-info">4 fabrics Â· 23 colors available</div>
               <a href="/product/pillowcase-zipper/" class="btn btn-primary" style="margin-top:auto;">Choose Size & Fabric</a>
             </div>
           </article>
@@ -286,7 +278,7 @@
               <div class="product-price" data-usd="20" data-thb="705">From US$20</div>
               <div class="product-price-note">Excludes shipping, tax & tariff</div>
               <p class="product-benefit">Decorative border styling for a luxury hotel appearance.</p>
-              <div class="product-fabrics-info">4 fabrics · 23 colors available</div>
+              <div class="product-fabrics-info">4 fabrics Â· 23 colors available</div>
               <a href="/product/pillowcase-sham/" class="btn btn-primary" style="margin-top:auto;">Choose Size & Fabric</a>
             </div>
           </article>
@@ -310,7 +302,7 @@
               <li>Envelope: classic no-fuss closure, easy to swap</li>
               <li>Zipper: 100% enclosed, ideal for allergy sufferers</li>
               <li>Sham: decorative hotel-style, slightly larger for a plump look</li>
-              <li>Standard size: 50×75cm  -  fits most pillows</li>
+              <li>Standard size: 50Ã—75cm  -  fits most pillows</li>
               <li>Custom sizes for dakimakura, body pillows, and specialty pillows</li>
               <li>All 4 fabric collections  -  BreezePlus, CloudSoft, PremaCotton, EcoLuxe</li>
               <li>OEKO-TEX certified on PremaCotton</li>
@@ -329,18 +321,20 @@
   <script src="/js/nav.js"></script>
   <script src="/js/clerk.js"></script>
   <script src="/js/cart.js"></script>
+  <script src="/js/campaign-state.js?v=20260601"></script>
+  <script src="/js/catalog-campaign-ui.js?v=20261025"></script>
   <script src="/js/cookie-consent.js"></script>
   <script>
     const SIZES_BY_REGION = {
-      us: [{ label: 'Standard 50×75cm / 20×30in', price: 18 }, { label: 'King 51×91cm / 20×36in', price: 24 }, { label: 'Body Pillow 51×152cm / 20×60in', price: 35 }, { label: 'Dakimakura 50×160cm', price: 38 }, { label: 'Custom size →', price: 'custom' }],
-      uk: [{ label: 'Standard 50×75cm', price: 18 }, { label: 'King 50×90cm', price: 24 }, { label: 'Body Pillow 50×150cm', price: 35 }, { label: 'Custom size →', price: 'custom' }],
-      eu: [{ label: 'Standard 50×75cm', price: 18 }, { label: 'King 50×90cm', price: 24 }, { label: 'Body Pillow 50×150cm', price: 35 }, { label: 'Custom size →', price: 'custom' }],
-      au: [{ label: 'Standard 50×75cm', price: 18 }, { label: 'King 50×90cm', price: 24 }, { label: 'Body Pillow 50×150cm', price: 35 }, { label: 'Custom size →', price: 'custom' }],
-      th: [{ label: 'Standard 50×75cm', price: 18 }, { label: 'King 50×90cm', price: 24 }, { label: 'Body Pillow 50×150cm', price: 35 }, { label: 'Dakimakura 50×160cm', price: 38 }, { label: 'Custom size →', price: 'custom' }],
-      my: [{ label: 'Standard 50×75cm', price: 18 }, { label: 'King 50×90cm', price: 24 }, { label: 'Body Pillow 50×150cm', price: 35 }, { label: 'Custom size →', price: 'custom' }],
-      in: [{ label: 'Standard 50×75cm', price: 18 }, { label: 'King 51×91cm', price: 24 }, { label: 'Body Pillow 51×152cm', price: 35 }, { label: 'Custom size →', price: 'custom' }],
-      jp: [{ label: 'Standard 50×75cm', price: 18 }, { label: 'Semi-Double 50×120cm', price: 28 }, { label: 'Queen 50×150cm', price: 32 }, { label: 'Dakimakura 50×160cm', price: 38 }, { label: 'Custom size →', price: 'custom' }],
-      custom: [{ label: 'Custom shape →', price: 'custom' }]
+      us: [{ label: 'Standard 50Ã—75cm / 20Ã—30in', price: 18 }, { label: 'King 51Ã—91cm / 20Ã—36in', price: 24 }, { label: 'Body Pillow 51Ã—152cm / 20Ã—60in', price: 35 }, { label: 'Dakimakura 50Ã—160cm', price: 38 }, { label: 'Custom size â†’', price: 'custom' }],
+      uk: [{ label: 'Standard 50Ã—75cm', price: 18 }, { label: 'King 50Ã—90cm', price: 24 }, { label: 'Body Pillow 50Ã—150cm', price: 35 }, { label: 'Custom size â†’', price: 'custom' }],
+      eu: [{ label: 'Standard 50Ã—75cm', price: 18 }, { label: 'King 50Ã—90cm', price: 24 }, { label: 'Body Pillow 50Ã—150cm', price: 35 }, { label: 'Custom size â†’', price: 'custom' }],
+      au: [{ label: 'Standard 50Ã—75cm', price: 18 }, { label: 'King 50Ã—90cm', price: 24 }, { label: 'Body Pillow 50Ã—150cm', price: 35 }, { label: 'Custom size â†’', price: 'custom' }],
+      th: [{ label: 'Standard 50Ã—75cm', price: 18 }, { label: 'King 50Ã—90cm', price: 24 }, { label: 'Body Pillow 50Ã—150cm', price: 35 }, { label: 'Dakimakura 50Ã—160cm', price: 38 }, { label: 'Custom size â†’', price: 'custom' }],
+      my: [{ label: 'Standard 50Ã—75cm', price: 18 }, { label: 'King 50Ã—90cm', price: 24 }, { label: 'Body Pillow 50Ã—150cm', price: 35 }, { label: 'Custom size â†’', price: 'custom' }],
+      in: [{ label: 'Standard 50Ã—75cm', price: 18 }, { label: 'King 51Ã—91cm', price: 24 }, { label: 'Body Pillow 51Ã—152cm', price: 35 }, { label: 'Custom size â†’', price: 'custom' }],
+      jp: [{ label: 'Standard 50Ã—75cm', price: 18 }, { label: 'Semi-Double 50Ã—120cm', price: 28 }, { label: 'Queen 50Ã—150cm', price: 32 }, { label: 'Dakimakura 50Ã—160cm', price: 38 }, { label: 'Custom size â†’', price: 'custom' }],
+      custom: [{ label: 'Custom shape â†’', price: 'custom' }]
     };
     const FABRIC_PRICES = { BreezePlus: 0, CloudSoft: -5, PremaCotton: 10, EcoLuxe: 5 };
     let selectedRegion = '', selectedSize = '', selectedFabric = 'BreezePlus';
@@ -354,7 +348,7 @@
         if (opt) base = opt.price === 'custom' ? 0 : opt.price;
       }
       const total = base + (FABRIC_PRICES[selectedFabric] || 0);
-      if (selectedRegion === 'custom' || selectedSize === 'Custom size →') { priceEl.textContent = 'Custom quote'; }
+      if (selectedRegion === 'custom' || selectedSize === 'Custom size â†’') { priceEl.textContent = 'Custom quote'; }
       else if (total > 0) { priceEl.textContent = '$' + total + '.00'; }
       else { priceEl.textContent = ' - '; }
     }
@@ -370,5 +364,6 @@
   </script>
 </body>
 </html>
+
 
 

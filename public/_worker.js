@@ -1,5 +1,3256 @@
-var __defProp = Object.defineProperty;
+﻿var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+
+// ../workers/api/sales.ts
+var SALES_SERVICE_NAME = "mildmate-sales-api";
+var SALES_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var SOURCE_MAP = {
+  shopee: "shopee",
+  lazada: "lazada",
+  tiktok: "tiktok",
+  line: "line",
+  tline: "line",
+  twhatsapp: "whatsapp",
+  whatsapp: "whatsapp",
+  etsy: "etsy",
+  ebay: "ebay",
+  facebook: "facebook",
+  mildmate: "website",
+  twebsite: "website",
+  website: "website",
+  manual: "manual"
+};
+var ALLOWED_STATUS = /* @__PURE__ */ new Set([
+  "pending",
+  "paid",
+  "processing",
+  "shipped",
+  "completed",
+  "cancelled",
+  "refunded",
+  "archived"
+]);
+var ALLOWED_MAPPING_STATUS = /* @__PURE__ */ new Set([
+  "Mapped",
+  "Partial",
+  "Review Required",
+  "Unmapped"
+]);
+var ALLOWED_REVENUE_STATUS = /* @__PURE__ */ new Set(["EXACT", "UNALLOCATED"]);
+var schemaReady = false;
+var schemaPromise = null;
+function response(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response, "response");
+function trimTo(v, max = 255) {
+  if (v === void 0 || v === null) return null;
+  const s = String(v).trim();
+  if (!s) return null;
+  return s.slice(0, max);
+}
+__name(trimTo, "trimTo");
+function toNum(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum, "toNum");
+function normalizeSourceSystem(raw) {
+  const key = String(raw || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+  if (!key) return "";
+  if (SOURCE_MAP[key]) return SOURCE_MAP[key];
+  return key.replace(/[^a-z0-9-]/g, "");
+}
+__name(normalizeSourceSystem, "normalizeSourceSystem");
+function normalizeStatus(raw) {
+  const v = trimTo(raw, 40);
+  if (!v) return null;
+  const s = v.toLowerCase();
+  if (!ALLOWED_STATUS.has(s)) return null;
+  return s;
+}
+__name(normalizeStatus, "normalizeStatus");
+function normalizeMappingStatus(raw) {
+  const v = trimTo(raw, 40);
+  if (!v) return null;
+  return ALLOWED_MAPPING_STATUS.has(v) ? v : null;
+}
+__name(normalizeMappingStatus, "normalizeMappingStatus");
+function parseItemStatus(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  return v === "removed" ? "removed" : "active";
+}
+__name(parseItemStatus, "parseItemStatus");
+function same(a, b) {
+  if (a === null || a === void 0 || a === "") return b === null || b === void 0 || b === "";
+  if (b === null || b === void 0 || b === "") return false;
+  return String(a) === String(b);
+}
+__name(same, "same");
+async function ensureSalesSchema(env) {
+  if (schemaReady) return;
+  if (!schemaPromise) {
+    schemaPromise = (async () => {
+      const schemaSql = [
+        `CREATE TABLE IF NOT EXISTS sales_orders (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          source_system TEXT NOT NULL,
+          source_order_id TEXT NOT NULL,
+          notion_page_id TEXT,
+          order_date TEXT,
+          channel TEXT,
+          currency TEXT,
+          order_total REAL,
+          status TEXT,
+          destination_country TEXT,
+          mapping_status TEXT,
+          source_created_at TEXT,
+          source_updated_at TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(source_system, source_order_id)
+        )`,
+        `CREATE TABLE IF NOT EXISTS sales_order_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          sales_order_id INTEGER NOT NULL,
+          source_item_key TEXT NOT NULL,
+          item_no INTEGER,
+          product_id INTEGER,
+          quantity REAL,
+          raw_item_text TEXT,
+          line_revenue REAL,
+          revenue_status TEXT NOT NULL,
+          mapping_status TEXT,
+          item_status TEXT NOT NULL DEFAULT 'active',
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (sales_order_id) REFERENCES sales_orders(id),
+          FOREIGN KEY (product_id) REFERENCES products(id),
+          UNIQUE(sales_order_id, source_item_key)
+        )`,
+        `CREATE TABLE IF NOT EXISTS sync_runs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          source TEXT NOT NULL,
+          scenario TEXT,
+          started_at TEXT NOT NULL,
+          finished_at TEXT,
+          status TEXT NOT NULL,
+          records_received INTEGER DEFAULT 0,
+          records_created INTEGER DEFAULT 0,
+          records_updated INTEGER DEFAULT 0,
+          records_unchanged INTEGER DEFAULT 0,
+          records_rejected INTEGER DEFAULT 0,
+          error_message TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_orders_order_date ON sales_orders(order_date)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_orders_channel ON sales_orders(channel)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_orders_status ON sales_orders(status)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_orders_notion_page ON sales_orders(notion_page_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_order_items_product ON sales_order_items(product_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_order_items_order ON sales_order_items(sales_order_id)`,
+        `CREATE TABLE IF NOT EXISTS product_mapping_aliases (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          source_system TEXT,
+          listing_id TEXT,
+          alias_text TEXT NOT NULL,
+          alias_norm TEXT NOT NULL,
+          product_ids TEXT NOT NULL,
+          match_scope TEXT NOT NULL DEFAULT 'alias',
+          verified INTEGER NOT NULL DEFAULT 0,
+          hit_count INTEGER NOT NULL DEFAULT 0,
+          last_used_at TEXT,
+          notes TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_product_mapping_aliases_key
+          ON product_mapping_aliases (COALESCE(source_system, ''), COALESCE(listing_id, ''), alias_norm)`,
+        `CREATE INDEX IF NOT EXISTS idx_product_mapping_aliases_listing ON product_mapping_aliases(listing_id)`,
+        `CREATE TABLE IF NOT EXISTS product_mapping_events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          notion_page_id TEXT,
+          source_order_id TEXT,
+          source_system TEXT,
+          raw_product_text TEXT,
+          previous_product_ids TEXT,
+          resolved_product_ids TEXT,
+          mapping_method TEXT,
+          confidence REAL,
+          result_status TEXT,
+          dry_run INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_product_mapping_events_order ON product_mapping_events(source_order_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_product_mapping_events_page ON product_mapping_events(notion_page_id)`
+      ];
+      for (const sql of schemaSql) {
+        await env.DB.prepare(sql).run();
+      }
+      schemaReady = true;
+    })().finally(() => {
+      if (!schemaReady) schemaPromise = null;
+    });
+  }
+  await schemaPromise;
+}
+__name(ensureSalesSchema, "ensureSalesSchema");
+async function createSyncRun(env, payload) {
+  const startedAt = (/* @__PURE__ */ new Date()).toISOString();
+  const source = trimTo(payload.sync_source, 80) || "notion-orderlist";
+  const scenario = trimTo(payload.scenario, 200);
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', 1)`
+  ).bind(source, scenario, startedAt).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun, "createSyncRun");
+async function finishSyncRun(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun, "finishSyncRun");
+async function requireBearerAuth(request, env) {
+  const configured = trimTo(env[SALES_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${SALES_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth, "requireBearerAuth");
+async function validateProductIds(env, items) {
+  const ids = Array.from(
+    new Set(
+      items.map((i) => i.product_id === null || i.product_id === void 0 ? null : Number(i.product_id)).filter((v) => Number.isInteger(v) && v > 0)
+    )
+  );
+  if (ids.length === 0) return { ok: true };
+  const placeholders = ids.map(() => "?").join(", ");
+  const found = await env.DB.prepare(`SELECT id FROM products WHERE id IN (${placeholders})`).bind(...ids).all();
+  const foundSet = new Set((found.results || []).map((r) => Number(r.id)));
+  const missing = ids.find((id) => !foundSet.has(id));
+  if (missing) {
+    return { ok: false, code: "INVALID_PRODUCT_ID", message: `Product ID ${missing} does not exist.` };
+  }
+  return { ok: true };
+}
+__name(validateProductIds, "validateProductIds");
+function normalizePayload(raw) {
+  const sourceSystem = normalizeSourceSystem(raw.source_system);
+  if (!sourceSystem) return { ok: false, code: "MISSING_SOURCE_SYSTEM", message: "source_system is required." };
+  const sourceOrderId = trimTo(raw.source_order_id, 120);
+  if (!sourceOrderId) return { ok: false, code: "MISSING_SOURCE_ORDER_ID", message: "source_order_id is required." };
+  const currencyRaw = trimTo(raw.currency, 10);
+  const currency = currencyRaw ? currencyRaw.toUpperCase() : null;
+  if (currency && !/^[A-Z]{3}$/.test(currency)) {
+    return { ok: false, code: "INVALID_CURRENCY", message: "currency must be a 3-letter ISO code." };
+  }
+  const normalizedStatus = raw.status === void 0 || raw.status === null || raw.status === "" ? null : normalizeStatus(raw.status);
+  if (raw.status !== void 0 && raw.status !== null && raw.status !== "" && !normalizedStatus) {
+    return { ok: false, code: "INVALID_STATUS", message: "status is invalid." };
+  }
+  const mappingStatus = normalizeMappingStatus(raw.mapping_status);
+  if (raw.mapping_status !== void 0 && raw.mapping_status !== null && raw.mapping_status !== "" && !mappingStatus) {
+    return { ok: false, code: "INVALID_MAPPING_STATUS", message: "mapping_status is invalid." };
+  }
+  const orderTotal = toNum(raw.order_total);
+  if (raw.order_total !== void 0 && raw.order_total !== null && raw.order_total !== "" && orderTotal === null) {
+    return { ok: false, code: "INVALID_ORDER_TOTAL", message: "order_total must be numeric." };
+  }
+  const destinationCountryRaw = trimTo(raw.destination_country, 20);
+  const destinationCountry = destinationCountryRaw ? destinationCountryRaw.toUpperCase() : null;
+  if (destinationCountry && !/^[A-Z]{2,3}$/.test(destinationCountry)) {
+    return { ok: false, code: "INVALID_DESTINATION_COUNTRY", message: "destination_country must be ISO country code." };
+  }
+  const itemsRaw = Array.isArray(raw.items) ? raw.items : [];
+  const seenKeys = /* @__PURE__ */ new Set();
+  const items = itemsRaw.map((it, idx) => {
+    const sourceItemKey = trimTo(it.source_item_key, 120) || `item-${idx + 1}`;
+    if (seenKeys.has(sourceItemKey)) {
+      throw new Error(`DUPLICATE_SOURCE_ITEM_KEY::${sourceItemKey}`);
+    }
+    seenKeys.add(sourceItemKey);
+    const productId = it.product_id === void 0 || it.product_id === null || it.product_id === "" ? null : Number(it.product_id);
+    if (productId !== null && (!Number.isInteger(productId) || productId <= 0)) {
+      throw new Error(`INVALID_PRODUCT_ID::${it.product_id}`);
+    }
+    const quantity = toNum(it.quantity);
+    if (it.quantity !== void 0 && it.quantity !== null && it.quantity !== "" && (quantity === null || quantity <= 0)) {
+      throw new Error(`INVALID_QUANTITY::${it.quantity}`);
+    }
+    const revenueStatus = String(it.revenue_status || "").trim().toUpperCase();
+    if (!ALLOWED_REVENUE_STATUS.has(revenueStatus)) {
+      throw new Error(`INVALID_REVENUE_STATUS::${it.revenue_status}`);
+    }
+    const lineRevenue = toNum(it.line_revenue);
+    if (revenueStatus === "EXACT" && lineRevenue === null) {
+      throw new Error("MISSING_EXACT_REVENUE");
+    }
+    if (revenueStatus === "UNALLOCATED" && lineRevenue !== null) {
+      throw new Error("UNALLOCATED_MUST_BE_NULL");
+    }
+    const itemMapping = normalizeMappingStatus(it.mapping_status);
+    if (it.mapping_status !== void 0 && it.mapping_status !== null && it.mapping_status !== "" && !itemMapping) {
+      throw new Error(`INVALID_ITEM_MAPPING_STATUS::${it.mapping_status}`);
+    }
+    const itemNo = it.item_no === void 0 || it.item_no === null || it.item_no === "" ? null : Number(it.item_no);
+    if (itemNo !== null && (!Number.isInteger(itemNo) || itemNo <= 0)) {
+      throw new Error(`INVALID_ITEM_NO::${it.item_no}`);
+    }
+    return {
+      source_item_key: sourceItemKey,
+      item_no: itemNo,
+      product_id: productId,
+      quantity,
+      raw_item_text: trimTo(it.raw_item_text, 2e3),
+      line_revenue: revenueStatus === "UNALLOCATED" ? null : lineRevenue,
+      revenue_status: revenueStatus,
+      mapping_status: itemMapping,
+      item_status: "active"
+    };
+  });
+  return {
+    ok: true,
+    data: {
+      source_system: sourceSystem,
+      source_order_id: sourceOrderId,
+      notion_page_id: trimTo(raw.notion_page_id, 120),
+      order_date: trimTo(raw.order_date, 40),
+      channel: trimTo(raw.channel, 120),
+      currency,
+      order_total: orderTotal,
+      status: normalizedStatus,
+      destination_country: destinationCountry,
+      mapping_status: mappingStatus,
+      source_created_at: trimTo(raw.source_created_at, 50),
+      source_updated_at: trimTo(raw.source_updated_at, 50),
+      items,
+      sync_source: trimTo(raw.sync_source, 80),
+      scenario: trimTo(raw.scenario, 200)
+    }
+  };
+}
+__name(normalizePayload, "normalizePayload");
+function compareOrder(existing, incoming) {
+  return same(existing.notion_page_id, incoming.notion_page_id) && same(existing.order_date, incoming.order_date) && same(existing.channel, incoming.channel) && same(existing.currency, incoming.currency) && same(existing.order_total, incoming.order_total) && same(existing.status, incoming.status) && same(existing.destination_country, incoming.destination_country) && same(existing.mapping_status, incoming.mapping_status) && same(existing.source_created_at, incoming.source_created_at) && same(existing.source_updated_at, incoming.source_updated_at);
+}
+__name(compareOrder, "compareOrder");
+function compareItem(existing, incoming) {
+  return same(existing.item_no, incoming.item_no) && same(existing.product_id, incoming.product_id) && same(existing.quantity, incoming.quantity) && same(existing.raw_item_text, incoming.raw_item_text) && same(existing.line_revenue, incoming.line_revenue) && same(existing.revenue_status, incoming.revenue_status) && same(existing.mapping_status, incoming.mapping_status) && parseItemStatus(existing.item_status) === parseItemStatus(incoming.item_status);
+}
+__name(compareItem, "compareItem");
+async function handleUpsert(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: auth.code,
+      message: auth.message
+    }, auth.status);
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: "INVALID_JSON",
+      message: "Request body must be valid JSON."
+    }, 400);
+  }
+  const normalized = normalizePayload(body);
+  if (!normalized.ok) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: normalized.code,
+      message: normalized.message
+    }, 400);
+  }
+  const payload = normalized.data;
+  const productCheck = await validateProductIds(env, payload.items || []);
+  if (!productCheck.ok) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: productCheck.code,
+      message: productCheck.message
+    }, 400);
+  }
+  let syncRunId = 0;
+  try {
+    syncRunId = await createSyncRun(env, payload);
+    const existingOrder = await env.DB.prepare(
+      `SELECT id, notion_page_id, order_date, channel, currency, order_total, status,
+              destination_country, mapping_status, source_created_at, source_updated_at
+       FROM sales_orders
+       WHERE source_system = ?1 AND source_order_id = ?2
+       LIMIT 1`
+    ).bind(payload.source_system, payload.source_order_id).first();
+    let salesOrderId = 0;
+    let orderAction = "unchanged";
+    if (!existingOrder) {
+      const inserted = await env.DB.prepare(
+        `INSERT INTO sales_orders (
+          source_system, source_order_id, notion_page_id, order_date, channel, currency, order_total,
+          status, destination_country, mapping_status, source_created_at, source_updated_at
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`
+      ).bind(
+        payload.source_system,
+        payload.source_order_id,
+        payload.notion_page_id,
+        payload.order_date,
+        payload.channel,
+        payload.currency,
+        payload.order_total,
+        payload.status,
+        payload.destination_country,
+        payload.mapping_status,
+        payload.source_created_at,
+        payload.source_updated_at
+      ).run();
+      salesOrderId = Number(inserted.meta?.last_row_id || 0);
+      orderAction = "created";
+    } else {
+      salesOrderId = Number(existingOrder.id);
+      const sameOrder = compareOrder(existingOrder, payload);
+      if (!sameOrder) {
+        await env.DB.prepare(
+          `UPDATE sales_orders
+           SET notion_page_id = ?1,
+               order_date = ?2,
+               channel = ?3,
+               currency = ?4,
+               order_total = ?5,
+               status = ?6,
+               destination_country = ?7,
+               mapping_status = ?8,
+               source_created_at = ?9,
+               source_updated_at = ?10,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?11`
+        ).bind(
+          payload.notion_page_id,
+          payload.order_date,
+          payload.channel,
+          payload.currency,
+          payload.order_total,
+          payload.status,
+          payload.destination_country,
+          payload.mapping_status,
+          payload.source_created_at,
+          payload.source_updated_at,
+          salesOrderId
+        ).run();
+        orderAction = "updated";
+      }
+    }
+    const existingItemsRes = await env.DB.prepare(
+      `SELECT id, source_item_key, item_no, product_id, quantity, raw_item_text, line_revenue,
+              revenue_status, mapping_status, item_status
+       FROM sales_order_items
+       WHERE sales_order_id = ?1`
+    ).bind(salesOrderId).all();
+    const existingItems = existingItemsRes.results || [];
+    const existingMap = /* @__PURE__ */ new Map();
+    existingItems.forEach((row) => existingMap.set(String(row.source_item_key), row));
+    const incomingKeys = /* @__PURE__ */ new Set();
+    const itemStats = { created: 0, updated: 0, unchanged: 0, removed: 0 };
+    for (const item of payload.items) {
+      const k = String(item.source_item_key);
+      incomingKeys.add(k);
+      const prev = existingMap.get(k);
+      if (!prev) {
+        await env.DB.prepare(
+          `INSERT INTO sales_order_items (
+            sales_order_id, source_item_key, item_no, product_id, quantity, raw_item_text,
+            line_revenue, revenue_status, mapping_status, item_status
+          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 'active')`
+        ).bind(
+          salesOrderId,
+          item.source_item_key,
+          item.item_no,
+          item.product_id,
+          item.quantity,
+          item.raw_item_text,
+          item.line_revenue,
+          item.revenue_status,
+          item.mapping_status
+        ).run();
+        itemStats.created += 1;
+        continue;
+      }
+      const merged = { ...item, item_status: "active" };
+      const unchanged = compareItem(prev, merged);
+      if (unchanged) {
+        itemStats.unchanged += 1;
+      } else {
+        await env.DB.prepare(
+          `UPDATE sales_order_items
+           SET item_no = ?1,
+               product_id = ?2,
+               quantity = ?3,
+               raw_item_text = ?4,
+               line_revenue = ?5,
+               revenue_status = ?6,
+               mapping_status = ?7,
+               item_status = 'active',
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?8`
+        ).bind(
+          item.item_no,
+          item.product_id,
+          item.quantity,
+          item.raw_item_text,
+          item.line_revenue,
+          item.revenue_status,
+          item.mapping_status,
+          prev.id
+        ).run();
+        itemStats.updated += 1;
+      }
+    }
+    for (const prev of existingItems) {
+      const k = String(prev.source_item_key);
+      if (!incomingKeys.has(k) && parseItemStatus(prev.item_status) !== "removed") {
+        await env.DB.prepare(
+          `UPDATE sales_order_items
+           SET item_status = 'removed', updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?1`
+        ).bind(prev.id).run();
+        itemStats.removed += 1;
+      }
+    }
+    let action = "unchanged";
+    if (orderAction === "created") action = "created";
+    else if (orderAction === "updated" || itemStats.created > 0 || itemStats.updated > 0 || itemStats.removed > 0) action = "updated";
+    await finishSyncRun(env, syncRunId, {
+      status: "success",
+      created: action === "created" ? 1 : 0,
+      updated: action === "updated" ? 1 : 0,
+      unchanged: action === "unchanged" ? 1 : 0,
+      rejected: 0
+    });
+    return response({
+      success: true,
+      action,
+      sales_order_id: salesOrderId,
+      source_system: payload.source_system,
+      source_order_id: payload.source_order_id,
+      items: itemStats
+    });
+  } catch (e) {
+    const msg = String(e?.message || e || "Unexpected error");
+    const upper = msg.toUpperCase();
+    let code = "UPSERT_FAILED";
+    let http = 500;
+    if (upper.startsWith("DUPLICATE_SOURCE_ITEM_KEY::")) {
+      code = "DUPLICATE_SOURCE_ITEM_KEY";
+      http = 400;
+    } else if (upper.startsWith("INVALID_PRODUCT_ID::")) {
+      code = "INVALID_PRODUCT_ID";
+      http = 400;
+    } else if (upper.startsWith("INVALID_QUANTITY::")) {
+      code = "INVALID_QUANTITY";
+      http = 400;
+    } else if (upper.startsWith("INVALID_REVENUE_STATUS::")) {
+      code = "INVALID_REVENUE_STATUS";
+      http = 400;
+    } else if (upper.startsWith("INVALID_ITEM_MAPPING_STATUS::")) {
+      code = "INVALID_MAPPING_STATUS";
+      http = 400;
+    } else if (upper === "MISSING_EXACT_REVENUE") {
+      code = "MISSING_EXACT_REVENUE";
+      http = 400;
+    } else if (upper === "UNALLOCATED_MUST_BE_NULL") {
+      code = "UNALLOCATED_REVENUE_MUST_BE_NULL";
+      http = 400;
+    } else if (upper.startsWith("INVALID_ITEM_NO::")) {
+      code = "INVALID_ITEM_NO";
+      http = 400;
+    }
+    await finishSyncRun(env, syncRunId, {
+      status: "failed",
+      rejected: 1,
+      error: msg
+    });
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: code,
+      message: msg
+    }, http);
+  }
+}
+__name(handleUpsert, "handleUpsert");
+async function handleReadOrder(request, env, sourcePart, orderPart) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: auth.code,
+      message: auth.message
+    }, auth.status);
+  }
+  const source = normalizeSourceSystem(decodeURIComponent(sourcePart || ""));
+  const sourceOrderId = decodeURIComponent(orderPart || "").trim();
+  if (!source || !sourceOrderId) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: "INVALID_PATH_PARAMS",
+      message: "source_system and source_order_id are required."
+    }, 400);
+  }
+  const order = await env.DB.prepare(
+    `SELECT id, source_system, source_order_id, notion_page_id, order_date, channel, currency,
+            order_total, status, destination_country, mapping_status, source_created_at, source_updated_at,
+            created_at, updated_at
+     FROM sales_orders
+     WHERE source_system = ?1 AND source_order_id = ?2
+     LIMIT 1`
+  ).bind(source, sourceOrderId).first();
+  if (!order) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: "ORDER_NOT_FOUND",
+      message: "Order not found."
+    }, 404);
+  }
+  const items = await env.DB.prepare(
+    `SELECT id, source_item_key, item_no, product_id, quantity, raw_item_text, line_revenue,
+            revenue_status, mapping_status, item_status, created_at, updated_at
+     FROM sales_order_items
+     WHERE sales_order_id = ?1
+     ORDER BY id`
+  ).bind(order.id).all();
+  return response({
+    success: true,
+    order,
+    items: items.results || []
+  });
+}
+__name(handleReadOrder, "handleReadOrder");
+var ALLOWED_MATCH_SCOPE = /* @__PURE__ */ new Set(["variation", "listing", "alias"]);
+function normalizeAliasKey(raw) {
+  return String(raw || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+}
+__name(normalizeAliasKey, "normalizeAliasKey");
+function parseProductIdsJson(raw) {
+  try {
+    const arr = JSON.parse(String(raw));
+    if (!Array.isArray(arr)) return [];
+    return arr.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  } catch {
+    return [];
+  }
+}
+__name(parseProductIdsJson, "parseProductIdsJson");
+async function handleMappingCatalog(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  const rows = await env.DB.prepare(
+    `SELECT id, slug, title_en, product_type, is_active
+     FROM products
+     WHERE is_active = 1
+     ORDER BY id`
+  ).all();
+  return response({
+    success: true,
+    count: (rows.results || []).length,
+    note: "Approved canonical Product_ID catalog. AI fallback must only choose ids from this list; never invent a Product_ID.",
+    products: rows.results || []
+  });
+}
+__name(handleMappingCatalog, "handleMappingCatalog");
+async function recordAliasHit(env, aliasId) {
+  await env.DB.prepare(
+    `UPDATE product_mapping_aliases
+     SET hit_count = hit_count + 1, last_used_at = ?1
+     WHERE id = ?2`
+  ).bind((/* @__PURE__ */ new Date()).toISOString(), aliasId).run();
+}
+__name(recordAliasHit, "recordAliasHit");
+async function handleMappingResolve(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const source = normalizeSourceSystem(body.source_system) || null;
+  const listingId = trimTo(body.listing_id, 120);
+  const variationNorm = normalizeAliasKey(body.variation_text);
+  const itemNorm = normalizeAliasKey(body.item_text);
+  if (!listingId && !variationNorm && !itemNorm) {
+    return response({
+      success: false,
+      error_code: "MISSING_RESOLVE_INPUT",
+      message: "Provide at least one of listing_id, variation_text, item_text."
+    }, 400);
+  }
+  const order = `ORDER BY (source_system IS NULL) ASC, verified DESC, id ASC LIMIT 1`;
+  const sourceCond = `(source_system IS NULL OR source_system = ?1)`;
+  const hit = /* @__PURE__ */ __name(async (sql, ...binds) => env.DB.prepare(sql).bind(...binds).first(), "hit");
+  let row = null;
+  let method = "";
+  if (!row && listingId && variationNorm) {
+    row = await hit(
+      `SELECT * FROM product_mapping_aliases
+       WHERE match_scope = 'variation' AND listing_id = ?2 AND alias_norm = ?3 AND ${sourceCond} ${order}`,
+      source,
+      listingId,
+      variationNorm
+    );
+    if (row) method = "variation_exact";
+  }
+  for (const norm of [variationNorm, itemNorm]) {
+    if (row || !norm) continue;
+    row = await hit(
+      `SELECT * FROM product_mapping_aliases
+       WHERE verified = 1 AND alias_norm = ?2 AND ${sourceCond} ${order}`,
+      source,
+      norm
+    );
+    if (row) method = "verified_alias";
+  }
+  if (!row && listingId) {
+    row = await hit(
+      `SELECT * FROM product_mapping_aliases
+       WHERE match_scope = 'listing'
+         AND (listing_id = ?2 OR alias_norm = ?3)
+         AND ${sourceCond} ${order}`,
+      source,
+      listingId,
+      normalizeAliasKey(listingId)
+    );
+    if (row) method = "listing";
+  }
+  if (!row) {
+    return response({
+      success: true,
+      resolved: false,
+      mapping_status_suggestion: "Review Required",
+      message: "No deterministic mapping found. Do not guess; route to Review Required (AI fallback may only propose ids from /v1/mapping/catalog)."
+    });
+  }
+  const productIds = parseProductIdsJson(row.product_ids);
+  if (productIds.length === 0) {
+    return response({
+      success: true,
+      resolved: false,
+      mapping_status_suggestion: "Review Required",
+      message: `Alias ${row.id} matched but stores no valid product ids; route to Review Required.`
+    });
+  }
+  await recordAliasHit(env, Number(row.id));
+  return response({
+    success: true,
+    resolved: true,
+    method,
+    confidence: method === "listing" ? "medium" : "high",
+    product_ids: productIds,
+    mapping_status_suggestion: "Mapped",
+    alias_id: Number(row.id),
+    verified: Number(row.verified) === 1
+  });
+}
+__name(handleMappingResolve, "handleMappingResolve");
+async function handleMappingAliasUpsert(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const source = normalizeSourceSystem(body.source_system) || null;
+  const listingId = trimTo(body.listing_id, 120);
+  const aliasText = trimTo(body.alias_text, 500) || listingId;
+  if (!aliasText) {
+    return response({ success: false, error_code: "MISSING_ALIAS_TEXT", message: "alias_text (or listing_id) is required." }, 400);
+  }
+  const aliasNorm = normalizeAliasKey(aliasText);
+  if (!aliasNorm) {
+    return response({ success: false, error_code: "INVALID_ALIAS_TEXT", message: "alias_text normalizes to empty." }, 400);
+  }
+  const rawIds = Array.isArray(body.product_ids) ? body.product_ids : [];
+  const productIds = Array.from(new Set(rawIds.map((v) => Number(v))));
+  if (productIds.length === 0 || productIds.some((v) => !Number.isInteger(v) || v <= 0)) {
+    return response({ success: false, error_code: "INVALID_PRODUCT_IDS", message: "product_ids must be a non-empty array of positive integers." }, 400);
+  }
+  const check = await validateProductIds(env, productIds.map((id) => ({ product_id: id })));
+  if (!check.ok) {
+    return response({ success: false, error_code: check.code, message: check.message }, 400);
+  }
+  const scopeRaw = String(body.match_scope || "alias").toLowerCase();
+  if (!ALLOWED_MATCH_SCOPE.has(scopeRaw)) {
+    return response({ success: false, error_code: "INVALID_MATCH_SCOPE", message: "match_scope must be variation, listing, or alias." }, 400);
+  }
+  if (scopeRaw === "variation" && !listingId) {
+    return response({ success: false, error_code: "MISSING_LISTING_ID", message: "match_scope=variation requires listing_id." }, 400);
+  }
+  const verified = body.verified === false ? 0 : 1;
+  const notes = trimTo(body.notes, 500);
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const idsJson = JSON.stringify(productIds);
+  const existing = await env.DB.prepare(
+    `SELECT id FROM product_mapping_aliases
+     WHERE COALESCE(source_system, '') = COALESCE(?1, '')
+       AND COALESCE(listing_id, '') = COALESCE(?2, '')
+       AND alias_norm = ?3
+     LIMIT 1`
+  ).bind(source, listingId, aliasNorm).first();
+  if (existing) {
+    await env.DB.prepare(
+      `UPDATE product_mapping_aliases
+       SET alias_text = ?1, product_ids = ?2, match_scope = ?3, verified = ?4, notes = COALESCE(?5, notes), updated_at = ?6
+       WHERE id = ?7`
+    ).bind(aliasText, idsJson, scopeRaw, verified, notes, now, existing.id).run();
+    return response({ success: true, action: "updated", alias_id: Number(existing.id), product_ids: productIds });
+  }
+  const ins = await env.DB.prepare(
+    `INSERT INTO product_mapping_aliases
+       (source_system, listing_id, alias_text, alias_norm, product_ids, match_scope, verified, notes, created_at, updated_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)`
+  ).bind(source, listingId, aliasText, aliasNorm, idsJson, scopeRaw, verified, notes, now).run();
+  return response({ success: true, action: "created", alias_id: Number(ins.meta?.last_row_id || 0), product_ids: productIds });
+}
+__name(handleMappingAliasUpsert, "handleMappingAliasUpsert");
+async function handleMappingAliasList(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  const rows = await env.DB.prepare(
+    `SELECT id, source_system, listing_id, alias_text, alias_norm, product_ids, match_scope,
+            verified, hit_count, last_used_at, notes, created_at, updated_at
+     FROM product_mapping_aliases
+     ORDER BY updated_at DESC
+     LIMIT 500`
+  ).all();
+  return response({ success: true, count: (rows.results || []).length, aliases: rows.results || [] });
+}
+__name(handleMappingAliasList, "handleMappingAliasList");
+var ALLOWED_MAPPING_METHOD = /* @__PURE__ */ new Set(["EXACT_VARIATION", "EXACT_ALIAS", "LISTING_VARIATION", "RULE", "AI", "HUMAN"]);
+var ALLOWED_RESULT_STATUS = /* @__PURE__ */ new Set(["Mapped", "Partial", "Review Required", "Unmapped"]);
+async function handleMappingEventInsert(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const resultStatus = trimTo(body.result_status, 40);
+  if (!resultStatus || !ALLOWED_RESULT_STATUS.has(resultStatus)) {
+    return response({ success: false, error_code: "INVALID_RESULT_STATUS", message: "result_status must be one of: " + Array.from(ALLOWED_RESULT_STATUS).join(", ") }, 400);
+  }
+  const method = trimTo(body.mapping_method, 40);
+  if (method && !ALLOWED_MAPPING_METHOD.has(method)) {
+    return response({ success: false, error_code: "INVALID_MAPPING_METHOD", message: "mapping_method must be one of: " + Array.from(ALLOWED_MAPPING_METHOD).join(", ") }, 400);
+  }
+  let resolvedIds = null;
+  if (body.resolved_product_ids !== void 0 && body.resolved_product_ids !== null) {
+    if (!Array.isArray(body.resolved_product_ids) || body.resolved_product_ids.some((v) => !Number.isInteger(Number(v)) || Number(v) <= 0)) {
+      return response({ success: false, error_code: "INVALID_PRODUCT_IDS", message: "resolved_product_ids must be an array of positive integers." }, 400);
+    }
+    resolvedIds = JSON.stringify(body.resolved_product_ids.map((v) => Number(v)));
+  }
+  const confidence = toNum(body.confidence);
+  const ins = await env.DB.prepare(
+    `INSERT INTO product_mapping_events
+       (notion_page_id, source_order_id, source_system, raw_product_text, previous_product_ids,
+        resolved_product_ids, mapping_method, confidence, result_status, dry_run)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`
+  ).bind(
+    trimTo(body.notion_page_id, 100),
+    trimTo(body.source_order_id, 120),
+    normalizeSourceSystem(body.source_system) || null,
+    trimTo(body.raw_product_text, 1e3),
+    trimTo(body.previous_product_ids, 200),
+    resolvedIds,
+    method,
+    confidence,
+    resultStatus,
+    body.dry_run ? 1 : 0
+  ).run();
+  return response({ success: true, action: "created", event_id: Number(ins.meta?.last_row_id || 0) });
+}
+__name(handleMappingEventInsert, "handleMappingEventInsert");
+async function handleMappingEventList(request, env, url) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  const limitRaw = Number(url.searchParams.get("limit") || 100);
+  const limit = Number.isInteger(limitRaw) && limitRaw > 0 && limitRaw <= 500 ? limitRaw : 100;
+  const orderId = trimTo(url.searchParams.get("source_order_id"), 120);
+  const rows = orderId ? await env.DB.prepare(
+    `SELECT * FROM product_mapping_events WHERE source_order_id = ?1 ORDER BY id DESC LIMIT ?2`
+  ).bind(orderId, limit).all() : await env.DB.prepare(
+    `SELECT * FROM product_mapping_events ORDER BY id DESC LIMIT ?1`
+  ).bind(limit).all();
+  return response({ success: true, count: (rows.results || []).length, events: rows.results || [] });
+}
+__name(handleMappingEventList, "handleMappingEventList");
+async function handleSalesApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1") && !path.startsWith("/api/v1")) {
+    return null;
+  }
+  await ensureSalesSchema(env);
+  if (method === "OPTIONS") return response({ ok: true });
+  if (method === "GET" && (path === "/v1/health" || path === "/api/v1/health")) {
+    return response({ ok: true, service: SALES_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/sales/orders/upsert" || path === "/api/v1/sales/orders/upsert")) {
+    return handleUpsert(request, env);
+  }
+  const readMatch = path.match(/^\/(?:api\/)?v1\/sales\/orders\/([^\/]+)\/([^\/]+)$/i);
+  if (method === "GET" && readMatch) {
+    return handleReadOrder(request, env, readMatch[1], readMatch[2]);
+  }
+  const mappingMatch = path.match(/^\/(?:api\/)?v1\/mapping\/(catalog|resolve|aliases|events)$/i);
+  if (mappingMatch) {
+    const sub = mappingMatch[1].toLowerCase();
+    if (sub === "catalog" && method === "GET") return handleMappingCatalog(request, env);
+    if (sub === "resolve" && method === "POST") return handleMappingResolve(request, env);
+    if (sub === "aliases" && method === "POST") return handleMappingAliasUpsert(request, env);
+    if (sub === "aliases" && method === "GET") return handleMappingAliasList(request, env);
+    if (sub === "events" && method === "POST") return handleMappingEventInsert(request, env);
+    if (sub === "events" && method === "GET") return handleMappingEventList(request, env, url);
+  }
+  return response({ error: "Sales route not found" }, 404);
+}
+__name(handleSalesApi, "handleSalesApi");
+
+// ../workers/api/gsc.ts
+var GSC_SERVICE_NAME = "mildmate-gsc-api";
+var GSC_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+var ALLOWED_DEVICE = /* @__PURE__ */ new Set(["", "DESKTOP", "MOBILE", "TABLET"]);
+var ALLOWED_SEARCH_TYPE = /* @__PURE__ */ new Set(["web", "image", "video", "news", "discover", "google_news"]);
+function response2(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response2, "response");
+function trimTo2(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo2, "trimTo");
+function toNum2(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum2, "toNum");
+function normalizeDate(v) {
+  const s = trimTo2(v, 20);
+  if (!DATE_RE.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate, "normalizeDate");
+function normalizeQuery(v) {
+  const queryText = trimTo2(v, 1e3);
+  if (!queryText) throw new Error("query is required");
+  const queryNorm = queryText.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!queryNorm) throw new Error("query is required");
+  return { queryText, queryNorm };
+}
+__name(normalizeQuery, "normalizeQuery");
+function normalizeCountry(v) {
+  return trimTo2(v, 20).toUpperCase();
+}
+__name(normalizeCountry, "normalizeCountry");
+function normalizeDevice(v) {
+  const device = trimTo2(v, 20).toUpperCase();
+  if (!ALLOWED_DEVICE.has(device)) throw new Error("device must be one of: DESKTOP, MOBILE, TABLET");
+  return device;
+}
+__name(normalizeDevice, "normalizeDevice");
+function normalizeSearchType(v) {
+  const t = trimTo2(v, 40).toLowerCase() || "web";
+  if (!ALLOWED_SEARCH_TYPE.has(t)) throw new Error("search_type is invalid");
+  return t;
+}
+__name(normalizeSearchType, "normalizeSearchType");
+function normalizeSearchAppearance(v) {
+  return trimTo2(v, 120);
+}
+__name(normalizeSearchAppearance, "normalizeSearchAppearance");
+function normalizePage(pageRaw, propertyHintRaw) {
+  const raw = trimTo2(pageRaw, 2e3);
+  if (!raw) throw new Error("page is required");
+  let pageUrl = raw;
+  let pagePath = raw;
+  try {
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      const u = new URL(raw);
+      const path = u.pathname || "/";
+      pagePath = path;
+      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${path}`;
+    } else if (raw.startsWith("/")) {
+      pagePath = raw;
+      const propertyHint = trimTo2(propertyHintRaw, 300);
+      if (propertyHint.startsWith("http://") || propertyHint.startsWith("https://")) {
+        const p = new URL(propertyHint);
+        pageUrl = `${p.protocol}//${p.hostname.toLowerCase()}${raw}`;
+      } else if (propertyHint.startsWith("sc-domain:")) {
+        const host = propertyHint.slice("sc-domain:".length).trim().toLowerCase();
+        if (host) pageUrl = `https://${host}${raw}`;
+      } else {
+        pageUrl = raw;
+      }
+    } else {
+      pagePath = "/" + raw;
+      pageUrl = pagePath;
+    }
+  } catch {
+    if (!raw.startsWith("/")) pagePath = "/" + raw;
+    pageUrl = pagePath;
+  }
+  pagePath = pagePath.replace(/\\/g, "/");
+  pagePath = pagePath.replace(/\/{2,}/g, "/");
+  if (!pagePath.startsWith("/")) pagePath = "/" + pagePath;
+  if (pagePath.length > 1 && pagePath.endsWith("/")) pagePath = pagePath.slice(0, -1);
+  if (!pageUrl.startsWith("http://") && !pageUrl.startsWith("https://")) {
+    pageUrl = pagePath;
+  } else {
+    try {
+      const u = new URL(pageUrl);
+      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${pagePath}`;
+    } catch {
+    }
+  }
+  return { pageUrl: pageUrl.slice(0, 2e3), pagePath: pagePath.slice(0, 1e3) };
+}
+__name(normalizePage, "normalizePage");
+function extractProductSlug(pagePath) {
+  const m = pagePath.match(/^\/(?:th\/)?product\/([^\/?#]+)\/?$/i);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]).trim().toLowerCase();
+  } catch {
+    return m[1].trim().toLowerCase();
+  }
+}
+__name(extractProductSlug, "extractProductSlug");
+function sameNullable(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable, "sameNullable");
+function sameNullableNum(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum, "sameNullableNum");
+async function requireBearerAuth2(request, env) {
+  const configured = trimTo2(env[GSC_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${GSC_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth2, "requireBearerAuth");
+async function createSyncRun2(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun2, "createSyncRun");
+async function finishSyncRun2(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun2, "finishSyncRun");
+async function resolveProductIdBySlug(env, slug, cache) {
+  if (cache.has(slug)) return cache.get(slug) || null;
+  const row = await env.DB.prepare(
+    `SELECT id FROM products WHERE lower(slug) = ?1 LIMIT 1`
+  ).bind(slug).first();
+  const id = row && row.id ? Number(row.id) : null;
+  cache.set(slug, id);
+  return id;
+}
+__name(resolveProductIdBySlug, "resolveProductIdBySlug");
+async function handleRowsUpsert(request, env) {
+  const auth = await requireBearerAuth2(request, env);
+  if (!auth.ok) return response2({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response2({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response2({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response2({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo2(body.sync_source, 80) || "gsc-make-collector";
+  const scenario = trimTo2(body.scenario, 200) || "phase09-gsc-collector";
+  const propertyHint = trimTo2(body.property || body.site_url || body.site, 300);
+  const runId = await createSyncRun2(env, source, scenario, rowsRaw.length);
+  const slugCache = /* @__PURE__ */ new Map();
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate(raw.date || raw.report_date);
+        const q = normalizeQuery(raw.query || raw.query_text);
+        const page = normalizePage(raw.page || raw.page_url || raw.landing_page, propertyHint);
+        const country = normalizeCountry(raw.country);
+        const device = normalizeDevice(raw.device);
+        const searchType = normalizeSearchType(raw.search_type);
+        const searchAppearance = normalizeSearchAppearance(raw.search_appearance);
+        const clicksNum = toNum2(raw.clicks);
+        if (clicksNum === null || clicksNum < 0) throw new Error("clicks must be a non-negative number");
+        const impressionsNum = toNum2(raw.impressions);
+        if (impressionsNum === null || impressionsNum < 0) throw new Error("impressions must be a non-negative number");
+        const clicks = Math.round(clicksNum);
+        const impressions = Math.round(impressionsNum);
+        const ctrInput = toNum2(raw.ctr);
+        const ctr = ctrInput === null ? impressions > 0 ? Math.round(clicks / impressions * 1e6) / 1e6 : null : ctrInput;
+        const position = toNum2(raw.position);
+        if (position !== null && position < 0) throw new Error("position must be >= 0");
+        const slug = extractProductSlug(page.pagePath);
+        let productId = null;
+        let mappingScope = "non_product";
+        if (slug) {
+          productId = await resolveProductIdBySlug(env, slug, slugCache);
+          mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+        }
+        const existing = await env.DB.prepare(
+          `SELECT id, query_text, page_path, clicks, impressions, ctr, position, product_id, mapping_scope
+           FROM gsc_search_daily
+           WHERE report_date = ?1 AND query_norm = ?2 AND page_url = ?3
+             AND country = ?4 AND device = ?5 AND search_type = ?6 AND search_appearance = ?7
+           LIMIT 1`
+        ).bind(reportDate, q.queryNorm, page.pageUrl, country, device, searchType, searchAppearance).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO gsc_search_daily
+             (report_date, query_text, query_norm, page_url, page_path, country, device, search_type, search_appearance,
+              clicks, impressions, ctr, position, product_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)`
+          ).bind(
+            reportDate,
+            q.queryText,
+            q.queryNorm,
+            page.pageUrl,
+            page.pagePath,
+            country,
+            device,
+            searchType,
+            searchAppearance,
+            clicks,
+            impressions,
+            ctr,
+            position,
+            productId,
+            mappingScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = sameNullable(existing.query_text, q.queryText) && sameNullable(existing.page_path, page.pagePath) && Number(existing.clicks || 0) === clicks && Number(existing.impressions || 0) === impressions && sameNullableNum(existing.ctr, ctr) && sameNullableNum(existing.position, position) && sameNullable(existing.product_id, productId) && sameNullable(existing.mapping_scope, mappingScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE gsc_search_daily
+           SET query_text = ?1,
+               page_path = ?2,
+               clicks = ?3,
+               impressions = ?4,
+               ctr = ?5,
+               position = ?6,
+               product_id = ?7,
+               mapping_scope = ?8,
+               source_updated_at = ?9,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?10`
+        ).bind(
+          q.queryText,
+          page.pagePath,
+          clicks,
+          impressions,
+          ctr,
+          position,
+          productId,
+          mappingScope,
+          nowIso,
+          Number(existing.id)
+        ).run();
+        updated++;
+      } catch (e) {
+        rejected++;
+        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
+    await finishSyncRun2(env, runId, { status, created, updated, unchanged, rejected, error: null });
+    return response2({
+      success: true,
+      run_id: runId,
+      source,
+      scenario,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun2(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response2(
+      {
+        success: false,
+        error_code: "GSC_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert, "handleRowsUpsert");
+async function handleGscApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/gsc") && !path.startsWith("/api/v1/gsc")) return null;
+  if (method === "OPTIONS") return response2({ ok: true });
+  if (method === "GET" && (path === "/v1/gsc/health" || path === "/api/v1/gsc/health")) {
+    return response2({ ok: true, service: GSC_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/gsc/rows/upsert" || path === "/api/v1/gsc/rows/upsert")) {
+    return handleRowsUpsert(request, env);
+  }
+  return response2({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GSC route not found." }, 404);
+}
+__name(handleGscApi, "handleGscApi");
+
+// ../workers/api/ga4.ts
+var GA4_SERVICE_NAME = "mildmate-ga4-api";
+var GA4_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE2 = /^\d{4}-\d{2}-\d{2}$/;
+var ALLOWED_DEVICE2 = /* @__PURE__ */ new Set(["", "desktop", "mobile", "tablet"]);
+function response3(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response3, "response");
+function trimTo3(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo3, "trimTo");
+function toNum3(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum3, "toNum");
+function toNonNegativeInt(v, fieldName) {
+  const n = toNum3(v);
+  if (n === null || n < 0) throw new Error(`${fieldName} must be a non-negative number`);
+  return Math.round(n);
+}
+__name(toNonNegativeInt, "toNonNegativeInt");
+function normalizeDate2(v) {
+  const s = trimTo3(v, 20);
+  if (!DATE_RE2.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate2, "normalizeDate");
+function normalizePath(pathRaw) {
+  const raw = trimTo3(pathRaw, 2e3);
+  if (!raw) return "";
+  let path = raw;
+  try {
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      const u = new URL(raw);
+      path = u.pathname || "/";
+    } else {
+      const u = new URL(raw, "https://mildmate.local");
+      path = u.pathname || raw;
+    }
+  } catch {
+    const qIdx = raw.indexOf("?");
+    const hIdx = raw.indexOf("#");
+    const cutAt = [qIdx, hIdx].filter((i) => i >= 0).sort((a, b) => a - b)[0];
+    path = cutAt >= 0 ? raw.slice(0, cutAt) : raw;
+  }
+  path = path.replace(/\\/g, "/");
+  path = path.replace(/\/{2,}/g, "/");
+  if (!path.startsWith("/")) path = "/" + path;
+  if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+  return path.slice(0, 1e3);
+}
+__name(normalizePath, "normalizePath");
+function normalizeDevice2(v) {
+  const d = trimTo3(v, 30).toLowerCase();
+  if (!ALLOWED_DEVICE2.has(d)) throw new Error("device must be one of: desktop, mobile, tablet");
+  return d;
+}
+__name(normalizeDevice2, "normalizeDevice");
+function normalizeDim(v, max = 120) {
+  const out = trimTo3(v, max);
+  if (out.toLowerCase() === "(not set)") return "";
+  return out;
+}
+__name(normalizeDim, "normalizeDim");
+function extractProductSlug2(path) {
+  const m = String(path || "").match(/^\/(?:th\/)?product\/([^\/?#]+)\/?$/i);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]).trim().toLowerCase();
+  } catch {
+    return m[1].trim().toLowerCase();
+  }
+}
+__name(extractProductSlug2, "extractProductSlug");
+function extractEtsyListingId(path) {
+  const m = String(path || "").match(/(?:^|\/)(?:[a-z]{2}(?:-[a-z]{2})?\/)?listing\/(\d{4,20})/i);
+  return m ? m[1] : null;
+}
+__name(extractEtsyListingId, "extractEtsyListingId");
+function isEtsyListingPath(path) {
+  return extractEtsyListingId(path) !== null;
+}
+__name(isEtsyListingPath, "isEtsyListingPath");
+function parseProductIdsJson2(raw) {
+  if (raw === void 0 || raw === null || raw === "") return [];
+  try {
+    const v = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!Array.isArray(v)) return [];
+    return v.map((x) => Number(x)).filter((x) => Number.isInteger(x) && x > 0);
+  } catch {
+    return [];
+  }
+}
+__name(parseProductIdsJson2, "parseProductIdsJson");
+async function resolveEtsyListingProduct(env, listingId, cache) {
+  if (cache.has(listingId)) return cache.get(listingId);
+  let out = { productId: null, mappingScope: "etsy_listing_unmapped" };
+  try {
+    const master = await env.DB.prepare(
+      `SELECT product_id FROM etsy_listing_master WHERE listing_id = ?1 LIMIT 1`
+    ).bind(listingId).first();
+    if (master && master.product_id) {
+      out = { productId: Number(master.product_id), mappingScope: "etsy_listing_mapped" };
+    } else {
+      const norm = listingId.toLowerCase();
+      const alias = await env.DB.prepare(
+        `SELECT product_ids FROM product_mapping_aliases
+          WHERE match_scope = 'listing' AND verified = 1
+            AND (COALESCE(source_system, '') = '' OR lower(source_system) = 'etsy')
+            AND (listing_id = ?1 OR alias_norm = ?2)
+          ORDER BY id DESC LIMIT 1`
+      ).bind(listingId, norm).first();
+      if (alias) {
+        const ids = parseProductIdsJson2(alias.product_ids);
+        if (ids.length === 1) out = { productId: ids[0], mappingScope: "etsy_listing_mapped" };
+        else if (ids.length > 1) out = { productId: null, mappingScope: "etsy_alias_multi_product" };
+      }
+    }
+  } catch {
+  }
+  cache.set(listingId, out);
+  return out;
+}
+__name(resolveEtsyListingProduct, "resolveEtsyListingProduct");
+function sameNullable2(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable2, "sameNullable");
+function sameNullableNum2(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum2, "sameNullableNum");
+async function requireBearerAuth3(request, env) {
+  const configured = trimTo3(env[GA4_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${GA4_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth3, "requireBearerAuth");
+async function createSyncRun3(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun3, "createSyncRun");
+async function finishSyncRun3(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun3, "finishSyncRun");
+async function resolveProductIdBySlug2(env, slug, cache) {
+  if (cache.has(slug)) return cache.get(slug) || null;
+  const row = await env.DB.prepare(`SELECT id FROM products WHERE lower(slug) = ?1 LIMIT 1`).bind(slug).first();
+  const id = row && row.id ? Number(row.id) : null;
+  cache.set(slug, id);
+  return id;
+}
+__name(resolveProductIdBySlug2, "resolveProductIdBySlug");
+async function handleRowsUpsert2(request, env) {
+  const auth = await requireBearerAuth3(request, env);
+  if (!auth.ok) return response3({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response3({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response3({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response3({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo3(body.sync_source, 80) || "ga4-manual-collector";
+  const scenario = trimTo3(body.scenario, 200) || "phase10-ga4-collector";
+  const defaultPropertyId = trimTo3(body.property_id ?? body.propertyId, 40) || "366290587";
+  const defaultPropertyScope = (trimTo3(body.property_scope ?? body.propertyScope, 20) || "website").toLowerCase();
+  if (!/^\d{4,20}$/.test(defaultPropertyId)) {
+    return response3({ success: false, error_code: "INVALID_PROPERTY", message: "property_id must be a numeric GA4 property id." }, 400);
+  }
+  if (defaultPropertyScope !== "website" && defaultPropertyScope !== "etsy") {
+    return response3({ success: false, error_code: "INVALID_SCOPE", message: "property_scope must be 'website' or 'etsy'." }, 400);
+  }
+  const runId = await createSyncRun3(env, source, scenario, rowsRaw.length);
+  const slugCache = /* @__PURE__ */ new Map();
+  const etsyCache = /* @__PURE__ */ new Map();
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate2(raw.date || raw.report_date);
+        const landingPagePath = normalizePath(raw.landing_page_path || raw.landing_page || raw.landingPage || "");
+        const pagePath = normalizePath(raw.page_path || raw.pagePath || raw.page || "");
+        const sourceDim = normalizeDim(raw.source, 120).toLowerCase();
+        const medium = normalizeDim(raw.medium, 120).toLowerCase();
+        const campaign = normalizeDim(raw.campaign, 180);
+        const country = normalizeDim(raw.country, 120);
+        const device = normalizeDevice2(raw.device || "");
+        const sessions = toNonNegativeInt(raw.sessions, "sessions");
+        const users = toNonNegativeInt(raw.users, "users");
+        const engagedSessions = toNonNegativeInt(raw.engaged_sessions, "engaged_sessions");
+        const productViews = toNonNegativeInt(raw.product_views, "product_views");
+        const addToCart = toNonNegativeInt(raw.add_to_cart, "add_to_cart");
+        const beginCheckout = toNonNegativeInt(raw.begin_checkout, "begin_checkout");
+        const purchases = toNonNegativeInt(raw.purchases, "purchases");
+        const purchaseRevenue = toNum3(raw.purchase_revenue);
+        if (purchaseRevenue !== null && purchaseRevenue < 0) throw new Error("purchase_revenue must be >= 0");
+        const candidatePath = pagePath || landingPagePath;
+        let slug = null;
+        let productId = null;
+        let mappingScope = "non_product";
+        let listingId = null;
+        const rowPropertyId = (() => {
+          const v = trimTo3(raw.property_id ?? raw.propertyId, 40) || defaultPropertyId;
+          if (!/^\d{4,20}$/.test(v)) throw new Error("property_id must be a numeric GA4 property id");
+          return v;
+        })();
+        const rowPropertyScope = (() => {
+          const v = (trimTo3(raw.property_scope ?? raw.propertyScope, 20) || defaultPropertyScope).toLowerCase();
+          if (v !== "website" && v !== "etsy") throw new Error("property_scope must be 'website' or 'etsy'");
+          return v;
+        })();
+        if (rowPropertyScope === "etsy") {
+          listingId = extractEtsyListingId(candidatePath);
+          if (listingId) {
+            const res = await resolveEtsyListingProduct(env, listingId, etsyCache);
+            productId = res.productId;
+            mappingScope = res.mappingScope;
+          } else {
+            mappingScope = "non_listing_page";
+          }
+        } else {
+          slug = extractProductSlug2(candidatePath);
+          if (slug) {
+            productId = await resolveProductIdBySlug2(env, slug, slugCache);
+            mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+          } else if (isEtsyListingPath(candidatePath)) {
+            mappingScope = "stray_etsy_path";
+          }
+        }
+        const existing = await env.DB.prepare(
+          `SELECT id, sessions, users, engaged_sessions, product_views, add_to_cart, begin_checkout,
+                  purchases, purchase_revenue, product_id, listing_id, mapping_scope
+             FROM ga4_funnel_daily
+            WHERE report_date = ?1 AND property_id = ?9 AND landing_page_path = ?2 AND page_path = ?3
+              AND source = ?4 AND medium = ?5 AND campaign = ?6 AND country = ?7 AND device = ?8
+            LIMIT 1`
+        ).bind(reportDate, landingPagePath, pagePath, sourceDim, medium, campaign, country, device, rowPropertyId).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO ga4_funnel_daily
+             (report_date, property_id, property_scope, landing_page_path, page_path, source, medium, campaign, country, device,
+              sessions, users, engaged_sessions, product_views, add_to_cart, begin_checkout, purchases, purchase_revenue,
+              product_id, listing_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?9, ?10, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)`
+          ).bind(
+            reportDate,
+            landingPagePath,
+            pagePath,
+            sourceDim,
+            medium,
+            campaign,
+            country,
+            device,
+            rowPropertyId,
+            rowPropertyScope,
+            sessions,
+            users,
+            engagedSessions,
+            productViews,
+            addToCart,
+            beginCheckout,
+            purchases,
+            purchaseRevenue,
+            productId,
+            listingId,
+            mappingScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = Number(existing.sessions || 0) === sessions && Number(existing.users || 0) === users && Number(existing.engaged_sessions || 0) === engagedSessions && Number(existing.product_views || 0) === productViews && Number(existing.add_to_cart || 0) === addToCart && Number(existing.begin_checkout || 0) === beginCheckout && Number(existing.purchases || 0) === purchases && sameNullableNum2(existing.purchase_revenue, purchaseRevenue) && sameNullable2(existing.product_id, productId) && sameNullable2(existing.listing_id, listingId) && sameNullable2(existing.mapping_scope, mappingScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE ga4_funnel_daily
+              SET sessions = ?1,
+                  users = ?2,
+                  engaged_sessions = ?3,
+                  product_views = ?4,
+                  add_to_cart = ?5,
+                  begin_checkout = ?6,
+                  purchases = ?7,
+                  purchase_revenue = ?8,
+                  product_id = ?9,
+                  listing_id = ?10,
+                  mapping_scope = ?11,
+                  source_updated_at = ?12,
+                  updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?13`
+        ).bind(
+          sessions,
+          users,
+          engagedSessions,
+          productViews,
+          addToCart,
+          beginCheckout,
+          purchases,
+          purchaseRevenue,
+          productId,
+          listingId,
+          mappingScope,
+          nowIso,
+          Number(existing.id)
+        ).run();
+        updated++;
+      } catch (e) {
+        rejected++;
+        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
+    await finishSyncRun3(env, runId, { status, created, updated, unchanged, rejected, error: null });
+    return response3({
+      success: true,
+      run_id: runId,
+      source,
+      scenario,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun3(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response3(
+      {
+        success: false,
+        error_code: "GA4_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert2, "handleRowsUpsert");
+async function handleGa4Api(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/ga4") && !path.startsWith("/api/v1/ga4")) return null;
+  if (method === "OPTIONS") return response3({ ok: true });
+  if (method === "GET" && (path === "/v1/ga4/health" || path === "/api/v1/ga4/health")) {
+    return response3({ ok: true, service: GA4_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/ga4/rows/upsert" || path === "/api/v1/ga4/rows/upsert")) {
+    return handleRowsUpsert2(request, env);
+  }
+  return response3({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GA4 route not found." }, 404);
+}
+__name(handleGa4Api, "handleGa4Api");
+
+// ../workers/api/etsy.ts
+var ETSY_SERVICE_NAME = "mildmate-etsy-api";
+var ETSY_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE3 = /^\d{4}-\d{2}-\d{2}$/;
+var KNOWN_INACTIVE_STATES = /* @__PURE__ */ new Set(["inactive", "deactivated", "expired", "removed", "draft", "sold_out"]);
+function response4(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response4, "response");
+function trimTo4(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo4, "trimTo");
+function toNum4(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum4, "toNum");
+function toNonNegativeInt2(v, fieldName, fallback = 0) {
+  if (v === void 0 || v === null || v === "") return fallback;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`${fieldName} must be a non-negative number`);
+  return Math.round(n);
+}
+__name(toNonNegativeInt2, "toNonNegativeInt");
+function normalizeDate3(v) {
+  const s = trimTo4(v, 20);
+  if (!DATE_RE3.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate3, "normalizeDate");
+function normalizeListingId(v) {
+  const s = trimTo4(v, 120);
+  if (!s) throw new Error("listing_id is required");
+  return s;
+}
+__name(normalizeListingId, "normalizeListingId");
+function normalizeCurrency(v) {
+  return trimTo4(v || "USD", 10).toUpperCase();
+}
+__name(normalizeCurrency, "normalizeCurrency");
+function normalizeListingState(v) {
+  return trimTo4(v || "active", 60).toLowerCase();
+}
+__name(normalizeListingState, "normalizeListingState");
+function normalizeBoolean(v, fallback) {
+  if (v === void 0 || v === null || v === "") return fallback;
+  if (typeof v === "boolean") return v;
+  const s = String(v).trim().toLowerCase();
+  if (["1", "true", "yes", "y", "active"].includes(s)) return true;
+  if (["0", "false", "no", "n", "inactive"].includes(s)) return false;
+  return fallback;
+}
+__name(normalizeBoolean, "normalizeBoolean");
+function inferActive(state) {
+  if (!state) return true;
+  return !KNOWN_INACTIVE_STATES.has(state);
+}
+__name(inferActive, "inferActive");
+function parseProductIdsJson3(raw) {
+  try {
+    const arr = JSON.parse(String(raw));
+    if (!Array.isArray(arr)) return [];
+    return arr.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  } catch {
+    return [];
+  }
+}
+__name(parseProductIdsJson3, "parseProductIdsJson");
+function sameNullable3(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable3, "sameNullable");
+function sameNullableNum3(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum3, "sameNullableNum");
+async function requireBearerAuth4(request, env) {
+  const configured = trimTo4(env[ETSY_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${ETSY_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth4, "requireBearerAuth");
+async function createSyncRun4(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun4, "createSyncRun");
+async function finishSyncRun4(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun4, "finishSyncRun");
+async function productExists(env, productId, cache) {
+  if (cache.has(productId)) return !!cache.get(productId);
+  const row = await env.DB.prepare(`SELECT id FROM products WHERE id = ?1 LIMIT 1`).bind(productId).first();
+  const ok = !!row?.id;
+  cache.set(productId, ok);
+  return ok;
+}
+__name(productExists, "productExists");
+async function resolveListingAliasProduct(env, listingId) {
+  const norm = trimTo4(listingId, 120).toLowerCase();
+  const row = await env.DB.prepare(
+    `SELECT product_ids
+     FROM product_mapping_aliases
+     WHERE match_scope = 'listing'
+       AND verified = 1
+       AND (COALESCE(source_system, '') = '' OR lower(source_system) = 'etsy')
+       AND (listing_id = ?1 OR alias_norm = ?2)
+     ORDER BY (CASE WHEN lower(COALESCE(source_system, '')) = 'etsy' THEN 1 ELSE 0 END) DESC,
+              verified DESC,
+              id ASC
+     LIMIT 1`
+  ).bind(listingId, norm).first();
+  if (!row) return { productId: null, mappingScope: "unmapped" };
+  const ids = parseProductIdsJson3(row.product_ids);
+  if (ids.length === 1) return { productId: ids[0], mappingScope: "alias_listing" };
+  if (ids.length > 1) return { productId: null, mappingScope: "alias_multi_product" };
+  return { productId: null, mappingScope: "unmapped" };
+}
+__name(resolveListingAliasProduct, "resolveListingAliasProduct");
+async function handleRowsUpsert3(request, env) {
+  const auth = await requireBearerAuth4(request, env);
+  if (!auth.ok) return response4({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response4({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response4({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response4({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo4(body.sync_source, 80) || "etsy-structured-import";
+  const scenario = trimTo4(body.scenario, 200) || "phase11-etsy-collector";
+  const runId = await createSyncRun4(env, source, scenario, rowsRaw.length);
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const productExistenceCache = /* @__PURE__ */ new Map();
+  const masterCache = /* @__PURE__ */ new Map();
+  const aliasCache = /* @__PURE__ */ new Map();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate3(raw.date || raw.report_date);
+        const listingId = normalizeListingId(raw.listing_id || raw.etsy_listing_id || raw.listing);
+        const listingState = normalizeListingState(raw.listing_state || raw.state || raw.status || "active");
+        const isActive = normalizeBoolean(raw.is_active, inferActive(listingState)) ? 1 : 0;
+        const currency = normalizeCurrency(raw.currency || raw.order_currency || "USD");
+        const visits = toNonNegativeInt2(raw.visits ?? raw.visit_count, "visits", 0);
+        const views = toNonNegativeInt2(raw.views ?? raw.view_count, "views", 0);
+        const favorites = toNonNegativeInt2(raw.favorites ?? raw.favorers ?? raw.favorite_count, "favorites", 0);
+        const orders = toNonNegativeInt2(raw.orders ?? raw.order_count, "orders", 0);
+        const transactions = toNonNegativeInt2(raw.transactions ?? raw.transaction_count, "transactions", 0);
+        const unitsSold = toNonNegativeInt2(raw.units_sold ?? raw.quantity_sold ?? raw.items_sold, "units_sold", 0);
+        const revenue = toNum4(raw.revenue ?? raw.revenue_amount ?? raw.gross_revenue);
+        if (revenue !== null && revenue < 0) throw new Error("revenue must be >= 0");
+        const revenueThbInput = toNum4(raw.revenue_thb);
+        if (revenueThbInput !== null && revenueThbInput < 0) throw new Error("revenue_thb must be >= 0");
+        const fxToThb = toNum4(raw.fx_rate_to_thb ?? raw.exchange_rate_to_thb ?? raw.thb_rate);
+        if (fxToThb !== null && fxToThb <= 0) throw new Error("fx_rate_to_thb must be > 0");
+        const revenueThb = revenueThbInput !== null ? revenueThbInput : revenue !== null && fxToThb !== null ? Math.round(revenue * fxToThb * 100) / 100 : null;
+        const explicitProductIdRaw = raw.product_id ?? raw.Product_ID;
+        const explicitProductId = explicitProductIdRaw === void 0 || explicitProductIdRaw === null || explicitProductIdRaw === "" ? null : Number(explicitProductIdRaw);
+        if (explicitProductId !== null && (!Number.isInteger(explicitProductId) || explicitProductId <= 0)) {
+          throw new Error("product_id must be a positive integer when provided");
+        }
+        if (explicitProductId !== null && !await productExists(env, explicitProductId, productExistenceCache)) {
+          throw new Error(`product_id ${explicitProductId} does not exist in products`);
+        }
+        if (!masterCache.has(listingId)) {
+          const masterRow = await env.DB.prepare(
+            `SELECT listing_id, shop_id, shop_name, listing_title, listing_state, is_active, listing_url,
+                    currency, price, quantity_available, views_total, favorites_total, product_id, mapping_scope
+             FROM etsy_listing_master
+             WHERE listing_id = ?1
+             LIMIT 1`
+          ).bind(listingId).first();
+          masterCache.set(listingId, masterRow || null);
+        }
+        const existingMaster = masterCache.get(listingId) || null;
+        if (!aliasCache.has(listingId)) {
+          aliasCache.set(listingId, await resolveListingAliasProduct(env, listingId));
+        }
+        const aliasResolved = aliasCache.get(listingId);
+        let resolvedProductId = null;
+        let resolvedScope = "unmapped";
+        if (explicitProductId !== null) {
+          resolvedProductId = explicitProductId;
+          resolvedScope = "explicit_product_id";
+        } else if (existingMaster?.product_id) {
+          resolvedProductId = Number(existingMaster.product_id);
+          resolvedScope = trimTo4(existingMaster.mapping_scope, 80) || "listing_master";
+        } else if (aliasResolved.productId) {
+          resolvedProductId = aliasResolved.productId;
+          resolvedScope = aliasResolved.mappingScope;
+        } else if (aliasResolved.mappingScope === "alias_multi_product") {
+          resolvedScope = aliasResolved.mappingScope;
+        }
+        const listingTitle = trimTo4(raw.listing_title || raw.title || existingMaster?.listing_title, 500);
+        const listingUrl = trimTo4(raw.listing_url || raw.url || existingMaster?.listing_url, 1e3);
+        const shopId = trimTo4(raw.shop_id || existingMaster?.shop_id, 120);
+        const shopName = trimTo4(raw.shop_name || existingMaster?.shop_name, 200);
+        const price = toNum4(raw.price ?? existingMaster?.price);
+        if (price !== null && price < 0) throw new Error("price must be >= 0");
+        const quantityAvailable = toNum4(raw.quantity_available ?? raw.stock_quantity ?? existingMaster?.quantity_available);
+        if (quantityAvailable !== null && quantityAvailable < 0) throw new Error("quantity_available must be >= 0");
+        const viewsTotal = toNum4(raw.views_total ?? raw.total_views ?? existingMaster?.views_total);
+        if (viewsTotal !== null && viewsTotal < 0) throw new Error("views_total must be >= 0");
+        const favoritesTotal = toNum4(raw.favorites_total ?? raw.total_favorites ?? existingMaster?.favorites_total);
+        if (favoritesTotal !== null && favoritesTotal < 0) throw new Error("favorites_total must be >= 0");
+        const effectiveProductId = resolvedProductId !== null ? resolvedProductId : existingMaster?.product_id ? Number(existingMaster.product_id) : null;
+        const effectiveMappingScope = effectiveProductId !== null ? resolvedScope : trimTo4(existingMaster?.mapping_scope, 80) || resolvedScope || "unmapped";
+        await env.DB.prepare(
+          `INSERT INTO etsy_listing_master
+             (listing_id, shop_id, shop_name, listing_title, listing_state, is_active, listing_url, currency,
+              price, quantity_available, views_total, favorites_total, product_id, mapping_scope,
+              source_updated_at, first_seen_at, last_seen_at)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?15, ?15)
+           ON CONFLICT(listing_id) DO UPDATE SET
+             shop_id = excluded.shop_id,
+             shop_name = excluded.shop_name,
+             listing_title = excluded.listing_title,
+             listing_state = excluded.listing_state,
+             is_active = excluded.is_active,
+             listing_url = excluded.listing_url,
+             currency = excluded.currency,
+             price = excluded.price,
+             quantity_available = excluded.quantity_available,
+             views_total = excluded.views_total,
+             favorites_total = excluded.favorites_total,
+             product_id = excluded.product_id,
+             mapping_scope = excluded.mapping_scope,
+             source_updated_at = excluded.source_updated_at,
+             last_seen_at = excluded.last_seen_at,
+             updated_at = CURRENT_TIMESTAMP`
+        ).bind(
+          listingId,
+          shopId,
+          shopName,
+          listingTitle,
+          listingState,
+          isActive,
+          listingUrl,
+          currency,
+          price,
+          quantityAvailable === null ? null : Math.round(quantityAvailable),
+          viewsTotal === null ? null : Math.round(viewsTotal),
+          favoritesTotal === null ? null : Math.round(favoritesTotal),
+          effectiveProductId,
+          effectiveMappingScope,
+          nowIso
+        ).run();
+        masterCache.set(listingId, {
+          listing_id: listingId,
+          shop_id: shopId,
+          shop_name: shopName,
+          listing_title: listingTitle,
+          listing_state: listingState,
+          is_active: isActive,
+          listing_url: listingUrl,
+          currency,
+          price,
+          quantity_available: quantityAvailable === null ? null : Math.round(quantityAvailable),
+          views_total: viewsTotal === null ? null : Math.round(viewsTotal),
+          favorites_total: favoritesTotal === null ? null : Math.round(favoritesTotal),
+          product_id: effectiveProductId,
+          mapping_scope: effectiveMappingScope
+        });
+        const existing = await env.DB.prepare(
+          `SELECT id, listing_title, listing_state, is_active, visits, views, favorites, orders, transactions,
+                  units_sold, revenue, revenue_thb, product_id, mapping_scope
+           FROM etsy_listing_daily
+           WHERE report_date = ?1 AND listing_id = ?2 AND currency = ?3
+           LIMIT 1`
+        ).bind(reportDate, listingId, currency).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO etsy_listing_daily
+               (report_date, listing_id, listing_title, listing_state, is_active, currency,
+                visits, views, favorites, orders, transactions, units_sold, revenue, revenue_thb,
+                product_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)`
+          ).bind(
+            reportDate,
+            listingId,
+            listingTitle,
+            listingState,
+            isActive,
+            currency,
+            visits,
+            views,
+            favorites,
+            orders,
+            transactions,
+            unitsSold,
+            revenue,
+            revenueThb,
+            effectiveProductId,
+            effectiveMappingScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = sameNullable3(existing.listing_title, listingTitle) && sameNullable3(existing.listing_state, listingState) && Number(existing.is_active || 0) === isActive && Number(existing.visits || 0) === visits && Number(existing.views || 0) === views && Number(existing.favorites || 0) === favorites && Number(existing.orders || 0) === orders && Number(existing.transactions || 0) === transactions && Number(existing.units_sold || 0) === unitsSold && sameNullableNum3(existing.revenue, revenue) && sameNullableNum3(existing.revenue_thb, revenueThb) && sameNullable3(existing.product_id, effectiveProductId) && sameNullable3(existing.mapping_scope, effectiveMappingScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE etsy_listing_daily
+           SET listing_title = ?1,
+               listing_state = ?2,
+               is_active = ?3,
+               visits = ?4,
+               views = ?5,
+               favorites = ?6,
+               orders = ?7,
+               transactions = ?8,
+               units_sold = ?9,
+               revenue = ?10,
+               revenue_thb = ?11,
+               product_id = ?12,
+               mapping_scope = ?13,
+               source_updated_at = ?14,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?15`
+        ).bind(
+          listingTitle,
+          listingState,
+          isActive,
+          visits,
+          views,
+          favorites,
+          orders,
+          transactions,
+          unitsSold,
+          revenue,
+          revenueThb,
+          effectiveProductId,
+          effectiveMappingScope,
+          nowIso,
+          Number(existing.id)
+        ).run();
+        updated++;
+      } catch (e) {
+        rejected++;
+        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
+    await finishSyncRun4(env, runId, { status, created, updated, unchanged, rejected, error: null });
+    return response4({
+      success: true,
+      run_id: runId,
+      source,
+      scenario,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun4(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response4(
+      {
+        success: false,
+        error_code: "ETSY_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert3, "handleRowsUpsert");
+async function handleEtsyApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/etsy") && !path.startsWith("/api/v1/etsy")) return null;
+  if (method === "OPTIONS") return response4({ ok: true });
+  if (method === "GET" && (path === "/v1/etsy/health" || path === "/api/v1/etsy/health")) {
+    return response4({ ok: true, service: ETSY_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/etsy/rows/upsert" || path === "/api/v1/etsy/rows/upsert")) {
+    return handleRowsUpsert3(request, env);
+  }
+  return response4({ success: false, error_code: "ROUTE_NOT_FOUND", message: "Etsy route not found." }, 404);
+}
+__name(handleEtsyApi, "handleEtsyApi");
+
+// ../workers/api/google-ads.ts
+var GOOGLE_ADS_SERVICE_NAME = "mildmate-google-ads-api";
+var GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE4 = /^\d{4}-\d{2}-\d{2}$/;
+var GOOGLE_ADS_SOURCE_SYSTEMS = /* @__PURE__ */ new Set(["", "google-ads", "google_ads", "googleads"]);
+function response5(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response5, "response");
+function trimTo5(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo5, "trimTo");
+function toNum5(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum5, "toNum");
+function toNonNegativeInt3(v, fieldName, fallback = 0) {
+  if (v === void 0 || v === null || v === "") return fallback;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`${fieldName} must be a non-negative number`);
+  return Math.round(n);
+}
+__name(toNonNegativeInt3, "toNonNegativeInt");
+function toNonNegativeReal(v, fieldName, fallback = 0) {
+  if (v === void 0 || v === null || v === "") return fallback;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`${fieldName} must be a non-negative number`);
+  return Math.round(n * 1e6) / 1e6;
+}
+__name(toNonNegativeReal, "toNonNegativeReal");
+function normalizeDate4(v) {
+  const s = trimTo5(v, 20);
+  if (!DATE_RE4.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate4, "normalizeDate");
+function normalizeCurrency2(v) {
+  return trimTo5(v || "THB", 10).toUpperCase();
+}
+__name(normalizeCurrency2, "normalizeCurrency");
+function normalizeText(v, max = 255) {
+  const out = trimTo5(v, max);
+  return out === "(not set)" ? "" : out;
+}
+__name(normalizeText, "normalizeText");
+function normalizeAliasCandidates(v) {
+  const raw = normalizeText(v, 500).toLowerCase().trim();
+  if (!raw) return [];
+  const collapsed = raw.replace(/\s+/g, " ").trim();
+  const compact = raw.replace(/[^a-z0-9]+/g, "");
+  const out = [];
+  if (collapsed) out.push(collapsed);
+  if (compact && compact !== collapsed) out.push(compact);
+  return Array.from(new Set(out));
+}
+__name(normalizeAliasCandidates, "normalizeAliasCandidates");
+function parseProductIdsJson4(raw) {
+  try {
+    const arr = JSON.parse(String(raw));
+    if (!Array.isArray(arr)) return [];
+    return arr.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  } catch {
+    return [];
+  }
+}
+__name(parseProductIdsJson4, "parseProductIdsJson");
+function sameNullable4(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable4, "sameNullable");
+function sameNullableNum4(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum4, "sameNullableNum");
+async function requireBearerAuth5(request, env) {
+  const configured = trimTo5(env[GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth5, "requireBearerAuth");
+async function createSyncRun5(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun5, "createSyncRun");
+async function finishSyncRun5(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun5, "finishSyncRun");
+async function productExists2(env, productId, cache) {
+  if (cache.has(productId)) return !!cache.get(productId);
+  const row = await env.DB.prepare(`SELECT id FROM products WHERE id = ?1 LIMIT 1`).bind(productId).first();
+  const ok = !!row?.id;
+  cache.set(productId, ok);
+  return ok;
+}
+__name(productExists2, "productExists");
+async function resolveAliasProduct(env, value) {
+  const idRaw = trimTo5(value, 120);
+  if (!idRaw) return { productId: null, mappingScope: "unmapped" };
+  const aliases = normalizeAliasCandidates(idRaw);
+  const aliasA = aliases[0] || "";
+  const aliasB = aliases[1] || aliasA;
+  const row = await env.DB.prepare(
+    `SELECT source_system, listing_id, match_scope, product_ids
+     FROM product_mapping_aliases
+     WHERE verified = 1
+       AND (listing_id = ?1 OR alias_norm = ?2 OR alias_norm = ?3)
+     ORDER BY
+       (CASE WHEN lower(COALESCE(source_system, '')) IN ('google-ads', 'google_ads', 'googleads') THEN 1 ELSE 0 END) DESC,
+       (CASE WHEN lower(COALESCE(match_scope, '')) = 'listing' THEN 1 ELSE 0 END) DESC,
+       id ASC
+     LIMIT 1`
+  ).bind(idRaw, aliasA, aliasB).first();
+  if (!row) return { productId: null, mappingScope: "unmapped" };
+  const sourceSystem = String(row.source_system || "").toLowerCase().trim();
+  if (!GOOGLE_ADS_SOURCE_SYSTEMS.has(sourceSystem)) return { productId: null, mappingScope: "unmapped" };
+  const ids = parseProductIdsJson4(row.product_ids);
+  if (ids.length === 1) return { productId: ids[0], mappingScope: "alias" };
+  if (ids.length > 1) return { productId: null, mappingScope: "alias_multi_product" };
+  return { productId: null, mappingScope: "unmapped" };
+}
+__name(resolveAliasProduct, "resolveAliasProduct");
+async function handleRowsUpsert4(request, env) {
+  const auth = await requireBearerAuth5(request, env);
+  if (!auth.ok) return response5({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response5({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response5({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response5({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo5(body.sync_source, 80) || "google-ads-structured-import";
+  const scenario = trimTo5(body.scenario, 200) || "phase12-google-ads-collector";
+  const runId = await createSyncRun5(env, source, scenario, rowsRaw.length);
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const productExistenceCache = /* @__PURE__ */ new Map();
+  const aliasCache = /* @__PURE__ */ new Map();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate4(raw.date || raw.report_date);
+        const customerId = normalizeText(raw.customer_id || raw.account_id || raw.customer || "", 120);
+        if (!customerId) throw new Error("customer_id is required");
+        const campaignId = normalizeText(raw.campaign_id || raw.campaign || "", 120);
+        if (!campaignId) throw new Error("campaign_id is required");
+        const adGroupId = normalizeText(raw.ad_group_id || raw.adgroup_id || raw.ad_group || "", 120);
+        const campaignName = normalizeText(raw.campaign_name || raw.campaign_title || "", 300);
+        const adGroupName = normalizeText(raw.ad_group_name || raw.adgroup_name || "", 300);
+        const customerName = normalizeText(raw.customer_name || raw.account_name || "", 300);
+        const channelType = normalizeText(raw.channel_type || raw.advertising_channel_type || "", 80).toLowerCase();
+        const network = normalizeText(raw.network || raw.ad_network_type || "", 80).toLowerCase();
+        const device = normalizeText(raw.device || "", 80).toLowerCase();
+        const currency = normalizeCurrency2(raw.currency || raw.currency_code || "THB");
+        const impressions = toNonNegativeInt3(raw.impressions, "impressions", 0);
+        const clicks = toNonNegativeInt3(raw.clicks, "clicks", 0);
+        const costMicros = toNum5(raw.cost_micros);
+        if (costMicros !== null && costMicros < 0) throw new Error("cost_micros must be >= 0");
+        const costRaw = raw.cost ?? raw.spend;
+        let cost = toNonNegativeReal(costRaw, "cost", 0);
+        if ((costRaw === void 0 || costRaw === null || costRaw === "") && costMicros !== null) {
+          cost = Math.round(costMicros / 1e6 * 1e6) / 1e6;
+        }
+        const conversions = toNonNegativeReal(raw.conversions, "conversions", 0);
+        const conversionValue = toNonNegativeReal(raw.conversion_value ?? raw.conversions_value, "conversion_value", 0);
+        const allConversions = toNum5(raw.all_conversions);
+        if (allConversions !== null && allConversions < 0) throw new Error("all_conversions must be >= 0");
+        const allConversionsValue = toNum5(raw.all_conversions_value);
+        if (allConversionsValue !== null && allConversionsValue < 0) throw new Error("all_conversions_value must be >= 0");
+        const explicitProductIdRaw = raw.product_id ?? raw.Product_ID;
+        const explicitProductId = explicitProductIdRaw === void 0 || explicitProductIdRaw === null || explicitProductIdRaw === "" ? null : Number(explicitProductIdRaw);
+        if (explicitProductId !== null && (!Number.isInteger(explicitProductId) || explicitProductId <= 0)) {
+          throw new Error("product_id must be a positive integer when provided");
+        }
+        if (explicitProductId !== null && !await productExists2(env, explicitProductId, productExistenceCache)) {
+          throw new Error(`product_id ${explicitProductId} does not exist in products`);
+        }
+        let resolvedProductId = null;
+        let resolvedScope = "unmapped";
+        if (explicitProductId !== null) {
+          resolvedProductId = explicitProductId;
+          resolvedScope = "explicit_product_id";
+        } else {
+          const lookupKeys = [
+            { key: `campaign_id:${campaignId}`, value: campaignId, scope: "alias_campaign_id" },
+            { key: `ad_group_id:${adGroupId}`, value: adGroupId, scope: "alias_ad_group_id" },
+            { key: `campaign_name:${campaignName}`, value: campaignName, scope: "alias_campaign_name" },
+            { key: `ad_group_name:${adGroupName}`, value: adGroupName, scope: "alias_ad_group_name" }
+          ];
+          for (const lk of lookupKeys) {
+            if (!lk.value) continue;
+            if (!aliasCache.has(lk.key)) aliasCache.set(lk.key, await resolveAliasProduct(env, lk.value));
+            const hit = aliasCache.get(lk.key);
+            if (hit.productId) {
+              resolvedProductId = hit.productId;
+              resolvedScope = lk.scope;
+              break;
+            }
+            if (hit.mappingScope === "alias_multi_product") {
+              resolvedScope = "alias_multi_product";
+            }
+          }
+        }
+        const existing = await env.DB.prepare(
+          `SELECT id, customer_name, campaign_name, ad_group_name, channel_type, network, device, currency,
+                  impressions, clicks, cost, conversions, conversion_value, all_conversions, all_conversions_value,
+                  product_id, mapping_scope
+           FROM google_ads_campaign_daily
+           WHERE report_date = ?1
+             AND customer_id = ?2
+             AND campaign_id = ?3
+             AND ad_group_id = ?4
+             AND network = ?5
+             AND device = ?6
+             AND currency = ?7
+           LIMIT 1`
+        ).bind(reportDate, customerId, campaignId, adGroupId, network, device, currency).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO google_ads_campaign_daily
+             (report_date, customer_id, customer_name, campaign_id, campaign_name, ad_group_id, ad_group_name,
+              channel_type, network, device, currency, impressions, clicks, cost, conversions, conversion_value,
+              all_conversions, all_conversions_value, product_id, mapping_scope, source_updated_at)
+             VALUES
+             (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)`
+          ).bind(
+            reportDate,
+            customerId,
+            customerName,
+            campaignId,
+            campaignName,
+            adGroupId,
+            adGroupName,
+            channelType,
+            network,
+            device,
+            currency,
+            impressions,
+            clicks,
+            cost,
+            conversions,
+            conversionValue,
+            allConversions,
+            allConversionsValue,
+            resolvedProductId,
+            resolvedScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = sameNullable4(existing.customer_name, customerName) && sameNullable4(existing.campaign_name, campaignName) && sameNullable4(existing.ad_group_name, adGroupName) && sameNullable4(existing.channel_type, channelType) && sameNullable4(existing.network, network) && sameNullable4(existing.device, device) && sameNullable4(existing.currency, currency) && Number(existing.impressions || 0) === impressions && Number(existing.clicks || 0) === clicks && sameNullableNum4(existing.cost, cost) && sameNullableNum4(existing.conversions, conversions) && sameNullableNum4(existing.conversion_value, conversionValue) && sameNullableNum4(existing.all_conversions, allConversions) && sameNullableNum4(existing.all_conversions_value, allConversionsValue) && sameNullable4(existing.product_id, resolvedProductId) && sameNullable4(existing.mapping_scope, resolvedScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE google_ads_campaign_daily
+           SET customer_name = ?1,
+               campaign_name = ?2,
+               ad_group_name = ?3,
+               channel_type = ?4,
+               impressions = ?5,
+               clicks = ?6,
+               cost = ?7,
+               conversions = ?8,
+               conversion_value = ?9,
+               all_conversions = ?10,
+               all_conversions_value = ?11,
+               product_id = ?12,
+               mapping_scope = ?13,
+               source_updated_at = ?14,
+               updated_at = ?15
+           WHERE id = ?16`
+        ).bind(
+          customerName,
+          campaignName,
+          adGroupName,
+          channelType,
+          impressions,
+          clicks,
+          cost,
+          conversions,
+          conversionValue,
+          allConversions,
+          allConversionsValue,
+          resolvedProductId,
+          resolvedScope,
+          nowIso,
+          nowIso,
+          existing.id
+        ).run();
+        updated++;
+      } catch (rowErr) {
+        rejected++;
+        rejects.push({
+          index: i,
+          reason: String(rowErr?.message || rowErr).slice(0, 220)
+        });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated > 0 ? "partial" : "failed";
+    await finishSyncRun5(env, runId, { status, created, updated, unchanged, rejected });
+    return response5({
+      success: status !== "failed",
+      run_id: runId,
+      status,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun5(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response5(
+      {
+        success: false,
+        error_code: "GOOGLE_ADS_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert4, "handleRowsUpsert");
+async function handleGoogleAdsApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/google-ads") && !path.startsWith("/api/v1/google-ads")) return null;
+  if (method === "OPTIONS") return response5({ ok: true });
+  if (method === "GET" && (path === "/v1/google-ads/health" || path === "/api/v1/google-ads/health")) {
+    return response5({ ok: true, service: GOOGLE_ADS_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/google-ads/rows/upsert" || path === "/api/v1/google-ads/rows/upsert")) {
+    return handleRowsUpsert4(request, env);
+  }
+  return response5({ success: false, error_code: "ROUTE_NOT_FOUND", message: "Google Ads route not found." }, 404);
+}
+__name(handleGoogleAdsApi, "handleGoogleAdsApi");
+
+// api/v1/[[path]].ts
+var onRequest = /* @__PURE__ */ __name(async (context) => {
+  const path = new URL(context.request.url).pathname.replace(/\/+$/, "");
+  if (path.startsWith("/api/v1/gsc") || path.startsWith("/v1/gsc")) {
+    const gscRes = await handleGscApi(context.request, context.env);
+    if (gscRes) return gscRes;
+  }
+  if (path.startsWith("/api/v1/ga4") || path.startsWith("/v1/ga4")) {
+    const ga4Res = await handleGa4Api(context.request, context.env);
+    if (ga4Res) return ga4Res;
+  }
+  if (path.startsWith("/api/v1/etsy") || path.startsWith("/v1/etsy")) {
+    const etsyRes = await handleEtsyApi(context.request, context.env);
+    if (etsyRes) return etsyRes;
+  }
+  if (path.startsWith("/api/v1/google-ads") || path.startsWith("/v1/google-ads")) {
+    const googleAdsRes = await handleGoogleAdsApi(context.request, context.env);
+    if (googleAdsRes) return googleAdsRes;
+  }
+  const salesRes = await handleSalesApi(context.request, context.env);
+  if (salesRes) return salesRes;
+  return new Response(JSON.stringify({ error: "Not Found" }), {
+    status: 404,
+    headers: { "Content-Type": "application/json" }
+  });
+}, "onRequest");
+
+// ../workers/api/clerk-verify.ts
+var DEV_CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
+var DEV_JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
+var JWKS_CACHE_MS = 3600 * 1e3;
+function getIssuer(env) {
+  return String(env?.CLERK_ISSUER || DEV_CLERK_ISSUER).trim();
+}
+__name(getIssuer, "getIssuer");
+function getJwksUrl(env) {
+  return String(env?.CLERK_JWKS_URL || DEV_JWKS_URL).trim();
+}
+__name(getJwksUrl, "getJwksUrl");
+function isProdClerkConfigured(env) {
+  const issuer = String(env?.CLERK_ISSUER || "").trim();
+  return issuer.length > 0 && issuer !== DEV_CLERK_ISSUER;
+}
+__name(isProdClerkConfigured, "isProdClerkConfigured");
+function isProductionHostname(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  return h === "www.mildmate.com" || h === "mildmate.com";
+}
+__name(isProductionHostname, "isProductionHostname");
+var jwksCache = /* @__PURE__ */ new Map();
+var RATE_WINDOW_MS = 60 * 1e3;
+var MAX_AUTH_REQUESTS = 30;
+async function checkAuthRateLimit(env, ip) {
+  try {
+    const row = await env.DB.prepare(
+      `SELECT COUNT(*) as cnt FROM rate_limits
+       WHERE ip_address = ?1 AND endpoint = 'auth'
+       AND created_at > datetime('now', '-1 minute')`
+    ).bind(ip).first();
+    return (row?.cnt || 0) >= MAX_AUTH_REQUESTS;
+  } catch {
+    return false;
+  }
+}
+__name(checkAuthRateLimit, "checkAuthRateLimit");
+async function recordRateLimit(env, ip) {
+  try {
+    await env.DB.prepare(
+      "INSERT INTO rate_limits (ip_address, endpoint) VALUES (?1, 'auth')"
+    ).bind(ip).run();
+  } catch {
+  }
+}
+__name(recordRateLimit, "recordRateLimit");
+async function getJwks(jwksUrl) {
+  const cached = jwksCache.get(jwksUrl);
+  if (cached && Date.now() - cached.fetchedAt < JWKS_CACHE_MS) {
+    return cached.keys;
+  }
+  const resp = await fetch(jwksUrl);
+  if (!resp.ok) throw new Error("Failed to fetch JWKS: " + resp.status);
+  const data = await resp.json();
+  const entry = { keys: data.keys || [], fetchedAt: Date.now() };
+  jwksCache.set(jwksUrl, entry);
+  return entry.keys;
+}
+__name(getJwks, "getJwks");
+function base64urlToBytes(str) {
+  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+__name(base64urlToBytes, "base64urlToBytes");
+async function importRsaKey(jwk) {
+  return crypto.subtle.importKey(
+    "jwk",
+    {
+      kty: jwk.kty,
+      n: jwk.n,
+      e: jwk.e,
+      alg: "RS256",
+      ext: false
+    },
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+}
+__name(importRsaKey, "importRsaKey");
+async function verifyClerkJwt(request, env) {
+  const origin = request.headers.get("Origin") || "";
+  const host = request.headers.get("Host") || "";
+  const allowedOrigins = [
+    "https://mildmate-new.pages.dev",
+    "https://www.mildmate.com",
+    "https://mildmate.com"
+  ];
+  if (origin && !allowedOrigins.includes(origin) && host !== "localhost" && !host.startsWith("127.0.0.1")) {
+    return { valid: false, error: "Invalid origin", status: 403 };
+  }
+  try {
+    const requestHost = new URL(request.url).hostname.toLowerCase();
+    if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
+      return { valid: false, error: "Auth service unavailable", status: 503 };
+    }
+  } catch {
+  }
+  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  if (await checkAuthRateLimit(env, ip)) {
+    return { valid: false, error: "Too many requests", status: 429 };
+  }
+  await recordRateLimit(env, ip);
+  const authHeader = request.headers.get("Authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+  if (!token) {
+    return { valid: false, error: "Missing token", status: 401 };
+  }
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return { valid: false, error: "Invalid token format", status: 401 };
+  }
+  let header;
+  try {
+    header = JSON.parse(new TextDecoder().decode(base64urlToBytes(parts[0])));
+  } catch {
+    return { valid: false, error: "Invalid token header", status: 401 };
+  }
+  if (header.alg !== "RS256") {
+    return { valid: false, error: "Unsupported algorithm", status: 401 };
+  }
+  let keys;
+  try {
+    keys = await getJwks(getJwksUrl(env));
+  } catch (e) {
+    console.error("Clerk JWKS fetch failed:", e.message);
+    return { valid: false, error: "Auth service unavailable", status: 503 };
+  }
+  const jwk = keys.find((k) => k.kid === header.kid && k.alg === "RS256");
+  if (!jwk) {
+    return { valid: false, error: "Unknown signing key", status: 401 };
+  }
+  const signedData = new TextEncoder().encode(parts[0] + "." + parts[1]);
+  const signature = base64urlToBytes(parts[2]);
+  let cryptoKey;
+  try {
+    cryptoKey = await importRsaKey(jwk);
+  } catch {
+    return { valid: false, error: "Invalid key", status: 401 };
+  }
+  let validSig = false;
+  try {
+    validSig = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      cryptoKey,
+      signature,
+      signedData
+    );
+  } catch {
+    return { valid: false, error: "Signature verification failed", status: 401 };
+  }
+  if (!validSig) {
+    return { valid: false, error: "Invalid signature", status: 401 };
+  }
+  let payload;
+  try {
+    const rawPayload = JSON.parse(
+      new TextDecoder().decode(base64urlToBytes(parts[1]))
+    );
+    payload = {
+      sub: rawPayload.sub || "",
+      email: rawPayload.email || "",
+      name: rawPayload.name || "",
+      raw: rawPayload,
+      exp: rawPayload.exp || 0,
+      iat: rawPayload.iat || 0,
+      iss: rawPayload.iss || "",
+      azp: rawPayload.azp || "",
+      sid: rawPayload.sid || ""
+    };
+  } catch {
+    return { valid: false, error: "Invalid token payload", status: 401 };
+  }
+  const now = Math.floor(Date.now() / 1e3);
+  if (payload.exp && payload.exp < now) {
+    return { valid: false, error: "Token expired", status: 401 };
+  }
+  const expectedIssuer = getIssuer(env);
+  if (payload.iss && payload.iss !== expectedIssuer) {
+    if (isProdClerkConfigured(env)) {
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
+    if (!payload.iss.startsWith("https://clerk.") && !payload.iss.includes(".clerk.accounts.dev")) {
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
+  }
+  return { valid: true, payload };
+}
+__name(verifyClerkJwt, "verifyClerkJwt");
+
+// ../workers/api/clerk-handshake.ts
+var HANDSHAKE_JWKS_CACHE_MS = 3600 * 1e3;
+var MAX_DIRECTIVES = 10;
+var MAX_DIRECTIVE_LENGTH = 8192;
+var JWT_CATEGORY_SESSION_TOKEN = "cl_B7d4PD111AAA";
+var JWT_CATEGORY_IGNORE = "cl_I7d4PD111III";
+var ALLOWED_COOKIE_NAME = /^(__session|__client_uat|__clerk_handshake)(_[A-Za-z0-9_-]{1,64})?$/;
+var HANDSHAKE_COOKIE_NAME = /^__clerk_handshake(?:_[A-Za-z0-9_-]{1,64})?$/;
+var SESSION_QUERY_NAME = /^__session(?:_[A-Za-z0-9_-]{1,64})?$/;
+var DBJWT_QUERY_NAME = /^__clerk_db_jwt(?:_[A-Za-z0-9_-]{1,64})?$/;
+var ALLOWED_COOKIE_VALUE = /^[A-Za-z0-9._~%+/=-]*$/;
+var ALLOWED_SAMESITE = /* @__PURE__ */ new Set(["lax", "strict", "none"]);
+var handshakeJwksCache = /* @__PURE__ */ new Map();
+function b64urlToBytes(str) {
+  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+__name(b64urlToBytes, "b64urlToBytes");
+function parseCookieHeader(cookieHeader) {
+  if (!cookieHeader) return [];
+  return cookieHeader.split(";").map((part) => part.trim()).filter(Boolean).map((part) => {
+    const idx = part.indexOf("=");
+    if (idx <= 0) return { name: "", value: "" };
+    return {
+      name: part.slice(0, idx).trim(),
+      value: part.slice(idx + 1).trim()
+    };
+  }).filter((entry) => entry.name && entry.value);
+}
+__name(parseCookieHeader, "parseCookieHeader");
+function getHandshakeToken(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const cookieTokens = parseCookieHeader(cookieHeader).filter((entry) => HANDSHAKE_COOKIE_NAME.test(entry.name)).map((entry) => entry.value.trim()).filter(Boolean);
+  const uniqueCookieTokens = Array.from(new Set(cookieTokens));
+  if (uniqueCookieTokens.length > 1) return null;
+  const queryTokens = [];
+  try {
+    for (const [name, value] of new URL(request.url).searchParams.entries()) {
+      if (!value) continue;
+      if (!HANDSHAKE_COOKIE_NAME.test(name)) continue;
+      queryTokens.push(value.trim());
+    }
+  } catch {
+  }
+  const uniqueQueryTokens = Array.from(new Set(queryTokens.filter(Boolean)));
+  if (uniqueQueryTokens.length > 1) return null;
+  if (uniqueCookieTokens.length === 1 && uniqueQueryTokens.length === 1) {
+    return uniqueCookieTokens[0] === uniqueQueryTokens[0] ? uniqueCookieTokens[0] : null;
+  }
+  if (uniqueCookieTokens.length === 1) return uniqueCookieTokens[0];
+  if (uniqueQueryTokens.length === 1) return uniqueQueryTokens[0];
+  return null;
+}
+__name(getHandshakeToken, "getHandshakeToken");
+function isNonSessionJwtCategory(cat) {
+  return cat !== void 0 && cat !== JWT_CATEGORY_SESSION_TOKEN && cat !== JWT_CATEGORY_IGNORE;
+}
+__name(isNonSessionJwtCategory, "isNonSessionJwtCategory");
+async function verifyHandshakeJwt(token, env) {
+  const issuer = String(env?.CLERK_ISSUER || "").trim();
+  const jwksUrl = String(env?.CLERK_JWKS_URL || "").trim();
+  if (!issuer || !jwksUrl) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  let header;
+  try {
+    header = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[0])));
+  } catch {
+    return null;
+  }
+  if (header.typ !== void 0 && header.typ !== "JWT") return null;
+  if (header.alg !== "RS256" || !header.kid) return null;
+  if (isNonSessionJwtCategory(header.cat)) return null;
+  let keys;
+  try {
+    const cached = handshakeJwksCache.get(jwksUrl);
+    if (cached && Date.now() - cached.fetchedAt < HANDSHAKE_JWKS_CACHE_MS) {
+      keys = cached.keys;
+    } else {
+      const resp = await fetch(jwksUrl);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      keys = data.keys || [];
+      handshakeJwksCache.set(jwksUrl, { keys, fetchedAt: Date.now() });
+    }
+  } catch {
+    return null;
+  }
+  const jwk = keys.find((k) => k.kid === header.kid && k.alg === "RS256");
+  if (!jwk) return null;
+  let valid = false;
+  try {
+    const cryptoKey = await crypto.subtle.importKey(
+      "jwk",
+      { kty: jwk.kty, n: jwk.n, e: jwk.e, alg: "RS256", ext: false },
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    valid = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      cryptoKey,
+      b64urlToBytes(parts[2]),
+      new TextEncoder().encode(parts[0] + "." + parts[1])
+    );
+  } catch {
+    return null;
+  }
+  if (!valid) return null;
+  let payload;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[1])));
+  } catch {
+    return null;
+  }
+  if (payload.iss && String(payload.iss) !== issuer) return null;
+  const now = Math.floor(Date.now() / 1e3);
+  if (typeof payload.exp === "number" && payload.exp > 0 && payload.exp < now) return null;
+  const list = payload.handshake;
+  if (!Array.isArray(list) || list.length === 0 || list.length > MAX_DIRECTIVES) return null;
+  if (!list.every((d) => typeof d === "string" && d.length <= MAX_DIRECTIVE_LENGTH)) return null;
+  return list;
+}
+__name(verifyHandshakeJwt, "verifyHandshakeJwt");
+function parseDirective(directive, requestHost) {
+  const segments = directive.split(";").map((s) => s.trim());
+  const first = segments.shift() || "";
+  const eq = first.indexOf("=");
+  if (eq <= 0) return null;
+  const name = first.slice(0, eq).trim();
+  const value = first.slice(eq + 1).trim();
+  if (!ALLOWED_COOKIE_NAME.test(name)) return null;
+  if (!ALLOWED_COOKIE_VALUE.test(value)) return null;
+  const attrs = [];
+  for (const seg of segments) {
+    if (!seg) continue;
+    const aEq = seg.indexOf("=");
+    const key = (aEq >= 0 ? seg.slice(0, aEq) : seg).trim().toLowerCase();
+    const val = aEq >= 0 ? seg.slice(aEq + 1).trim() : "";
+    if (key === "path") {
+      if (val !== "/") return null;
+      attrs.push("Path=/");
+    } else if (key === "domain") {
+      const domain = val.replace(/^\./, "").toLowerCase();
+      if (!/^[a-z0-9.-]+$/.test(domain)) return null;
+      if (requestHost !== domain && !requestHost.endsWith("." + domain)) return null;
+      attrs.push("Domain=" + domain);
+    } else if (key === "expires") {
+      const ts = Date.parse(val);
+      if (!Number.isFinite(ts)) return null;
+      attrs.push("Expires=" + new Date(ts).toUTCString());
+    } else if (key === "max-age") {
+      if (!/^\d{1,10}$/.test(val)) return null;
+      attrs.push("Max-Age=" + val);
+    } else if (key === "secure") {
+      attrs.push("Secure");
+    } else if (key === "httponly") {
+      attrs.push("HttpOnly");
+    } else if (key === "samesite") {
+      if (!ALLOWED_SAMESITE.has(val.toLowerCase())) return null;
+      attrs.push("SameSite=" + val.charAt(0).toUpperCase() + val.slice(1).toLowerCase());
+    }
+  }
+  return { name, value, serialized: [first.slice(0, eq).trim() + "=" + value, ...attrs].join("; ") };
+}
+__name(parseDirective, "parseDirective");
+function stripAuthParams(url) {
+  const clean = new URL(url.toString());
+  for (const key of Array.from(clean.searchParams.keys())) {
+    if (key === "__clerk_help" || key === "__mm_hs" || HANDSHAKE_COOKIE_NAME.test(key) || DBJWT_QUERY_NAME.test(key) || SESSION_QUERY_NAME.test(key)) {
+      clean.searchParams.delete(key);
+    }
+  }
+  return clean.toString();
+}
+__name(stripAuthParams, "stripAuthParams");
+function redirectWithCookies(location, cookies) {
+  const headers = new Headers({ Location: location });
+  for (const c of cookies) headers.append("Set-Cookie", c);
+  return new Response(null, { status: 302, headers });
+}
+__name(redirectWithCookies, "redirectWithCookies");
+function signInUrl(url, env) {
+  const accountsDomain = String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
+  const target = new URL(`https://${accountsDomain}/sign-in`);
+  target.searchParams.set("redirect_url", url.origin + url.pathname);
+  return target.toString();
+}
+__name(signInUrl, "signInUrl");
+async function consumeClerkHandshake(request, env) {
+  const token = getHandshakeToken(request);
+  if (!token) return null;
+  const directives = await verifyHandshakeJwt(token, env);
+  if (!directives) return null;
+  const url = new URL(request.url);
+  const host = url.hostname.toLowerCase();
+  const parsed = [];
+  let sessionToken = "";
+  let sawSessionDirective = false;
+  for (const d of directives) {
+    const p = parseDirective(d, host);
+    if (!p) continue;
+    if (/^__session(_|$)/.test(p.name)) {
+      sawSessionDirective = true;
+      if (p.value) sessionToken = p.value;
+    }
+    parsed.push(p);
+  }
+  if (sessionToken) {
+    const verifyReq = new Request(request.url, {
+      headers: new Headers({
+        ...Object.fromEntries(request.headers.entries()),
+        Authorization: `Bearer ${sessionToken}`
+      })
+    });
+    const result = await verifyClerkJwt(verifyReq, env);
+    if (result.valid) {
+      return redirectWithCookies(stripAuthParams(url), parsed.map((p) => p.serialized));
+    }
+    const clears = parsed.filter((p) => /^__clerk_handshake(_|$)/.test(p.name) && !p.value).map((p) => p.serialized);
+    return redirectWithCookies(signInUrl(url, env), clears);
+  }
+  if (sawSessionDirective) {
+    return redirectWithCookies(signInUrl(url, env), parsed.map((p) => p.serialized));
+  }
+  return null;
+}
+__name(consumeClerkHandshake, "consumeClerkHandshake");
+
+// ../workers/api/clerk-session-token.ts
+var SESSION_COOKIE_RE = /^__session(?:_[A-Za-z0-9_-]{1,64})?$/;
+var DEV_SESSION_COOKIE_RE = /^__clerk_db_jwt(?:_[A-Za-z0-9_-]{1,64})?$/;
+function isSessionTokenName(name) {
+  return SESSION_COOKIE_RE.test(name) || DEV_SESSION_COOKIE_RE.test(name);
+}
+__name(isSessionTokenName, "isSessionTokenName");
+function parseCookieHeader2(cookieHeader) {
+  if (!cookieHeader) return [];
+  return cookieHeader.split(";").map((part) => part.trim()).filter(Boolean).map((part) => {
+    const idx = part.indexOf("=");
+    if (idx <= 0) return { name: "", value: "" };
+    return {
+      name: part.slice(0, idx).trim(),
+      value: part.slice(idx + 1).trim()
+    };
+  }).filter((entry) => entry.name && entry.value);
+}
+__name(parseCookieHeader2, "parseCookieHeader");
+function collectCookieCandidates(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const parsed = parseCookieHeader2(cookieHeader);
+  return parsed.filter((entry) => isSessionTokenName(entry.name)).map((entry) => ({ name: entry.name, value: entry.value, source: "cookie" }));
+}
+__name(collectCookieCandidates, "collectCookieCandidates");
+function collectQueryCandidates(request) {
+  const url = new URL(request.url);
+  const out = [];
+  for (const [name, value] of url.searchParams.entries()) {
+    if (!value) continue;
+    if (!isSessionTokenName(name)) continue;
+    out.push({ name, value: value.trim(), source: "query" });
+  }
+  return out;
+}
+__name(collectQueryCandidates, "collectQueryCandidates");
+function extractClerkSessionToken(request, options = {}) {
+  const cookieCandidates = collectCookieCandidates(request);
+  const queryCandidates = options.allowQueryToken ? collectQueryCandidates(request) : [];
+  const all = [...cookieCandidates, ...queryCandidates];
+  if (!all.length) {
+    return { token: null, source: null, ambiguous: false };
+  }
+  const uniqueValues = Array.from(new Set(all.map((candidate) => candidate.value)));
+  if (uniqueValues.length !== 1) {
+    return { token: null, source: null, ambiguous: true };
+  }
+  const token = uniqueValues[0];
+  const source = all.some((candidate) => candidate.source === "cookie") ? "cookie" : "query";
+  return { token, source, ambiguous: false };
+}
+__name(extractClerkSessionToken, "extractClerkSessionToken");
+
+// auth/clerk-return/[[path]].ts
+var DEFAULT_NEXT_PATH = "/super-admin/";
+function normalizeNextPath(raw) {
+  const value = String(raw || "").trim();
+  if (!value) return DEFAULT_NEXT_PATH;
+  if (!value.startsWith("/") || value.startsWith("//")) return DEFAULT_NEXT_PATH;
+  try {
+    const parsed = new URL(value, "https://mildmate.local");
+    if (!parsed.pathname.startsWith("/")) return DEFAULT_NEXT_PATH;
+    return parsed.pathname + parsed.search;
+  } catch {
+    return DEFAULT_NEXT_PATH;
+  }
+}
+__name(normalizeNextPath, "normalizeNextPath");
+function buildCallbackUrl(url, nextPath) {
+  const callback = new URL("/auth/clerk-return/", url.origin);
+  callback.searchParams.set("next", nextPath);
+  return callback.toString();
+}
+__name(buildCallbackUrl, "buildCallbackUrl");
+function redirectToSignIn(url, env, nextPath) {
+  const accountsDomain = String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
+  const signInUrl2 = new URL(`https://${accountsDomain}/sign-in`);
+  signInUrl2.searchParams.set("redirect_url", buildCallbackUrl(url, nextPath));
+  return Response.redirect(signInUrl2.toString(), 302);
+}
+__name(redirectToSignIn, "redirectToSignIn");
+var onRequest2 = /* @__PURE__ */ __name(async (context) => {
+  const url = new URL(context.request.url);
+  const nextPath = normalizeNextPath(url.searchParams.get("next"));
+  const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
+  if (handshakeResponse) return handshakeResponse;
+  const session = extractClerkSessionToken(context.request, { allowQueryToken: true });
+  if (session.ambiguous) {
+    return redirectToSignIn(url, context.env, nextPath);
+  }
+  if (!session.token) {
+    return redirectToSignIn(url, context.env, nextPath);
+  }
+  const verifyRequest = new Request(context.request.url, {
+    headers: new Headers({
+      ...Object.fromEntries(context.request.headers.entries()),
+      Authorization: `Bearer ${session.token}`
+    })
+  });
+  const verified = await verifyClerkJwt(verifyRequest, context.env);
+  if (!verified.valid) {
+    return redirectToSignIn(url, context.env, nextPath);
+  }
+  return Response.redirect(new URL(nextPath, url.origin).toString(), 302);
+}, "onRequest");
 
 // blog-shared.ts
 function escHtml(str) {
@@ -144,7 +3395,10 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
       }
       paginationHtml = '<div class="blog-pagination"><button class="pag-arrow' + (prevDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(pageUrl(prevPage)) + `'"` + (prevDisabled ? " disabled" : "") + ' aria-label="Previous page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button><div class="pag-dots">' + dotsHtml + '</div><button class="pag-arrow' + (nextDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(pageUrl(nextPage)) + `'"` + (nextDisabled ? " disabled" : "") + ' aria-label="Next page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>';
     }
-    const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:240px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:18px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;padding:6px 10px;align-items:center;gap:6px}\n.drawer-search-form input{flex:1;padding:4px;border:none;outline:none;font-size:0.875rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:4px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:8px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
+    const canonicalHref = (isThai ? "/th/blogs/" : "/blogs/") + (page > 1 ? "?page=" + page : "");
+    const enListingHref = "https://www.mildmate.com/blogs/" + (page > 1 ? "?page=" + page : "");
+    const thListingHref = "https://www.mildmate.com/th/blogs/" + (page > 1 ? "?page=" + page : "");
+    const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link rel="canonical" href="https://www.mildmate.com' + canonicalHref + '">\n<link rel="alternate" hreflang="en" href="' + enListingHref + '">\n<link rel="alternate" hreflang="th" href="' + thListingHref + '">\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:240px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:18px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;padding:6px 10px;align-items:center;gap:6px}\n.drawer-search-form input{flex:1;padding:4px;border:none;outline:none;font-size:0.875rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:4px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:8px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
     return new Response(html, {
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=60" }
     });
@@ -379,7 +3633,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
 __name(buildBlogPostHTML, "buildBlogPostHTML");
 
 // th/blogs/[[path]].ts
-async function onRequest(context) {
+async function onRequest3(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -413,12 +3667,12 @@ async function onRequest(context) {
         "X-Robots-Tag": "index, follow"
       }
     });
-  } catch (err) {
-    console.error("Blog post TH error:", err);
+  } catch (err4) {
+    console.error("Blog post TH error:", err4);
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest, "onRequest");
+__name(onRequest3, "onRequest");
 
 // product/[[path]].ts
 var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
@@ -434,6 +3688,7 @@ var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "flat-sheet-extra-deep-pocket",
   "co-sleeping-top-sheet",
   "3-sided-duvet",
+  "weighted-duvet-cover",
   "pet-owner-duvet-cover",
   "duvet-cover-marine",
   "duvet-cover-rv",
@@ -447,6 +3702,7 @@ var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "mattress-protector-family",
   "mattress-protector-deep-pocket",
   "pet-proof-mattress-protector",
+  "custom-waterproof-cushion-protector",
   "mattress-encasement-general",
   "rv-truck-mattress-encasement",
   "pillow-protector-general",
@@ -468,6 +3724,30 @@ var NICHE_DISPLAY = {
   "boarding-dorm": "Boarding Dorm",
   "rv-truck": "RV & Truck Cab"
 };
+var MISSING_ECOMMERCE_PRODUCER_SLUGS = /* @__PURE__ */ new Set([
+  "bedbridge-connector",
+  "duvet-insert",
+  "mattress-lift-helper",
+  "marine-fitted-sheet",
+  "marine-top-sheet",
+  "marine-mattress-protector"
+]);
+function clerkCspOrigins(requestUrl) {
+  try {
+    const h = new URL(requestUrl).hostname.toLowerCase();
+    if (h.endsWith(".pages.dev") || h === "localhost" || h === "127.0.0.1") {
+      return "https://kind-joey-29.clerk.accounts.dev";
+    }
+  } catch {
+  }
+  return "https://clerk.mildmate.com https://accounts.mildmate.com";
+}
+__name(clerkCspOrigins, "clerkCspOrigins");
+var SECURITY_CSP_TEMPLATE = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://cdn.protect.clerk.com __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.co.th data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.co.th https://cdn.protect.clerk.com __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; upgrade-insecure-requests;";
+function securityCsp(requestUrl) {
+  return SECURITY_CSP_TEMPLATE.split("__CLERK_CSP_ORIGINS__").join(clerkCspOrigins(requestUrl));
+}
+__name(securityCsp, "securityCsp");
 function hasToken(slug, token) {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
@@ -475,8 +3755,8 @@ __name(hasToken, "hasToken");
 function resolveLegacyProduct(slug) {
   if (slug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
   if (slug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
-  if (slug.startsWith("product-boat-bedding")) return "/product/marine-fitted-sheet/";
   if (slug.startsWith("product-boat-top-sheet")) return "/product/marine-top-sheet/";
+  if (slug.startsWith("product-boat-bedding")) return "/product/marine-fitted-sheet/";
   if (slug.includes("boat") && slug.includes("pillow")) return "/product/pillowcase-envelope/";
   if (slug.includes("dorm")) return slug.includes("duvet") ? "/product/duvet-cover-dorm/" : "/product/dorm-fitted-sheet/";
   if (slug.includes("rv-truck") || hasToken(slug, "rv") || slug.includes("truck")) {
@@ -511,22 +3791,418 @@ function escapeHtml(value) {
   return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 __name(escapeHtml, "escapeHtml");
-function applyLocalizedDescriptionFromD1(html, description, isTh) {
+function stripHtml(value) {
+  return String(value || "").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<\/?[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
+}
+__name(stripHtml, "stripHtml");
+function truncateForMeta(value, max = 160) {
+  const text = String(value || "").trim();
+  if (!text || text.length <= max) return text;
+  return `${text.slice(0, max - 1).trimEnd()}\u2026`;
+}
+__name(truncateForMeta, "truncateForMeta");
+function looksLikeHtml(value) {
+  return /<\/?[a-z][\s\S]*>/i.test(String(value || ""));
+}
+__name(looksLikeHtml, "looksLikeHtml");
+function buildDescriptionHtml(description) {
   const text = String(description || "").trim();
-  if (!text) return html;
-  const escaped = escapeHtml(text);
-  html = html.replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${escaped}">`).replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${escaped}">`).replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${escaped}">`);
+  if (!text) return "";
+  if (looksLikeHtml(text)) return text;
+  return `<p>${escapeHtml(text)}</p>`;
+}
+__name(buildDescriptionHtml, "buildDescriptionHtml");
+function applyLocalizedDescriptionFromD1(html, description, isTh, seoMetaOverride) {
+  const text = String(description || "").trim();
+  const overrideMeta = String(seoMetaOverride || "").trim();
+  if (!text && !overrideMeta) return html;
+  const metaSource = overrideMeta || text;
+  const metaDescription = escapeHtml(truncateForMeta(stripHtml(metaSource), 160));
+  const descriptionHtml = buildDescriptionHtml(text);
+  html = html.replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${metaDescription}">`).replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${metaDescription}">`).replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${metaDescription}">`);
   if (isTh) {
     html = html.replace(/data-info-tab="description">[\s\S]*?<\/button>/i, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">[\s\S]*?<\/button>/i, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>');
   }
-  html = html.replace(
-    /(<div[^>]*id="info-panel-description"[^>]*>[\s\S]*?<p>)[\s\S]*?(<\/p>)/i,
-    `$1${escaped}$2`
-  );
+  if (text) {
+    html = html.replace(
+      /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
+      (_m, start, end) => `${start}${descriptionHtml}
+        ${end}`
+    );
+  }
   return html;
 }
 __name(applyLocalizedDescriptionFromD1, "applyLocalizedDescriptionFromD1");
-async function onRequest2(context) {
+function applyLocalizedFaqFromD1(html, faq) {
+  const text = String(faq || "").trim();
+  if (!text) return html;
+  const faqHtml = looksLikeHtml(text) ? text : `<p>${escapeHtml(text)}</p>`;
+  return html.replace(
+    /(<div[^>]*id="info-panel-faq"[^>]*>)[\s\S]*?(<\/div>\s*<\/div>\s*<\/div>)/i,
+    (_m, start, end) => `${start}${faqHtml}
+        ${end}`
+  );
+}
+__name(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
+function formatSeoTitle(value) {
+  const title = String(value || "").trim();
+  if (!title) return "";
+  return /mildmate/i.test(title) ? title : `${title} \u2014 MildMate`;
+}
+__name(formatSeoTitle, "formatSeoTitle");
+function replaceProductTagline(html, tagline) {
+  const safeTagline = String(tagline || "").trim();
+  if (!safeTagline) return html;
+  return html.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+}
+__name(replaceProductTagline, "replaceProductTagline");
+function applyProductUiLabelOverrides(html, labels) {
+  let result = html;
+  const ctaPrimary = String(labels.ctaPrimary || "").trim();
+  const ctaCustom = String(labels.ctaCustom || "").trim();
+  const ctaSizeHelp = String(labels.ctaSizeHelp || "").trim();
+  if (ctaPrimary) {
+    const label = escapeHtml(ctaPrimary);
+    result = result.replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*[\s\S]*?(<\/button>)/i, `$1 ${label}$2`).replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*[\s\S]*?(<\/button>)/i, `$1 ${label}$2`);
+  }
+  if (ctaCustom) {
+    const label = escapeHtml(ctaCustom);
+    result = result.replace(
+      /(<button class="config-tab" data-tab="custom">)[\s\S]*?(<\/button>)/i,
+      `$1${label}$2`
+    );
+  }
+  if (ctaSizeHelp) {
+    const label = escapeHtml(ctaSizeHelp);
+    result = result.replace(
+      /(<a href="\/(?:th\/)?sizeguide\/"[^>]*>)[\s\S]*?(<\/a>)/i,
+      `$1${label}$2`
+    );
+  }
+  return result;
+}
+__name(applyProductUiLabelOverrides, "applyProductUiLabelOverrides");
+function injectConfiguratorLabelMeta(html, labels) {
+  const ctaPrimary = String(labels.ctaPrimary || "").trim();
+  const ctaCustom = String(labels.ctaCustom || "").trim();
+  const ctaSizeHelp = String(labels.ctaSizeHelp || "").trim();
+  const parts = [];
+  if (ctaPrimary) parts.push(`<meta name="mm-cta-primary" content="${escapeHtml(ctaPrimary)}">`);
+  if (ctaCustom) parts.push(`<meta name="mm-cta-custom" content="${escapeHtml(ctaCustom)}">`);
+  if (ctaSizeHelp) parts.push(`<meta name="mm-cta-size-help" content="${escapeHtml(ctaSizeHelp)}">`);
+  if (parts.length === 0) return html;
+  const anchor = '<meta charset="UTF-8">';
+  if (!html.includes(anchor)) return html;
+  return html.replace(anchor, `${anchor}
+  ${parts.join("\n  ")}`);
+}
+__name(injectConfiguratorLabelMeta, "injectConfiguratorLabelMeta");
+var TH_GENERIC_FAQ_INNER = `<details class="faq-item" open>
+            <summary>\u0E08\u0E30\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E44\u0E14\u0E49\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E14\u0E39<a href="/th/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>\u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19 \u0E2B\u0E23\u0E37\u0E2D\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13\u0E43\u0E19\u0E41\u0E1A\u0E1A\u0E1F\u0E2D\u0E23\u0E4C\u0E21\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29\u0E44\u0E14\u0E49\u0E2B\u0E23\u0E37\u0E2D\u0E44\u0E21\u0E48?</summary>
+            <p>\u0E44\u0E14\u0E49 \u0E04\u0E25\u0E34\u0E01 <strong>\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E41\u0E1A\u0E1A\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E40\u0E2D\u0E07</strong> \u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E41\u0E25\u0E49\u0E27\u0E2A\u0E48\u0E07\u0E04\u0E33\u0E02\u0E2D\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E04\u0E27\u0E23\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E14\u0E39\u0E41\u0E25\u0E23\u0E31\u0E01\u0E29\u0E32\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E1C\u0E49\u0E32\u0E17\u0E38\u0E01\u0E0A\u0E19\u0E34\u0E14\u0E02\u0E2D\u0E07 MildMate \u0E0B\u0E31\u0E01\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E44\u0E14\u0E49\u0E17\u0E35\u0E48\u0E2D\u0E38\u0E13\u0E2B\u0E20\u0E39\u0E21\u0E34\u0E1B\u0E32\u0E19\u0E01\u0E25\u0E32\u0E07 (40\xB0C / 104\xB0F) \u0E2B\u0E49\u0E32\u0E21\u0E43\u0E0A\u0E49\u0E19\u0E49\u0E33\u0E22\u0E32\u0E1F\u0E2D\u0E01\u0E02\u0E32\u0E27 \u0E41\u0E19\u0E30\u0E19\u0E33\u0E43\u0E2B\u0E49\u0E15\u0E32\u0E01\u0E41\u0E2B\u0E49\u0E07\u0E43\u0E19\u0E17\u0E35\u0E48\u0E23\u0E48\u0E21\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E23\u0E31\u0E01\u0E29\u0E32\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E40\u0E2A\u0E49\u0E19\u0E43\u0E22\u0E23\u0E30\u0E22\u0E30\u0E22\u0E32\u0E27</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E19\u0E32\u0E19\u0E40\u0E17\u0E48\u0E32\u0E44\u0E2B\u0E23\u0E48?</summary>
+            <p>\u0E1C\u0E25\u0E34\u0E15\u0E41\u0E1A\u0E1A\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E42\u0E23\u0E07\u0E07\u0E32\u0E19\u0E43\u0E19\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22 \u0E23\u0E30\u0E22\u0E30\u0E40\u0E27\u0E25\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E02\u0E36\u0E49\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E01\u0E31\u0E1A\u0E1B\u0E25\u0E32\u0E22\u0E17\u0E32\u0E07\u0E41\u0E25\u0E30\u0E08\u0E30\u0E41\u0E08\u0E49\u0E07\u0E43\u0E2B\u0E49\u0E17\u0E23\u0E32\u0E1A\u0E43\u0E19\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32\u0E2B\u0E23\u0E37\u0E2D\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</p>
+          </details>`;
+var TH_MARINE_FAQ_INNER = `<details class="faq-item" open>
+            <summary>\u0E04\u0E27\u0E23\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E14\u0E39\u0E41\u0E25\u0E23\u0E31\u0E01\u0E29\u0E32\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E1C\u0E49\u0E32 CloudSoft \u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E0B\u0E31\u0E01\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E44\u0E14\u0E49 \u0E41\u0E2B\u0E49\u0E07\u0E40\u0E23\u0E47\u0E27 \u0E17\u0E19\u0E17\u0E32\u0E19\u0E15\u0E48\u0E2D\u0E2A\u0E20\u0E32\u0E1E\u0E41\u0E27\u0E14\u0E25\u0E49\u0E2D\u0E21\u0E17\u0E32\u0E07\u0E17\u0E30\u0E40\u0E25 \u0E2B\u0E49\u0E32\u0E21\u0E43\u0E0A\u0E49\u0E19\u0E49\u0E33\u0E22\u0E32\u0E1F\u0E2D\u0E01\u0E02\u0E32\u0E27 \u0E41\u0E19\u0E30\u0E19\u0E33\u0E43\u0E2B\u0E49\u0E15\u0E32\u0E01\u0E41\u0E2B\u0E49\u0E07\u0E43\u0E19\u0E17\u0E35\u0E48\u0E23\u0E48\u0E21\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E23\u0E31\u0E01\u0E29\u0E32\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E40\u0E2A\u0E49\u0E19\u0E43\u0E22\u0E23\u0E30\u0E22\u0E30\u0E22\u0E32\u0E27</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E43\u0E0A\u0E49<a href="/th/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>\u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2D\u0E49\u0E32\u0E07\u0E2D\u0E34\u0E07 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E40\u0E15\u0E35\u0E22\u0E07\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13\u0E14\u0E49\u0E32\u0E19\u0E1A\u0E19 \u0E41\u0E25\u0E49\u0E27\u0E01\u0E23\u0E2D\u0E01\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27\u0E02\u0E2D\u0E07\u0E41\u0E15\u0E48\u0E25\u0E30\u0E14\u0E49\u0E32\u0E19\u0E43\u0E2B\u0E49\u0E15\u0E23\u0E07\u0E15\u0E32\u0E21\u0E17\u0E35\u0E48\u0E27\u0E31\u0E14\u0E44\u0E14\u0E49\u0E08\u0E23\u0E34\u0E07 \u0E23\u0E30\u0E1A\u0E38\u0E04\u0E27\u0E32\u0E21\u0E2B\u0E19\u0E32\u0E02\u0E2D\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E49\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E1E\u0E2D\u0E14\u0E35\u0E41\u0E1A\u0E1A\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E40\u0E2D\u0E07</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E1C\u0E25\u0E34\u0E15\u0E41\u0E25\u0E30\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E19\u0E32\u0E19\u0E40\u0E17\u0E48\u0E32\u0E44\u0E2B\u0E23\u0E48?</summary>
+            <p>\u0E1C\u0E25\u0E34\u0E15\u0E41\u0E1A\u0E1A\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E15\u0E32\u0E21\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E41\u0E25\u0E30\u0E02\u0E19\u0E32\u0E14\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E1C\u0E25\u0E34\u0E15 5\u20137 \u0E27\u0E31\u0E19\u0E17\u0E33\u0E01\u0E32\u0E23 \u0E23\u0E30\u0E22\u0E30\u0E40\u0E27\u0E25\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E02\u0E36\u0E49\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E01\u0E31\u0E1A\u0E1B\u0E25\u0E32\u0E22\u0E17\u0E32\u0E07 \u0E04\u0E38\u0E13\u0E08\u0E30\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02\u0E1E\u0E31\u0E2A\u0E14\u0E38\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E41\u0E25\u0E49\u0E27</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E16\u0E49\u0E32\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E44\u0E21\u0E48\u0E2D\u0E22\u0E39\u0E48\u0E43\u0E19\u0E25\u0E34\u0E2A\u0E15\u0E4C\u0E25\u0E48\u0E30?</summary>
+            <p>\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E43\u0E01\u0E25\u0E49\u0E40\u0E04\u0E35\u0E22\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14\u0E41\u0E25\u0E30\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E2B\u0E15\u0E38\u0E43\u0E19\u0E41\u0E1A\u0E1A\u0E1F\u0E2D\u0E23\u0E4C\u0E21\u0E02\u0E2D\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32 \u2014 \u0E40\u0E23\u0E32\u0E1C\u0E25\u0E34\u0E15\u0E15\u0E32\u0E21\u0E41\u0E1A\u0E1A\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E2B\u0E23\u0E37\u0E2D<a href="/th/contact/">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32</a>\u0E42\u0E14\u0E22\u0E15\u0E23\u0E07\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E41\u0E19\u0E1A\u0E20\u0E32\u0E1E\u0E27\u0E32\u0E14\u0E2B\u0E23\u0E37\u0E2D\u0E23\u0E39\u0E1B\u0E16\u0E48\u0E32\u0E22\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</p>
+          </details>`;
+var MARINE_FAQ_SLUGS = /* @__PURE__ */ new Set(["marine-fitted-sheet", "marine-top-sheet", "marine-mattress-protector"]);
+var TH_BREADCRUMB_CATEGORY_LABELS = {
+  "/sheets/": "\u0E1C\u0E49\u0E32\u0E1B\u0E39\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19",
+  "/duvet-covers/": "\u0E1B\u0E25\u0E2D\u0E01\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21",
+  "/pillowcases/": "\u0E1B\u0E25\u0E2D\u0E01\u0E2B\u0E21\u0E2D\u0E19",
+  "/protection/": "\u0E1C\u0E25\u0E34\u0E15\u0E20\u0E31\u0E13\u0E11\u0E4C\u0E1B\u0E01\u0E1B\u0E49\u0E2D\u0E07",
+  "/accessories/": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E2A\u0E23\u0E34\u0E21"
+};
+var TH_MARINE_SHAPE_LABELS = [
+  [/Choose Your Boat Mattress Shape/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13"],
+  [/— Select a shape —/g, "\u2014 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07 \u2014"],
+  [/Select a shape above to see the measurement diagram/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E14\u0E49\u0E32\u0E19\u0E1A\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E14\u0E39\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E01\u0E32\u0E23\u0E27\u0E31\u0E14"]
+];
+var TH_STATIC_HTML_REPLACEMENTS = [
+  // Configurator dimension labels
+  [/<label for="dim-width">Width \(W\)<\/label>/g, '<label for="dim-width">\u0E04\u0E27\u0E32\u0E21\u0E01\u0E27\u0E49\u0E32\u0E07 (W)</label>'],
+  [/<label for="dim-length">Length \(L\)<\/label>/g, '<label for="dim-length">\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 (L)</label>'],
+  [/<label for="dim-depth">Depth \(D\)<\/label>/g, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E25\u0E36\u0E01 (D)</label>'],
+  // Price labels
+  [/<span class="price-label">Estimated price<\/span>/g, '<span class="price-label">\u0E23\u0E32\u0E04\u0E32\u0E1B\u0E23\u0E30\u0E21\u0E32\u0E13\u0E01\u0E32\u0E23</span>'],
+  [/<span class="price-label">Price<\/span>/g, '<span class="price-label">\u0E23\u0E32\u0E04\u0E32</span>'],
+  [/<span class="price-sub" id="price-top-sub">Starting from<\/span>/g, '<span class="price-sub" id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>'],
+  // Color picker label (preserves fabric name in English — fabric names stay EN)
+  [/<div class="panel-label">Color — /g, '<div class="panel-label">\u0E2A\u0E35 \u2014 '],
+  // Payment badges
+  [/<\/svg> Secure checkout<\/span>/g, "</svg> \u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22</span>"],
+  // Trust badges (OEKO label fallback) — Premium Quality (no space and with space)
+  [/<\/svg>Premium Quality<\/div>/g, "</svg>\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</div>"],
+  [/<\/svg> Premium Quality<\/div>/g, "</svg> \u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</div>"],
+  [/<\/svg>Premium Quality<\/span>/g, "</svg>\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>"],
+  // Trust badges (mobile, customizable template)
+  [/<\/svg>Custom Fit<\/div>/g, "</svg>\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>"],
+  [/<\/svg>Human Safe<\/div>/g, "</svg>\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>"],
+  [/<\/svg>Pet Resist<\/div>/g, "</svg>\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>"],
+  // Trust badges (desktop, all templates)
+  [/<\/svg> Top-Rated Etsy Boutique/g, "</svg> \u0E23\u0E49\u0E32\u0E19 Etsy \u0E17\u0E35\u0E48\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E04\u0E30\u0E41\u0E19\u0E19\u0E2A\u0E39\u0E07"],
+  [/<\/svg> Ships from Thailand/g, "</svg> \u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E08\u0E32\u0E01\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22"],
+  // Reviews section
+  [/<div class="reviews-header"><h2>Customer Reviews<\/h2><\/div>/g, '<div class="reviews-header"><h2>\u0E23\u0E35\u0E27\u0E34\u0E27\u0E08\u0E32\u0E01\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32</h2></div>'],
+  [/id="product-review-count">Loading reviews\.\.\.<\/div>/g, 'id="product-review-count">\u0E01\u0E33\u0E25\u0E31\u0E07\u0E42\u0E2B\u0E25\u0E14\u0E23\u0E35\u0E27\u0E34\u0E27...</div>'],
+  [/<h2>You might also like<\/h2>/g, "<h2>\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E38\u0E13\u0E2D\u0E32\u0E08\u0E2A\u0E19\u0E43\u0E08</h2>"],
+  // Tags label (anchored on class context to avoid false matches)
+  [/text-transform:uppercase; letter-spacing:0\.08em; margin-right:4px;">Tags:<\/span>/g, 'text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">\u0E2B\u0E21\u0E27\u0E14\u0E2B\u0E21\u0E39\u0E48:</span>'],
+  // Marine template — fabric spec label + boat model prompt
+  [/<div class="spec-label">Fabric<\/div>/g, '<div class="spec-label">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</div>'],
+  // Configurator inline JS — single-fabric Fabric badge label
+  [/<div class="panel-label">Fabric<\/div>/g, '<div class="panel-label">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</div>'],
+  [/Choose one sizing mode/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E42\u0E2B\u0E21\u0E14\u0E01\u0E32\u0E23\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E41\u0E1A\u0E1A"],
+  [/Know your boat model\? Choose fixed-price option/g, "\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13? \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E15\u0E31\u0E27\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E32\u0E04\u0E32\u0E04\u0E07\u0E17\u0E35\u0E48"],
+  [/Select boat model<\/option>/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D</option>"],
+  [/Select a boat model to use Boat Model pricing\./g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49\u0E01\u0E32\u0E23\u0E15\u0E31\u0E49\u0E07\u0E23\u0E32\u0E04\u0E32\u0E41\u0E1A\u0E1A\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D"],
+  [/Choose a boat model to apply fixed Boat Model pricing\./g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49\u0E23\u0E32\u0E04\u0E32\u0E04\u0E07\u0E17\u0E35\u0E48\u0E15\u0E32\u0E21\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D"],
+  [/No saved boat models yet\. Use Mattress Shape instead\./g, "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E17\u0E35\u0E48\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E44\u0E27\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E43\u0E0A\u0E49\u0E42\u0E2B\u0E21\u0E14\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E41\u0E17\u0E19"],
+  [/Mattress Shape mode active\. Select a shape and enter dimensions below\./g, "\u0E42\u0E2B\u0E21\u0E14\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E41\u0E25\u0E49\u0E27 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E41\u0E25\u0E30\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07"],
+  // Unit warning (configurator) — preserves <strong> markup
+  [/Default: <strong>cm<\/strong>\. Using inches\? Switch to <strong>inch<\/strong> first\./g, "\u0E2B\u0E19\u0E48\u0E27\u0E22\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19: <strong>\u0E0B\u0E21.</strong> \u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E2B\u0E19\u0E48\u0E27\u0E22\u0E19\u0E34\u0E49\u0E27? \u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E40\u0E1B\u0E47\u0E19 <strong>\u0E19\u0E34\u0E49\u0E27</strong> \u0E01\u0E48\u0E2D\u0E19"]
+];
+function applyThaiProductUiLocalization(html, tagline, slug) {
+  const safeTagline = String(tagline || "").trim();
+  const isWeightedDuvet = slug === "weighted-duvet-cover";
+  const isCushionProtector = slug === "custom-waterproof-cushion-protector";
+  const sizeLabel = isWeightedDuvet ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01" : isCushionProtector ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30 / \u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33" : "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19";
+  const customPrompt = isWeightedDuvet ? "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : isCushionProtector ? "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 (\u0E22\u0E32\u0E27 \xD7 \u0E01\u0E27\u0E49\u0E32\u0E07 \xD7 \u0E2A\u0E39\u0E07)" : "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13";
+  const sizeHintText = isWeightedDuvet ? "\u0E14\u0E39\u0E27\u0E34\u0E18\u0E35\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21" : "\u0E14\u0E39\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14";
+  const customTabNote = isWeightedDuvet ? "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01\u0E08\u0E23\u0E34\u0E07 (\u0E01\u0E27\u0E49\u0E32\u0E07 \xD7 \u0E22\u0E32\u0E27) \u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19" : isCushionProtector ? "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E40\u0E1A\u0E32\u0E30\u0E08\u0E23\u0E34\u0E07\u0E17\u0E35\u0E48\u0E08\u0E38\u0E14\u0E22\u0E32\u0E27\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14 \u0E01\u0E27\u0E49\u0E32\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14 \u0E41\u0E25\u0E30\u0E2A\u0E39\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14" : "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13";
+  const localized = html.replace(
+    /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
+    '<button class="config-tab active" data-tab="standard">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>'
+  ).replace(
+    /<button class="config-tab" data-tab="custom">[\s\S]*?<\/button>/i,
+    '<button class="config-tab" data-tab="custom">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>'
+  ).replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`).replace(/<div class="panel-label">\s*Select Duvet Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`).replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`).replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact duvet dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`).replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, `<div class="size-hint"><a href="/th/sizeguide/">${sizeHintText}</a></div>`).replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, `<p class="dim-diagram-caption">${customTabNote}</p>`).replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/<button class="info-tab" type="button" data-info-tab="faq">[\s\S]*?<\/button>/i, '<button class="info-tab" type="button" data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>\s*Premium Quality\s*<\/span>/i, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>\s*Custom Fit\s*<\/div>/i, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>\s*Human Safe\s*<\/div>/i, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>\s*Pet Resist\s*<\/div>/i, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>");
+  let result = localized;
+  if (isCushionProtector) {
+    result = result.replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E2A\u0E39\u0E07 (H)</label>').replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30: \u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 (L), \u0E04\u0E27\u0E32\u0E21\u0E01\u0E27\u0E49\u0E32\u0E07 (W), \u0E04\u0E27\u0E32\u0E21\u0E2A\u0E39\u0E07 (H)"');
+  }
+  if (!safeTagline) return result;
+  return result.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+}
+__name(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
+function applyCushionProtectorUiLocalization(html, isTh) {
+  if (isTh) {
+    return html.replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30 / \u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</div>').replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>').replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, '<p class="dim-diagram-caption">\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E40\u0E1A\u0E32\u0E30\u0E08\u0E23\u0E34\u0E07\u0E17\u0E35\u0E48\u0E08\u0E38\u0E14\u0E22\u0E32\u0E27\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14 \u0E01\u0E27\u0E49\u0E32\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14 \u0E41\u0E25\u0E30\u0E2A\u0E39\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14</p>').replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E2B\u0E19\u0E32 (T)</label>').replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E01\u0E32\u0E23\u0E27\u0E31\u0E14\u0E40\u0E1A\u0E32\u0E30 \u0E41\u0E2A\u0E14\u0E07 Width (W), Length (L), \u0E41\u0E25\u0E30 Thickness (T)"').replace(/<img src="\/images\/products\/common\/measure-mattress-diagram-01\.png" alt="[^"]*">/i, '<img src="/images/products/common/measure-cushion-diagram-01.png" alt="\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E01\u0E32\u0E23\u0E27\u0E31\u0E14\u0E40\u0E1A\u0E32\u0E30 \u0E41\u0E2A\u0E14\u0E07 Width (W), Length (L), \u0E41\u0E25\u0E30 Thickness (T)">').replace(/<div class="size-hint"><a href="\/th\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/th/sizeguide/">\u0E14\u0E39\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a><br><span style="display:block;margin-top:6px;">\u0E17\u0E23\u0E07\u0E44\u0E21\u0E48\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19? \u0E2A\u0E48\u0E07\u0E23\u0E39\u0E1B\u0E16\u0E48\u0E32\u0E22\u0E2B\u0E23\u0E37\u0E2D\u0E2A\u0E40\u0E01\u0E47\u0E15\u0E0A\u0E4C\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E02\u0E2D\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32\u0E41\u0E1A\u0E1A\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</span></div>');
+  }
+  return html.replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">Select Cushion Size</div>').replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">Enter your exact cushion dimensions</strong>').replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, '<p class="dim-diagram-caption">Measure your cushion at its longest, widest, and thickest points</p>').replace(/<label for="dim-depth">Depth \(D\)<\/label>/i, '<label for="dim-depth">Thickness (T)</label>').replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)"').replace(/<img src="\/images\/products\/common\/measure-mattress-diagram-01\.png" alt="[^"]*">/i, '<img src="/images/products/common/measure-cushion-diagram-01.png" alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)">').replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/sizeguide/">View full size guide</a><br><span style="display:block;margin-top:6px;">Irregular shape? Send us a photo or measurement sketch for a custom quote.</span></div>').replace(/>\s*Pet Resist\s*<\/div>/gi, ">Pet Accident Protection</div>").replace(/Measure the cushion itself and provide width,\s*length,\s*and thickness\.\s*Do not use mattress dimensions\./gi, "Measure the cushion itself and provide width, length, and thickness.");
+}
+__name(applyCushionProtectorUiLocalization, "applyCushionProtectorUiLocalization");
+function applyFlatSheetExtraDeepPocketGuardrails(html, isTh) {
+  if (isTh) return html;
+  return html.replace(
+    /<p class="product-tagline">[\s\S]*?<\/p>/i,
+    '<p class="product-tagline">Loose, non-elastic deep pocket top sheet for extra-deep mattresses with 20 in / 51 cm default depth and ~10 in / 25 cm tuck allowance.</p>'
+  ).replace(/Full-perimeter elastic\.?/gi, "Loose non-elastic top sheet");
+}
+__name(applyFlatSheetExtraDeepPocketGuardrails, "applyFlatSheetExtraDeepPocketGuardrails");
+function injectMissingEcommerceTracking(html, slug, productName, fallbackPriceUsd) {
+  if (!MISSING_ECOMMERCE_PRODUCER_SLUGS.has(slug)) return html;
+  if (html.includes('id="mm-fixed-ga4-ecommerce"')) return html;
+  const trackerMeta = JSON.stringify({
+    slug,
+    name: String(productName || ""),
+    fallbackPriceUsd: Number(fallbackPriceUsd || 0)
+  });
+  const trackerScript = `<script id="mm-fixed-ga4-ecommerce">
+    (function () {
+      var meta = ${trackerMeta};
+      var ga4ViewSent = false;
+      var lastSig = '';
+      var lastSigAt = 0;
+
+      function toNum(v) {
+        var n = Number(v);
+        return isFinite(n) ? n : 0;
+      }
+
+      function round2(v) {
+        return Math.round(toNum(v) * 100) / 100;
+      }
+
+      function ensureGa4Stub() {
+        window.dataLayer = window.dataLayer || [];
+        if (typeof window.gtag !== 'function') {
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+        }
+      }
+
+      function sendGa4Event(name, params) {
+        try {
+          var payload = params || {};
+          if (typeof window.__mildmateTrackEvent === 'function') {
+            window.__mildmateTrackEvent(name, payload);
+            return;
+          }
+          ensureGa4Stub();
+          window.gtag('event', name, payload);
+        } catch (e) {}
+      }
+
+      function detectCurrencyFromText(text) {
+        var t = String(text || '');
+        if (/\u0E3F|THB/i.test(t)) return 'THB';
+        if (/\\$|USD/i.test(t)) return 'USD';
+        return '';
+      }
+
+      function parsePriceFromText(text) {
+        var n = String(text || '').replace(/[^0-9.]/g, '');
+        if (!n) return 0;
+        return round2(Number(n));
+      }
+
+      function resolveCurrency(item) {
+        if (item && String(item.quote_currency || '').toUpperCase() === 'THB') return 'THB';
+        if (item && String(item.currency || '').toUpperCase() === 'THB') return 'THB';
+        var priceEl = document.getElementById('price-display') || document.getElementById('custom-price') || document.getElementById('price-display-top');
+        var currencyFromText = detectCurrencyFromText(priceEl ? priceEl.textContent : '');
+        if (currencyFromText) return currencyFromText;
+        return 'USD';
+      }
+
+      function resolveUnitPrice(item, currency) {
+        if (item) {
+          if (currency === 'THB') {
+            var thb = toNum(item.price_thb || item.priceThb || item.price);
+            if (thb > 0) return round2(thb);
+          }
+          var usd = toNum(item.price_usd || item.priceUsd || item.price);
+          if (usd > 0) return round2(usd);
+        }
+
+        var priceEl = document.getElementById('price-display') || document.getElementById('custom-price') || document.getElementById('price-display-top');
+        var parsed = parsePriceFromText(priceEl ? priceEl.textContent : '');
+        if (parsed > 0) return round2(parsed);
+        return round2(meta.fallbackPriceUsd || 0);
+      }
+
+      function buildGa4Item(item, currency, unitPrice) {
+        var qty = toNum(item && item.qty) || 1;
+        return {
+          item_id: String((item && (item.product_slug || item.slug)) || meta.slug || ''),
+          item_name: String((item && (item.product_name || item.name || item.title)) || meta.name || meta.slug || ''),
+          price: round2(unitPrice),
+          quantity: qty
+        };
+      }
+
+      function shouldSkip(sig) {
+        var now = Date.now();
+        if (sig && sig === lastSig && (now - lastSigAt) < 1200) return true;
+        lastSig = sig;
+        lastSigAt = now;
+        return false;
+      }
+
+      function trackViewItemOnce() {
+        if (ga4ViewSent) return;
+        var currency = resolveCurrency(null);
+        var unitPrice = resolveUnitPrice(null, currency);
+        var payload = {
+          currency: currency,
+          value: round2(unitPrice),
+          items: [buildGa4Item(null, currency, unitPrice)]
+        };
+        sendGa4Event('view_item', payload);
+        ga4ViewSent = true;
+      }
+
+      function trackAddToCart(item) {
+        var currency = resolveCurrency(item || null);
+        var unitPrice = resolveUnitPrice(item || null, currency);
+        var gaItem = buildGa4Item(item || null, currency, unitPrice);
+        var value = round2(unitPrice * (toNum(gaItem.quantity) || 1));
+        var sig = [gaItem.item_id, gaItem.item_name, currency, value, gaItem.quantity].join('|');
+        if (shouldSkip(sig)) return;
+        sendGa4Event('add_to_cart', {
+          currency: currency,
+          value: value,
+          items: [gaItem]
+        });
+      }
+
+      function wrapGlobalAddToCart() {
+        if (typeof window.addToCart !== 'function') return false;
+        if (window.addToCart.__mildmateGa4Wrapped) return true;
+        var original = window.addToCart;
+        var wrapped = function () {
+          var argItem = arguments.length ? arguments[0] : null;
+          var result = original.apply(this, arguments);
+          trackAddToCart(argItem);
+          return result;
+        };
+        wrapped.__mildmateGa4Wrapped = true;
+        wrapped.__mildmateGa4Original = original;
+        window.addToCart = wrapped;
+        return true;
+      }
+
+      function wrapCartAdd() {
+        if (!window.MildMateCart || typeof window.MildMateCart.add !== 'function') return false;
+        if (window.MildMateCart.__mildmateGa4Wrapped) return true;
+        var originalAdd = window.MildMateCart.add;
+        window.MildMateCart.add = function (item) {
+          var result = originalAdd.apply(this, arguments);
+          trackAddToCart(item);
+          return result;
+        };
+        window.MildMateCart.__mildmateGa4Wrapped = true;
+        return true;
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', trackViewItemOnce, { once: true });
+      } else {
+        trackViewItemOnce();
+      }
+      setTimeout(trackViewItemOnce, 800);
+
+      wrapGlobalAddToCart();
+      wrapCartAdd();
+      var attempts = 0;
+      var timer = setInterval(function () {
+        var wrapped = wrapGlobalAddToCart() && wrapCartAdd();
+        attempts += 1;
+        if (wrapped || attempts > 80) clearInterval(timer);
+      }, 120);
+    })();
+  <\/script>`;
+  return html.replace(/<\/body>/i, `${trackerScript}
+</body>`);
+}
+__name(injectMissingEcommerceTracking, "injectMissingEcommerceTracking");
+async function onRequest4(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
   if (pathname === "/product" || pathname === "/product/") {
@@ -557,12 +4233,50 @@ async function onRequest2(context) {
     if (isTh) {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
-    const stmt = context.env.DB.prepare(
-      "SELECT image_url, images, title_en, title_th, description_en, description_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
-    ).bind(slug);
-    const product = await stmt.first();
-    const localizedDescription = isTh ? String(product?.description_th || "") : String(product?.description_en || "");
-    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
+    let product = null;
+    try {
+      const stmt = context.env.DB.prepare(
+        "SELECT image_url, images, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th, product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+      ).bind(slug);
+      product = await stmt.first();
+    } catch (dbErr) {
+      console.warn("Product SSR: primary product query failed, retrying with compatibility projection", dbErr);
+      try {
+        const fallbackStmt = context.env.DB.prepare(
+          "SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+        ).bind(slug);
+        product = await fallbackStmt.first();
+      } catch (legacyDbErr) {
+        console.warn("Product SSR: faq projection unavailable, retrying legacy fallback", legacyDbErr);
+        const legacyStmt = context.env.DB.prepare(
+          "SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+        ).bind(slug);
+        product = await legacyStmt.first();
+      }
+    }
+    const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || "");
+    const seoMetaDescription = isTh ? String(product?.seo_meta_description_th || product?.seo_meta_description_en || "") : String(product?.seo_meta_description_en || "");
+    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh, seoMetaDescription);
+    const thFaqFallback = MARINE_FAQ_SLUGS.has(slug) ? TH_MARINE_FAQ_INNER : TH_GENERIC_FAQ_INNER;
+    const localizedFaq = isTh ? String(product?.faq_th || thFaqFallback) : String(product?.faq_en || "");
+    html = applyLocalizedFaqFromD1(html, localizedFaq);
+    const localizedTagline = isTh ? String(product?.product_tagline_th || product?.card_benefit_th || product?.product_tagline_en || product?.card_benefit_en || product?.title_th || "") : String(product?.product_tagline_en || product?.card_benefit_en || product?.title_en || "");
+    if (isTh) {
+      html = applyThaiProductUiLocalization(html, localizedTagline, slug);
+    } else {
+      html = replaceProductTagline(html, localizedTagline);
+    }
+    const ctaPrimary = isTh ? String(product?.cta_primary_th || product?.cta_primary_en || "") : String(product?.cta_primary_en || "");
+    const ctaCustom = isTh ? String(product?.cta_custom_th || product?.cta_custom_en || "") : String(product?.cta_custom_en || "");
+    const ctaSizeHelp = isTh ? String(product?.cta_size_help_th || product?.cta_size_help_en || "") : String(product?.cta_size_help_en || "");
+    html = applyProductUiLabelOverrides(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
+    html = injectConfiguratorLabelMeta(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
+    if (slug === "flat-sheet-extra-deep-pocket") {
+      html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);
+    }
+    if (slug === "custom-waterproof-cushion-protector") {
+      html = applyCushionProtectorUiLocalization(html, isTh);
+    }
     let images = [];
     if (product && product.images) {
       try {
@@ -570,25 +4284,71 @@ async function onRequest2(context) {
       } catch (e) {
         try {
           images = JSON.parse(product.images.replace(/\\"/g, '"'));
-        } catch (err) {
-          console.error("Failed to parse product.images:", err);
+        } catch (err4) {
+          console.error("Failed to parse product.images:", err4);
         }
       }
     }
     const mainImage = product && product.image_url || images[0] || "";
-    const title = isTh && product && product.title_th ? product.title_th : product && product.title_en;
-    if (title) {
-      html = html.replace(/<title>[^<]*<\/title>/i, `<title>${title} \u2014 MildMate</title>`);
-      html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${title} \u2014 MildMate"`);
-      html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${title} \u2014 MildMate"`);
+    const visibleTitle = isTh ? String(product?.title_th || product?.title_en || "") : String(product?.title_en || "");
+    const seoTitleRaw = isTh ? String(product?.seo_title_th || product?.seo_title_en || visibleTitle) : String(product?.seo_title_en || visibleTitle);
+    const seoTitle = formatSeoTitle(seoTitleRaw);
+    if (visibleTitle) {
+      if (seoTitle) {
+        html = html.replace(/<title>[^<]*<\/title>/i, `<title>${seoTitle}</title>`);
+        html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${seoTitle}"`);
+        html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${seoTitle}"`);
+      }
       html = html.replace(
         /<h1 class="product-title">[\s\S]*?<\/h1>/i,
-        `<h1 class="product-title">${title}</h1>`
+        `<h1 class="product-title">${visibleTitle}</h1>`
       );
       html = html.replace(
         /(<nav class="product-breadcrumb"[\s\S]*?<span>)[\s\S]*?(<\/span>)/i,
-        `$1${title}$2`
+        `$1${visibleTitle}$2`
       );
+    }
+    const effectiveTitle = visibleTitle || String(product?.title_en || slug.replace(/-/g, " "));
+    html = injectMissingEcommerceTracking(html, slug, effectiveTitle, Number(product?.base_price_usd || 0));
+    if (isTh) {
+      html = html.replace(
+        /<nav class="product-breadcrumb"[\s\S]*?<\/nav>/i,
+        (navBlock) => {
+          let patched = navBlock;
+          for (const [catUrl, thLabel] of Object.entries(TH_BREADCRUMB_CATEGORY_LABELS)) {
+            const re = new RegExp(
+              '(<a href="' + catUrl.replace(/\//g, "\\/") + '"[^>]*>)([\\s\\S]*?)(<\\/a>)',
+              "g"
+            );
+            patched = patched.replace(re, (_m, open, _text, close) => `${open}${thLabel}${close}`);
+          }
+          patched = patched.replace(
+            /(<a href="\/"[^>]*>)Home(<\/a>)/,
+            "$1\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01$2"
+          );
+          return patched;
+        }
+      );
+      for (const [re, thLabel] of TH_MARINE_SHAPE_LABELS) {
+        html = html.replace(re, thLabel);
+      }
+      for (const [re, thLabel] of TH_STATIC_HTML_REPLACEMENTS) {
+        html = html.replace(re, thLabel);
+      }
+    }
+    {
+      const enPath = `/product/${slug}/`;
+      const thPath = `/th/product/${slug}/`;
+      const canonicalHref = isTh ? `https://www.mildmate.com${thPath}` : `https://www.mildmate.com${enPath}`;
+      const enHref = `https://www.mildmate.com${enPath}`;
+      const thHref = `https://www.mildmate.com${thPath}`;
+      const seoTags = `<link rel="canonical" href="${canonicalHref}">
+  <link rel="alternate" hreflang="en" href="${enHref}">
+  <link rel="alternate" hreflang="th" href="${thHref}">`;
+      const anchor = '<meta charset="UTF-8">';
+      if (html.includes(anchor) && !html.includes('rel="canonical"')) {
+        html = html.replace(anchor, anchor + "\n  " + seoTags);
+      }
     }
     if (product && (product.image_url || product.images)) {
       const THUMB_COUNT = 6;
@@ -676,15 +4436,16 @@ async function onRequest2(context) {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=60"
+        "Cache-Control": "public, max-age=60",
+        "Content-Security-Policy": securityCsp(context.request.url)
       }
     });
-  } catch (err) {
-    console.error("Product SSR error:", err);
+  } catch (err4) {
+    console.error("Product SSR error:", err4);
     return context.next();
   }
 }
-__name(onRequest2, "onRequest");
+__name(onRequest4, "onRequest");
 
 // ../workers/api/products.ts
 var R2_PUBLIC_BASE2 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
@@ -717,6 +4478,26 @@ function r2Product(p) {
   return out;
 }
 __name(r2Product, "r2Product");
+async function ensureProductTaxonomyTables(env) {
+  const db = env.DB;
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS product_niches (
+      product_id INTEGER NOT NULL,
+      niche_type TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (product_id, niche_type)
+    )
+  `).run();
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS product_collections (
+      product_id INTEGER NOT NULL,
+      collection_type TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (product_id, collection_type)
+    )
+  `).run();
+}
+__name(ensureProductTaxonomyTables, "ensureProductTaxonomyTables");
 var PRODUCT_TYPE_DISPLAY2 = {
   "sheets": "Sheets",
   "duvet-covers": "Duvet Covers",
@@ -734,6 +4515,7 @@ var NICHE_DISPLAY2 = {
 };
 async function listProducts(env, filters) {
   const db = env.DB;
+  await ensureProductTaxonomyTables(env);
   let sql = `SELECT * FROM products WHERE 1=1`;
   const params = [];
   if (filters.product_type) {
@@ -744,8 +4526,15 @@ async function listProducts(env, filters) {
     params.push(filters.category, filters.category);
   }
   if (filters.niche) {
-    sql += ` AND (',' || niches || ',' LIKE '%,' || ? || ',%' OR ',' || category || ',' LIKE '%,' || ? || ',%')`;
-    params.push(filters.niche, filters.niche);
+    sql += ` AND (
+      EXISTS (
+        SELECT 1 FROM product_collections pc
+        WHERE pc.product_id = products.id AND pc.collection_type = ?
+      )
+      OR ',' || niches || ',' LIKE '%,' || ? || ',%'
+      OR ',' || category || ',' LIKE '%,' || ? || ',%'
+    )`;
+    params.push(filters.niche, filters.niche, filters.niche);
   }
   if (filters.fabric) {
     sql += ` AND fabric = ?`;
@@ -762,6 +4551,7 @@ async function listProducts(env, filters) {
 __name(listProducts, "listProducts");
 async function getProductBySlug(env, slug) {
   const db = env.DB;
+  await ensureProductTaxonomyTables(env);
   const result = await db.prepare(`SELECT * FROM products WHERE slug = ?`).bind(slug).first();
   return result;
 }
@@ -911,10 +4701,15 @@ var OPERATING_RATE = 0.15;
 var MARKETING_RATE = 0.2;
 var MARGIN_RATE = 0.3;
 var FAMILY_MARGIN_RATE = 0.5;
+var CUSHION_PROTECTOR_MARGIN_RATE = 0.3;
 var PILLOW_PROTECTOR_MARGIN_RATE = 0.35;
 var PILLOWCASE_MARGIN_RATE = 0.15;
 var THB_TO_USD = 30;
 var MAX_WIDTH_CM = 220;
+var DERIVED_MARKUP_KEY_PREFIX = "derived_markup_";
+var DEFAULT_DERIVED_MARKUPS = {
+  "weighted-duvet-cover": 10
+};
 function inchToCm(val) {
   return val * 2.54;
 }
@@ -1149,7 +4944,8 @@ function isFittedSheetProduct(product) {
     "dorm-fitted-sheet",
     "rv-truck-fitted-sheet",
     "pet-owner-fitted-sheet",
-    "family-fitted-sheet"
+    "family-fitted-sheet",
+    "custom-waterproof-cushion-protector"
   ].includes(product);
 }
 __name(isFittedSheetProduct, "isFittedSheetProduct");
@@ -1166,7 +4962,8 @@ function isDuvetProduct(product) {
     "duvet-cover-dorm",
     "duvet-cover-rv",
     "duvet-cover-marine",
-    "pet-owner-duvet-cover"
+    "pet-owner-duvet-cover",
+    "weighted-duvet-cover"
   ].includes(product);
 }
 __name(isDuvetProduct, "isDuvetProduct");
@@ -1181,10 +4978,21 @@ function isPillowcaseProduct(product) {
   return { isPillowcase: false };
 }
 __name(isPillowcaseProduct, "isPillowcaseProduct");
-function calculatePrice(input, currency = "USD") {
+function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
   const product = input.product || "";
   const mode = input.mode || "sheet";
   const fabric = input.fabric || "cloudsoft";
+  const resolveMarkupPct = /* @__PURE__ */ __name(() => {
+    if (!product) return 0;
+    if (derivedMarkups[product] !== void 0) return Number(derivedMarkups[product]) || 0;
+    return DEFAULT_DERIVED_MARKUPS[product] || 0;
+  }, "resolveMarkupPct");
+  const applyDerivedMarkup = /* @__PURE__ */ __name((basePrice) => {
+    const pct = resolveMarkupPct();
+    if (!pct || !Number.isFinite(basePrice) || basePrice <= 0) return basePrice;
+    const marked = basePrice * (1 + pct / 100);
+    return currency === "THB" ? Math.ceil(marked / 100) * 100 : Math.round(marked * 100) / 100;
+  }, "applyDerivedMarkup");
   const pillowcase = isPillowcaseProduct(product);
   if (pillowcase.isPillowcase) {
     let w2 = input.width || 0;
@@ -1199,7 +5007,7 @@ function calculatePrice(input, currency = "USD") {
     if (w2 > 0 && l2 > 0) {
       const result = calculatePillowcasePrice(w2, l2, fabric, pillowcase.variant);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -1218,7 +5026,7 @@ function calculatePrice(input, currency = "USD") {
     if (w2 > 0 && l2 > 0) {
       const result = calculatePillowProtectorPrice(w2, l2);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -1234,7 +5042,7 @@ function calculatePrice(input, currency = "USD") {
     if (w2 > 0 && l2 > 0) {
       const result = calculateDuvetPrice(w2, l2, fabric);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -1252,7 +5060,7 @@ function calculatePrice(input, currency = "USD") {
     if (w2 > 0 && l2 > 0 && d > 0) {
       const result = calculateFlatSheetPrice(w2, l2, d, fabric);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -1271,15 +5079,15 @@ function calculatePrice(input, currency = "USD") {
       if (product !== "family-fitted-sheet" && w2 > MAX_WIDTH_CM) {
         const result2 = calculateFittedSheetPrice(w2, l2, d, fabric);
         return {
-          price: currency === "THB" ? result2.priceThb : result2.priceUsd,
+          price: applyDerivedMarkup(currency === "THB" ? result2.priceThb : result2.priceUsd),
           breakdown: { ...result2.breakdown, roundedThb: -1 }
           // -1 signals "requires family sheet"
         };
       }
-      const marginRate = product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : MARGIN_RATE;
+      const marginRate = product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : product === "custom-waterproof-cushion-protector" ? CUSHION_PROTECTOR_MARGIN_RATE : MARGIN_RATE;
       const result = calculateFittedSheetPrice(w2, l2, d, fabric, marginRate);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -1295,9 +5103,28 @@ function calculatePrice(input, currency = "USD") {
     head = inchToCm(head);
     foot = inchToCm(foot);
   }
-  return { price: calculateLegacyPrice(mode, w, l, head, foot, fabric, currency) };
+  return { price: applyDerivedMarkup(calculateLegacyPrice(mode, w, l, head, foot, fabric, currency)) };
 }
 __name(calculatePrice, "calculatePrice");
+async function loadDerivedMarkupMap(env) {
+  const out = { ...DEFAULT_DERIVED_MARKUPS };
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT key, value FROM pricing_params WHERE key LIKE ?1"
+    ).bind(`${DERIVED_MARKUP_KEY_PREFIX}%`).all();
+    for (const row of results || []) {
+      const key = String(row.key || "");
+      if (!key.startsWith(DERIVED_MARKUP_KEY_PREFIX)) continue;
+      const slug = key.slice(DERIVED_MARKUP_KEY_PREFIX.length).trim();
+      const pct = Number(row.value);
+      if (!slug || !Number.isFinite(pct)) continue;
+      out[slug] = pct;
+    }
+  } catch {
+  }
+  return out;
+}
+__name(loadDerivedMarkupMap, "loadDerivedMarkupMap");
 async function handlePricing(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -1326,8 +5153,9 @@ async function handlePricing(request, env) {
           foot: parseFloat(params.get("foot") || "0") || void 0
         };
       }
-      const resultUsd = calculatePrice(body, "USD");
-      const resultThb = calculatePrice(body, "THB");
+      const derivedMarkupMap = await loadDerivedMarkupMap(env);
+      const resultUsd = calculatePrice(body, "USD", derivedMarkupMap);
+      const resultThb = calculatePrice(body, "THB", derivedMarkupMap);
       let formulaType = "legacy";
       const pc = isPillowcaseProduct(body.product || "");
       if (pc.isPillowcase) {
@@ -1341,19 +5169,20 @@ async function handlePricing(request, env) {
       } else if (isFittedSheetProduct(body.product || "") || !body.product && body.mode !== "vberth") {
         formulaType = "fitted-sheet";
       }
-      const response = {
+      const response6 = {
         price_usd: resultUsd.price,
         price_thb: resultThb.price,
         product: body.product || null,
         mode: body.mode || "sheet",
         fabric: body.fabric || "cloudsoft",
         unit: body.unit || "cm",
-        formula: formulaType
+        formula: formulaType,
+        derived_markup_pct: body.product ? derivedMarkupMap[body.product] || 0 : 0
       };
       if (resultUsd.breakdown) {
-        response.breakdown = resultUsd.breakdown;
+        response6.breakdown = resultUsd.breakdown;
       }
-      return new Response(JSON.stringify(response), {
+      return new Response(JSON.stringify(response6), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
@@ -1650,7 +5479,54 @@ async function handleCountries(request, env) {
 __name(handleCountries, "handleCountries");
 
 // ../workers/api/email.ts
+var PROD_LABELS = /* @__PURE__ */ new Set(["prod", "production", "live"]);
+function normalize(v) {
+  return String(v || "").trim().toLowerCase();
+}
+__name(normalize, "normalize");
+function evaluateOutboundEmailSafety(env) {
+  const runtimeEnv = normalize(env.RUNTIME_ENV || env.APP_ENV);
+  const d1EnvLabel = normalize(env.D1_ENV_LABEL);
+  const stripeEnvMode = normalize(env.STRIPE_ENV_MODE);
+  const nonProdEmailAllowed = normalize(env.NON_PROD_EMAIL_ALLOWED);
+  const runtimeIsProd = !!runtimeEnv && PROD_LABELS.has(runtimeEnv);
+  const d1IsProd = !!d1EnvLabel && PROD_LABELS.has(d1EnvLabel);
+  const stripeIsProd = stripeEnvMode === "live";
+  const runtimeIsNonProd = !!runtimeEnv && !PROD_LABELS.has(runtimeEnv);
+  const d1IsNonProd = !!d1EnvLabel && !PROD_LABELS.has(d1EnvLabel);
+  const stripeIsNonProd = stripeEnvMode === "test";
+  const hasProdSignal = runtimeIsProd || d1IsProd || stripeIsProd;
+  const hasNonProdSignal = runtimeIsNonProd || d1IsNonProd || stripeIsNonProd;
+  if (hasNonProdSignal && nonProdEmailAllowed === "false") {
+    return { allowed: false, mode: "non_production", reason: "non_prod_email_explicitly_blocked" };
+  }
+  if (hasProdSignal && hasNonProdSignal) {
+    return { allowed: false, mode: "unknown", reason: "environment_signal_conflict" };
+  }
+  if (hasNonProdSignal) {
+    if (nonProdEmailAllowed === "true") {
+      return { allowed: true, mode: "non_production", reason: "non_prod_opt_in" };
+    }
+    if (nonProdEmailAllowed === "false") {
+      return { allowed: false, mode: "non_production", reason: "non_prod_email_explicitly_blocked" };
+    }
+    if (!nonProdEmailAllowed) {
+      return { allowed: false, mode: "non_production", reason: "missing_non_prod_email_allowed" };
+    }
+    return { allowed: false, mode: "non_production", reason: "malformed_non_prod_email_allowed" };
+  }
+  if (hasProdSignal) {
+    return { allowed: true, mode: "production", reason: "production_mode" };
+  }
+  return { allowed: true, mode: "unknown", reason: "legacy_unclassified_mode" };
+}
+__name(evaluateOutboundEmailSafety, "evaluateOutboundEmailSafety");
 async function sendEmail(env, options) {
+  const safety = evaluateOutboundEmailSafety(env);
+  if (!safety.allowed) {
+    console.warn(`Email suppressed: ${safety.reason}`);
+    return { success: false, error: `EMAIL_SUPPRESSED:${safety.reason}` };
+  }
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) {
     console.error("RESEND_API_KEY not set");
@@ -1658,19 +5534,23 @@ async function sendEmail(env, options) {
   }
   try {
     const from = options.from || env.ORDER_FROM_EMAIL || "MildMate <noreply@mildmate.com>";
+    const payload = {
+      from,
+      to: [options.to],
+      reply_to: options.replyTo,
+      subject: options.subject,
+      text: options.text
+    };
+    if (options.html && options.html.trim().length > 0) {
+      payload.html = options.html;
+    }
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        from,
-        to: [options.to],
-        reply_to: options.replyTo,
-        subject: options.subject,
-        text: options.text
-      })
+      body: JSON.stringify(payload)
     });
     const body = await resp.json();
     if (!resp.ok) {
@@ -1678,9 +5558,9 @@ async function sendEmail(env, options) {
       return { success: false, error: body?.message || `HTTP ${resp.status}` };
     }
     return { success: true, id: body?.id };
-  } catch (err) {
-    console.error("Resend fetch failed:", err.message || err);
-    return { success: false, error: err.message || "Network error" };
+  } catch (err4) {
+    console.error("Resend fetch failed:", err4.message || err4);
+    return { success: false, error: err4.message || "Network error" };
   }
 }
 __name(sendEmail, "sendEmail");
@@ -1875,8 +5755,8 @@ async function handleUnsubscribe(request, env) {
         }
       }
     );
-  } catch (err) {
-    console.error("Unsubscribe error:", err);
+  } catch (err4) {
+    console.error("Unsubscribe error:", err4);
     return new Response(
       JSON.stringify({ message: "Database error. Please try again later." }),
       {
@@ -1896,14 +5776,10 @@ function isValidEmail2(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 __name(isValidEmail2, "isValidEmail");
-async function verifyTurnstileToken(env, token, ip) {
+async function verifyTurnstile(env, token, ip) {
   if (!env.TURNSTILE_SECRET_KEY) {
     console.error("TURNSTILE_SECRET_KEY is missing");
-    return {
-      ok: false,
-      status: 503,
-      error: "Security verification is temporarily unavailable. Please try again later."
-    };
+    return { ok: false, status: 503, error: "Security verification is temporarily unavailable. Please try again later." };
   }
   if (!token) {
     return { ok: false, status: 400, error: "Please complete the security check." };
@@ -1929,7 +5805,7 @@ async function verifyTurnstileToken(env, token, ip) {
     return { ok: false, status: 502, error: "Security verification failed. Please try again." };
   }
 }
-__name(verifyTurnstileToken, "verifyTurnstileToken");
+__name(verifyTurnstile, "verifyTurnstile");
 async function handleContact(request, env) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -1961,7 +5837,7 @@ async function handleContact(request, env) {
   const message = (body.message || "").trim();
   const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  const turnstile = await verifyTurnstileToken(env, turnstileToken, ip);
+  const turnstile = await verifyTurnstile(env, turnstileToken, ip);
   if (!turnstile.ok) {
     return new Response(
       JSON.stringify({ error: turnstile.error || "Security verification failed." }),
@@ -2021,9 +5897,338 @@ User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
 }
 __name(handleContact, "handleContact");
 
+// ../workers/api/attribution.ts
+var ATTRIBUTION_SCHEMA_VERSION = 1;
+function cleanString(raw, max = 160) {
+  if (raw == null) return null;
+  const v = String(raw).trim();
+  if (!v) return null;
+  return v.slice(0, max);
+}
+__name(cleanString, "cleanString");
+function lowerToken(raw, max = 120) {
+  const clean = cleanString(raw, max);
+  return clean ? clean.toLowerCase() : null;
+}
+__name(lowerToken, "lowerToken");
+function boolish(raw) {
+  return raw === true || raw === 1 || String(raw || "").toLowerCase() === "true";
+}
+__name(boolish, "boolish");
+function toIso(raw) {
+  const d = raw ? new Date(String(raw)) : /* @__PURE__ */ new Date();
+  if (Number.isNaN(d.getTime())) return (/* @__PURE__ */ new Date()).toISOString();
+  return d.toISOString();
+}
+__name(toIso, "toIso");
+function parseHost(raw) {
+  const input = cleanString(raw, 300);
+  if (!input) return null;
+  try {
+    if (/^https?:\/\//i.test(input)) {
+      return new URL(input).hostname.toLowerCase().slice(0, 200);
+    }
+  } catch {
+  }
+  const host = input.replace(/^https?:\/\//i, "").split("/")[0].split("?")[0].split("#")[0].trim().toLowerCase();
+  if (!host) return null;
+  if (!/^[a-z0-9.-]+$/.test(host)) return null;
+  return host.slice(0, 200);
+}
+__name(parseHost, "parseHost");
+function sanitizePath(raw) {
+  const input = cleanString(raw, 500);
+  if (!input) return null;
+  let path = input;
+  try {
+    if (/^https?:\/\//i.test(input)) {
+      path = new URL(input).pathname || "/";
+    }
+  } catch {
+  }
+  path = path.split("?")[0].split("#")[0].trim();
+  if (!path) return null;
+  if (!path.startsWith("/")) path = "/" + path;
+  path = path.replace(/\/{2,}/g, "/");
+  if (/^\/quote\/qt-[^/]+\/?$/i.test(path)) return "/quote/";
+  return path.slice(0, 240);
+}
+__name(sanitizePath, "sanitizePath");
+function sanitizeTouch(raw, consent) {
+  if (!raw || typeof raw !== "object") return null;
+  const utmSource = lowerToken(raw.utm_source || raw.source, 100);
+  const utmMedium = lowerToken(raw.utm_medium || raw.medium, 100);
+  const source = lowerToken(raw.source || raw.utm_source, 100);
+  const medium = lowerToken(raw.medium || raw.utm_medium, 100);
+  const utmCampaign = cleanString(raw.utm_campaign || raw.campaign, 140);
+  const utmTerm = cleanString(raw.utm_term || raw.term, 140);
+  const utmContent = cleanString(raw.utm_content || raw.content, 140);
+  const gclid = consent.marketing ? cleanString(raw.gclid, 120) : null;
+  const gbraid = consent.marketing ? cleanString(raw.gbraid, 120) : null;
+  const wbraid = consent.marketing ? cleanString(raw.wbraid, 120) : null;
+  const referrerDomain = parseHost(raw.referrer_domain || raw.referrer_host || raw.referrer);
+  const referrerPath = sanitizePath(raw.referrer_path);
+  const landingPath = sanitizePath(raw.landing_path || raw.path);
+  const gaClientId = consent.analytics ? cleanString(raw.ga_client_id, 120) : null;
+  const gaSessionId = consent.analytics ? cleanString(raw.ga_session_id, 120) : null;
+  const observed = boolish(raw.observed) || !!(utmSource || utmMedium || gclid || gbraid || wbraid);
+  const inferred = boolish(raw.inferred) || !observed && !!(source || medium || referrerDomain);
+  if (!source && !medium && !utmSource && !utmMedium && !utmCampaign && !utmTerm && !utmContent && !gclid && !gbraid && !wbraid && !referrerDomain && !referrerPath && !landingPath && !gaClientId && !gaSessionId) {
+    return null;
+  }
+  return {
+    source: source || null,
+    medium: medium || null,
+    utm_source: utmSource || null,
+    utm_medium: utmMedium || null,
+    utm_campaign: utmCampaign || null,
+    utm_term: utmTerm || null,
+    utm_content: utmContent || null,
+    gclid,
+    gbraid,
+    wbraid,
+    referrer_domain: referrerDomain || null,
+    referrer_path: referrerPath || null,
+    landing_path: landingPath || null,
+    ga_client_id: gaClientId,
+    ga_session_id: gaSessionId,
+    observed,
+    inferred,
+    captured_at: toIso(raw.captured_at)
+  };
+}
+__name(sanitizeTouch, "sanitizeTouch");
+function sanitizeConsentState(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  const analytics = boolish(src.analytics);
+  const marketing = boolish(src.marketing);
+  const timestampNum = Number(src.timestamp);
+  return {
+    essential: true,
+    analytics,
+    marketing,
+    timestamp: Number.isFinite(timestampNum) && timestampNum > 0 ? Math.round(timestampNum) : null,
+    captured_at: toIso(src.captured_at),
+    source: cleanString(src.source, 80)
+  };
+}
+__name(sanitizeConsentState, "sanitizeConsentState");
+function safeParseObject(raw) {
+  if (!raw) return null;
+  if (typeof raw === "object") return raw;
+  if (typeof raw !== "string") return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+__name(safeParseObject, "safeParseObject");
+function toJsonText(value) {
+  if (!value) return null;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return null;
+  }
+}
+__name(toJsonText, "toJsonText");
+function sanitizeAttributionPayload(raw, stage) {
+  const parsed = safeParseObject(raw) || {};
+  const consent = sanitizeConsentState(parsed.consent_state || parsed.consent || {});
+  const firstTouch = sanitizeTouch(parsed.first_touch, consent) || null;
+  const quoteTouch = stage === "quote" ? sanitizeTouch(parsed.quote_session || parsed.session_touch || parsed.latest_touch, consent) : null;
+  const checkoutTouch = stage === "checkout" ? sanitizeTouch(parsed.checkout_session || parsed.session_touch || parsed.latest_touch, consent) : null;
+  return {
+    schema_version: ATTRIBUTION_SCHEMA_VERSION,
+    consent_state: consent,
+    first_touch: firstTouch,
+    quote_session: quoteTouch,
+    checkout_session: checkoutTouch
+  };
+}
+__name(sanitizeAttributionPayload, "sanitizeAttributionPayload");
+var quoteAttributionSchemaReady = false;
+var quoteAttributionSchemaPromise = null;
+async function ensureQuoteAttributionSchema(env) {
+  if (quoteAttributionSchemaReady) return true;
+  if (!quoteAttributionSchemaPromise) {
+    quoteAttributionSchemaPromise = (async () => {
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS quote_acquisition_attribution (
+             quote_id TEXT PRIMARY KEY,
+             email TEXT,
+             schema_version INTEGER NOT NULL DEFAULT 1,
+             first_touch_json TEXT,
+             quote_session_json TEXT,
+             checkout_session_json TEXT,
+             consent_state_json TEXT,
+             quote_session_captured_at DATETIME,
+             checkout_session_captured_at DATETIME,
+             checkout_stripe_session_id TEXT,
+             created_at DATETIME DEFAULT (datetime('now')),
+             updated_at DATETIME DEFAULT (datetime('now'))
+           )`
+        ).run();
+        await env.DB.prepare(
+          "CREATE INDEX IF NOT EXISTS idx_quote_acquisition_attr_email ON quote_acquisition_attribution(email)"
+        ).run();
+        await env.DB.prepare(
+          "CREATE INDEX IF NOT EXISTS idx_quote_acquisition_attr_checkout_session ON quote_acquisition_attribution(checkout_stripe_session_id)"
+        ).run();
+        try {
+          const tableInfo = await env.DB.prepare("PRAGMA table_info(quote_acquisition_attribution)").all();
+          const existing = new Set((tableInfo?.results || []).map((r) => String(r?.name || "").toLowerCase()));
+          const alters = [];
+          if (!existing.has("schema_version")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN schema_version INTEGER NOT NULL DEFAULT 1");
+          if (!existing.has("first_touch_json")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN first_touch_json TEXT");
+          if (!existing.has("quote_session_json")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN quote_session_json TEXT");
+          if (!existing.has("checkout_session_json")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN checkout_session_json TEXT");
+          if (!existing.has("consent_state_json")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN consent_state_json TEXT");
+          if (!existing.has("quote_session_captured_at")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN quote_session_captured_at DATETIME");
+          if (!existing.has("checkout_session_captured_at")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN checkout_session_captured_at DATETIME");
+          if (!existing.has("checkout_stripe_session_id")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN checkout_stripe_session_id TEXT");
+          if (!existing.has("updated_at")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN updated_at DATETIME");
+          for (const sql of alters) await env.DB.prepare(sql).run();
+        } catch {
+        }
+        quoteAttributionSchemaReady = true;
+        return true;
+      } catch (e) {
+        console.error("quote attribution schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!quoteAttributionSchemaReady) quoteAttributionSchemaPromise = null;
+    });
+  }
+  return await quoteAttributionSchemaPromise;
+}
+__name(ensureQuoteAttributionSchema, "ensureQuoteAttributionSchema");
+function uniqueQuoteIds(rawIds) {
+  const out = /* @__PURE__ */ new Set();
+  for (const raw of rawIds || []) {
+    const id = cleanString(raw, 80);
+    if (id) out.add(id);
+  }
+  return Array.from(out);
+}
+__name(uniqueQuoteIds, "uniqueQuoteIds");
+function extractUniqueQuoteIdsFromItems(items) {
+  const ids = [];
+  for (const item of Array.isArray(items) ? items : []) {
+    ids.push(item?.quote_id);
+    ids.push(item?.qi);
+  }
+  return uniqueQuoteIds(ids);
+}
+__name(extractUniqueQuoteIdsFromItems, "extractUniqueQuoteIdsFromItems");
+async function upsertQuoteAttributionFromQuote(env, quoteIdRaw, emailRaw, payload) {
+  const quoteId = cleanString(quoteIdRaw, 80);
+  if (!quoteId) return false;
+  const schemaOk = await ensureQuoteAttributionSchema(env);
+  if (!schemaOk) return false;
+  const email = lowerToken(emailRaw, 200);
+  const firstTouchJson = toJsonText(payload?.first_touch);
+  const quoteSessionJson = toJsonText(payload?.quote_session);
+  const consentJson = toJsonText(payload?.consent_state);
+  const quoteCapturedAt = payload?.quote_session?.captured_at || null;
+  await env.DB.prepare(
+    `INSERT INTO quote_acquisition_attribution (
+       quote_id, email, schema_version, first_touch_json, quote_session_json, checkout_session_json,
+       consent_state_json, quote_session_captured_at, checkout_session_captured_at, checkout_stripe_session_id,
+       created_at, updated_at
+     ) VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7, NULL, NULL, datetime('now'), datetime('now'))
+     ON CONFLICT(quote_id) DO UPDATE SET
+       email = COALESCE(excluded.email, quote_acquisition_attribution.email),
+       schema_version = excluded.schema_version,
+       first_touch_json = COALESCE(quote_acquisition_attribution.first_touch_json, excluded.first_touch_json),
+       quote_session_json = COALESCE(excluded.quote_session_json, quote_acquisition_attribution.quote_session_json),
+       consent_state_json = COALESCE(excluded.consent_state_json, quote_acquisition_attribution.consent_state_json),
+       quote_session_captured_at = COALESCE(excluded.quote_session_captured_at, quote_acquisition_attribution.quote_session_captured_at),
+       updated_at = datetime('now')`
+  ).bind(
+    quoteId,
+    email,
+    Number(payload?.schema_version || ATTRIBUTION_SCHEMA_VERSION),
+    firstTouchJson,
+    quoteSessionJson,
+    consentJson,
+    quoteCapturedAt
+  ).run();
+  return true;
+}
+__name(upsertQuoteAttributionFromQuote, "upsertQuoteAttributionFromQuote");
+async function upsertQuoteAttributionFromCheckout(env, quoteIdsRaw, emailRaw, payload, stripeSessionIdRaw) {
+  const quoteIds = uniqueQuoteIds(quoteIdsRaw || []);
+  if (quoteIds.length === 0) return false;
+  const schemaOk = await ensureQuoteAttributionSchema(env);
+  if (!schemaOk) return false;
+  const email = lowerToken(emailRaw, 200);
+  const firstTouchJson = toJsonText(payload?.first_touch);
+  const checkoutSessionJson = toJsonText(payload?.checkout_session);
+  const consentJson = toJsonText(payload?.consent_state);
+  const checkoutCapturedAt = payload?.checkout_session?.captured_at || null;
+  const stripeSessionId = cleanString(stripeSessionIdRaw, 120);
+  for (const quoteId of quoteIds) {
+    await env.DB.prepare(
+      `INSERT INTO quote_acquisition_attribution (
+         quote_id, email, schema_version, first_touch_json, quote_session_json, checkout_session_json,
+         consent_state_json, quote_session_captured_at, checkout_session_captured_at, checkout_stripe_session_id,
+         created_at, updated_at
+       ) VALUES (?1, ?2, ?3, ?4, NULL, ?5, ?6, NULL, ?7, ?8, datetime('now'), datetime('now'))
+       ON CONFLICT(quote_id) DO UPDATE SET
+         email = COALESCE(excluded.email, quote_acquisition_attribution.email),
+         schema_version = excluded.schema_version,
+         first_touch_json = COALESCE(quote_acquisition_attribution.first_touch_json, excluded.first_touch_json),
+         checkout_session_json = COALESCE(excluded.checkout_session_json, quote_acquisition_attribution.checkout_session_json),
+         consent_state_json = COALESCE(excluded.consent_state_json, quote_acquisition_attribution.consent_state_json),
+         checkout_session_captured_at = COALESCE(excluded.checkout_session_captured_at, quote_acquisition_attribution.checkout_session_captured_at),
+         checkout_stripe_session_id = COALESCE(excluded.checkout_stripe_session_id, quote_acquisition_attribution.checkout_stripe_session_id),
+         updated_at = datetime('now')`
+    ).bind(
+      quoteId,
+      email,
+      Number(payload?.schema_version || ATTRIBUTION_SCHEMA_VERSION),
+      firstTouchJson,
+      checkoutSessionJson,
+      consentJson,
+      checkoutCapturedAt,
+      stripeSessionId
+    ).run();
+  }
+  return true;
+}
+__name(upsertQuoteAttributionFromCheckout, "upsertQuoteAttributionFromCheckout");
+
 // ../workers/api/quote.ts
 var QUOTE_RATE_LIMIT = 5;
 var QUOTE_RATE_WINDOW = "-1 hour";
+var FIXED_WHITE_PROTECTOR_SLUGS = /* @__PURE__ */ new Set([
+  "marine-mattress-protector",
+  "mattress-protector-standard",
+  "mattress-protector-family",
+  "mattress-protector-deep-pocket",
+  "pet-proof-mattress-protector",
+  // TPU-only, white-only encasements + pillow protector — client default fabric must never leak through
+  "mattress-encasement-general",
+  "rv-truck-mattress-encasement",
+  "pillow-protector-general"
+]);
+function normalizeQuoteFabric(slug, fabric) {
+  if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "tpu";
+  const clean = typeof fabric === "string" ? fabric.trim().toLowerCase() : "";
+  return clean || null;
+}
+__name(normalizeQuoteFabric, "normalizeQuoteFabric");
+function normalizeQuoteColor(slug, color) {
+  if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "white";
+  const clean = typeof color === "string" ? color.trim().toLowerCase() : "";
+  return clean || null;
+}
+__name(normalizeQuoteColor, "normalizeQuoteColor");
 async function checkRateLimit(db, ip, endpoint, max) {
   const row = await db.prepare(
     `SELECT COUNT(*) as cnt FROM rate_limits WHERE ip_address = ? AND endpoint = ? AND created_at > datetime('now', ?)`
@@ -2031,6 +6236,36 @@ async function checkRateLimit(db, ip, endpoint, max) {
   return (row?.cnt || 0) >= max;
 }
 __name(checkRateLimit, "checkRateLimit");
+async function verifyTurnstile2(env, token, ip) {
+  if (!env.TURNSTILE_SECRET_KEY) {
+    console.error("TURNSTILE_SECRET_KEY is missing");
+    return { ok: false, status: 503, error: "Security verification is temporarily unavailable. Please try again later." };
+  }
+  if (!token) {
+    return { ok: false, status: 400, error: "Please complete the security check." };
+  }
+  const payload = new URLSearchParams({
+    secret: env.TURNSTILE_SECRET_KEY,
+    response: token
+  });
+  if (ip && ip !== "unknown") payload.append("remoteip", ip);
+  try {
+    const resp = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: payload.toString()
+    });
+    const result = await resp.json();
+    if (!result?.success) {
+      return { ok: false, status: 400, error: "Security verification failed. Please try again." };
+    }
+    return { ok: true, status: 200 };
+  } catch (e) {
+    console.error("Turnstile verify error:", e?.message || e);
+    return { ok: false, status: 502, error: "Security verification failed. Please try again." };
+  }
+}
+__name(verifyTurnstile2, "verifyTurnstile");
 async function handleQuote(request, env) {
   const url = new URL(request.url);
   if (request.method === "GET") {
@@ -2044,7 +6279,7 @@ async function handleQuote(request, env) {
     try {
       const row = await env.DB.prepare(
         `SELECT quote_id, customer_name, email, product_slug, dimensions, fabric, color,
-                status, quoted_price, expires_at, created_at
+                status, quoted_price, free_shipping, expires_at, created_at
          FROM custom_quotes
          WHERE quote_id = ?1`
       ).bind(quoteId).first();
@@ -2082,6 +6317,7 @@ async function handleQuote(request, env) {
         status: row.status,
         quoted_price_thb: priceThb,
         quoted_price_usd: priceUsd,
+        free_shipping: Number(row.free_shipping || 0) === 1,
         expires_at: row.expires_at,
         created_at: row.created_at,
         is_expired: row.expires_at ? /* @__PURE__ */ new Date(row.expires_at + "Z") < /* @__PURE__ */ new Date() : false,
@@ -2105,7 +6341,7 @@ async function handleQuote(request, env) {
   }
   try {
     const body = await request.json();
-    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, _website } = body;
+    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, attribution, _website } = body;
     const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
     if (_website && _website.length > 0) {
       return new Response(JSON.stringify({ success: true, message: "Quote submitted." }), {
@@ -2114,7 +6350,7 @@ async function handleQuote(request, env) {
       });
     }
     const ip = request.headers.get("cf-connecting-ip") || "unknown";
-    const turnstile = await verifyTurnstileToken(env, turnstileToken, ip);
+    const turnstile = await verifyTurnstile2(env, turnstileToken, ip);
     if (!turnstile.ok) {
       return new Response(JSON.stringify({
         error: turnstile.error || "Security verification failed."
@@ -2170,9 +6406,12 @@ async function handleQuote(request, env) {
     const cleanName = customer_name.trim();
     const cleanAddress = address?.trim() || "\u2014";
     const cleanPhone = telephone?.trim() || "\u2014";
-    const cleanFabric = fabric || "\u2014";
-    const cleanColor = color || "\u2014";
-    const cleanSlug = product_slug;
+    const cleanSlug = String(product_slug || "").trim().toLowerCase();
+    const normalizedFabric = normalizeQuoteFabric(cleanSlug, fabric);
+    const normalizedColor = normalizeQuoteColor(cleanSlug, color);
+    const cleanFabric = normalizedFabric || "\u2014";
+    const cleanColor = normalizedColor || "\u2014";
+    const quoteAttribution = sanitizeAttributionPayload(attribution, "quote");
     await env.DB.prepare(`
       INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price, quoted_price_usd)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -2184,18 +6423,31 @@ async function handleQuote(request, env) {
       telephone?.trim() || null,
       cleanSlug,
       dimsJson,
-      fabric || null,
-      color || null,
+      normalizedFabric,
+      normalizedColor,
       quoted_price_thb || null,
       quoted_price_usd || null
     ).run();
+    try {
+      await upsertQuoteAttributionFromQuote(env, quoteId, cleanEmail, quoteAttribution);
+    } catch (e) {
+      console.error("Quote attribution persist failed:", e?.message || e);
+    }
     await env.DB.prepare(
       `INSERT OR IGNORE INTO subscribers (email, source, language) VALUES (?, 'quote', 'en')`
     ).bind(cleanEmail).run();
     await env.DB.prepare(
       `INSERT INTO rate_limits (ip_address, endpoint) VALUES (?, 'quote')`
     ).bind(ip).run();
-    const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd);
+    let productTitle = "";
+    try {
+      const titleRow = await env.DB.prepare(
+        "SELECT title_en FROM products WHERE slug = ?1"
+      ).bind(cleanSlug).first();
+      if (titleRow?.title_en) productTitle = String(titleRow.title_en).trim();
+    } catch {
+    }
+    const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd, productTitle);
     let emailStatus = "not_sent";
     try {
       const emailResult = await sendEmail(env, {
@@ -2222,8 +6474,8 @@ async function handleQuote(request, env) {
       status: 201,
       headers: { "Content-Type": "application/json" }
     });
-  } catch (err) {
-    console.error("Quote API error:", err);
+  } catch (err4) {
+    console.error("Quote API error:", err4);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
@@ -2231,7 +6483,8 @@ async function handleQuote(request, env) {
   }
 }
 __name(handleQuote, "handleQuote");
-function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, color, quoteId, priceThb, priceUsd) {
+function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, color, quoteId, priceThb, priceUsd, productTitle) {
+  const fmt1 = /* @__PURE__ */ __name((n) => String(Math.round(Number(n) * 10) / 10), "fmt1");
   let dimStr = "\u2014";
   let shapeLine = "";
   let areaLine = "";
@@ -2263,7 +6516,14 @@ function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, co
           dimStr = JSON.stringify(d);
         }
       } else if (d.w && d.l) {
-        dimStr = d.d ? `${d.w} \xD7 ${d.l} \xD7 ${d.d} ${unit}` : `${d.w} \xD7 ${d.l} ${unit}`;
+        const cmStr = d.d ? `${fmt1(d.w)} \xD7 ${fmt1(d.l)} \xD7 ${fmt1(d.d)} ${unit}` : `${fmt1(d.w)} \xD7 ${fmt1(d.l)} ${unit}`;
+        const e = d.entered;
+        if (e && typeof e === "object" && e.w && e.l && e.unit && String(e.unit).toLowerCase() !== String(unit).toLowerCase()) {
+          const enteredStr = e.d ? `${fmt1(e.w)} \xD7 ${fmt1(e.l)} \xD7 ${fmt1(e.d)} ${e.unit}` : `${fmt1(e.w)} \xD7 ${fmt1(e.l)} ${e.unit}`;
+          dimStr = `${enteredStr} (${cmStr})`;
+        } else {
+          dimStr = cmStr;
+        }
       } else {
         dimStr = JSON.stringify(d);
       }
@@ -2277,10 +6537,11 @@ function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, co
     const thb = priceThb != null ? ` (\u0E3F${priceThb.toLocaleString()})` : "";
     priceLine = `$${usd} USD${thb}`;
   }
+  const productLine = productTitle ? `${productTitle} (${slug})` : slug;
   return `New custom quote submitted from MildMate website:
 
 Quote ID: ${quoteId}
-Product: ${slug}
+Product: ${productLine}
 
 \u2501\u2501\u2501 Customer \u2501\u2501\u2501
 Name: ${name}
@@ -2388,174 +6649,25 @@ async function handlePricingParams(request, env) {
 }
 __name(handlePricingParams, "handlePricingParams");
 
-// ../workers/api/clerk-verify.ts
-var jwksCache = null;
-var CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
-var JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
-var JWKS_CACHE_MS = 3600 * 1e3;
-var RATE_WINDOW_MS = 60 * 1e3;
-var MAX_AUTH_REQUESTS = 30;
-async function checkAuthRateLimit(env, ip) {
-  try {
-    const row = await env.DB.prepare(
-      `SELECT COUNT(*) as cnt FROM rate_limits
-       WHERE ip_address = ?1 AND endpoint = 'auth'
-       AND created_at > datetime('now', '-1 minute')`
-    ).bind(ip).first();
-    return (row?.cnt || 0) >= MAX_AUTH_REQUESTS;
-  } catch {
-    return false;
-  }
-}
-__name(checkAuthRateLimit, "checkAuthRateLimit");
-async function recordRateLimit(env, ip) {
-  try {
-    await env.DB.prepare(
-      "INSERT INTO rate_limits (ip_address, endpoint) VALUES (?1, 'auth')"
-    ).bind(ip).run();
-  } catch {
-  }
-}
-__name(recordRateLimit, "recordRateLimit");
-async function getJwks() {
-  if (jwksCache && Date.now() - jwksCache.fetchedAt < JWKS_CACHE_MS) {
-    return jwksCache.keys;
-  }
-  const resp = await fetch(JWKS_URL);
-  if (!resp.ok) throw new Error("Failed to fetch JWKS: " + resp.status);
-  const data = await resp.json();
-  jwksCache = { keys: data.keys || [], fetchedAt: Date.now() };
-  return jwksCache.keys;
-}
-__name(getJwks, "getJwks");
-function base64urlToBytes(str) {
-  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-__name(base64urlToBytes, "base64urlToBytes");
-async function importRsaKey(jwk) {
-  return crypto.subtle.importKey(
-    "jwk",
-    {
-      kty: jwk.kty,
-      n: jwk.n,
-      e: jwk.e,
-      alg: "RS256",
-      ext: false
-    },
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["verify"]
-  );
-}
-__name(importRsaKey, "importRsaKey");
-async function verifyClerkJwt(request, env) {
-  const origin = request.headers.get("Origin") || "";
-  const host = request.headers.get("Host") || "";
-  const allowedOrigins = [
-    "https://mildmate-new.pages.dev",
-    "https://www.mildmate.com"
-  ];
-  if (origin && !allowedOrigins.includes(origin) && host !== "localhost" && !host.startsWith("127.0.0.1")) {
-    return { valid: false, error: "Invalid origin", status: 403 };
-  }
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  if (await checkAuthRateLimit(env, ip)) {
-    return { valid: false, error: "Too many requests", status: 429 };
-  }
-  await recordRateLimit(env, ip);
-  const authHeader = request.headers.get("Authorization") || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
-  if (!token) {
-    return { valid: false, error: "Missing token", status: 401 };
-  }
-  const parts = token.split(".");
-  if (parts.length !== 3) {
-    return { valid: false, error: "Invalid token format", status: 401 };
-  }
-  let header;
-  try {
-    header = JSON.parse(new TextDecoder().decode(base64urlToBytes(parts[0])));
-  } catch {
-    return { valid: false, error: "Invalid token header", status: 401 };
-  }
-  if (header.alg !== "RS256") {
-    return { valid: false, error: "Unsupported algorithm", status: 401 };
-  }
-  let keys;
-  try {
-    keys = await getJwks();
-  } catch (e) {
-    console.error("Clerk JWKS fetch failed:", e.message);
-    return { valid: false, error: "Auth service unavailable", status: 503 };
-  }
-  const jwk = keys.find((k) => k.kid === header.kid && k.alg === "RS256");
-  if (!jwk) {
-    return { valid: false, error: "Unknown signing key", status: 401 };
-  }
-  const signedData = new TextEncoder().encode(parts[0] + "." + parts[1]);
-  const signature = base64urlToBytes(parts[2]);
-  let cryptoKey;
-  try {
-    cryptoKey = await importRsaKey(jwk);
-  } catch {
-    return { valid: false, error: "Invalid key", status: 401 };
-  }
-  let validSig = false;
-  try {
-    validSig = await crypto.subtle.verify(
-      "RSASSA-PKCS1-v1_5",
-      cryptoKey,
-      signature,
-      signedData
-    );
-  } catch {
-    return { valid: false, error: "Signature verification failed", status: 401 };
-  }
-  if (!validSig) {
-    return { valid: false, error: "Invalid signature", status: 401 };
-  }
-  let payload;
-  try {
-    const rawPayload = JSON.parse(
-      new TextDecoder().decode(base64urlToBytes(parts[1]))
-    );
-    payload = {
-      sub: rawPayload.sub || "",
-      email: rawPayload.email || "",
-      name: rawPayload.name || "",
-      raw: rawPayload,
-      exp: rawPayload.exp || 0,
-      iat: rawPayload.iat || 0,
-      iss: rawPayload.iss || "",
-      azp: rawPayload.azp || "",
-      sid: rawPayload.sid || ""
-    };
-  } catch {
-    return { valid: false, error: "Invalid token payload", status: 401 };
-  }
-  const now = Math.floor(Date.now() / 1e3);
-  if (payload.exp && payload.exp < now) {
-    return { valid: false, error: "Token expired", status: 401 };
-  }
-  if (payload.iss && payload.iss !== CLERK_ISSUER && !payload.iss.startsWith("https://clerk.") && !payload.iss.includes(".clerk.accounts.dev")) {
-    return { valid: false, error: "Invalid issuer", status: 401 };
-  }
-  return { valid: true, payload };
-}
-__name(verifyClerkJwt, "verifyClerkJwt");
-
 // ../workers/api/admin-pricing.ts
-function getClerkSessionToken(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  return cookieMatch ? cookieMatch[1] : "";
+var DEFAULT_DERIVED_MARKUP_PARAMS = [
+  {
+    key: "derived_markup_weighted-duvet-cover",
+    value: 10,
+    label: "Derived Markup \u2014 weighted-duvet-cover (%)",
+    category: "derived_markup"
+  }
+];
+async function ensureDerivedMarkupDefaults(env) {
+  for (const row of DEFAULT_DERIVED_MARKUP_PARAMS) {
+    await env.DB.prepare(
+      `INSERT INTO pricing_params (key, value, label, category)
+       VALUES (?1, ?2, ?3, ?4)
+       ON CONFLICT(key) DO NOTHING`
+    ).bind(row.key, row.value, row.label, row.category).run();
+  }
 }
-__name(getClerkSessionToken, "getClerkSessionToken");
+__name(ensureDerivedMarkupDefaults, "ensureDerivedMarkupDefaults");
 function collectRoles(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -2671,6 +6783,7 @@ async function handleAdminPricingParams(request, env) {
   }
   if (request.method === "GET") {
     try {
+      await ensureDerivedMarkupDefaults(env);
       const { results } = await env.DB.prepare(
         "SELECT key, value, label, category FROM pricing_params ORDER BY category, key"
       ).all();
@@ -2735,6 +6848,195 @@ async function handleAdminPricingParams(request, env) {
 }
 __name(handleAdminPricingParams, "handleAdminPricingParams");
 
+// ../workers/api/admin-auth.ts
+var MACHINE_SECRET_ROUTES = /* @__PURE__ */ new Set([
+  "/api/admin/subscribers"
+]);
+function collectRoles2(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  const add = /* @__PURE__ */ __name((v) => {
+    if (v !== void 0 && v !== null) values.push(v);
+  }, "add");
+  add(raw.role);
+  add(raw.roles);
+  add(raw.org_role);
+  add(raw.orgRole);
+  add(raw.public_metadata?.role);
+  add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.role);
+  add(raw.unsafe_metadata?.roles);
+  add(raw.metadata?.role);
+  add(raw.metadata?.roles);
+  add(raw["https://mildmate.com/role"]);
+  add(raw["https://mildmate.com/roles"]);
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles2, "collectRoles");
+function hasAdminRole2(rawClaims) {
+  const roles = collectRoles2(rawClaims);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole2, "hasAdminRole");
+function emailAllowed2(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed2, "emailAllowed");
+function blockedEmailsFromEnv(env) {
+  return new Set(
+    String(env?.ADMIN_BLOCKED_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+  );
+}
+__name(blockedEmailsFromEnv, "blockedEmailsFromEnv");
+function emailBlocked(email, env) {
+  if (!email) return false;
+  return blockedEmailsFromEnv(env).has(email.toLowerCase());
+}
+__name(emailBlocked, "emailBlocked");
+function normalizeAdminApiPath(pathname) {
+  let path = String(pathname || "/").trim();
+  if (!path) path = "/";
+  try {
+    path = decodeURIComponent(path);
+  } catch {
+  }
+  path = path.replace(/\\/g, "/").replace(/\/{2,}/g, "/");
+  if (!path.startsWith("/")) path = "/" + path;
+  if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+  return path;
+}
+__name(normalizeAdminApiPath, "normalizeAdminApiPath");
+function classifyAdminApiPath(pathname) {
+  const path = normalizeAdminApiPath(pathname);
+  if (path !== "/api/admin" && !path.startsWith("/api/admin/")) return "not_admin";
+  if (MACHINE_SECRET_ROUTES.has(path)) return "machine_secret";
+  return "browser_admin";
+}
+__name(classifyAdminApiPath, "classifyAdminApiPath");
+function getPrimaryClerkEmail2(user) {
+  if (!user || typeof user !== "object") return "";
+  const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
+  const primaryId = user.primary_email_address_id;
+  const primary = list.find((e) => e && e.id === primaryId);
+  return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
+}
+__name(getPrimaryClerkEmail2, "getPrimaryClerkEmail");
+async function enrichFromClerk(sub, env) {
+  const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
+  if (!sub || !clerkKey) return { email: "", hasAdmin: false };
+  try {
+    const resp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+      headers: { Authorization: "Bearer " + clerkKey }
+    });
+    if (!resp.ok) return { email: "", hasAdmin: false };
+    const user = await resp.json();
+    const email = getPrimaryClerkEmail2(user);
+    const metadataRaw = {
+      role: user?.public_metadata?.role,
+      roles: user?.public_metadata?.roles,
+      org_role: user?.public_metadata?.org_role,
+      orgRole: user?.public_metadata?.orgRole,
+      public_metadata: user?.public_metadata || {},
+      unsafe_metadata: user?.unsafe_metadata || {},
+      metadata: user?.private_metadata || {}
+    };
+    return { email, hasAdmin: hasAdminRole2(metadataRaw) };
+  } catch {
+    return { email: "", hasAdmin: false };
+  }
+}
+__name(enrichFromClerk, "enrichFromClerk");
+function isProductionHost(hostname) {
+  if (!hostname) return false;
+  if (hostname === "localhost" || hostname === "127.0.0.1") return false;
+  if (hostname.endsWith(".local")) return false;
+  return hostname === "www.mildmate.com" || hostname === "mildmate.com";
+}
+__name(isProductionHost, "isProductionHost");
+function hasBearerAuth(request) {
+  return (request.headers.get("Authorization") || "").startsWith("Bearer ");
+}
+__name(hasBearerAuth, "hasBearerAuth");
+function configuredAdminSecret(env) {
+  return typeof env?.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+}
+__name(configuredAdminSecret, "configuredAdminSecret");
+async function authorizeAdminBrowser(request, env) {
+  if (!hasBearerAuth(request)) {
+    return { ok: false, status: 401, error: "Unauthorized: bearer token required" };
+  }
+  const verified = await verifyClerkJwt(request, env);
+  if (!verified.valid) {
+    return { ok: false, status: verified.status, error: verified.error };
+  }
+  const raw = verified.payload.raw || {};
+  let hasRole = hasAdminRole2(raw);
+  let email = String(verified.payload.email || "").trim().toLowerCase();
+  let allowed = emailAllowed2(email, env);
+  if (!hasRole || !allowed) {
+    const sub = String(verified.payload.sub || "").trim();
+    const enriched = await enrichFromClerk(sub, env);
+    if (enriched.email) email = enriched.email;
+    hasRole = hasRole || enriched.hasAdmin;
+    allowed = allowed || emailAllowed2(email, env);
+  }
+  if (emailBlocked(email, env)) {
+    return { ok: false, status: 403, error: "Forbidden: account not authorized for admin access" };
+  }
+  if (hasRole && allowed) {
+    return { ok: true };
+  }
+  return { ok: false, status: 403, error: "Forbidden: admin role and email allowlist required" };
+}
+__name(authorizeAdminBrowser, "authorizeAdminBrowser");
+async function authorizeAdminMachineSecret(request, env) {
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  if (!providedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  const expectedSecret = configuredAdminSecret(env);
+  if (!expectedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized: ADMIN_SECRET not configured" };
+  }
+  if (providedSecret !== expectedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  return { ok: true };
+}
+__name(authorizeAdminMachineSecret, "authorizeAdminMachineSecret");
+async function authorizeAdminForRoute(request, env, pathname) {
+  const mode = classifyAdminApiPath(pathname);
+  if (mode === "not_admin") return { ok: true };
+  if (mode === "machine_secret") {
+    if (hasBearerAuth(request)) return authorizeAdminBrowser(request, env);
+    return authorizeAdminMachineSecret(request, env);
+  }
+  return authorizeAdminBrowser(request, env);
+}
+__name(authorizeAdminForRoute, "authorizeAdminForRoute");
+async function authorizeAdmin(request, env) {
+  if (hasBearerAuth(request)) {
+    return authorizeAdminBrowser(request, env);
+  }
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  return authorizeAdminMachineSecret(request, env);
+}
+__name(authorizeAdmin, "authorizeAdmin");
+
 // ../workers/api/admin-diy.ts
 async function handleAdminDiyPrices(request, env) {
   if (request.method === "OPTIONS") {
@@ -2747,23 +7049,12 @@ async function handleAdminDiyPrices(request, env) {
       }
     });
   }
-  const host = new URL(request.url).hostname;
-  const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
-  if (!isDev) {
-    const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-    const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-    if (!provided) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-      });
-    }
-    if (configured && provided !== configured) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-      });
-    }
+  const auth = await authorizeAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+    });
   }
   if (request.method === "POST" || request.method === "PUT") {
     try {
@@ -2819,32 +7110,6 @@ async function handleAdminDiyPrices(request, env) {
 __name(handleAdminDiyPrices, "handleAdminDiyPrices");
 
 // ../workers/api/admin-exchange.ts
-function isProductionHost(host) {
-  return host === "www.mildmate.com" || host === "mildmate.com";
-}
-__name(isProductionHost, "isProductionHost");
-function isDevHost(host) {
-  return host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
-}
-__name(isDevHost, "isDevHost");
-function authorizeAdmin(request, env) {
-  const host = new URL(request.url).hostname;
-  if (isDevHost(host)) return { ok: true };
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
-  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!providedSecret) {
-    return { ok: false, status: 401, error: "Unauthorized" };
-  }
-  const prodHost = isProductionHost(host);
-  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
-  if (prodHost && !allowSecretInProd) {
-    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
-  }
-  if (!configuredSecret) return { ok: true };
-  if (providedSecret === configuredSecret) return { ok: true };
-  return { ok: false, status: 401, error: "Unauthorized" };
-}
-__name(authorizeAdmin, "authorizeAdmin");
 async function handleAdminExchangeRates(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -2856,10 +7121,10 @@ async function handleAdminExchangeRates(request, env) {
       }
     });
   }
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (!auth.ok) {
-    return new Response(JSON.stringify({ error: auth.error || "Unauthorized" }), {
-      status: auth.status || 401,
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
     });
   }
@@ -2933,7 +7198,7 @@ function isProductionHost2(hostname) {
 }
 __name(isProductionHost2, "isProductionHost");
 var ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
-function collectRoles2(raw) {
+function collectRoles3(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   values.push(raw.role, raw.roles, raw.org_role, raw.org_roles, raw.permission, raw.permissions);
@@ -2957,20 +7222,20 @@ function collectRoles2(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles2, "collectRoles");
-function hasAdminRole2(rawClaims) {
-  const roles = collectRoles2(rawClaims);
+__name(collectRoles3, "collectRoles");
+function hasAdminRole3(rawClaims) {
+  const roles = collectRoles3(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole2, "hasAdminRole");
-function emailAllowed2(email, env) {
+__name(hasAdminRole3, "hasAdminRole");
+function emailAllowed3(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed2, "emailAllowed");
+__name(emailAllowed3, "emailAllowed");
 async function authCheck(request, env) {
   const hostname = request.headers.get("Host") || "";
   const prodHost = isProductionHost2(hostname);
@@ -2980,7 +7245,7 @@ async function authCheck(request, env) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole2(raw) || emailAllowed2(verified.payload.email || "", env)) return true;
+      if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) return true;
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -2992,7 +7257,7 @@ async function authCheck(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed2(email, env) || hasAdminRole2(metadata)) return true;
+            if (emailAllowed3(email, env) || hasAdminRole3(metadata)) return true;
           }
         } catch {
         }
@@ -3019,7 +7284,9 @@ async function handleAdminProducts(request, env) {
   if (method === "GET" && path === "/api/admin/products") {
     const db = env.DB;
     const result = await db.prepare(
-      `SELECT id, slug, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th,
+      `SELECT id, slug, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th,
+              product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th,
+              description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th,
               category, product_type, niches, subcategory, fabric_options, base_price_usd, base_price_thb,
               is_custom, image_url, tags, youtube_url, images, sort_order, is_active
        FROM products ORDER BY sort_order, id`
@@ -3043,12 +7310,24 @@ async function handleAdminProducts(request, env) {
       const { product_type, niches } = parseCategoryCsv(body.category || "sheets");
       const placeholderImage = "/images/products/mattress-protector-standard/main.jpg";
       await db.prepare(
-        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
+        `INSERT INTO products (slug, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th, product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
       ).bind(
         slug,
         body.title_en || body.titleEN || slug,
         body.title_th || body.titleTH || null,
+        body.seo_title_en || body.seoTitleEN || null,
+        body.seo_title_th || body.seoTitleTH || null,
+        body.seo_meta_description_en || body.seoMetaDescriptionEN || null,
+        body.seo_meta_description_th || body.seoMetaDescriptionTH || null,
+        body.product_tagline_en || body.productTaglineEN || null,
+        body.product_tagline_th || body.productTaglineTH || null,
+        body.cta_primary_en || body.ctaPrimaryEN || null,
+        body.cta_primary_th || body.ctaPrimaryTH || null,
+        body.cta_custom_en || body.ctaCustomEN || null,
+        body.cta_custom_th || body.ctaCustomTH || null,
+        body.cta_size_help_en || body.ctaSizeHelpEN || null,
+        body.cta_size_help_th || body.ctaSizeHelpTH || null,
         body.description_en || body.descEN || null,
         body.description_th || body.descTH || null,
         body.faq_en || body.faqEN || null,
@@ -3109,6 +7388,18 @@ async function handleAdminProducts(request, env) {
         "faq_th",
         "card_benefit_en",
         "card_benefit_th",
+        "seo_title_en",
+        "seo_title_th",
+        "seo_meta_description_en",
+        "seo_meta_description_th",
+        "product_tagline_en",
+        "product_tagline_th",
+        "cta_primary_en",
+        "cta_primary_th",
+        "cta_custom_en",
+        "cta_custom_th",
+        "cta_size_help_en",
+        "cta_size_help_th",
         "tags",
         "youtube_url",
         "images",
@@ -3166,7 +7457,7 @@ async function handleAdminProducts(request, env) {
 __name(handleAdminProducts, "handleAdminProducts");
 
 // ../workers/api/admin-upload.ts
-function collectRoles3(raw) {
+function collectRoles4(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   values.push(raw.role, raw.roles, raw.org_role, raw.org_roles, raw.permission, raw.permissions);
@@ -3190,20 +7481,20 @@ function collectRoles3(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles3, "collectRoles");
-function hasAdminRole3(rawClaims) {
-  const roles = collectRoles3(rawClaims);
+__name(collectRoles4, "collectRoles");
+function hasAdminRole4(rawClaims) {
+  const roles = collectRoles4(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole3, "hasAdminRole");
-function emailAllowed3(email, env) {
+__name(hasAdminRole4, "hasAdminRole");
+function emailAllowed4(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed3, "emailAllowed");
+__name(emailAllowed4, "emailAllowed");
 async function authCheck2(request, env) {
   const host = String(request.headers.get("Host") || "").toLowerCase().split(":")[0];
   const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
@@ -3213,7 +7504,7 @@ async function authCheck2(request, env) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) return true;
+      if (hasAdminRole4(raw) || emailAllowed4(verified.payload.email || "", env)) return true;
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -3225,7 +7516,7 @@ async function authCheck2(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed3(email, env) || hasAdminRole3(metadata)) return true;
+            if (emailAllowed4(email, env) || hasAdminRole4(metadata)) return true;
           }
         } catch {
         }
@@ -3369,6 +7660,41 @@ function json2(body, status = 200) {
   });
 }
 __name(json2, "json");
+var FIXED_SIZE_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
+  "bedbridge-connector",
+  "mattress-lift-helper",
+  "duvet-insert"
+]);
+function hasDimensions(o) {
+  const hasW = Number.isFinite(Number(o?.width_cm));
+  const hasL = Number.isFinite(Number(o?.length_cm));
+  const hasD = Number.isFinite(Number(o?.depth_cm));
+  return hasW && hasL || hasD;
+}
+__name(hasDimensions, "hasDimensions");
+function isConfigurableProductSlug(slugRaw) {
+  const slug = String(slugRaw || "").trim().toLowerCase();
+  if (!slug) return true;
+  return !FIXED_SIZE_PRODUCT_SLUGS.has(slug);
+}
+__name(isConfigurableProductSlug, "isConfigurableProductSlug");
+async function getLatestSalesSyncRun(env) {
+  try {
+    const row = await env.DB.prepare(
+      `SELECT id, source, scenario, status,
+              records_received, records_created, records_updated, records_unchanged, records_rejected,
+              finished_at, created_at
+       FROM sync_runs
+       ORDER BY COALESCE(finished_at, created_at) DESC
+       LIMIT 1`
+    ).first();
+    return row || null;
+  } catch (e) {
+    console.warn("sync_runs lookup skipped:", e?.message || e);
+    return null;
+  }
+}
+__name(getLatestSalesSyncRun, "getLatestSalesSyncRun");
 async function ensureOrderShippingSchema(env) {
   if (orderShippingSchemaReady) return;
   if (!orderShippingSchemaPromise) {
@@ -3429,7 +7755,7 @@ function isProductionHost3(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost3, "isProductionHost");
-function collectRoles4(raw) {
+function collectRoles5(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -3454,20 +7780,20 @@ function collectRoles4(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles4, "collectRoles");
-function hasAdminRole4(rawClaims) {
-  const roles = collectRoles4(rawClaims);
+__name(collectRoles5, "collectRoles");
+function hasAdminRole5(rawClaims) {
+  const roles = collectRoles5(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole4, "hasAdminRole");
-function emailAllowed4(email, env) {
+__name(hasAdminRole5, "hasAdminRole");
+function emailAllowed5(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed4, "emailAllowed");
+__name(emailAllowed5, "emailAllowed");
 async function authorizeAdmin2(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -3476,7 +7802,7 @@ async function authorizeAdmin2(request, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole4(raw) || emailAllowed4(verified.payload.email || "", env)) {
+      if (hasAdminRole5(raw) || emailAllowed5(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -3492,8 +7818,8 @@ async function authorizeAdmin2(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed4(email, env)) return { ok: true };
-            if (hasAdminRole4(metadata)) return { ok: true };
+            if (emailAllowed5(email, env)) return { ok: true };
+            if (hasAdminRole5(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -3532,32 +7858,104 @@ async function handleAdminOrders(request, env) {
   const method = request.method;
   if (method === "GET" && path === "/api/admin/orders") {
     const db = env.DB;
+    const q = String(url.searchParams.get("q") || "").trim();
+    const rawStatus = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const archivedParam = String(url.searchParams.get("archived") || "").trim().toLowerCase();
     const includeArchived = String(url.searchParams.get("include_archived") || "").toLowerCase();
-    const shouldIncludeArchived = includeArchived === "1" || includeArchived === "true" || includeArchived === "yes";
-    const sql = shouldIncludeArchived ? `SELECT id, stripe_session_id, stripe_payment_intent_id,
-              email, customer_name, phone, shipping_address,
-              product_slug, product_title_en, fabric, color,
-              width_cm, length_cm, depth_cm,
-              width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
-              status, created_at,
-              carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at, is_archived
-       FROM orders
-       ORDER BY created_at DESC` : `SELECT id, stripe_session_id, stripe_payment_intent_id,
-              email, customer_name, phone, shipping_address,
-              product_slug, product_title_en, fabric, color,
-              width_cm, length_cm, depth_cm,
-              width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
-              status, created_at,
-              carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at, is_archived
-       FROM orders
-       WHERE COALESCE(is_archived, 0) = 0
-       ORDER BY created_at DESC`;
-    const result = await db.prepare(sql).all();
-    return json2({ orders: result.results });
+    const fromDate = String(url.searchParams.get("from") || "").trim();
+    const toDate = String(url.searchParams.get("to") || "").trim();
+    const sort = String(url.searchParams.get("sort") || "created_at_desc").trim().toLowerCase();
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const requestedPageSize = Number(url.searchParams.get("page_size") || 25);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+    const allowedPageSizes = /* @__PURE__ */ new Set([10, 25, 50, 100]);
+    const pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 25;
+    const offset = (page - 1) * pageSize;
+    const statusAllow = /* @__PURE__ */ new Set(["pending", "confirmed", "production", "shipped", "cancelled"]);
+    const statuses = rawStatus ? rawStatus.split(",").map((s) => s.trim().toLowerCase()).filter((s) => statusAllow.has(s)) : [];
+    let archivedMode = "active";
+    if (archivedParam === "all" || archivedParam === "archived" || archivedParam === "active") {
+      archivedMode = archivedParam;
+    } else {
+      const shouldIncludeArchived = includeArchived === "1" || includeArchived === "true" || includeArchived === "yes";
+      archivedMode = shouldIncludeArchived ? "all" : "active";
+    }
+    const where = [];
+    const binds = [];
+    if (archivedMode === "active") {
+      where.push("COALESCE(is_archived, 0) = 0");
+    } else if (archivedMode === "archived") {
+      where.push("COALESCE(is_archived, 0) = 1");
+    }
+    if (statuses.length) {
+      where.push(`LOWER(status) IN (${statuses.map(() => "?").join(",")})`);
+      binds.push(...statuses);
+    }
+    if (fromDate) {
+      where.push("substr(created_at, 1, 10) >= ?");
+      binds.push(fromDate);
+    }
+    if (toDate) {
+      where.push("substr(created_at, 1, 10) <= ?");
+      binds.push(toDate);
+    }
+    if (q) {
+      const qLike = `%${q}%`;
+      where.push(`(
+        stripe_session_id LIKE ?
+        OR CAST(id AS TEXT) LIKE ?
+        OR email LIKE ?
+        OR customer_name LIKE ?
+        OR product_title_en LIKE ?
+        OR product_slug LIKE ?
+        OR tracking_number LIKE ?
+      )`);
+      binds.push(qLike, qLike, qLike, qLike, qLike, qLike, qLike);
+    }
+    const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
+    const orderClause = sort === "created_at_asc" ? "ORDER BY created_at ASC" : "ORDER BY created_at DESC";
+    const selectColumns = `id, stripe_session_id, stripe_payment_intent_id,
+            email, customer_name, phone, shipping_address,
+            product_slug, product_title_en, fabric, color,
+            width_cm, length_cm, depth_cm,
+            width_in, length_in, depth_in,
+            custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
+            status, created_at,
+            carrier_code, tracking_number, tracking_url,
+            shipping_status, shipped_at, is_archived`;
+    const countSql = `SELECT COUNT(*) AS total FROM orders ${whereClause}`;
+    const countRow = await db.prepare(countSql).bind(...binds).first();
+    const total = Number(countRow?.total || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const listSql = `SELECT ${selectColumns}
+      FROM orders
+      ${whereClause}
+      ${orderClause}
+      LIMIT ?
+      OFFSET ?`;
+    const result = await db.prepare(listSql).bind(...binds, pageSize, offset).all();
+    const rows = Array.isArray(result.results) ? result.results : [];
+    const missingConfigurable = rows.filter(
+      (o) => isConfigurableProductSlug(o?.product_slug) && !hasDimensions(o)
+    );
+    const affectedOrderIds = Array.from(new Set(
+      missingConfigurable.map((o) => String(o?.stripe_session_id || "").slice(-8)).filter(Boolean)
+    ));
+    const latestSalesSync = await getLatestSalesSyncRun(env);
+    return json2({
+      orders: rows,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages
+      },
+      dimension_guardrail: {
+        missing_configurable_rows: missingConfigurable.length,
+        affected_orders: affectedOrderIds
+      },
+      sales_sync: latestSalesSync
+    });
   }
   const idMatch = path.match(/^\/api\/admin\/orders\/(\d+)$/);
   if (method === "GET" && idMatch) {
@@ -3569,7 +7967,7 @@ async function handleAdminOrders(request, env) {
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
               width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
               shipping_status, shipped_at, is_archived
@@ -3596,7 +7994,7 @@ async function handleAdminOrders(request, env) {
     }
     const db = env.DB;
     const currentOrder = await db.prepare(
-      `SELECT id, stripe_session_id, email, customer_name, product_title_en
+      `SELECT id, stripe_session_id, email, customer_name, product_title_en, status, carrier_code, tracking_number
        FROM orders
        WHERE id = ?1`
     ).bind(orderId).first();
@@ -3610,6 +8008,7 @@ async function handleAdminOrders(request, env) {
     if (newStatus === "shipped") {
       const carrierCode = normalizeCarrier(body.carrier_code);
       const trackingNumber = String(body.tracking_number || "").trim();
+      const sendShippingEmail = body.send_shipping_email === void 0 ? true : body.send_shipping_email === true || body.send_shipping_email === 1 || String(body.send_shipping_email).toLowerCase() === "true";
       if (!carrierCode || !TRACKING_URL_BY_CARRIER[carrierCode]) {
         return json2({ error: "carrier_code is required for shipped status" }, 400);
       }
@@ -3630,7 +8029,25 @@ async function handleAdminOrders(request, env) {
              is_archived = COALESCE(?7, is_archived)
          WHERE id = ?8`
       ).bind(newStatus, carrierCode, trackingNumber, trackingUrl, shippingStatus, shippedAt, archiveValue, orderId).run();
-      if (currentOrder.email && env.RESEND_API_KEY) {
+      const currentCarrier = normalizeCarrier(currentOrder.carrier_code);
+      const currentTracking = String(currentOrder.tracking_number || "").trim();
+      const isSameShippedState = String(currentOrder.status || "").toLowerCase() === "shipped" && currentCarrier === carrierCode && currentTracking === trackingNumber;
+      let alreadyNotified = isSameShippedState;
+      if (!alreadyNotified && currentOrder.stripe_session_id) {
+        const duplicateShipment = await db.prepare(
+          `SELECT id
+           FROM orders
+           WHERE stripe_session_id = ?1
+             AND id != ?2
+             AND LOWER(COALESCE(status, '')) = 'shipped'
+             AND LOWER(COALESCE(carrier_code, '')) = ?3
+             AND tracking_number = ?4
+           LIMIT 1`
+        ).bind(String(currentOrder.stripe_session_id), orderId, carrierCode, trackingNumber).first();
+        alreadyNotified = !!duplicateShipment;
+      }
+      const emailSkippedReason = !sendShippingEmail ? "disabled_by_admin" : alreadyNotified ? "duplicate_shipment" : null;
+      if (sendShippingEmail && !alreadyNotified && currentOrder.email && env.RESEND_API_KEY) {
         const orderCode = String(currentOrder.stripe_session_id || orderId).slice(-8);
         const customerName = String(currentOrder.customer_name || "").trim();
         const greeting = customerName ? `Hi ${customerName},` : "Hi,";
@@ -3664,7 +8081,9 @@ Thank you for shopping with MildMate.`;
         tracking_url: trackingUrl,
         shipping_status: shippingStatus,
         shipped_at: shippedAt,
-        is_archived: archiveValue
+        is_archived: archiveValue,
+        email_sent: !!(sendShippingEmail && !alreadyNotified && currentOrder.email && env.RESEND_API_KEY),
+        email_skipped_reason: emailSkippedReason
       });
     }
     await db.prepare("UPDATE orders SET status = ?1, is_archived = COALESCE(?2, is_archived) WHERE id = ?3").bind(newStatus, archiveValue, orderId).run();
@@ -3701,7 +8120,7 @@ function isProductionHost4(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost4, "isProductionHost");
-function collectRoles5(raw) {
+function collectRoles6(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -3725,20 +8144,20 @@ function collectRoles5(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles5, "collectRoles");
-function hasAdminRole5(rawClaims) {
-  const roles = collectRoles5(rawClaims);
+__name(collectRoles6, "collectRoles");
+function hasAdminRole6(rawClaims) {
+  const roles = collectRoles6(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole5, "hasAdminRole");
-function emailAllowed5(email, env) {
+__name(hasAdminRole6, "hasAdminRole");
+function emailAllowed6(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed5, "emailAllowed");
+__name(emailAllowed6, "emailAllowed");
 async function authorizeAdmin3(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -3746,7 +8165,7 @@ async function authorizeAdmin3(request, env) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole5(raw) || emailAllowed5(verified.payload.email || "", env)) {
+      if (hasAdminRole6(raw) || emailAllowed6(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -3762,8 +8181,8 @@ async function authorizeAdmin3(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed5(email, env)) return { ok: true };
-            if (hasAdminRole5(metadata)) return { ok: true };
+            if (emailAllowed6(email, env)) return { ok: true };
+            if (hasAdminRole6(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -3884,7 +8303,7 @@ function isProductionHost5(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost5, "isProductionHost");
-function collectRoles6(raw) {
+function collectRoles7(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -3909,20 +8328,20 @@ function collectRoles6(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles6, "collectRoles");
-function hasAdminRole6(rawClaims) {
-  const roles = collectRoles6(rawClaims);
+__name(collectRoles7, "collectRoles");
+function hasAdminRole7(rawClaims) {
+  const roles = collectRoles7(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole6, "hasAdminRole");
-function emailAllowed6(email, env) {
+__name(hasAdminRole7, "hasAdminRole");
+function emailAllowed7(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed6, "emailAllowed");
+__name(emailAllowed7, "emailAllowed");
 async function authorizeAdmin4(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -3931,7 +8350,7 @@ async function authorizeAdmin4(request, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole6(raw) || emailAllowed6(verified.payload.email || "", env)) {
+      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -3947,8 +8366,8 @@ async function authorizeAdmin4(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed6(email, env)) return { ok: true };
-            if (hasAdminRole6(metadata)) return { ok: true };
+            if (emailAllowed7(email, env)) return { ok: true };
+            if (hasAdminRole7(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -4202,9 +8621,545 @@ async function handleAdminStats(request, env) {
 }
 __name(handleAdminStats, "handleAdminStats");
 
-// ../workers/api/shipping.ts
-var shippingSchemaReady = false;
-var shippingSchemaPromise = null;
+// ../scripts/opportunity-core.mjs
+var DEFAULT_MODEL_VERSION = "v1";
+var DEFAULT_WEIGHTS = { momentum: 30, profitability: 30, channel_fit: 20, demand: 15, strategic: 5, conversion: 0, demand_ga4: 80, demand_gsc: 20 };
+var CONF_MODEL = {
+  modeled_margin_basis: 15,
+  // flat: profitability is modeled, not realized
+  demand_mapping_max: 10,
+  // × (1 − mapped share) per demand source actually used
+  ga4_stale_after_days: 10,
+  // −5 if GA4 latest data older than this and GA4 was used
+  gsc_stale_after_days: 14,
+  // −5 if GSC latest data older than this and GSC was used
+  product_stale_block: 30,
+  // −5 per 30d since product's last order (cap 15)
+  low_volume_orders: 5,
+  // all-time orders-containing < 5 → −10; < 2 → −15
+  profitability_missing: 10
+  // modeled margin not derivable → −10 (never zero)
+};
+var TIER = { high: 70, medium: 45, low: 25 };
+function round1(v) {
+  return Math.round(v * 10) / 10;
+}
+__name(round1, "round1");
+function percentileMap(values) {
+  const n = values.length;
+  const map = /* @__PURE__ */ new Map();
+  if (!n) return map;
+  const sorted = [...values].sort((a, b) => a - b);
+  let i = 0;
+  while (i < n) {
+    let j = i;
+    while (j < n && sorted[j] === sorted[i]) j++;
+    const below = i;
+    const equal = j - i;
+    map.set(sorted[i], round1((below + equal / 2) / n * 100));
+    i = j;
+  }
+  return map;
+}
+__name(percentileMap, "percentileMap");
+function today() {
+  return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+}
+__name(today, "today");
+async function fetchInputs(env) {
+  const q = /* @__PURE__ */ __name(async (sql) => (await env.DB.prepare(sql).all()).results || [], "q");
+  const products = await q(
+    "SELECT id, slug, title_en FROM products WHERE is_active = 1 ORDER BY id"
+  );
+  const costRows = await q(
+    "SELECT product_id, production_cost_thb, modeled_price_thb, cost_source, is_estimate, effective_from FROM cost_model_products ORDER BY product_id, effective_from DESC, CASE WHEN cost_source = 'verified' THEN 1 ELSE 0 END DESC, id DESC"
+  );
+  const costByProduct = /* @__PURE__ */ new Map();
+  for (const r of costRows) {
+    if (!costByProduct.has(r.product_id)) costByProduct.set(r.product_id, r);
+  }
+  const salesByProduct = await q(
+    "SELECT product_id, COUNT(DISTINCT CASE WHEN order_day >= date('now','-90 day') THEN sales_order_id END) AS cur90_orders, SUM(CASE WHEN order_day >= date('now','-90 day') THEN quantity ELSE 0 END) AS cur90_units, COUNT(DISTINCT CASE WHEN order_day < date('now','-90 day') AND order_day >= date('now','-180 day') THEN sales_order_id END) AS prev90_orders, SUM(CASE WHEN order_day < date('now','-90 day') AND order_day >= date('now','-180 day') THEN quantity ELSE 0 END) AS prev90_units, COUNT(DISTINCT sales_order_id) AS all_orders, SUM(quantity) AS all_units, MAX(order_day) AS last_order_day FROM analysis_active_items WHERE product_id IS NOT NULL GROUP BY product_id"
+  );
+  const salesByChannel = await q(
+    "SELECT product_id, channel_norm AS channel, SUM(CASE WHEN order_day >= date('now','-90 day') THEN quantity ELSE 0 END) AS cur90_units, SUM(CASE WHEN order_day < date('now','-90 day') AND order_day >= date('now','-180 day') THEN quantity ELSE 0 END) AS prev90_units, SUM(quantity) AS all_units FROM analysis_active_items WHERE product_id IS NOT NULL GROUP BY product_id, channel_norm"
+  );
+  const channelTrend = await q(
+    "SELECT channel_norm AS channel, COUNT(DISTINCT CASE WHEN order_day >= date('now','-90 day') THEN id END) AS cur90_orders, COUNT(DISTINCT CASE WHEN order_day < date('now','-90 day') AND order_day >= date('now','-180 day') THEN id END) AS prev90_orders FROM analysis_commercial_orders GROUP BY channel_norm"
+  );
+  const ga4ByProduct = await q(
+    "SELECT product_id, SUM(sessions) AS sessions FROM ga4_funnel_daily WHERE property_scope = 'website' AND product_id IS NOT NULL AND report_date >= date('now','-28 day') GROUP BY product_id"
+  );
+  const ga4Health = (await q(
+    "SELECT MAX(report_date) AS max_date, SUM(sessions) AS total_sessions, SUM(CASE WHEN product_id IS NOT NULL THEN sessions ELSE 0 END) AS mapped_sessions FROM ga4_funnel_daily WHERE property_scope = 'website'"
+  ))[0] || {};
+  const ga4EtsyByProduct = await q(
+    "SELECT m.product_id AS product_id, SUM(g.sessions) AS sessions FROM ga4_funnel_daily g JOIN etsy_listing_master m ON m.listing_id = g.listing_id WHERE g.property_scope = 'etsy' AND m.product_id IS NOT NULL AND g.report_date >= date('now','-28 day') GROUP BY m.product_id"
+  );
+  const ga4EtsyHealth = (await q(
+    "SELECT MAX(g.report_date) AS max_date, SUM(g.sessions) AS total_sessions, SUM(CASE WHEN m.product_id IS NOT NULL THEN g.sessions ELSE 0 END) AS mapped_sessions FROM ga4_funnel_daily g LEFT JOIN etsy_listing_master m ON m.listing_id = g.listing_id WHERE g.property_scope = 'etsy'"
+  ))[0] || {};
+  const gscByProduct = await q(
+    "SELECT product_id, SUM(clicks) AS clicks, SUM(impressions) AS impressions FROM gsc_search_daily WHERE product_id IS NOT NULL AND report_date >= date('now','-28 day') GROUP BY product_id"
+  );
+  const gscHealth = (await q(
+    "SELECT MAX(report_date) AS max_date, SUM(clicks) AS total_clicks, SUM(CASE WHEN product_id IS NOT NULL THEN clicks ELSE 0 END) AS mapped_clicks FROM gsc_search_daily"
+  ))[0] || {};
+  const feeRows = await q(
+    "SELECT channel, marketplace_fee_pct, payment_fee_pct, payment_fee_fixed_thb, other_fee_thb_per_order, effective_from FROM cost_model_channel_fees ORDER BY channel, effective_from DESC, id DESC"
+  );
+  const shipRows = await q(
+    "SELECT channel, avg_shipping_cost_thb, effective_from FROM cost_model_shipping ORDER BY channel, effective_from DESC, id DESC"
+  );
+  const feeByChannel = /* @__PURE__ */ new Map();
+  for (const r of feeRows) if (!feeByChannel.has(r.channel)) feeByChannel.set(r.channel, r);
+  const shipByChannel = /* @__PURE__ */ new Map();
+  for (const r of shipRows) if (!shipByChannel.has(r.channel)) shipByChannel.set(r.channel, r);
+  return {
+    products,
+    costByProduct,
+    salesByProduct,
+    salesByChannel,
+    channelTrend,
+    ga4ByProduct: new Map(ga4ByProduct.map((r) => [r.product_id, r.sessions || 0])),
+    ga4EtsyByProduct: new Map(ga4EtsyByProduct.map((r) => [r.product_id, r.sessions || 0])),
+    gscByProduct: new Map(gscByProduct.map((r) => [r.product_id, r.clicks || 0])),
+    ga4Health,
+    ga4EtsyHealth,
+    gscHealth,
+    feeByChannel,
+    shipByChannel
+  };
+}
+__name(fetchInputs, "fetchInputs");
+function daysSince(dateStr, now) {
+  if (!dateStr) return null;
+  const d = Math.floor((Date.parse(now + "T00:00:00Z") - Date.parse(dateStr + "T00:00:00Z")) / 864e5);
+  return Number.isFinite(d) ? d : null;
+}
+__name(daysSince, "daysSince");
+function buildReasons(row, scope) {
+  const parts = [];
+  const c = row.components_json;
+  if (row.score !== null && row.score !== void 0) {
+    parts.push(`Score ${round1(row.score)}/100 (rank ${row.rank} in scope ${scope}, available weight ${row.available_weight} of 100)`);
+  } else {
+    parts.push("INSUFFICIENT_DATA \u2014 no score issued");
+  }
+  if (c.momentum && c.momentum.raw !== null && c.momentum.raw !== void 0) {
+    parts.push(`momentum ${c.momentum.raw >= 0 ? "+" : ""}${round1(c.momentum.raw * 100)}% 90d units (w${c.momentum.weight}, p${c.momentum.normalized})`);
+  }
+  if (c.profitability && c.profitability.raw !== null && c.profitability.raw !== void 0) {
+    parts.push(`MODELED margin ${round1(c.profitability.raw)}% ESTIMATED (w${c.profitability.weight}, p${c.profitability.normalized})`);
+  }
+  if (c.channel_fit && c.channel_fit.raw !== null && c.channel_fit.raw !== void 0) {
+    parts.push(`channel fit ${c.channel_fit.raw_desc || c.channel_fit.raw} (w${c.channel_fit.weight}, p${c.channel_fit.normalized})`);
+  }
+  if (c.demand && c.demand.raw !== null && c.demand.raw !== void 0) {
+    parts.push(`demand p${c.demand.normalized} ${c.demand.sources || ""} (w${c.demand.weight})`);
+  }
+  if (row.missing_components) parts.push(`missing: ${row.missing_components} (weight redistributed, never zero)`);
+  parts.push(`confidence ${round1(row.confidence)} (${row.tier})`);
+  return parts.join("; ");
+}
+__name(buildReasons, "buildReasons");
+function confidenceScore(opts) {
+  let c = 100;
+  const notes = [];
+  c -= CONF_MODEL.modeled_margin_basis;
+  notes.push("modeled margin basis -15");
+  if (opts.usedGa4 && Number.isFinite(opts.ga4MappedShare)) {
+    const d = round1(CONF_MODEL.demand_mapping_max * (1 - opts.ga4MappedShare));
+    if (d > 0) {
+      c -= d;
+      notes.push(`GA4 unmapped -${d}`);
+    }
+  }
+  if (opts.usedGsc && Number.isFinite(opts.gscMappedShare)) {
+    const d = round1(CONF_MODEL.demand_mapping_max * (1 - opts.gscMappedShare));
+    if (d > 0) {
+      c -= d;
+      notes.push(`GSC unmapped -${d}`);
+    }
+  }
+  if (opts.usedGa4Etsy && Number.isFinite(opts.ga4EtsyMappedShare)) {
+    const d = round1(CONF_MODEL.demand_mapping_max * (1 - opts.ga4EtsyMappedShare));
+    if (d > 0) {
+      c -= d;
+      notes.push(`GA4 Etsy unmapped -${d}`);
+    }
+  }
+  if (opts.usedGa4 && opts.ga4AgeDays !== null && opts.ga4AgeDays > CONF_MODEL.ga4_stale_after_days) {
+    c -= 5;
+    notes.push(`GA4 stale ${opts.ga4AgeDays}d -5`);
+  }
+  if (opts.usedGa4Etsy && opts.ga4EtsyAgeDays !== null && opts.ga4EtsyAgeDays > CONF_MODEL.ga4_stale_after_days) {
+    c -= 5;
+    notes.push(`GA4 Etsy stale ${opts.ga4EtsyAgeDays}d -5`);
+  }
+  if (opts.usedGsc && opts.gscAgeDays !== null && opts.gscAgeDays > CONF_MODEL.gsc_stale_after_days) {
+    c -= 5;
+    notes.push(`GSC stale ${opts.gscAgeDays}d -5`);
+  }
+  const staleDays = daysSince(opts.lastOrderDay, opts.now);
+  if (staleDays !== null && staleDays > CONF_MODEL.product_stale_block) {
+    const d = Math.min(15, Math.floor(staleDays / CONF_MODEL.product_stale_block) * 5);
+    if (d > 0) {
+      c -= d;
+      notes.push(`last order ${staleDays}d ago -${d}`);
+    }
+  }
+  const ao = Number(opts.allOrders) || 0;
+  if (ao < 2) {
+    c -= 15;
+    notes.push("volume <2 orders -15");
+  } else if (ao < CONF_MODEL.low_volume_orders) {
+    c -= 10;
+    notes.push(`volume ${ao} orders -10`);
+  }
+  if (!opts.hasProfitability) {
+    c -= CONF_MODEL.profitability_missing;
+    notes.push("no modeled margin -10");
+  }
+  return { confidence: Math.max(0, Math.min(100, round1(c))), notes: notes.join(", ") };
+}
+__name(confidenceScore, "confidenceScore");
+function demandSubWeights(weights) {
+  const ga4 = Math.max(0, Math.min(1, (Number(weights?.demand_ga4) || 80) / 100));
+  const gscDefault = 100 - ga4 * 100;
+  const gsc = Math.max(0, Math.min(1, Number(weights?.demand_gsc ?? gscDefault) / 100));
+  return { ga4, gsc };
+}
+__name(demandSubWeights, "demandSubWeights");
+function scoreRows(inputs, weights, now) {
+  const W = weights;
+  const DW = demandSubWeights(W);
+  const ga4MappedShare = (Number(inputs.ga4Health.mapped_sessions) || 0) / Math.max(1, Number(inputs.ga4Health.total_sessions) || 1);
+  const gscMappedShare = (Number(inputs.gscHealth.mapped_clicks) || 0) / Math.max(1, Number(inputs.gscHealth.total_clicks) || 1);
+  const ga4AgeDays = daysSince((inputs.ga4Health.max_date || "").slice(0, 10), now);
+  const gscAgeDays = daysSince((inputs.gscHealth.max_date || "").slice(0, 10), now);
+  const ga4EtsyMappedShare = (Number(inputs.ga4EtsyHealth.mapped_sessions) || 0) / Math.max(1, Number(inputs.ga4EtsyHealth.total_sessions) || 1);
+  const ga4EtsyAgeDays = daysSince((inputs.ga4EtsyHealth.max_date || "").slice(0, 10), now);
+  const rows = [];
+  for (const p of inputs.products) {
+    const sales = inputs.salesByProduct.find((r) => r.product_id === p.id) || null;
+    const cost = inputs.costByProduct.get(p.id) || null;
+    const allUnits = Number(sales?.all_units) || 0;
+    const channels = inputs.salesByChannel.filter((r) => r.product_id === p.id && (Number(r.all_units) || 0) > 0);
+    const cur90 = Number(sales?.cur90_units) || 0;
+    const prev90 = Number(sales?.prev90_units) || 0;
+    let momentumRaw = null, momentumFlag = null;
+    if (prev90 > 0) momentumRaw = (cur90 - prev90) / prev90;
+    else if (cur90 > 0) momentumFlag = "insufficient_history";
+    else momentumFlag = "no_recent_sales";
+    let profitRaw = null;
+    const unitCost = Number(cost?.production_cost_thb) || 0;
+    const modeledPrice = Number(cost?.modeled_price_thb) || 0;
+    if (unitCost > 0 && modeledPrice > 0) profitRaw = (modeledPrice - unitCost) / modeledPrice * 100;
+    const channelCount = channels.length;
+    const channelFitRaw = channelCount > 0 ? channelCount : null;
+    const ga4Sessions = inputs.ga4ByProduct.get(p.id) || 0;
+    const gscClicks = inputs.gscByProduct.get(p.id) || 0;
+    const usedGa4 = ga4Sessions > 0;
+    const usedGsc = gscClicks > 0;
+    rows.push({
+      product_id: p.id,
+      slug: p.slug,
+      title: p.title_en,
+      channel: "",
+      _raw: {
+        momentum: momentumRaw,
+        momentumFlag,
+        profitability: profitRaw,
+        channel_fit: channelFitRaw,
+        channel_fit_desc: `${channelCount} channel(s)`,
+        demand_ga4: usedGa4 ? ga4Sessions : null,
+        demand_gsc: usedGsc ? gscClicks : null,
+        usedGa4,
+        usedGsc
+      },
+      _meta: {
+        all_orders: Number(sales?.all_orders) || 0,
+        last_order_day: sales?.last_order_day || null,
+        has_profitability: profitRaw !== null,
+        cur90,
+        prev90
+      }
+    });
+    for (const ch of channels) {
+      const cCur = Number(ch.cur90_units) || 0;
+      const cPrev = Number(ch.prev90_units) || 0;
+      let chMomentum = null, chMomentumFlag = null;
+      if (cPrev > 0) chMomentum = (cCur - cPrev) / cPrev;
+      else if (cCur > 0) chMomentumFlag = "insufficient_history";
+      else chMomentumFlag = "no_recent_sales";
+      let chProfit = null, chProfitFlag = null;
+      if (unitCost > 0 && modeledPrice > 0) {
+        const fee = inputs.feeByChannel.get(ch.channel);
+        const ship = inputs.shipByChannel.get(ch.channel);
+        if (fee && ship) {
+          const feesAbs = modeledPrice * ((Number(fee.marketplace_fee_pct) || 0) + (Number(fee.payment_fee_pct) || 0)) / 100 + (Number(fee.payment_fee_fixed_thb) || 0) + (Number(fee.other_fee_thb_per_order) || 0);
+          chProfit = (modeledPrice - unitCost - feesAbs - Number(ship.avg_shipping_cost_thb)) / modeledPrice * 100;
+        } else {
+          chProfitFlag = !fee ? "channel_fees_missing" : "channel_shipping_missing";
+        }
+      }
+      const etsySessions = inputs.ga4EtsyByProduct.get(p.id) || 0;
+      let chDemand = null;
+      let chDemandFlag = null;
+      let chUsedGa4Etsy = false;
+      if (ch.channel === "website") {
+        chDemand = usedGa4 ? ga4Sessions : null;
+      } else if (ch.channel === "etsy") {
+        if (etsySessions > 0) {
+          chDemand = etsySessions;
+          chUsedGa4Etsy = true;
+        } else {
+          chDemandFlag = "demand_etsy_unmapped";
+        }
+      } else {
+        chDemandFlag = "demand_not_tracked";
+      }
+      rows.push({
+        product_id: p.id,
+        slug: p.slug,
+        title: p.title_en,
+        channel: ch.channel,
+        _raw: {
+          momentum: chMomentum,
+          momentumFlag: chMomentumFlag,
+          profitability: chProfit,
+          profitabilityFlag: chProfitFlag,
+          channel_fit: cCur > 0 ? cCur : null,
+          channel_fit_desc: `${cCur} units 90d in ${ch.channel}`,
+          demand_ga4: chDemand,
+          demand_gsc: null,
+          usedGa4: ch.channel === "website" && chDemand !== null,
+          usedGa4Etsy: chUsedGa4Etsy,
+          usedGsc: false,
+          demandFlag: chDemandFlag
+        },
+        _meta: {
+          all_orders: Number(sales?.all_orders) || 0,
+          last_order_day: sales?.last_order_day || null,
+          has_profitability: chProfit !== null,
+          cur90: cCur,
+          prev90: cPrev
+        }
+      });
+    }
+  }
+  const pctPool = /* @__PURE__ */ __name((scopeFilter, getVal) => percentileMap(
+    rows.filter((r) => scopeFilter(r) && getVal(r) !== null && getVal(r) !== void 0).map(getVal)
+  ), "pctPool");
+  const pools = {};
+  for (const scope of ["overall", ...new Set(rows.map((r) => r.channel))]) {
+    const inScope = /* @__PURE__ */ __name((r) => scope === "overall" ? r.channel === "" : r.channel === scope, "inScope");
+    pools[scope] = {
+      momentum: pctPool(inScope, (r) => r._raw.momentum),
+      profitability: pctPool(inScope, (r) => r._raw.profitability),
+      channel_fit: pctPool(inScope, (r) => r._raw.channel_fit),
+      demand_ga4: pctPool(inScope, (r) => r._raw.demand_ga4),
+      demand_gsc: pctPool(inScope, (r) => r._raw.demand_gsc)
+    };
+  }
+  const scored = [];
+  for (const r of rows) {
+    const scope = r.channel === "" ? "overall" : r.channel;
+    const P = pools[scope];
+    const components = {};
+    const missing = [];
+    let availableWeight = 0;
+    let weighted = 0;
+    const addComponent = /* @__PURE__ */ __name((name, raw, normalized, flags2) => {
+      components[name] = { raw: raw === null ? null : round1(raw), normalized, weight: W[name], flags: flags2 || null };
+      if (normalized === null || normalized === void 0) {
+        missing.push(flags2 ? `${name}:${flags2}` : name);
+      } else {
+        availableWeight += W[name];
+        weighted += W[name] * normalized;
+      }
+    }, "addComponent");
+    if (r._raw.momentum !== null) {
+      addComponent("momentum", r._raw.momentum, P.momentum.get(r._raw.momentum) ?? null, null);
+    } else {
+      addComponent("momentum", null, null, r._raw.momentumFlag || "insufficient_data");
+    }
+    if (r._raw.profitability !== null) {
+      addComponent("profitability", r._raw.profitability, P.profitability.get(r._raw.profitability) ?? null, null);
+    } else {
+      addComponent("profitability", null, null, r._raw.profitabilityFlag || "not_derivable");
+    }
+    if (r._raw.channel_fit !== null) {
+      const norm = P.channel_fit.get(r._raw.channel_fit) ?? null;
+      components.channel_fit = { raw: r._raw.channel_fit, raw_desc: r._raw.channel_fit_desc, normalized: norm, weight: W.channel_fit, flags: null };
+      if (norm === null) missing.push("channel_fit");
+      else {
+        availableWeight += W.channel_fit;
+        weighted += W.channel_fit * norm;
+      }
+    } else {
+      components.channel_fit = { raw: null, normalized: null, weight: W.channel_fit, flags: "no_channel_data" };
+      missing.push("channel_fit:no_channel_data");
+    }
+    const demandParts = [];
+    let demandNorm = null;
+    if (r._raw.demand_ga4 !== null) {
+      const n = P.demand_ga4.get(r._raw.demand_ga4) ?? null;
+      if (n !== null) demandParts.push({ n, w: DW.ga4, src: r._raw.usedGa4Etsy ? "GA4_Etsy" : "GA4" });
+    }
+    if (r._raw.demand_gsc !== null && r.channel === "") {
+      const n = P.demand_gsc.get(r._raw.demand_gsc) ?? null;
+      if (n !== null) demandParts.push({ n, w: DW.gsc, src: "GSC" });
+    }
+    if (demandParts.length) {
+      const wsum = demandParts.reduce((s, x) => s + x.w, 0);
+      demandNorm = round1(demandParts.reduce((s, x) => s + x.n * x.w, 0) / wsum);
+      components.demand = {
+        raw: null,
+        normalized: demandNorm,
+        weight: W.demand,
+        sources: demandParts.map((x) => x.src).join("+"),
+        flags: null
+      };
+      availableWeight += W.demand;
+      weighted += W.demand * demandNorm;
+    } else {
+      components.demand = { raw: null, normalized: null, weight: W.demand, flags: r._raw.demandFlag || "no_demand_signal" };
+      missing.push(`demand:${r._raw.demandFlag || "no_demand_signal"}`);
+    }
+    components.strategic = { raw: null, normalized: null, weight: W.strategic, flags: "strategic_undefined" };
+    missing.push("strategic:strategic_undefined");
+    components.conversion = { raw: null, normalized: null, weight: W.conversion, flags: "conversion_weight_zero" };
+    if (W.conversion > 0) missing.push("conversion:not_tracked_v1");
+    const conf = confidenceScore({
+      usedGa4: r._raw.usedGa4,
+      usedGsc: r._raw.usedGsc,
+      usedGa4Etsy: r._raw.usedGa4Etsy,
+      ga4MappedShare,
+      gscMappedShare,
+      ga4AgeDays,
+      gscAgeDays,
+      ga4EtsyMappedShare,
+      ga4EtsyAgeDays,
+      lastOrderDay: r._meta.last_order_day,
+      now,
+      allOrders: r._meta.all_orders,
+      hasProfitability: r._meta.has_profitability
+    });
+    let score = null, tier = "INSUFFICIENT_DATA";
+    if (availableWeight > 0) {
+      score = round1(weighted / availableWeight);
+      if (conf.confidence < TIER.low) {
+        score = null;
+        tier = "INSUFFICIENT_DATA";
+      } else if (score >= TIER.high) tier = "HIGH";
+      else if (score >= TIER.medium) tier = "MEDIUM";
+      else tier = "LOW";
+    }
+    scored.push({
+      product_id: r.product_id,
+      slug: r.slug,
+      title: r.title,
+      channel: r.channel,
+      score,
+      tier,
+      confidence: conf.confidence,
+      confidence_notes: conf.notes,
+      components_json: components,
+      available_weight: availableWeight,
+      missing_components: missing.join(","),
+      scope,
+      _meta: r._meta
+    });
+  }
+  for (const scope of new Set(scored.map((r) => r.scope))) {
+    const inScope = scored.filter((r) => r.scope === scope).sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.product_id - b.product_id);
+    inScope.forEach((r, i) => {
+      r.rank = r.score !== null ? i + 1 : null;
+    });
+  }
+  return scored;
+}
+__name(scoreRows, "scoreRows");
+async function persistRow(env, row, scoreDate, modelVersion, computedAt) {
+  const compJson = JSON.stringify(row.components_json);
+  await env.DB.prepare(
+    "INSERT INTO opportunity_scores (score_date, score_model_version, product_id, channel, score, rank, tier, confidence, components_json, available_weight, missing_components, reasons, computed_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13) ON CONFLICT(score_date, score_model_version, product_id, channel) DO UPDATE SET score = ?5, rank = ?6, tier = ?7, confidence = ?8, components_json = ?9, available_weight = ?10, missing_components = ?11, reasons = ?12, computed_at = ?13, updated_at = CURRENT_TIMESTAMP"
+  ).bind(
+    scoreDate,
+    modelVersion,
+    row.product_id,
+    row.channel,
+    row.score,
+    row.rank,
+    row.tier,
+    row.confidence,
+    compJson,
+    row.available_weight,
+    row.missing_components,
+    row.reasons,
+    computedAt
+  ).run();
+}
+__name(persistRow, "persistRow");
+async function loadModel(env) {
+  const row = await env.DB.prepare(
+    "SELECT model_version, weights_json FROM opportunity_score_models ORDER BY created_at DESC, model_version DESC"
+  ).first();
+  if (row) {
+    try {
+      return { model_version: row.model_version, weights: { ...DEFAULT_WEIGHTS, ...JSON.parse(row.weights_json) } };
+    } catch {
+    }
+  }
+  return { model_version: DEFAULT_MODEL_VERSION, weights: DEFAULT_WEIGHTS };
+}
+__name(loadModel, "loadModel");
+async function recomputeOpportunityScores(env, opts = {}) {
+  const dryRun = !!opts.dryRun;
+  const now = today();
+  const computedAt = (/* @__PURE__ */ new Date()).toISOString();
+  const model = await loadModel(env);
+  const inputs = await fetchInputs(env);
+  const scored = scoreRows(inputs, model.weights, now);
+  for (const r of scored) {
+    r.reasons = buildReasons(r, r.scope === "overall" ? "product overall" : r.scope);
+  }
+  if (!dryRun) {
+    await env.DB.prepare(
+      "CREATE TABLE IF NOT EXISTS opportunity_scores (id INTEGER PRIMARY KEY AUTOINCREMENT, score_date TEXT NOT NULL, score_model_version TEXT NOT NULL, product_id INTEGER NOT NULL, channel TEXT NOT NULL DEFAULT '', score REAL, rank INTEGER, tier TEXT NOT NULL, confidence REAL, components_json TEXT NOT NULL DEFAULT '{}', available_weight REAL NOT NULL DEFAULT 0, missing_components TEXT NOT NULL DEFAULT '', reasons TEXT NOT NULL DEFAULT '', computed_at TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(score_date, score_model_version, product_id, channel))"
+    ).run();
+    for (const r of scored) await persistRow(env, r, now, model.model_version, computedAt);
+  }
+  const overall = scored.filter((r) => r.channel === "");
+  return {
+    ok: true,
+    dry_run: dryRun,
+    score_date: now,
+    computed_at: computedAt,
+    model_version: model.model_version,
+    weights: model.weights,
+    rows_total: scored.length,
+    overall_rows: overall.length,
+    channel_rows: scored.length - overall.length,
+    scored_count: scored.filter((r) => r.score !== null).length,
+    insufficient_count: scored.filter((r) => r.score === null).length,
+    source_health: {
+      ga4: { scope: "website", mapped_share: inputs.ga4Health.total_sessions ? Math.round(inputs.ga4Health.mapped_sessions / inputs.ga4Health.total_sessions * 1e3) / 10 : null, latest: inputs.ga4Health.max_date },
+      ga4_etsy: { scope: "etsy", mapped_share: inputs.ga4EtsyHealth.total_sessions ? Math.round(inputs.ga4EtsyHealth.mapped_sessions / inputs.ga4EtsyHealth.total_sessions * 1e3) / 10 : null, latest: inputs.ga4EtsyHealth.max_date },
+      gsc: { mapped_share: inputs.gscHealth.total_clicks ? Math.round(inputs.gscHealth.mapped_clicks / inputs.gscHealth.total_clicks * 1e3) / 10 : null, latest: inputs.gscHealth.max_date }
+    },
+    demand_sub_weights: {
+      ga4: Math.round(demandSubWeights(model.weights).ga4 * 100),
+      gsc: Math.round(demandSubWeights(model.weights).gsc * 100)
+    },
+    preview: dryRun ? scored : void 0
+  };
+}
+__name(recomputeOpportunityScores, "recomputeOpportunityScores");
+
+// ../workers/api/admin-opportunity.ts
 function json5(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -4215,6 +9170,3418 @@ function json5(body, status = 200) {
   });
 }
 __name(json5, "json");
+function err(code, message, status = 400) {
+  return json5({ success: false, error_code: code, message }, status);
+}
+__name(err, "err");
+async function getOpportunity(env) {
+  const model = await loadModel(env);
+  let latest = null;
+  try {
+    latest = await env.DB.prepare(
+      "SELECT score_date, computed_at, COUNT(*) AS rows_n, SUM(CASE WHEN score IS NOT NULL THEN 1 ELSE 0 END) AS scored_n, SUM(CASE WHEN score IS NULL THEN 1 ELSE 0 END) AS insufficient_n FROM opportunity_scores WHERE score_model_version = ?1 GROUP BY score_date ORDER BY score_date DESC LIMIT 1"
+    ).bind(model.model_version).first();
+  } catch {
+    latest = null;
+  }
+  let rows = [];
+  if (latest) {
+    const res = await env.DB.prepare(
+      "SELECT o.product_id, p.slug, p.title_en, o.channel, o.score, o.rank, o.tier, o.confidence, o.components_json, o.available_weight, o.missing_components, o.reasons FROM opportunity_scores o JOIN products p ON p.id = o.product_id WHERE o.score_model_version = ?1 AND o.score_date = ?2 ORDER BY CASE WHEN o.channel = '' THEN 0 ELSE 1 END, o.channel, o.rank, o.product_id"
+    ).bind(model.model_version, latest.score_date).all();
+    rows = res.results || [];
+  }
+  const overall = rows.filter((r) => r.channel === "");
+  const byChannel = rows.filter((r) => r.channel !== "");
+  return json5({
+    success: true,
+    model_version: model.model_version,
+    weights: model.weights,
+    latest_score_date: latest ? latest.score_date : null,
+    computed_at: latest ? latest.computed_at : null,
+    row_counts: latest ? { total: latest.rows_n, scored: latest.scored_n, insufficient: latest.insufficient_n } : null,
+    note: "Scores are normalized per available component weight (missing components never count as zero). Profitability is MODELED margin (Phase 13 formula-derived, ESTIMATED) \u2014 never realized per-product margin. Tier grades the score (HIGH >=70, MEDIUM >=45, LOW >=25) and is issued only when confidence >= 25; otherwise INSUFFICIENT_DATA (no score).",
+    overall,
+    by_channel: byChannel
+  });
+}
+__name(getOpportunity, "getOpportunity");
+async function recomputeOpportunityHandler(request, env) {
+  let body = null;
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+  const dryRun = body && body.dry_run === true;
+  try {
+    const report = await recomputeOpportunityScores(env, { dryRun });
+    return json5({ success: true, ...report });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table") || msg.includes("no such view")) {
+      return err("OPPORTUNITY_VIEWS_MISSING", "Opportunity engine inputs not found \u2014 apply migrations 042/046/048/053/054 first.", 500);
+    }
+    return err("RECOMPUTE_FAILED", msg, 500);
+  }
+}
+__name(recomputeOpportunityHandler, "recomputeOpportunityHandler");
+
+// ../workers/api/admin-analysis.ts
+function json6(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    }
+  });
+}
+__name(json6, "json");
+function err2(code, message, status = 400) {
+  return json6({ success: false, error_code: code, message }, status);
+}
+__name(err2, "err");
+function isProductionHost6(hostname) {
+  if (!hostname) return false;
+  if (hostname === "localhost" || hostname === "127.0.0.1") return false;
+  if (hostname.endsWith(".local")) return false;
+  return hostname === "www.mildmate.com" || hostname === "mildmate.com";
+}
+__name(isProductionHost6, "isProductionHost");
+function collectRoles8(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  const add = /* @__PURE__ */ __name((v) => {
+    if (v !== void 0 && v !== null) values.push(v);
+  }, "add");
+  add(raw.role);
+  add(raw.roles);
+  add(raw.org_role);
+  add(raw.orgRole);
+  add(raw.public_metadata?.role);
+  add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.role);
+  add(raw.unsafe_metadata?.roles);
+  add(raw.metadata?.role);
+  add(raw.metadata?.roles);
+  add(raw["https://mildmate.com/role"]);
+  add(raw["https://mildmate.com/roles"]);
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles8, "collectRoles");
+function hasAdminRole8(rawClaims) {
+  const roles = collectRoles8(rawClaims);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole8, "hasAdminRole");
+function emailAllowed8(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed8, "emailAllowed");
+async function authorizeAdmin5(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const hasBearer = authHeader.startsWith("Bearer ");
+  if (hasBearer) {
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) {
+    } else {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) {
+        return { ok: true };
+      }
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find(function(e) {
+              return e.id === user.primary_email_address_id;
+            })?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed8(email, env)) return { ok: true };
+            if (hasAdminRole8(metadata)) return { ok: true };
+          }
+        } catch (e) {
+          console.error("Clerk API lookup failed:", e?.message || e);
+        }
+      }
+      return { ok: false, status: 403, error: "Forbidden: admin role required" };
+    }
+  }
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!providedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost6(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  if (!configuredSecret) return { ok: true };
+  if (providedSecret === configuredSecret) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
+}
+__name(authorizeAdmin5, "authorizeAdmin");
+var DATE_RE5 = /^\d{4}-\d{2}-\d{2}$/;
+var CHANNEL_RE = /^[a-z0-9-]{1,30}$/;
+var COMMERCIAL_STATUSES = /* @__PURE__ */ new Set(["paid", "processing", "shipped", "completed"]);
+var REVENUE_STATUSES = /* @__PURE__ */ new Set(["EXACT", "UNALLOCATED"]);
+var MAPPING_STATUSES = /* @__PURE__ */ new Set(["Mapped", "Partial", "Unmapped", "Itemless"]);
+var MAX_LIMIT = 200;
+var DEFAULT_LIMIT = 50;
+function parseFilters(url) {
+  const bad = /* @__PURE__ */ __name((code, msg) => ({ ok: false, res: err2(code, msg) }), "bad");
+  const start = (url.searchParams.get("start") || "").trim() || null;
+  if (start && !DATE_RE5.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
+  const end = (url.searchParams.get("end") || "").trim() || null;
+  if (end && !DATE_RE5.test(end)) return bad("INVALID_END_DATE", "end must be YYYY-MM-DD.");
+  if (start && end && start > end) return bad("INVALID_DATE_RANGE", "start must be on or before end.");
+  const channelRaw = (url.searchParams.get("channel") || "").trim().toLowerCase() || null;
+  if (channelRaw && !CHANNEL_RE.test(channelRaw)) return bad("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
+  const pidRaw = (url.searchParams.get("product_id") || "").trim();
+  let productId = null;
+  if (pidRaw) {
+    if (!/^\d{1,9}$/.test(pidRaw)) return bad("INVALID_PRODUCT_ID", "product_id must be a positive integer.");
+    productId = Number(pidRaw);
+  }
+  const statusRaw = (url.searchParams.get("status") || "").trim().toLowerCase() || null;
+  if (statusRaw && !COMMERCIAL_STATUSES.has(statusRaw)) {
+    return bad("INVALID_STATUS", "status must be one of: paid, processing, shipped, completed (analysis covers commercial orders only).");
+  }
+  const revRaw = (url.searchParams.get("revenue_status") || "").trim().toUpperCase() || null;
+  if (revRaw && !REVENUE_STATUSES.has(revRaw)) return bad("INVALID_REVENUE_STATUS", "revenue_status must be EXACT or UNALLOCATED.");
+  const mapRaw0 = (url.searchParams.get("mapping") || "").trim();
+  const mapRaw = mapRaw0 ? mapRaw0.charAt(0).toUpperCase() + mapRaw0.slice(1).toLowerCase() : null;
+  if (mapRaw && !MAPPING_STATUSES.has(mapRaw)) return bad("INVALID_MAPPING_STATUS", "mapping must be Mapped, Partial, Unmapped, or Itemless.");
+  const limitRaw = (url.searchParams.get("limit") || "").trim();
+  let limit = DEFAULT_LIMIT;
+  if (limitRaw) {
+    if (!/^\d{1,4}$/.test(limitRaw) || Number(limitRaw) < 1) return bad("INVALID_LIMIT", "limit must be a positive integer.");
+    limit = Math.min(Number(limitRaw), MAX_LIMIT);
+  }
+  const offsetRaw = (url.searchParams.get("offset") || "").trim();
+  let offset = 0;
+  if (offsetRaw) {
+    if (!/^\d{1,9}$/.test(offsetRaw)) return bad("INVALID_OFFSET", "offset must be a non-negative integer.");
+    offset = Number(offsetRaw);
+  }
+  return {
+    ok: true,
+    f: { start, end, channel: channelRaw, productId, status: statusRaw, revenueStatus: revRaw, mapping: mapRaw, limit, offset }
+  };
+}
+__name(parseFilters, "parseFilters");
+function dayRangeWhere(f, col = "order_day") {
+  const parts = [];
+  const binds = [];
+  if (f.start) {
+    parts.push(`${col} >= ?`);
+    binds.push(f.start);
+  }
+  if (f.end) {
+    parts.push(`${col} <= ?`);
+    binds.push(f.end);
+  }
+  return { sql: parts.length ? " AND " + parts.join(" AND ") : "", binds };
+}
+__name(dayRangeWhere, "dayRangeWhere");
+function createdRangeWhere(f, col = "created_at") {
+  const parts = [];
+  const binds = [];
+  if (f.start) {
+    parts.push(`substr(COALESCE(${col}, datetime('now')), 1, 10) >= ?`);
+    binds.push(f.start);
+  }
+  if (f.end) {
+    parts.push(`substr(COALESCE(${col}, datetime('now')), 1, 10) <= ?`);
+    binds.push(f.end);
+  }
+  return { sql: parts.length ? " AND " + parts.join(" AND ") : "", binds };
+}
+__name(createdRangeWhere, "createdRangeWhere");
+function shiftIsoDate(isoDay, deltaDays) {
+  if (!DATE_RE5.test(isoDay)) return null;
+  const d = /* @__PURE__ */ new Date(isoDay + "T00:00:00Z");
+  if (isNaN(d.getTime())) return null;
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return d.toISOString().slice(0, 10);
+}
+__name(shiftIsoDate, "shiftIsoDate");
+async function getSummary(env, f) {
+  const range = dayRangeWhere(f);
+  const binds = [...range.binds];
+  let channelSql = "";
+  if (f.channel) {
+    channelSql = " AND channel_norm = ?";
+    binds.push(f.channel);
+  }
+  const row = await env.DB.prepare(
+    `SELECT
+       COALESCE(SUM(orders), 0)            AS orders,
+       SUM(order_revenue)                  AS order_revenue,
+       COALESCE(SUM(units), 0)             AS units,
+       COALESCE(SUM(mapped_orders), 0)     AS mapped_orders,
+       COALESCE(SUM(exact_items), 0)       AS exact_items,
+       COALESCE(SUM(unallocated_items), 0) AS unallocated_items
+     FROM analysis_sales_daily
+     WHERE 1=1${range.sql}${channelSql}`
+  ).bind(...binds).first();
+  const orders = Number(row?.orders || 0);
+  const revenue = row?.order_revenue === null || row?.order_revenue === void 0 ? null : Number(row.order_revenue);
+  const items = Number(row?.exact_items || 0) + Number(row?.unallocated_items || 0);
+  return json6({
+    success: true,
+    filters: { start: f.start, end: f.end, channel: f.channel },
+    summary: {
+      orders,
+      order_revenue: revenue,
+      currency: "THB",
+      units: Number(row?.units || 0),
+      aov: orders > 0 && revenue !== null ? Math.round(revenue / orders * 100) / 100 : null,
+      mapped_orders: Number(row?.mapped_orders || 0),
+      mapped_order_pct: orders > 0 ? Math.round(Number(row?.mapped_orders || 0) / orders * 1e3) / 10 : null,
+      exact_items: Number(row?.exact_items || 0),
+      unallocated_items: Number(row?.unallocated_items || 0),
+      exact_item_pct: items > 0 ? Math.round(Number(row?.exact_items || 0) / items * 1e3) / 10 : null,
+      unallocated_item_pct: items > 0 ? Math.round(Number(row?.unallocated_items || 0) / items * 1e3) / 10 : null
+    }
+  });
+}
+__name(getSummary, "getSummary");
+async function getSales(env, f) {
+  const range = dayRangeWhere(f, "ai.order_day");
+  const conds = [];
+  const binds = [...range.binds];
+  if (f.channel) {
+    conds.push("ai.channel_norm = ?");
+    binds.push(f.channel);
+  }
+  if (f.productId !== null) {
+    conds.push("ai.product_id = ?");
+    binds.push(f.productId);
+  }
+  if (f.revenueStatus) {
+    conds.push("ai.revenue_status = ?");
+    binds.push(f.revenueStatus);
+  }
+  if (f.status) {
+    conds.push("co.status = ?");
+    binds.push(f.status);
+  }
+  if (f.mapping) {
+    conds.push("om.derived_mapping_status = ?");
+    binds.push(f.mapping);
+  }
+  const extra = conds.length ? " AND " + conds.join(" AND ") : "";
+  const base = `FROM analysis_active_items ai
+     JOIN analysis_commercial_orders co ON co.id = ai.sales_order_id
+     LEFT JOIN analysis_order_mapping om ON om.sales_order_id = ai.sales_order_id
+     LEFT JOIN products p ON p.id = ai.product_id
+     WHERE 1=1${range.sql}${extra}`;
+  const countRow = await env.DB.prepare(`SELECT COUNT(*) AS n ${base}`).bind(...binds).first();
+  const total = Number(countRow?.n || 0);
+  const rows = await env.DB.prepare(
+    `SELECT
+       ai.order_day, ai.channel_norm, co.source_system, co.source_order_id, co.status,
+       co.order_total, co.currency,
+       ai.product_id, COALESCE(p.title_en, '(unmapped)') AS product_title,
+       ai.quantity, ai.raw_item_text,
+       ai.line_revenue, ai.revenue_status,
+       om.derived_mapping_status
+     ${base}
+     ORDER BY ai.order_day DESC, ai.sales_order_id DESC, ai.id
+     LIMIT ? OFFSET ?`
+  ).bind(...binds, f.limit, f.offset).all();
+  return json6({
+    success: true,
+    filters: {
+      start: f.start,
+      end: f.end,
+      channel: f.channel,
+      product_id: f.productId,
+      status: f.status,
+      revenue_status: f.revenueStatus,
+      mapping: f.mapping
+    },
+    pagination: { total, limit: f.limit, offset: f.offset },
+    rows: rows.results || []
+  });
+}
+__name(getSales, "getSales");
+async function getProducts(env, f) {
+  const range = dayRangeWhere(f, "ai.order_day");
+  const binds = [...range.binds];
+  let channelSql = "";
+  if (f.channel) {
+    channelSql = " AND ai.channel_norm = ?";
+    binds.push(f.channel);
+  }
+  const rows = await env.DB.prepare(
+    `SELECT
+       ai.product_id,
+       COALESCE(p.title_en, '(unmapped)') AS product_title,
+       p.slug AS product_slug,
+       COUNT(DISTINCT ai.sales_order_id) AS orders_containing_product,
+       SUM(ai.quantity) AS quantity,
+       SUM(CASE WHEN ai.revenue_status = 'EXACT' THEN ai.line_revenue END) AS exact_revenue,
+       SUM(ai.revenue_status = 'EXACT') AS exact_items,
+       COUNT(*) AS total_items,
+       COUNT(DISTINCT ai.channel_norm) AS channel_count
+     FROM analysis_active_items ai
+     LEFT JOIN products p ON p.id = ai.product_id
+     WHERE 1=1${range.sql}${channelSql}
+     GROUP BY ai.product_id, p.title_en, p.slug
+     ORDER BY orders_containing_product DESC, quantity DESC, ai.product_id`
+  ).bind(...binds).all();
+  const trend = await env.DB.prepare(
+    `SELECT product_id, orders_28d, orders_prev_28d, growth_vs_previous FROM analysis_sales_28d`
+  ).all();
+  const trendMap = {};
+  (trend.results || []).forEach((t) => {
+    trendMap[String(t.product_id)] = t;
+  });
+  const topChannel = await env.DB.prepare(
+    `SELECT product_id, channel_norm, orders, units
+     FROM analysis_product_channel
+     ORDER BY orders DESC, units DESC, channel_norm`
+  ).all();
+  const topMap = {};
+  (topChannel.results || []).forEach((t) => {
+    const k = String(t.product_id);
+    if (!(k in topMap)) topMap[k] = t.channel_norm;
+  });
+  const out = (rows.results || []).map((r) => {
+    const k = String(r.product_id);
+    return {
+      ...r,
+      revenue_coverage_pct: Number(r.total_items || 0) > 0 ? Math.round(Number(r.exact_items || 0) / Number(r.total_items) * 1e3) / 10 : null,
+      top_channel: topMap[k] || null,
+      orders_28d: trendMap[k]?.orders_28d ?? 0,
+      growth_vs_previous_28d: trendMap[k]?.growth_vs_previous ?? null
+    };
+  });
+  return json6({
+    success: true,
+    filters: { start: f.start, end: f.end, channel: f.channel },
+    products: out
+  });
+}
+__name(getProducts, "getProducts");
+async function getProductDetail(env, idRaw) {
+  if (!/^\d{1,9}$/.test(idRaw)) return err2("INVALID_PRODUCT_ID", "product id must be a positive integer.");
+  const pid = Number(idRaw);
+  const product = await env.DB.prepare(
+    `SELECT id, slug, title_en, product_type, is_active FROM products WHERE id = ?`
+  ).bind(pid).first();
+  if (!product) return err2("PRODUCT_NOT_FOUND", "No product with id " + pid + ".", 404);
+  const participation = await env.DB.prepare(
+    `SELECT orders_containing_product, quantity, exact_revenue, exact_items, total_items, channel_count
+     FROM analysis_product_participation WHERE product_id = ?`
+  ).bind(pid).first();
+  const channels = await env.DB.prepare(
+    `SELECT channel_norm, orders, units, exact_revenue
+     FROM analysis_product_channel WHERE product_id = ? ORDER BY orders DESC, units DESC`
+  ).bind(pid).all();
+  const w28 = await env.DB.prepare(`SELECT * FROM analysis_sales_28d WHERE product_id = ?`).bind(pid).first();
+  const w90 = await env.DB.prepare(`SELECT * FROM analysis_sales_90d WHERE product_id = ?`).bind(pid).first();
+  const anchorOrders = Number(participation?.orders_containing_product || 0);
+  const pairs = await env.DB.prepare(
+    `SELECT
+       CASE WHEN cp.product_a = ?1 THEN cp.product_b ELSE cp.product_a END AS partner_product_id,
+       COALESCE(p.title_en, '(unknown)') AS partner_title,
+       cp.co_orders
+     FROM analysis_product_copurchase cp
+     LEFT JOIN products p ON p.id = CASE WHEN cp.product_a = ?1 THEN cp.product_b ELSE cp.product_a END
+     WHERE cp.product_a = ?1 OR cp.product_b = ?1
+     ORDER BY cp.co_orders DESC`
+  ).bind(pid).all();
+  const coPurchase = (pairs.results || []).map((r) => ({
+    ...r,
+    attach_rate_pct: anchorOrders > 0 ? Math.round(Number(r.co_orders) / anchorOrders * 1e3) / 10 : null
+  }));
+  return json6({
+    success: true,
+    product,
+    participation: participation || {
+      orders_containing_product: 0,
+      quantity: 0,
+      exact_revenue: null,
+      exact_items: 0,
+      total_items: 0,
+      channel_count: 0
+    },
+    channels: channels.results || [],
+    window_28d: w28 || null,
+    window_90d: w90 || null,
+    co_purchase: coPurchase
+  });
+}
+__name(getProductDetail, "getProductDetail");
+async function getChannels(env, f) {
+  const range = dayRangeWhere(f);
+  const rows = await env.DB.prepare(
+    `SELECT
+       channel_norm,
+       SUM(orders) AS orders,
+       SUM(order_revenue) AS order_revenue,
+       SUM(units) AS units,
+       CASE WHEN SUM(orders) > 0 THEN ROUND(SUM(order_revenue) * 1.0 / SUM(orders), 2) END AS aov,
+       SUM(mapped_orders) AS mapped_orders,
+       CASE WHEN SUM(orders) > 0 THEN ROUND(SUM(mapped_orders) * 100.0 / SUM(orders), 1) END AS mapped_pct
+     FROM analysis_sales_daily
+     WHERE 1=1${range.sql}
+     GROUP BY channel_norm
+     ORDER BY orders DESC, order_revenue DESC`
+  ).bind(...range.binds).all();
+  return json6({
+    success: true,
+    filters: { start: f.start, end: f.end },
+    channels: rows.results || []
+  });
+}
+__name(getChannels, "getChannels");
+async function getQuotes(env, f) {
+  const range = createdRangeWhere(f, "q.created_at");
+  const baseSql = `FROM custom_quotes q WHERE 1=1${range.sql}`;
+  const summaryRow = await env.DB.prepare(
+    `SELECT
+       COUNT(*) AS total_quotes,
+       SUM(CASE WHEN q.created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS new_quotes_7d,
+       SUM(CASE WHEN q.created_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS new_quotes_30d,
+       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) != 'archived'
+                 AND (q.expires_at IS NULL OR q.expires_at > datetime('now'))
+                THEN 1 ELSE 0 END) AS active_quotes,
+       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved' THEN 1 ELSE 0 END) AS approved_quotes,
+       SUM(CASE WHEN q.expires_at IS NOT NULL AND q.expires_at <= datetime('now')
+                 AND LOWER(COALESCE(q.status, 'pending')) != 'archived'
+                THEN 1 ELSE 0 END) AS expired_quotes,
+       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
+                 AND q.expires_at IS NOT NULL
+                 AND q.expires_at > datetime('now')
+                 AND q.expires_at <= datetime('now', '+7 days')
+                THEN 1 ELSE 0 END) AS expiring_7d,
+       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
+                 AND NOT EXISTS (
+                   SELECT 1 FROM orders o
+                   WHERE o.quote_id = q.quote_id
+                 )
+                THEN 1 ELSE 0 END) AS approved_unconverted
+     ${baseSql}`
+  ).bind(...range.binds).first();
+  const exactRow = await env.DB.prepare(
+    `SELECT COUNT(DISTINCT q.quote_id) AS exact_converted
+     ${baseSql}
+       AND EXISTS (
+         SELECT 1 FROM orders o
+         WHERE o.quote_id = q.quote_id
+       )`
+  ).bind(...range.binds).first();
+  const legacyRow = await env.DB.prepare(
+    `SELECT COUNT(DISTINCT q.quote_id) AS legacy_email_matched
+     ${baseSql}
+       AND NOT EXISTS (
+         SELECT 1 FROM orders o
+         WHERE o.quote_id = q.quote_id
+       )
+       AND EXISTS (
+         SELECT 1 FROM orders o2
+         WHERE LOWER(COALESCE(o2.email, '')) = LOWER(COALESCE(q.email, ''))
+       )`
+  ).bind(...range.binds).first();
+  const topProducts = await env.DB.prepare(
+    `SELECT
+       q.product_slug,
+       COUNT(*) AS quote_count,
+       SUM(CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.quote_id = q.quote_id) THEN 1 ELSE 0 END) AS exact_converted
+     ${baseSql}
+     GROUP BY q.product_slug
+     ORDER BY quote_count DESC, exact_converted DESC, q.product_slug
+     LIMIT 12`
+  ).bind(...range.binds).all();
+  const atRisk = await env.DB.prepare(
+    `SELECT
+       q.quote_id,
+       q.product_slug,
+       q.created_at,
+       q.expires_at,
+       q.quoted_price_usd,
+       q.quoted_price
+     ${baseSql}
+       AND LOWER(COALESCE(q.status, 'pending')) = 'approved'
+       AND q.expires_at IS NOT NULL
+       AND q.expires_at > datetime('now')
+       AND q.expires_at <= datetime('now', '+7 days')
+       AND NOT EXISTS (
+         SELECT 1 FROM orders o
+         WHERE o.quote_id = q.quote_id
+       )
+     ORDER BY q.expires_at ASC, q.created_at ASC
+     LIMIT 25`
+  ).bind(...range.binds).all();
+  const approvedQuotes = Number(summaryRow?.approved_quotes || 0);
+  const exactConverted = Number(exactRow?.exact_converted || 0);
+  const phase5 = await buildPhase5QuoteFunnel(env, f, baseSql, range.binds);
+  return json6({
+    success: true,
+    filters: { start: f.start, end: f.end },
+    phase5,
+    summary: {
+      total_quotes: Number(summaryRow?.total_quotes || 0),
+      new_quotes_7d: Number(summaryRow?.new_quotes_7d || 0),
+      new_quotes_30d: Number(summaryRow?.new_quotes_30d || 0),
+      active_quotes: Number(summaryRow?.active_quotes || 0),
+      approved_quotes: approvedQuotes,
+      approved_unconverted: Number(summaryRow?.approved_unconverted || 0),
+      expiring_7d: Number(summaryRow?.expiring_7d || 0),
+      expired_quotes: Number(summaryRow?.expired_quotes || 0)
+    },
+    conversion: {
+      exact_converted_quotes: exactConverted,
+      exact_conversion_pct: approvedQuotes > 0 ? Math.round(exactConverted / approvedQuotes * 1e3) / 10 : null,
+      legacy_email_matched_quotes: Number(legacyRow?.legacy_email_matched || 0)
+    },
+    top_products: (topProducts.results || []).map((r) => ({
+      product_slug: r.product_slug || "(unknown)",
+      quote_count: Number(r.quote_count || 0),
+      exact_converted: Number(r.exact_converted || 0),
+      exact_conversion_pct: Number(r.quote_count || 0) > 0 ? Math.round(Number(r.exact_converted || 0) / Number(r.quote_count || 0) * 1e3) / 10 : null
+    })),
+    at_risk: (atRisk.results || []).map((r) => ({
+      quote_id: r.quote_id,
+      product_slug: r.product_slug,
+      created_at: r.created_at,
+      expires_at: r.expires_at,
+      quoted_price_usd: r.quoted_price_usd,
+      quoted_price_thb: r.quoted_price
+    }))
+  });
+}
+__name(getQuotes, "getQuotes");
+var PHASE5_ATTRIBUTION_COVERAGE_START = "2026-10-30";
+var PHASE5_TEST_QUOTE_DENYLIST = ["QT-261030-001", "QT-261030-002"];
+var PHASE5_PAID_ORDER_STATUSES = /* @__PURE__ */ new Set(["confirmed", "processing", "shipped", "delivered"]);
+var PHASE5_PAID_CLICK_FIELDS = ["gclid", "gbraid", "wbraid"];
+function phase5IsTestQuoteId(quoteId) {
+  const id = String(quoteId || "").trim();
+  if (!id) return false;
+  if (PHASE5_TEST_QUOTE_DENYLIST.includes(id)) return true;
+  return /^test-/i.test(id);
+}
+__name(phase5IsTestQuoteId, "phase5IsTestQuoteId");
+function phase5ParseAttributionJson(raw) {
+  if (!raw || typeof raw !== "string") return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+__name(phase5ParseAttributionJson, "phase5ParseAttributionJson");
+function phase5ChannelOf(obj) {
+  if (!obj) return null;
+  const src = String(obj.source || obj.utm_source || "").trim() || "(none)";
+  const med = String(obj.medium || obj.utm_medium || "").trim() || "(none)";
+  return src + "/" + med;
+}
+__name(phase5ChannelOf, "phase5ChannelOf");
+function phase5HasPaidClick(obj) {
+  if (!obj) return false;
+  return PHASE5_PAID_CLICK_FIELDS.some((f) => {
+    const v = obj[f];
+    return typeof v === "string" && v.trim().length > 0;
+  });
+}
+__name(phase5HasPaidClick, "phase5HasPaidClick");
+function phase5Bucket(map, channel, quoteId, customerKey, approved, paidClick) {
+  let b = map.get(channel);
+  if (!b) {
+    b = { channel, quotes: /* @__PURE__ */ new Set(), customers: /* @__PURE__ */ new Set(), approved: 0, paid_click_quotes: 0 };
+    map.set(channel, b);
+  }
+  b.quotes.add(quoteId);
+  if (customerKey) b.customers.add(customerKey);
+  if (approved) b.approved += 1;
+  if (paidClick) b.paid_click_quotes += 1;
+}
+__name(phase5Bucket, "phase5Bucket");
+function phase5ChannelRows(map) {
+  return [...map.values()].map((b) => ({
+    channel: b.channel,
+    quotes: b.quotes.size,
+    unique_customers: b.customers.size,
+    approved: b.approved,
+    paid_click_quotes: b.paid_click_quotes
+  })).sort((a, b) => b.quotes - a.quotes || a.channel.localeCompare(b.channel));
+}
+__name(phase5ChannelRows, "phase5ChannelRows");
+async function buildPhase5QuoteFunnel(env, f, baseSql, rangeBinds) {
+  try {
+    const quoteRows = await env.DB.prepare(
+      `SELECT q.quote_id,
+              LOWER(TRIM(COALESCE(q.email, ''))) AS email_key,
+              LOWER(COALESCE(q.status, 'pending')) AS status,
+              q.product_slug, q.fabric, q.color
+       ${baseSql}`
+    ).bind(...rangeBinds).all();
+    const quotes = (quoteRows.results || []).filter((r) => !phase5IsTestQuoteId(r.quote_id));
+    const attrRows = await env.DB.prepare(
+      `SELECT a.quote_id, a.first_touch_json, a.quote_session_json FROM quote_acquisition_attribution a`
+    ).all();
+    const quoteIdSet = new Set(quotes.map((q) => String(q.quote_id)));
+    const attrById = /* @__PURE__ */ new Map();
+    for (const r of attrRows.results || []) {
+      const id = String(r.quote_id || "");
+      if (quoteIdSet.has(id) && !attrById.has(id)) attrById.set(id, r);
+    }
+    const orderRows = await env.DB.prepare(
+      `SELECT o.quote_id, o.stripe_session_id, o.product_slug, o.product_title_en,
+              o.quantity, o.price_usd, o.price_thb, o.currency, o.status, o.created_at
+       FROM orders o
+       WHERE o.quote_id IS NOT NULL AND COALESCE(o.is_archived, 0) = 0`
+    ).all();
+    const ordersByQuote = /* @__PURE__ */ new Map();
+    for (const r of orderRows.results || []) {
+      const id = String(r.quote_id || "");
+      if (!quoteIdSet.has(id)) continue;
+      if (!ordersByQuote.has(id)) ordersByQuote.set(id, []);
+      ordersByQuote.get(id).push(r);
+    }
+    let adsCostRows = [];
+    let adsFreshRow = null;
+    try {
+      const adsRange = dayRangeWhere(f, "report_date");
+      const ads = await env.DB.prepare(
+        `SELECT COALESCE(currency, '') AS currency,
+                SUM(cost) AS cost,
+                MAX(report_date) AS latest_report_date
+         FROM google_ads_campaign_daily
+         WHERE 1=1${adsRange.sql}
+         GROUP BY COALESCE(currency, '')`
+      ).bind(...adsRange.binds).all();
+      adsCostRows = ads.results || [];
+      adsFreshRow = await env.DB.prepare(
+        `SELECT MAX(report_date) AS latest_report_date, COUNT(*) AS total_rows FROM google_ads_campaign_daily`
+      ).first();
+    } catch {
+      adsCostRows = [];
+      adsFreshRow = null;
+    }
+    const ftMap = /* @__PURE__ */ new Map();
+    const qsMap = /* @__PURE__ */ new Map();
+    const customersAll = /* @__PURE__ */ new Set();
+    const customersWithAttr = /* @__PURE__ */ new Set();
+    const customersPaid = /* @__PURE__ */ new Set();
+    let approvedCount = 0;
+    let paidQuotes = 0;
+    let ftUnavailable = 0;
+    let qsUnavailable = 0;
+    const adsAttributableQuoteIds = /* @__PURE__ */ new Set();
+    for (const q of quotes) {
+      const id = String(q.quote_id);
+      const custKey = String(q.email_key || "");
+      const isApproved = String(q.status) === "approved";
+      if (isApproved) approvedCount += 1;
+      if (custKey) customersAll.add(custKey);
+      const attr = attrById.get(id) || null;
+      const ft = attr ? phase5ParseAttributionJson(attr.first_touch_json) : null;
+      const qs = attr ? phase5ParseAttributionJson(attr.quote_session_json) : null;
+      if (ft) customersWithAttr.add(custKey);
+      const ftChannel = phase5ChannelOf(ft);
+      const qsChannel = phase5ChannelOf(qs);
+      if (!ftChannel) ftUnavailable += 1;
+      if (!qsChannel) qsUnavailable += 1;
+      const ftPaid = phase5HasPaidClick(ft);
+      const qsPaid = phase5HasPaidClick(qs);
+      if (ftChannel) phase5Bucket(ftMap, ftChannel, id, custKey, isApproved, ftPaid);
+      if (qsChannel) phase5Bucket(qsMap, qsChannel, id, custKey, isApproved, qsPaid);
+      if (ftPaid || qsPaid) adsAttributableQuoteIds.add(id);
+      const rows = ordersByQuote.get(id) || [];
+      const hasPaidOrder = rows.some((r) => PHASE5_PAID_ORDER_STATUSES.has(String(r.status || "").toLowerCase()));
+      if (hasPaidOrder) {
+        paidQuotes += 1;
+        if (custKey) customersPaid.add(custKey);
+      }
+    }
+    const byQuote = quotes.filter((q) => (ordersByQuote.get(String(q.quote_id)) || []).length > 0).map((q) => {
+      const id = String(q.quote_id);
+      const rows = ordersByQuote.get(id) || [];
+      const orderIds = [...new Set(rows.map((r) => String(r.stripe_session_id || "")))];
+      return {
+        quote_id: id,
+        quote_status: q.status,
+        order_count: orderIds.length,
+        order_ids: orderIds,
+        paid: rows.some((r) => PHASE5_PAID_ORDER_STATUSES.has(String(r.status || "").toLowerCase())),
+        statuses: [...new Set(rows.map((r) => String(r.status || "").toLowerCase()))],
+        items: rows.map((r) => {
+          const qty = Number(r.quantity || 1) || 1;
+          const cur = String(r.currency || "").toUpperCase();
+          const unitPrice = cur === "USD" ? Number(r.price_usd || 0) : cur === "THB" ? Number(r.price_thb || 0) : 0;
+          return {
+            product_slug: r.product_slug || "(unknown)",
+            product_title: r.product_title_en || r.product_slug || "(unknown)",
+            quantity: qty,
+            currency: cur || null,
+            unit_price: unitPrice,
+            line_revenue: Math.round(unitPrice * qty * 100) / 100,
+            status: String(r.status || "").toLowerCase()
+          };
+        })
+      };
+    }).sort((a, b) => String(b.quote_id).localeCompare(String(a.quote_id)));
+    const revenueByCur = {};
+    let excludedNonPaidRows = 0;
+    for (const q of quotes) {
+      for (const r of ordersByQuote.get(String(q.quote_id)) || []) {
+        const st = String(r.status || "").toLowerCase();
+        if (!PHASE5_PAID_ORDER_STATUSES.has(st)) {
+          excludedNonPaidRows += 1;
+          continue;
+        }
+        const cur = String(r.currency || "").toUpperCase();
+        if (cur !== "THB" && cur !== "USD") continue;
+        if (!revenueByCur[cur]) {
+          revenueByCur[cur] = { line_revenue: 0, orders: /* @__PURE__ */ new Set(), items: 0, quantity: 0 };
+        }
+        const qty = Number(r.quantity || 1) || 1;
+        const unit = cur === "USD" ? Number(r.price_usd || 0) : Number(r.price_thb || 0);
+        revenueByCur[cur].line_revenue = Math.round((revenueByCur[cur].line_revenue + unit * qty) * 100) / 100;
+        revenueByCur[cur].orders.add(String(r.stripe_session_id || ""));
+        revenueByCur[cur].items += 1;
+        revenueByCur[cur].quantity += qty;
+      }
+    }
+    for (const cur of Object.keys(revenueByCur)) {
+      revenueByCur[cur].orders = revenueByCur[cur].orders.size;
+    }
+    const nowMs = Date.now();
+    let adsDaysSince = null;
+    if (adsFreshRow && adsFreshRow.latest_report_date) {
+      const t = Date.parse(String(adsFreshRow.latest_report_date) + "T00:00:00Z");
+      if (!isNaN(t)) adsDaysSince = Math.floor((nowMs - t) / 864e5);
+    }
+    const adsCost = adsCostRows.map((r) => ({
+      currency: r.currency || null,
+      cost: Number(r.cost || 0),
+      latest_report_date: r.latest_report_date || null
+    }));
+    const adsAttributable = adsAttributableQuoteIds.size;
+    let costPerQuote = null;
+    if (adsAttributable > 0 && adsCost.length > 0) {
+      costPerQuote = adsCost.map((c) => ({
+        currency: c.currency,
+        cost_per_attributable_quote: Math.round(c.cost / adsAttributable * 100) / 100
+      }));
+    }
+    return {
+      coverage_start: PHASE5_ATTRIBUTION_COVERAGE_START,
+      exclusions: {
+        denylist: [...PHASE5_TEST_QUOTE_DENYLIST],
+        patterns: ["TEST-*"],
+        excluded_note: "Legacy summary/conversion/top_products/at_risk blocks above are computed without exclusions and keep their original definitions."
+      },
+      status_funnel: {
+        submitted: quotes.length,
+        approved: approvedCount,
+        paid: paidQuotes,
+        unpaid: quotes.length - paidQuotes
+      },
+      customers: {
+        unique_customers_total: customersAll.size,
+        unique_customers_with_attribution: customersWithAttr.size,
+        unique_customers_paid: customersPaid.size,
+        pii_note: "Unique counts are computed server-side; no customer identifiers are returned."
+      },
+      acquisition: {
+        first_touch: phase5ChannelRows(ftMap),
+        quote_session: phase5ChannelRows(qsMap),
+        unavailable: {
+          first_touch_quotes: ftUnavailable,
+          quote_session_quotes: qsUnavailable,
+          note: "Quotes submitted before " + PHASE5_ATTRIBUTION_COVERAGE_START + " (Phase 3 deploy) have no attribution capture; they are counted as unavailable, never as Direct."
+        },
+        paid_click_evidence: "paid_click_quotes = quotes whose captured attribution JSON contains gclid/gbraid/wbraid; observed values only, never inferred from spend."
+      },
+      orders: {
+        by_quote: byQuote,
+        note: "Orders bind to quotes via exact orders.quote_id. Line grain: unit price \xD7 quantity; shipping lines are never stored on order rows."
+      },
+      revenue: {
+        basis: "orders rows with paid status (confirmed/processing/shipped/delivered), COALESCE(is_archived,0)=0; line revenue = unit price \xD7 quantity; per-currency, never blended; quoted_price is never used.",
+        thb: revenueByCur["THB"] ? { line_revenue: revenueByCur["THB"].line_revenue, orders: revenueByCur["THB"].orders, items: revenueByCur["THB"].items, quantity: revenueByCur["THB"].quantity } : { line_revenue: 0, orders: 0, items: 0, quantity: 0 },
+        usd: revenueByCur["USD"] ? { line_revenue: revenueByCur["USD"].line_revenue, orders: revenueByCur["USD"].orders, items: revenueByCur["USD"].items, quantity: revenueByCur["USD"].quantity } : { line_revenue: 0, orders: 0, items: 0, quantity: 0 },
+        excluded_non_paid_rows: excludedNonPaidRows
+      },
+      google_ads: {
+        ads_attributable_quotes: adsAttributable,
+        attribution_basis: "exact recorded paid click id (gclid/gbraid/wbraid) in quote attribution JSON; Direct/Unknown quotes are never assigned to Ads.",
+        cost_scope: "google_ads_campaign_daily cost summed over the report_date filter window, per source currency; platform-attributed and directional only.",
+        cost: adsCost,
+        cost_per_attributable_quote: costPerQuote,
+        na_reason: adsAttributable === 0 ? "N/A \u2014 no Ads-attributable quotes (no recorded paid click ids) in the selected window." : null,
+        freshness: {
+          latest_report_date: adsFreshRow?.latest_report_date || null,
+          total_rows: Number(adsFreshRow?.total_rows || 0),
+          days_since_latest_report: adsDaysSince,
+          status: !adsFreshRow || Number(adsFreshRow.total_rows || 0) === 0 ? "empty" : adsDaysSince !== null && adsDaysSince > 4 ? "warning" : "ok"
+        }
+      }
+    };
+  } catch (e) {
+    return {
+      available: false,
+      error_code: "PHASE5_FUNNEL_UNAVAILABLE",
+      message: String(e?.message || e).slice(0, 300)
+    };
+  }
+}
+__name(buildPhase5QuoteFunnel, "buildPhase5QuoteFunnel");
+async function getGsc(env, f) {
+  const range = dayRangeWhere(f, "g.report_date");
+  const binds = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND g.product_id = ?";
+    binds.push(f.productId);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT g.query_norm) AS queries,
+         COUNT(DISTINCT g.page_path) AS pages,
+         COALESCE(SUM(g.clicks), 0) AS clicks,
+         COALESCE(SUM(g.impressions), 0) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.clicks ELSE 0 END), 0) AS mapped_clicks,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.impressions ELSE 0 END), 0) AS mapped_impressions
+       FROM gsc_search_daily g
+       WHERE 1=1${range.sql}${productSql}`
+    ).bind(...binds).first();
+    const topPages = await env.DB.prepare(
+      `SELECT
+         g.page_path,
+         g.product_id,
+         COALESCE(p.title_en, '(non-product)') AS product_title,
+         COUNT(DISTINCT g.query_norm) AS queries,
+         SUM(g.clicks) AS clicks,
+         SUM(g.impressions) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position
+       FROM gsc_search_daily g
+       LEFT JOIN products p ON p.id = g.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.page_path, g.product_id, p.title_en
+       ORDER BY SUM(g.clicks) DESC, SUM(g.impressions) DESC, g.page_path
+       LIMIT 15`
+    ).bind(...binds).all();
+    const topQueries = await env.DB.prepare(
+      `SELECT
+         MIN(g.query_text) AS query_text,
+         COUNT(DISTINCT g.page_path) AS pages,
+         SUM(g.clicks) AS clicks,
+         SUM(g.impressions) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position
+       FROM gsc_search_daily g
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.query_norm
+       ORDER BY SUM(g.clicks) DESC, SUM(g.impressions) DESC, MIN(g.query_text)
+       LIMIT 20`
+    ).bind(...binds).all();
+    const fresh = await env.DB.prepare(`SELECT * FROM analysis_gsc_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+    let trend = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      clicks_28d: 0,
+      impressions_28d: 0,
+      ctr_28d: null,
+      avg_position_28d: null,
+      clicks_prev_28d: 0,
+      impressions_prev_28d: 0,
+      ctr_prev_28d: null,
+      avg_position_prev_28d: null,
+      clicks_growth_pct: null,
+      impressions_growth_pct: null
+    };
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds = [currentStart, anchorDate];
+        const prevBinds = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND g.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.clicks), 0) AS clicks,
+             COALESCE(SUM(g.impressions), 0) AS impressions,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+             END AS ctr_pct,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+             END AS avg_position
+           FROM gsc_search_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...curBinds).first();
+        const prev = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.clicks), 0) AS clicks,
+             COALESCE(SUM(g.impressions), 0) AS impressions,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+             END AS ctr_pct,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+             END AS avg_position
+           FROM gsc_search_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...prevBinds).first();
+        const prevClicks = Number(prev?.clicks || 0);
+        const prevImpr = Number(prev?.impressions || 0);
+        const curClicks = Number(cur?.clicks || 0);
+        const curImpr = Number(cur?.impressions || 0);
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          clicks_28d: curClicks,
+          impressions_28d: curImpr,
+          ctr_28d: cur?.ctr_pct === null || cur?.ctr_pct === void 0 ? null : Number(cur.ctr_pct),
+          avg_position_28d: cur?.avg_position === null || cur?.avg_position === void 0 ? null : Number(cur.avg_position),
+          clicks_prev_28d: prevClicks,
+          impressions_prev_28d: prevImpr,
+          ctr_prev_28d: prev?.ctr_pct === null || prev?.ctr_pct === void 0 ? null : Number(prev.ctr_pct),
+          avg_position_prev_28d: prev?.avg_position === null || prev?.avg_position === void 0 ? null : Number(prev.avg_position),
+          clicks_growth_pct: prevClicks > 0 ? Math.round((curClicks - prevClicks) * 1e4 / prevClicks) / 100 : null,
+          impressions_growth_pct: prevImpr > 0 ? Math.round((curImpr - prevImpr) * 1e4 / prevImpr) / 100 : null
+        };
+      }
+    }
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const gscDays = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === void 0 ? null : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    const latestSyncAt = fresh?.last_sync_at || null;
+    let freshnessStatus = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (gscDays !== null && gscDays > 4) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+    return json6({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        queries: Number(summary?.queries || 0),
+        pages: Number(summary?.pages || 0),
+        clicks: Number(summary?.clicks || 0),
+        impressions: Number(summary?.impressions || 0),
+        ctr_pct: summary?.ctr_pct === null || summary?.ctr_pct === void 0 ? null : Number(summary.ctr_pct),
+        avg_position: summary?.avg_position === null || summary?.avg_position === void 0 ? null : Number(summary.avg_position),
+        mapped_clicks: Number(summary?.mapped_clicks || 0),
+        mapped_impressions: Number(summary?.mapped_impressions || 0)
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: gscDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: latestSyncAt,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "GSC data is typically delayed by 1\u20132 days; freshness warning threshold = 4 days."
+      },
+      top_pages: topPages.results || [],
+      top_queries: topQueries.results || []
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: gsc_search_daily") || msg.includes("no such table: analysis_gsc_freshness")) {
+      return json6({
+        success: true,
+        available: false,
+        message: "GSC schema is not available in this environment yet. Apply migration 046_gsc_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId }
+      });
+    }
+    return err2("GSC_QUERY_FAILED", msg, 500);
+  }
+}
+__name(getGsc, "getGsc");
+async function getGa4(env, f) {
+  const GA4_SCOPE_WHERE = " AND g.property_scope = 'website' AND g.landing_page_path NOT LIKE '%/listing/%'";
+  const range = dayRangeWhere(f, "g.report_date");
+  const binds = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND g.product_id = ?";
+    binds.push(f.productId);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT g.landing_page_path) AS landing_pages,
+         COUNT(DISTINCT g.page_path) AS page_paths,
+         COALESCE(SUM(g.sessions), 0) AS sessions,
+         COALESCE(SUM(g.users), 0) AS users,
+         COALESCE(SUM(g.engaged_sessions), 0) AS engaged_sessions,
+         COALESCE(SUM(g.product_views), 0) AS product_views,
+         COALESCE(SUM(g.add_to_cart), 0) AS add_to_cart,
+         COALESCE(SUM(g.begin_checkout), 0) AS begin_checkout,
+         COALESCE(SUM(g.purchases), 0) AS purchases,
+         COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.engaged_sessions) * 100.0 / SUM(g.sessions), 2)
+         END AS engagement_rate_pct,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.add_to_cart) * 100.0 / SUM(g.sessions), 2)
+         END AS add_to_cart_rate_pct,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.begin_checkout) * 100.0 / SUM(g.sessions), 2)
+         END AS checkout_rate_pct,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.purchases) * 100.0 / SUM(g.sessions), 2)
+         END AS purchase_rate_pct,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.sessions ELSE 0 END), 0) AS mapped_sessions
+       FROM ga4_funnel_daily g
+       WHERE 1=1${GA4_SCOPE_WHERE}${range.sql}${productSql}`
+    ).bind(...binds).first();
+    const topPages = await env.DB.prepare(
+      `SELECT
+         g.landing_page_path,
+         g.page_path,
+         g.product_id,
+         COALESCE(p.title_en, '(non-product)') AS product_title,
+         SUM(g.sessions) AS sessions,
+         SUM(g.users) AS users,
+         SUM(g.product_views) AS product_views,
+         SUM(g.add_to_cart) AS add_to_cart,
+         SUM(g.begin_checkout) AS begin_checkout,
+         SUM(g.purchases) AS purchases,
+         SUM(COALESCE(g.purchase_revenue, 0)) AS purchase_revenue,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.purchases) * 100.0 / SUM(g.sessions), 2)
+         END AS purchase_rate_pct
+       FROM ga4_funnel_daily g
+       LEFT JOIN products p ON p.id = g.product_id
+       WHERE 1=1${GA4_SCOPE_WHERE}${range.sql}${productSql}
+       GROUP BY g.landing_page_path, g.page_path, g.product_id, p.title_en
+       ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
+       LIMIT 15`
+    ).bind(...binds).all();
+    const bySource = await env.DB.prepare(
+      `SELECT
+         CASE
+           WHEN length(trim(g.source)) = 0 THEN '(direct)'
+           WHEN length(trim(g.medium)) = 0 THEN lower(g.source)
+           ELSE lower(g.source) || ' / ' || lower(g.medium)
+         END AS source_medium,
+         SUM(g.sessions) AS sessions,
+         SUM(g.purchases) AS purchases,
+         SUM(COALESCE(g.purchase_revenue, 0)) AS purchase_revenue
+       FROM ga4_funnel_daily g
+       WHERE 1=1${GA4_SCOPE_WHERE}${range.sql}${productSql}
+       GROUP BY source_medium
+       ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
+       LIMIT 12`
+    ).bind(...binds).all();
+    const fresh = await env.DB.prepare(`SELECT * FROM analysis_ga4_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+    let trend = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      sessions_28d: 0,
+      product_views_28d: 0,
+      add_to_cart_28d: 0,
+      begin_checkout_28d: 0,
+      purchases_28d: 0,
+      purchase_revenue_28d: 0,
+      sessions_prev_28d: 0,
+      product_views_prev_28d: 0,
+      add_to_cart_prev_28d: 0,
+      begin_checkout_prev_28d: 0,
+      purchases_prev_28d: 0,
+      purchase_revenue_prev_28d: 0,
+      sessions_growth_pct: null,
+      purchases_growth_pct: null,
+      purchase_revenue_growth_pct: null
+    };
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds = [currentStart, anchorDate];
+        const prevBinds = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND g.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.sessions), 0) AS sessions,
+             COALESCE(SUM(g.product_views), 0) AS product_views,
+             COALESCE(SUM(g.add_to_cart), 0) AS add_to_cart,
+             COALESCE(SUM(g.begin_checkout), 0) AS begin_checkout,
+             COALESCE(SUM(g.purchases), 0) AS purchases,
+             COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
+           FROM ga4_funnel_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${GA4_SCOPE_WHERE}${productTrendSql}`
+        ).bind(...curBinds).first();
+        const prev = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.sessions), 0) AS sessions,
+             COALESCE(SUM(g.product_views), 0) AS product_views,
+             COALESCE(SUM(g.add_to_cart), 0) AS add_to_cart,
+             COALESCE(SUM(g.begin_checkout), 0) AS begin_checkout,
+             COALESCE(SUM(g.purchases), 0) AS purchases,
+             COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
+           FROM ga4_funnel_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${GA4_SCOPE_WHERE}${productTrendSql}`
+        ).bind(...prevBinds).first();
+        const prevSessions = Number(prev?.sessions || 0);
+        const prevPurchases = Number(prev?.purchases || 0);
+        const prevRevenue = Number(prev?.purchase_revenue || 0);
+        const curSessions = Number(cur?.sessions || 0);
+        const curPurchases = Number(cur?.purchases || 0);
+        const curRevenue = Number(cur?.purchase_revenue || 0);
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          sessions_28d: curSessions,
+          product_views_28d: Number(cur?.product_views || 0),
+          add_to_cart_28d: Number(cur?.add_to_cart || 0),
+          begin_checkout_28d: Number(cur?.begin_checkout || 0),
+          purchases_28d: curPurchases,
+          purchase_revenue_28d: curRevenue,
+          sessions_prev_28d: prevSessions,
+          product_views_prev_28d: Number(prev?.product_views || 0),
+          add_to_cart_prev_28d: Number(prev?.add_to_cart || 0),
+          begin_checkout_prev_28d: Number(prev?.begin_checkout || 0),
+          purchases_prev_28d: prevPurchases,
+          purchase_revenue_prev_28d: prevRevenue,
+          sessions_growth_pct: prevSessions > 0 ? Math.round((curSessions - prevSessions) * 1e4 / prevSessions) / 100 : null,
+          purchases_growth_pct: prevPurchases > 0 ? Math.round((curPurchases - prevPurchases) * 1e4 / prevPurchases) / 100 : null,
+          purchase_revenue_growth_pct: prevRevenue > 0 ? Math.round((curRevenue - prevRevenue) * 1e4 / prevRevenue) / 100 : null
+        };
+      }
+    }
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const ga4Days = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === void 0 ? null : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (ga4Days !== null && ga4Days > 3) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+    return json6({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        landing_pages: Number(summary?.landing_pages || 0),
+        page_paths: Number(summary?.page_paths || 0),
+        sessions: Number(summary?.sessions || 0),
+        users: Number(summary?.users || 0),
+        engaged_sessions: Number(summary?.engaged_sessions || 0),
+        product_views: Number(summary?.product_views || 0),
+        add_to_cart: Number(summary?.add_to_cart || 0),
+        begin_checkout: Number(summary?.begin_checkout || 0),
+        purchases: Number(summary?.purchases || 0),
+        purchase_revenue: Number(summary?.purchase_revenue || 0),
+        engagement_rate_pct: summary?.engagement_rate_pct === null || summary?.engagement_rate_pct === void 0 ? null : Number(summary.engagement_rate_pct),
+        add_to_cart_rate_pct: summary?.add_to_cart_rate_pct === null || summary?.add_to_cart_rate_pct === void 0 ? null : Number(summary.add_to_cart_rate_pct),
+        checkout_rate_pct: summary?.checkout_rate_pct === null || summary?.checkout_rate_pct === void 0 ? null : Number(summary.checkout_rate_pct),
+        purchase_rate_pct: summary?.purchase_rate_pct === null || summary?.purchase_rate_pct === void 0 ? null : Number(summary.purchase_rate_pct),
+        mapped_sessions: Number(summary?.mapped_sessions || 0)
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: ga4Days,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: fresh?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "GA4 event data may finalize with delay; freshness warning threshold = 3 days."
+      },
+      top_pages: topPages.results || [],
+      top_sources: bySource.results || []
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: ga4_funnel_daily") || msg.includes("no such table: analysis_ga4_freshness") || msg.includes("no such column: g.property_scope")) {
+      return json6({
+        success: true,
+        available: false,
+        message: "GA4 schema is not available in this environment yet. Apply migrations 048_ga4_analytics.sql and 055_ga4_multi_property.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId }
+      });
+    }
+    return err2("GA4_QUERY_FAILED", msg, 500);
+  }
+}
+__name(getGa4, "getGa4");
+async function getEtsy(env, f) {
+  const range = dayRangeWhere(f, "e.report_date");
+  const binds = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND e.product_id = ?";
+    binds.push(f.productId);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT e.listing_id) AS listings,
+         COUNT(DISTINCT CASE WHEN e.is_active = 1 THEN e.listing_id END) AS active_listings,
+         COALESCE(SUM(e.visits), 0) AS visits,
+         COALESCE(SUM(e.views), 0) AS views,
+         COALESCE(SUM(e.favorites), 0) AS favorites,
+         COALESCE(SUM(e.orders), 0) AS orders,
+         COALESCE(SUM(e.transactions), 0) AS transactions,
+         COALESCE(SUM(e.units_sold), 0) AS units_sold,
+         COALESCE(SUM(COALESCE(e.revenue, 0)), 0) AS revenue,
+         COALESCE(SUM(COALESCE(e.revenue_thb, 0)), 0) AS revenue_thb,
+         COALESCE(SUM(CASE WHEN e.product_id IS NOT NULL THEN e.views ELSE 0 END), 0) AS mapped_views,
+         COALESCE(SUM(CASE WHEN e.product_id IS NOT NULL THEN e.orders ELSE 0 END), 0) AS mapped_orders
+       FROM etsy_listing_daily e
+       WHERE 1=1${range.sql}${productSql}`
+    ).bind(...binds).first();
+    const topListings = await env.DB.prepare(
+      `SELECT
+         e.listing_id,
+         MIN(e.listing_title) AS listing_title,
+         MIN(e.listing_state) AS listing_state,
+         MAX(e.is_active) AS is_active,
+         MIN(e.currency) AS currency,
+         e.product_id,
+         COALESCE(p.title_en, '(unmapped)') AS product_title,
+         SUM(e.visits) AS visits,
+         SUM(e.views) AS views,
+         SUM(e.favorites) AS favorites,
+         SUM(e.orders) AS orders,
+         SUM(e.transactions) AS transactions,
+         SUM(e.units_sold) AS units_sold,
+         SUM(COALESCE(e.revenue_thb, 0)) AS revenue_thb
+       FROM etsy_listing_daily e
+       LEFT JOIN products p ON p.id = e.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY e.listing_id, e.product_id, p.title_en
+       ORDER BY SUM(e.views) DESC, SUM(e.orders) DESC, e.listing_id
+       LIMIT 20`
+    ).bind(...binds).all();
+    const topProducts = await env.DB.prepare(
+      `SELECT
+         e.product_id,
+         p.slug AS product_slug,
+         p.title_en AS product_title,
+         COUNT(DISTINCT e.listing_id) AS listing_count,
+         SUM(e.visits) AS visits,
+         SUM(e.views) AS views,
+         SUM(e.favorites) AS favorites,
+         SUM(e.orders) AS orders,
+         SUM(e.transactions) AS transactions,
+         SUM(e.units_sold) AS units_sold,
+         SUM(COALESCE(e.revenue_thb, 0)) AS revenue_thb
+       FROM etsy_listing_daily e
+       JOIN products p ON p.id = e.product_id
+       WHERE e.product_id IS NOT NULL${range.sql}${productSql}
+       GROUP BY e.product_id, p.slug, p.title_en
+       ORDER BY SUM(e.views) DESC, SUM(e.orders) DESC, e.product_id
+       LIMIT 15`
+    ).bind(...binds).all();
+    const fresh = await env.DB.prepare(`SELECT * FROM analysis_etsy_freshness`).first();
+    const statusRow = await env.DB.prepare(`SELECT * FROM analysis_etsy_listing_status`).first();
+    const byState = await env.DB.prepare(
+      `SELECT
+         listing_state,
+         is_active,
+         COUNT(*) AS listings,
+         SUM(CASE WHEN product_id IS NOT NULL THEN 1 ELSE 0 END) AS mapped_listings
+       FROM etsy_listing_master
+       GROUP BY listing_state, is_active
+       ORDER BY listings DESC, listing_state`
+    ).all();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+    let trend = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      views_28d: 0,
+      favorites_28d: 0,
+      orders_28d: 0,
+      transactions_28d: 0,
+      units_sold_28d: 0,
+      revenue_thb_28d: 0,
+      views_prev_28d: 0,
+      favorites_prev_28d: 0,
+      orders_prev_28d: 0,
+      transactions_prev_28d: 0,
+      units_sold_prev_28d: 0,
+      revenue_thb_prev_28d: 0,
+      views_growth_pct: null,
+      orders_growth_pct: null,
+      revenue_growth_pct: null
+    };
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds = [currentStart, anchorDate];
+        const prevBinds = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND e.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(e.views), 0) AS views,
+             COALESCE(SUM(e.favorites), 0) AS favorites,
+             COALESCE(SUM(e.orders), 0) AS orders,
+             COALESCE(SUM(e.transactions), 0) AS transactions,
+             COALESCE(SUM(e.units_sold), 0) AS units_sold,
+             COALESCE(SUM(COALESCE(e.revenue_thb, 0)), 0) AS revenue_thb
+           FROM etsy_listing_daily e
+           WHERE e.report_date >= ? AND e.report_date <= ?${productTrendSql}`
+        ).bind(...curBinds).first();
+        const prev = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(e.views), 0) AS views,
+             COALESCE(SUM(e.favorites), 0) AS favorites,
+             COALESCE(SUM(e.orders), 0) AS orders,
+             COALESCE(SUM(e.transactions), 0) AS transactions,
+             COALESCE(SUM(e.units_sold), 0) AS units_sold,
+             COALESCE(SUM(COALESCE(e.revenue_thb, 0)), 0) AS revenue_thb
+           FROM etsy_listing_daily e
+           WHERE e.report_date >= ? AND e.report_date <= ?${productTrendSql}`
+        ).bind(...prevBinds).first();
+        const prevViews = Number(prev?.views || 0);
+        const prevOrders = Number(prev?.orders || 0);
+        const prevRevenue = Number(prev?.revenue_thb || 0);
+        const curViews = Number(cur?.views || 0);
+        const curOrders = Number(cur?.orders || 0);
+        const curRevenue = Number(cur?.revenue_thb || 0);
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          views_28d: curViews,
+          favorites_28d: Number(cur?.favorites || 0),
+          orders_28d: curOrders,
+          transactions_28d: Number(cur?.transactions || 0),
+          units_sold_28d: Number(cur?.units_sold || 0),
+          revenue_thb_28d: curRevenue,
+          views_prev_28d: prevViews,
+          favorites_prev_28d: Number(prev?.favorites || 0),
+          orders_prev_28d: prevOrders,
+          transactions_prev_28d: Number(prev?.transactions || 0),
+          units_sold_prev_28d: Number(prev?.units_sold || 0),
+          revenue_thb_prev_28d: prevRevenue,
+          views_growth_pct: prevViews > 0 ? Math.round((curViews - prevViews) * 1e4 / prevViews) / 100 : null,
+          orders_growth_pct: prevOrders > 0 ? Math.round((curOrders - prevOrders) * 1e4 / prevOrders) / 100 : null,
+          revenue_growth_pct: prevRevenue > 0 ? Math.round((curRevenue - prevRevenue) * 1e4 / prevRevenue) / 100 : null
+        };
+      }
+    }
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const etsyDays = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === void 0 ? null : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (etsyDays !== null && etsyDays > 7) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+    return json6({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        listings: Number(summary?.listings || 0),
+        active_listings: Number(summary?.active_listings || 0),
+        visits: Number(summary?.visits || 0),
+        views: Number(summary?.views || 0),
+        favorites: Number(summary?.favorites || 0),
+        orders: Number(summary?.orders || 0),
+        transactions: Number(summary?.transactions || 0),
+        units_sold: Number(summary?.units_sold || 0),
+        revenue: Number(summary?.revenue || 0),
+        revenue_thb: Number(summary?.revenue_thb || 0),
+        mapped_views: Number(summary?.mapped_views || 0),
+        mapped_orders: Number(summary?.mapped_orders || 0)
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: etsyDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: fresh?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "Etsy metrics depend on source exports/API windows; freshness warning threshold = 7 days."
+      },
+      listing_status: {
+        total_listings: Number(statusRow?.total_listings || 0),
+        active_listings: Number(statusRow?.active_listings || 0),
+        inactive_listings: Number(statusRow?.inactive_listings || 0),
+        mapped_listings: Number(statusRow?.mapped_listings || 0),
+        unmapped_listings: Number(statusRow?.unmapped_listings || 0),
+        last_listing_sync_at: statusRow?.last_listing_sync_at || null,
+        by_state: byState.results || []
+      },
+      top_listings: topListings.results || [],
+      top_products: topProducts.results || []
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: etsy_listing_daily") || msg.includes("no such table: etsy_listing_master") || msg.includes("no such table: analysis_etsy_freshness")) {
+      return json6({
+        success: true,
+        available: false,
+        message: "Etsy schema is not available in this environment yet. Apply migration 049_etsy_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId }
+      });
+    }
+    return err2("ETSY_QUERY_FAILED", msg, 500);
+  }
+}
+__name(getEtsy, "getEtsy");
+async function getGoogleAds(env, f) {
+  const range = dayRangeWhere(f, "a.report_date");
+  const binds = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND a.product_id = ?";
+    binds.push(f.productId);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT a.campaign_id) AS campaigns,
+         COUNT(DISTINCT CASE WHEN length(trim(a.ad_group_id)) > 0 THEN a.ad_group_id END) AS ad_groups,
+         COALESCE(SUM(a.impressions), 0) AS impressions,
+         COALESCE(SUM(a.clicks), 0) AS clicks,
+         COALESCE(SUM(a.cost), 0) AS cost,
+         COALESCE(SUM(a.conversions), 0) AS conversions,
+         COALESCE(SUM(a.conversion_value), 0) AS conversion_value,
+         COALESCE(SUM(COALESCE(a.all_conversions, 0)), 0) AS all_conversions,
+         COALESCE(SUM(COALESCE(a.all_conversions_value, 0)), 0) AS all_conversions_value,
+         CASE WHEN SUM(a.impressions) > 0
+              THEN ROUND(SUM(a.clicks) * 100.0 / SUM(a.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(a.clicks) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.clicks), 2)
+         END AS cpc,
+         CASE WHEN SUM(a.conversions) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.conversions), 2)
+         END AS cpa,
+         CASE WHEN SUM(a.cost) > 0
+              THEN ROUND(SUM(a.conversion_value) / SUM(a.cost), 2)
+         END AS roas,
+         COALESCE(SUM(CASE WHEN a.product_id IS NOT NULL THEN a.cost ELSE 0 END), 0) AS mapped_cost
+       FROM google_ads_campaign_daily a
+       WHERE 1=1${range.sql}${productSql}`
+    ).bind(...binds).first();
+    const topCampaigns = await env.DB.prepare(
+      `SELECT
+         a.campaign_id,
+         MIN(a.campaign_name) AS campaign_name,
+         a.ad_group_id,
+         MIN(a.ad_group_name) AS ad_group_name,
+         MIN(a.channel_type) AS channel_type,
+         MIN(a.network) AS network,
+         MIN(a.device) AS device,
+         a.product_id,
+         COALESCE(p.title_en, '(unmapped)') AS product_title,
+         SUM(a.impressions) AS impressions,
+         SUM(a.clicks) AS clicks,
+         SUM(a.cost) AS cost,
+         SUM(a.conversions) AS conversions,
+         SUM(a.conversion_value) AS conversion_value,
+         CASE WHEN SUM(a.impressions) > 0
+              THEN ROUND(SUM(a.clicks) * 100.0 / SUM(a.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(a.clicks) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.clicks), 2)
+         END AS cpc,
+         CASE WHEN SUM(a.conversions) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.conversions), 2)
+         END AS cpa,
+         CASE WHEN SUM(a.cost) > 0
+              THEN ROUND(SUM(a.conversion_value) / SUM(a.cost), 2)
+         END AS roas
+       FROM google_ads_campaign_daily a
+       LEFT JOIN products p ON p.id = a.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY a.campaign_id, a.ad_group_id, a.product_id, p.title_en
+       ORDER BY SUM(a.cost) DESC, SUM(a.conversions) DESC, a.campaign_id
+       LIMIT 20`
+    ).bind(...binds).all();
+    const topProducts = await env.DB.prepare(
+      `SELECT
+         a.product_id,
+         p.slug AS product_slug,
+         p.title_en AS product_title,
+         COUNT(DISTINCT a.campaign_id) AS campaign_count,
+         COUNT(DISTINCT CASE WHEN length(trim(a.ad_group_id)) > 0 THEN a.ad_group_id END) AS ad_group_count,
+         SUM(a.impressions) AS impressions,
+         SUM(a.clicks) AS clicks,
+         SUM(a.cost) AS cost,
+         SUM(a.conversions) AS conversions,
+         SUM(a.conversion_value) AS conversion_value,
+         CASE WHEN SUM(a.impressions) > 0
+              THEN ROUND(SUM(a.clicks) * 100.0 / SUM(a.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(a.clicks) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.clicks), 2)
+         END AS cpc,
+         CASE WHEN SUM(a.conversions) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.conversions), 2)
+         END AS cpa,
+         CASE WHEN SUM(a.cost) > 0
+              THEN ROUND(SUM(a.conversion_value) / SUM(a.cost), 2)
+         END AS roas
+       FROM google_ads_campaign_daily a
+       JOIN products p ON p.id = a.product_id
+       WHERE a.product_id IS NOT NULL${range.sql}${productSql}
+       GROUP BY a.product_id, p.slug, p.title_en
+       ORDER BY SUM(a.cost) DESC, SUM(a.conversions) DESC, a.product_id
+       LIMIT 15`
+    ).bind(...binds).all();
+    const fresh = await env.DB.prepare(`SELECT * FROM analysis_google_ads_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+    let trend = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      cost_28d: 0,
+      clicks_28d: 0,
+      impressions_28d: 0,
+      conversions_28d: 0,
+      conversion_value_28d: 0,
+      cpa_28d: null,
+      roas_28d: null,
+      cost_prev_28d: 0,
+      clicks_prev_28d: 0,
+      impressions_prev_28d: 0,
+      conversions_prev_28d: 0,
+      conversion_value_prev_28d: 0,
+      cpa_prev_28d: null,
+      roas_prev_28d: null,
+      cost_growth_pct: null,
+      conversions_growth_pct: null,
+      conversion_value_growth_pct: null
+    };
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds = [currentStart, anchorDate];
+        const prevBinds = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND a.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(a.cost), 0) AS cost,
+             COALESCE(SUM(a.clicks), 0) AS clicks,
+             COALESCE(SUM(a.impressions), 0) AS impressions,
+             COALESCE(SUM(a.conversions), 0) AS conversions,
+             COALESCE(SUM(a.conversion_value), 0) AS conversion_value
+           FROM google_ads_campaign_daily a
+           WHERE a.report_date >= ? AND a.report_date <= ?${productTrendSql}`
+        ).bind(...curBinds).first();
+        const prev = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(a.cost), 0) AS cost,
+             COALESCE(SUM(a.clicks), 0) AS clicks,
+             COALESCE(SUM(a.impressions), 0) AS impressions,
+             COALESCE(SUM(a.conversions), 0) AS conversions,
+             COALESCE(SUM(a.conversion_value), 0) AS conversion_value
+           FROM google_ads_campaign_daily a
+           WHERE a.report_date >= ? AND a.report_date <= ?${productTrendSql}`
+        ).bind(...prevBinds).first();
+        const prevCost = Number(prev?.cost || 0);
+        const prevConversions = Number(prev?.conversions || 0);
+        const prevConversionValue = Number(prev?.conversion_value || 0);
+        const curCost = Number(cur?.cost || 0);
+        const curConversions = Number(cur?.conversions || 0);
+        const curConversionValue = Number(cur?.conversion_value || 0);
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          cost_28d: curCost,
+          clicks_28d: Number(cur?.clicks || 0),
+          impressions_28d: Number(cur?.impressions || 0),
+          conversions_28d: curConversions,
+          conversion_value_28d: curConversionValue,
+          cpa_28d: curConversions > 0 ? Math.round(curCost / curConversions * 100) / 100 : null,
+          roas_28d: curCost > 0 ? Math.round(curConversionValue / curCost * 100) / 100 : null,
+          cost_prev_28d: prevCost,
+          clicks_prev_28d: Number(prev?.clicks || 0),
+          impressions_prev_28d: Number(prev?.impressions || 0),
+          conversions_prev_28d: prevConversions,
+          conversion_value_prev_28d: prevConversionValue,
+          cpa_prev_28d: prevConversions > 0 ? Math.round(prevCost / prevConversions * 100) / 100 : null,
+          roas_prev_28d: prevCost > 0 ? Math.round(prevConversionValue / prevCost * 100) / 100 : null,
+          cost_growth_pct: prevCost > 0 ? Math.round((curCost - prevCost) * 1e4 / prevCost) / 100 : null,
+          conversions_growth_pct: prevConversions > 0 ? Math.round((curConversions - prevConversions) * 1e4 / prevConversions) / 100 : null,
+          conversion_value_growth_pct: prevConversionValue > 0 ? Math.round((curConversionValue - prevConversionValue) * 1e4 / prevConversionValue) / 100 : null
+        };
+      }
+    }
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const googleAdsDays = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === void 0 ? null : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (googleAdsDays !== null && googleAdsDays > 4) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+    return json6({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        campaigns: Number(summary?.campaigns || 0),
+        ad_groups: Number(summary?.ad_groups || 0),
+        impressions: Number(summary?.impressions || 0),
+        clicks: Number(summary?.clicks || 0),
+        cost: Number(summary?.cost || 0),
+        conversions: Number(summary?.conversions || 0),
+        conversion_value: Number(summary?.conversion_value || 0),
+        all_conversions: Number(summary?.all_conversions || 0),
+        all_conversions_value: Number(summary?.all_conversions_value || 0),
+        ctr_pct: summary?.ctr_pct === null || summary?.ctr_pct === void 0 ? null : Number(summary.ctr_pct),
+        cpc: summary?.cpc === null || summary?.cpc === void 0 ? null : Number(summary.cpc),
+        cpa: summary?.cpa === null || summary?.cpa === void 0 ? null : Number(summary.cpa),
+        roas: summary?.roas === null || summary?.roas === void 0 ? null : Number(summary.roas),
+        mapped_cost: Number(summary?.mapped_cost || 0)
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: googleAdsDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: fresh?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "Google Ads conversion value is platform-attributed and directional only; keep separate from canonical D1 order revenue."
+      },
+      top_campaigns: topCampaigns.results || [],
+      top_products: topProducts.results || []
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: google_ads_campaign_daily") || msg.includes("no such table: analysis_google_ads_freshness")) {
+      return json6({
+        success: true,
+        available: false,
+        message: "Google Ads schema is not available in this environment yet. Apply migration 050_google_ads_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId }
+      });
+    }
+    return err2("GOOGLE_ADS_QUERY_FAILED", msg, 500);
+  }
+}
+__name(getGoogleAds, "getGoogleAds");
+async function getGrowthSignals(env, f) {
+  const now = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  const anchorDate = f.end || now;
+  const currentStart = shiftIsoDate(anchorDate, -27) || anchorDate;
+  const previousEnd = shiftIsoDate(anchorDate, -28) || anchorDate;
+  const previousStart = shiftIsoDate(anchorDate, -55) || anchorDate;
+  const pct = /* @__PURE__ */ __name((num, den) => {
+    const n2 = Number(num);
+    const d = Number(den);
+    if (!Number.isFinite(n2) || !Number.isFinite(d) || d <= 0) return null;
+    return Math.round(n2 / d * 1e3) / 10;
+  }, "pct");
+  const n = /* @__PURE__ */ __name((v) => v === null || v === void 0 ? 0 : Number(v) || 0, "n");
+  const days = /* @__PURE__ */ __name((v) => v === null || v === void 0 ? null : Number(v), "days");
+  const clamp = /* @__PURE__ */ __name((v, lo, hi) => Math.max(lo, Math.min(hi, v)), "clamp");
+  const firstOrNull = /* @__PURE__ */ __name(async (sql, binds = []) => {
+    try {
+      return await env.DB.prepare(sql).bind(...binds).first();
+    } catch (e) {
+      const msg = String(e?.message || e);
+      if (msg.includes("no such table") || msg.includes("no such view")) return null;
+      throw e;
+    }
+  }, "firstOrNull");
+  const allOrNull = /* @__PURE__ */ __name(async (sql, binds = []) => {
+    try {
+      const out = await env.DB.prepare(sql).bind(...binds).all();
+      return out.results || [];
+    } catch (e) {
+      const msg = String(e?.message || e);
+      if (msg.includes("no such table") || msg.includes("no such view")) return null;
+      throw e;
+    }
+  }, "allOrNull");
+  const productSql = f.productId !== null ? " AND product_id = ?" : "";
+  const productBind = f.productId !== null ? [f.productId] : [];
+  const salesChannelSql = f.channel ? " AND channel_norm = ?" : "";
+  const salesChannelBind = f.channel ? [f.channel] : [];
+  const ga4Cur = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(sessions), 0) AS sessions,
+       COALESCE(SUM(add_to_cart), 0) AS add_to_cart,
+       COALESCE(SUM(begin_checkout), 0) AS begin_checkout,
+       COALESCE(SUM(purchases), 0) AS purchases
+     FROM ga4_funnel_daily
+     WHERE property_scope = 'website'
+       AND report_date >= ? AND report_date <= ?${productSql}`,
+    [currentStart, anchorDate, ...productBind]
+  );
+  const ga4Prev = await firstOrNull(
+    `SELECT COALESCE(SUM(sessions), 0) AS sessions
+     FROM ga4_funnel_daily
+     WHERE property_scope = 'website'
+       AND report_date >= ? AND report_date <= ?${productSql}`,
+    [previousStart, previousEnd, ...productBind]
+  );
+  const ga4Cov = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(sessions), 0) AS total_sessions,
+       COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN sessions ELSE 0 END), 0) AS mapped_sessions
+     FROM ga4_funnel_daily
+     WHERE property_scope = 'website'
+       AND report_date >= ? AND report_date <= ?`,
+    [currentStart, anchorDate]
+  );
+  const ga4Fresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_ga4_freshness");
+  const gscCur = await firstOrNull(
+    `SELECT COALESCE(SUM(clicks), 0) AS clicks
+     FROM gsc_search_daily
+     WHERE report_date >= ? AND report_date <= ?${productSql}`,
+    [currentStart, anchorDate, ...productBind]
+  );
+  const gscPrev = await firstOrNull(
+    `SELECT COALESCE(SUM(clicks), 0) AS clicks
+     FROM gsc_search_daily
+     WHERE report_date >= ? AND report_date <= ?${productSql}`,
+    [previousStart, previousEnd, ...productBind]
+  );
+  const gscCov = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(clicks), 0) AS total_clicks,
+       COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN clicks ELSE 0 END), 0) AS mapped_clicks
+     FROM gsc_search_daily
+     WHERE report_date >= ? AND report_date <= ?`,
+    [currentStart, anchorDate]
+  );
+  const gscFresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_gsc_freshness");
+  const etsyProductSql = f.productId !== null ? " AND m.product_id = ?" : "";
+  const etsyCur = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(e.views), 0) AS views,
+       COALESCE(SUM(e.orders), 0) AS orders,
+       COALESCE(SUM(CASE WHEN m.product_id IS NOT NULL THEN e.views ELSE 0 END), 0) AS mapped_views
+     FROM etsy_listing_daily e
+     LEFT JOIN etsy_listing_master m ON m.listing_id = e.listing_id
+     WHERE e.report_date >= ? AND e.report_date <= ?${etsyProductSql}`,
+    [currentStart, anchorDate, ...f.productId !== null ? [f.productId] : []]
+  );
+  const etsyPrev = await firstOrNull(
+    `SELECT COALESCE(SUM(e.views), 0) AS views
+     FROM etsy_listing_daily e
+     LEFT JOIN etsy_listing_master m ON m.listing_id = e.listing_id
+     WHERE e.report_date >= ? AND e.report_date <= ?${etsyProductSql}`,
+    [previousStart, previousEnd, ...f.productId !== null ? [f.productId] : []]
+  );
+  const etsyCov = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(e.views), 0) AS total_views,
+       COALESCE(SUM(CASE WHEN m.product_id IS NOT NULL THEN e.views ELSE 0 END), 0) AS mapped_views
+     FROM etsy_listing_daily e
+     LEFT JOIN etsy_listing_master m ON m.listing_id = e.listing_id
+     WHERE e.report_date >= ? AND e.report_date <= ?`,
+    [currentStart, anchorDate]
+  );
+  const etsyFresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_etsy_freshness");
+  const adsCur = await firstOrNull(
+    `SELECT
+       COUNT(*) AS rows_n,
+       COALESCE(SUM(cost), 0) AS cost,
+       COALESCE(SUM(conversions), 0) AS conversions,
+       COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN cost ELSE 0 END), 0) AS mapped_cost
+     FROM google_ads_campaign_daily
+     WHERE report_date >= ? AND report_date <= ?${productSql}`,
+    [currentStart, anchorDate, ...productBind]
+  );
+  const adsFresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_google_ads_freshness");
+  const salesCur = await firstOrNull(
+    `SELECT
+       COUNT(DISTINCT sales_order_id) AS orders,
+       COALESCE(SUM(quantity), 0) AS units
+     FROM analysis_active_items
+     WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}`,
+    [currentStart, anchorDate, ...productBind, ...salesChannelBind]
+  );
+  const salesPrev = await firstOrNull(
+    `SELECT
+       COUNT(DISTINCT sales_order_id) AS orders,
+       COALESCE(SUM(quantity), 0) AS units
+     FROM analysis_active_items
+     WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}`,
+    [previousStart, previousEnd, ...productBind, ...salesChannelBind]
+  );
+  const channelRows = await allOrNull(
+    `SELECT channel_norm, COUNT(DISTINCT sales_order_id) AS orders, COALESCE(SUM(quantity), 0) AS units
+     FROM analysis_active_items
+     WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}
+     GROUP BY channel_norm
+     ORDER BY units DESC, orders DESC`,
+    [currentStart, anchorDate, ...productBind, ...salesChannelBind]
+  );
+  const orderCov = await firstOrNull(
+    `SELECT COALESCE(SUM(mapped_orders), 0) AS mapped_orders, COALESCE(SUM(orders), 0) AS orders
+     FROM analysis_sales_daily
+     WHERE order_day >= ? AND order_day <= ?${f.channel ? " AND channel_norm = ?" : ""}`,
+    [currentStart, anchorDate, ...f.channel ? [f.channel] : []]
+  );
+  const profitCov = await firstOrNull("SELECT * FROM analysis_profit_coverage");
+  const ga4Sessions = n(ga4Cur?.sessions);
+  const ga4PrevSessions = n(ga4Prev?.sessions);
+  const gscClicks = n(gscCur?.clicks);
+  const gscPrevClicks = n(gscPrev?.clicks);
+  const etsyViews = n(etsyCur?.views);
+  const etsyPrevViews = n(etsyPrev?.views);
+  const ga4MappedPct = pct(ga4Cov?.mapped_sessions, ga4Cov?.total_sessions);
+  const gscMappedPct = pct(gscCov?.mapped_clicks, gscCov?.total_clicks);
+  const etsyMappedPct = pct(etsyCov?.mapped_views, etsyCov?.total_views);
+  const adsMappedPct = pct(adsCur?.mapped_cost, adsCur?.cost);
+  const orderMappedPct = pct(orderCov?.mapped_orders, orderCov?.orders);
+  const ga4Days = days(ga4Fresh?.days_since_latest_report);
+  const gscDays = days(gscFresh?.days_since_latest_report);
+  const etsyDays = days(etsyFresh?.days_since_latest_report);
+  const adsDays = days(adsFresh?.days_since_latest_report);
+  const signals = {};
+  const impacts = [];
+  const ga4Growth = ga4PrevSessions > 0 ? Math.round((ga4Sessions - ga4PrevSessions) * 1e3 / ga4PrevSessions) / 10 : null;
+  const gscGrowth = gscPrevClicks > 0 ? Math.round((gscClicks - gscPrevClicks) * 1e3 / gscPrevClicks) / 10 : null;
+  const etsyGrowth = etsyPrevViews > 0 ? Math.round((etsyViews - etsyPrevViews) * 1e3 / etsyPrevViews) / 10 : null;
+  const growthPool = [ga4Growth, gscGrowth, etsyGrowth].filter((v) => v !== null);
+  const blendedGrowth = growthPool.length ? Math.round(growthPool.reduce((s, v) => s + v, 0) / growthPool.length * 10) / 10 : null;
+  let demandStatus = "sufficient";
+  let demandImpact = 0;
+  const staleDemandSources = [];
+  if (ga4Sessions > 0 && ga4Days !== null && ga4Days > 10) staleDemandSources.push("ga4");
+  if (gscClicks > 0 && gscDays !== null && gscDays > 14) staleDemandSources.push("gsc");
+  if (etsyViews > 0 && etsyDays !== null && etsyDays > 7) staleDemandSources.push("etsy");
+  const hasDemandSignal = ga4Sessions > 0 || gscClicks > 0 || etsyViews > 0;
+  if (!hasDemandSignal) {
+    demandStatus = "insufficient_signal";
+    demandImpact -= 25;
+  } else if (staleDemandSources.length) {
+    demandStatus = "stale_source";
+    demandImpact -= 10;
+  } else if (ga4MappedPct !== null && ga4MappedPct < 50 || gscMappedPct !== null && gscMappedPct < 50 || etsyMappedPct !== null && etsyMappedPct < 50) {
+    demandStatus = "mapping_gap";
+    demandImpact -= 10;
+  }
+  impacts.push(demandImpact);
+  signals.demand = {
+    value: {
+      ga4_sessions_28d: ga4Sessions,
+      gsc_clicks_28d: gscClicks,
+      etsy_views_28d: etsyViews,
+      blended_growth_pct: blendedGrowth,
+      ga4_growth_pct: ga4Growth,
+      gsc_growth_pct: gscGrowth,
+      etsy_growth_pct: etsyGrowth
+    },
+    status: demandStatus,
+    coverage: {
+      ga4_mapped_session_pct: ga4MappedPct,
+      gsc_mapped_click_pct: gscMappedPct,
+      etsy_mapped_view_pct: etsyMappedPct
+    },
+    freshness_days: { ga4: ga4Days, gsc: gscDays, etsy: etsyDays },
+    confidence_impact: demandImpact,
+    reason: !hasDemandSignal ? "No measurable 28-day demand signal from GA4 website scope, GSC, or Etsy in the selected window." : staleDemandSources.length ? `Demand sources stale: ${staleDemandSources.join(", ")}.` : demandStatus === "mapping_gap" ? "Demand exists but mapped coverage is thin for at least one active source." : "Demand signal is present and mapped coverage/freshness are acceptable."
+  };
+  const curUnits = n(salesCur?.units);
+  const prevUnits = n(salesPrev?.units);
+  const curOrders = n(salesCur?.orders);
+  const prevOrders = n(salesPrev?.orders);
+  const unitGrowthPct = prevUnits > 0 ? Math.round((curUnits - prevUnits) * 1e3 / prevUnits) / 10 : null;
+  let momentumStatus = "sufficient";
+  let momentumImpact = 0;
+  if (curUnits + prevUnits <= 0) {
+    momentumStatus = "insufficient_signal";
+    momentumImpact -= 20;
+  } else if (prevUnits <= 0 && curUnits > 0) {
+    momentumStatus = "insufficient_signal";
+    momentumImpact -= 8;
+  }
+  impacts.push(momentumImpact);
+  signals.momentum = {
+    value: {
+      units_28d: curUnits,
+      units_prev_28d: prevUnits,
+      orders_28d: curOrders,
+      orders_prev_28d: prevOrders,
+      units_growth_pct: unitGrowthPct
+    },
+    status: momentumStatus,
+    coverage: {
+      mapped_order_pct: orderMappedPct,
+      window_start: currentStart,
+      window_end: anchorDate
+    },
+    freshness_days: null,
+    confidence_impact: momentumImpact,
+    reason: curUnits + prevUnits <= 0 ? "No unit activity in current and previous windows." : prevUnits <= 0 ? "Current activity exists but previous baseline is zero, so growth direction is weakly anchored." : "Momentum uses comparable 28-day windows over mapped active items."
+  };
+  const ga4Atc = n(ga4Cur?.add_to_cart);
+  const ga4Checkout = n(ga4Cur?.begin_checkout);
+  const ga4Purchases = n(ga4Cur?.purchases);
+  const ga4PurchaseRate = ga4Sessions > 0 ? Math.round(ga4Purchases * 1e3 / ga4Sessions) / 10 : null;
+  let conversionStatus = "sufficient";
+  let conversionImpact = 0;
+  if (ga4Sessions <= 0) {
+    conversionStatus = "insufficient_signal";
+    conversionImpact -= 15;
+  } else if (ga4Atc + ga4Checkout + ga4Purchases <= 0) {
+    conversionStatus = "insufficient_signal";
+    conversionImpact -= 10;
+  } else if (ga4MappedPct !== null && ga4MappedPct < 50) {
+    conversionStatus = "mapping_gap";
+    conversionImpact -= 5;
+  }
+  impacts.push(conversionImpact);
+  signals.conversion_availability = {
+    value: {
+      sessions_28d: ga4Sessions,
+      add_to_cart_28d: ga4Atc,
+      begin_checkout_28d: ga4Checkout,
+      purchases_28d: ga4Purchases,
+      purchase_rate_pct: ga4PurchaseRate
+    },
+    status: conversionStatus,
+    coverage: { ga4_mapped_session_pct: ga4MappedPct },
+    freshness_days: ga4Days,
+    confidence_impact: conversionImpact,
+    reason: ga4Sessions <= 0 ? "No GA4 website sessions in the selected window." : ga4Atc + ga4Checkout + ga4Purchases <= 0 ? "GA4 traffic exists but funnel events are sparse/absent." : conversionStatus === "mapping_gap" ? "Conversion events exist but product mapping coverage is limited." : "GA4 funnel events are available for growth diagnostics."
+  };
+  const channels = channelRows || [];
+  const totalChannelUnits = channels.reduce((s, r) => s + n(r.units), 0);
+  const topChannel = channels.length ? String(channels[0].channel_norm || "") : null;
+  const topChannelShare = totalChannelUnits > 0 ? Math.round(n(channels[0]?.units) * 1e3 / totalChannelUnits) / 10 : null;
+  let channelStatus = "sufficient";
+  let channelImpact = 0;
+  if (!channels.length) {
+    channelStatus = "insufficient_signal";
+    channelImpact -= 10;
+  } else if (channels.length === 1) {
+    channelStatus = "neutral";
+    channelImpact -= 3;
+  }
+  impacts.push(channelImpact);
+  signals.channel_context = {
+    value: {
+      active_channels_28d: channels.length,
+      top_channel: topChannel,
+      top_channel_units_share_pct: topChannelShare,
+      channel_rows: channels.slice(0, 6)
+    },
+    status: channelStatus,
+    coverage: { channel_filter: f.channel || null },
+    freshness_days: null,
+    confidence_impact: channelImpact,
+    reason: !channels.length ? "No channel-level unit activity in the selected window." : channels.length === 1 ? "Activity is concentrated in one channel; breadth signal is limited." : "Multiple channels are active, enabling channel-opportunity comparisons."
+  };
+  const hasGa4Data = n(ga4Fresh?.total_rows) > 0 || ga4Sessions > 0;
+  const hasGscData = n(gscFresh?.total_rows) > 0 || gscClicks > 0;
+  const hasEtsyData = n(etsyFresh?.total_rows) > 0 || etsyViews > 0;
+  const hasAdsData = n(adsFresh?.total_rows) > 0 || n(adsCur?.rows_n) > 0 || n(adsCur?.cost) > 0;
+  const staleSources = [];
+  if (hasGa4Data && ga4Days !== null && ga4Days > 10) staleSources.push("ga4");
+  if (hasGscData && gscDays !== null && gscDays > 14) staleSources.push("gsc");
+  if (hasEtsyData && etsyDays !== null && etsyDays > 7) staleSources.push("etsy");
+  if (hasAdsData && adsDays !== null && adsDays > 4) staleSources.push("google_ads");
+  let freshnessStatus = "sufficient";
+  let freshnessImpact = 0;
+  if (!hasGa4Data && !hasGscData && !hasEtsyData) {
+    freshnessStatus = "insufficient_signal";
+    freshnessImpact -= 20;
+  } else if (staleSources.length) {
+    freshnessStatus = "stale_source";
+    freshnessImpact -= 10;
+  }
+  impacts.push(freshnessImpact);
+  const adsNeutral = !hasAdsData || n(adsCur?.cost) <= 0 || n(adsCur?.conversions) <= 0;
+  signals.source_freshness = {
+    value: {
+      ga4_days_since_latest: ga4Days,
+      gsc_days_since_latest: gscDays,
+      etsy_days_since_latest: etsyDays,
+      google_ads_days_since_latest: adsDays
+    },
+    status: freshnessStatus,
+    coverage: {
+      ga4_available: hasGa4Data,
+      gsc_available: hasGscData,
+      etsy_available: hasEtsyData,
+      google_ads_available: hasAdsData
+    },
+    freshness_days: { ga4: ga4Days, gsc: gscDays, etsy: etsyDays, google_ads: adsDays },
+    confidence_impact: freshnessImpact,
+    reason: !hasGa4Data && !hasGscData && !hasEtsyData ? "Primary growth sources have no reported data rows yet." : staleSources.length ? `Source freshness warning: ${staleSources.join(", ")}.` : adsNeutral ? "Primary growth sources are fresh. Google Ads is operational but currently treated as neutral due to sparse/zero business signal." : "Primary growth sources are fresh."
+  };
+  const coveragePool = [ga4MappedPct, gscMappedPct, etsyMappedPct].filter((v) => v !== null);
+  const mappedAvg = coveragePool.length ? Math.round(coveragePool.reduce((s, v) => s + v, 0) / coveragePool.length * 10) / 10 : null;
+  let mappingStatus = "sufficient";
+  let mappingImpact = 0;
+  if (!coveragePool.length) {
+    mappingStatus = "insufficient_signal";
+    mappingImpact -= 15;
+  } else if (mappedAvg !== null && mappedAvg < 50) {
+    mappingStatus = "mapping_gap";
+    mappingImpact -= 15;
+  } else if (mappedAvg !== null && mappedAvg < 75) {
+    mappingStatus = "mapping_gap";
+    mappingImpact -= 8;
+  }
+  impacts.push(mappingImpact);
+  signals.mapping_coverage = {
+    value: { mapped_avg_pct: mappedAvg, order_mapped_pct_28d: orderMappedPct },
+    status: mappingStatus,
+    coverage: {
+      ga4_mapped_session_pct: ga4MappedPct,
+      gsc_mapped_click_pct: gscMappedPct,
+      etsy_mapped_view_pct: etsyMappedPct,
+      google_ads_mapped_cost_pct: adsMappedPct
+    },
+    freshness_days: null,
+    confidence_impact: mappingImpact,
+    reason: !coveragePool.length ? "No mapped coverage baseline available from active growth sources in the current window." : mappingStatus === "mapping_gap" ? "Mapped coverage is below target for at least one growth source." : "Mapped coverage is healthy for active growth sources."
+  };
+  const grossCovPct = pct(profitCov?.gross_covered_revenue, profitCov?.total_revenue);
+  const contribCovPct = pct(profitCov?.contribution_covered_revenue, profitCov?.total_revenue);
+  const fullCostOrderPct = pct(profitCov?.full_cost_orders, profitCov?.commercial_orders);
+  let guardrailImpact = 0;
+  let guardrailStatus = "secondary_guardrail";
+  if (grossCovPct !== null && grossCovPct < 50) guardrailImpact -= 5;
+  impacts.push(guardrailImpact);
+  if (!profitCov) guardrailStatus = "insufficient_signal";
+  signals.profitability_guardrail = {
+    value: {
+      gross_covered_revenue_pct: grossCovPct,
+      contribution_covered_revenue_pct: contribCovPct,
+      full_cost_order_pct: fullCostOrderPct,
+      products_with_cost: profitCov ? n(profitCov.products_with_cost) : null,
+      active_products: profitCov ? n(profitCov.active_products) : null
+    },
+    status: guardrailStatus,
+    coverage: profitCov ? {
+      products_with_cost: n(profitCov.products_with_cost),
+      active_products: n(profitCov.active_products),
+      channels_with_fees: n(profitCov.channels_with_fees),
+      channels_with_shipping: n(profitCov.channels_with_shipping)
+    } : null,
+    freshness_days: null,
+    confidence_impact: guardrailImpact,
+    reason: !profitCov ? "Profitability coverage view unavailable in this environment." : "Profitability is a secondary guardrail in Phase 13 and does not control opportunity ranking here."
+  };
+  const confidenceValue = clamp(Math.round((100 + impacts.reduce((s, v) => s + v, 0)) * 10) / 10, 0, 100);
+  signals.confidence = {
+    value: confidenceValue,
+    status: confidenceValue >= 75 ? "sufficient" : confidenceValue >= 50 ? "neutral" : "insufficient_signal",
+    coverage: {
+      signal_count: 7,
+      total_impact: impacts.reduce((s, v) => s + v, 0)
+    },
+    freshness_days: null,
+    confidence_impact: 0,
+    reason: "Confidence summarizes signal quality/coverage and source freshness; missing or immature sources reduce confidence without forcing synthetic zero values."
+  };
+  return json6({
+    success: true,
+    growth_signal_contract: "v1",
+    objective: "Build a sales-growth analytical layer that identifies demand, momentum, conversion, and channel opportunities across MildMate products and listings, while using profitability as a secondary guardrail.",
+    filters: { start: f.start, end: f.end, channel: f.channel, product_id: f.productId },
+    window: {
+      anchor_date: anchorDate,
+      current_start: currentStart,
+      current_end: anchorDate,
+      previous_start: previousStart,
+      previous_end: previousEnd
+    },
+    google_ads_policy: {
+      infrastructure: "available",
+      business_signal: adsNeutral ? "insufficient_or_sparse" : "present",
+      scoring_effect: "neutral_in_phase13",
+      reason: "Phase 13 treats Google Ads sparse/zero business signal as neutral and surfaces it via coverage/freshness/confidence metadata."
+    },
+    signals
+  });
+}
+__name(getGrowthSignals, "getGrowthSignals");
+async function getDataQuality(env) {
+  const dq = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
+  if (!dq) return err2("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
+  const zeroRow = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM analysis_commercial_orders WHERE order_total IS NULL OR order_total <= 0`
+  ).first();
+  const zeroTotalOrders = Number(zeroRow?.n || 0);
+  const runs = await env.DB.prepare(
+    `SELECT id, source, scenario, started_at, finished_at, status,
+            records_received, records_created, records_updated, records_unchanged, records_rejected,
+            substr(COALESCE(error_message, ''), 1, 300) AS error_message
+     FROM sync_runs
+     ORDER BY COALESCE(finished_at, created_at) DESC
+     LIMIT 10`
+  ).all();
+  const freshness = await env.DB.prepare(
+    `SELECT channel_norm,
+            MAX(order_day) AS last_order_day,
+            COUNT(*) AS orders,
+            CAST(julianday('now') - julianday(MAX(order_day)) AS INTEGER) AS days_since_last_order
+     FROM analysis_commercial_orders
+     GROUP BY channel_norm
+     ORDER BY last_order_day DESC`
+  ).all();
+  const spanRow = await env.DB.prepare(
+    `SELECT MIN(order_day) AS first_order_day,
+            MAX(order_day) AS last_order_day,
+            COUNT(*) AS total_orders,
+            COUNT(DISTINCT channel_norm) AS channels
+     FROM analysis_commercial_orders`
+  ).first();
+  const coverageYear = await env.DB.prepare(
+    `SELECT COALESCE(substr(co.order_day, 1, 4), 'unknown') AS year,
+            COUNT(*) AS orders,
+            COUNT(DISTINCT substr(co.order_day, 1, 7)) AS months_with_orders,
+            COUNT(DISTINCT co.channel_norm) AS channels,
+            MIN(co.order_day) AS first_day,
+            MAX(co.order_day) AS last_day,
+            SUM(CASE WHEN om.derived_mapping_status = 'Mapped' THEN 1 ELSE 0 END) AS mapped_orders
+     FROM analysis_commercial_orders co
+     LEFT JOIN analysis_order_mapping om ON om.sales_order_id = co.id
+     GROUP BY COALESCE(substr(co.order_day, 1, 4), 'unknown')
+     ORDER BY year`
+  ).all();
+  const coverageChannel = await env.DB.prepare(
+    `SELECT co.channel_norm,
+            COUNT(*) AS orders,
+            MIN(co.order_day) AS first_day,
+            MAX(co.order_day) AS last_day,
+            SUM(CASE WHEN om.derived_mapping_status = 'Mapped' THEN 1 ELSE 0 END) AS mapped_orders
+     FROM analysis_commercial_orders co
+     LEFT JOIN analysis_order_mapping om ON om.sales_order_id = co.id
+     GROUP BY co.channel_norm
+     ORDER BY orders DESC, co.channel_norm`
+  ).all();
+  let gscFreshness = null;
+  try {
+    gscFreshness = await env.DB.prepare(`SELECT * FROM analysis_gsc_freshness`).first();
+  } catch {
+    gscFreshness = null;
+  }
+  let ga4Freshness = null;
+  try {
+    ga4Freshness = await env.DB.prepare(`SELECT * FROM analysis_ga4_freshness`).first();
+  } catch {
+    ga4Freshness = null;
+  }
+  let etsyFreshness = null;
+  try {
+    etsyFreshness = await env.DB.prepare(`SELECT * FROM analysis_etsy_freshness`).first();
+  } catch {
+    etsyFreshness = null;
+  }
+  let googleAdsFreshness = null;
+  try {
+    googleAdsFreshness = await env.DB.prepare(`SELECT * FROM analysis_google_ads_freshness`).first();
+  } catch {
+    googleAdsFreshness = null;
+  }
+  let freshnessMinutes = null;
+  const rawTs = String(dq.last_success_sync_at || "").trim();
+  if (rawTs) {
+    let d = new Date(rawTs);
+    if (isNaN(d.getTime()) && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(rawTs)) {
+      d = /* @__PURE__ */ new Date(rawTs.replace(" ", "T") + "Z");
+    }
+    if (!isNaN(d.getTime())) {
+      freshnessMinutes = Math.round((Date.now() - d.getTime()) / 6e4);
+    }
+  }
+  const warnings = [];
+  let level = "ok";
+  const lastStatus = String(dq.last_sync_status || "").toLowerCase();
+  if (!rawTs) {
+    level = "critical";
+    warnings.push("No successful sales sync recorded.");
+  }
+  if (["failed", "partial", "error"].includes(lastStatus)) {
+    level = "critical";
+    warnings.push("Latest sync run status: " + lastStatus + ".");
+  }
+  if (Number(dq.invalid_product_refs || 0) > 0) {
+    level = "critical";
+    warnings.push(dq.invalid_product_refs + " item(s) reference a non-existent product id.");
+  }
+  const warn = /* @__PURE__ */ __name((msg) => {
+    if (level !== "critical") level = "warning";
+    warnings.push(msg);
+  }, "warn");
+  if (freshnessMinutes !== null && freshnessMinutes > 30) warn("Last successful sync was " + freshnessMinutes + " minutes ago (threshold 30).");
+  if (Number(dq.sync_errors_7d || 0) > 0) warn(dq.sync_errors_7d + " sync error(s) in the last 7 days.");
+  if (Number(dq.missing_product_id_items || 0) > 0) warn(dq.missing_product_id_items + " active item(s) have no Product_ID.");
+  if (Number(dq.itemless_orders || 0) > 0) warn(dq.itemless_orders + " commercial order(s) have no items.");
+  if (Number(dq.orders_missing_date || 0) > 0) warn(dq.orders_missing_date + " commercial order(s) have a missing/malformed order date.");
+  if (Number(dq.unknown_status_orders || 0) > 0) warn(dq.unknown_status_orders + " order(s) have an unknown status value.");
+  if (Number(dq.unknown_source_labels || 0) > 0) warn(dq.unknown_source_labels + " unknown source label(s) present.");
+  if (zeroTotalOrders > 0) warn(zeroTotalOrders + " commercial order(s) have a null/zero order total (business rules require a positive total).");
+  const gscRows = Number(gscFreshness?.total_rows || 0);
+  const gscDays = gscFreshness?.days_since_latest_report === null || gscFreshness?.days_since_latest_report === void 0 ? null : Number(gscFreshness.days_since_latest_report);
+  const gscLastStatus = String(gscFreshness?.last_sync_status || "").toLowerCase();
+  if (gscRows > 0) {
+    if (gscDays !== null && gscDays > 4) warn("GSC freshness is " + gscDays + " days old (threshold 4).");
+    if (["failed", "partial", "error"].includes(gscLastStatus)) warn("Latest GSC sync run status: " + gscLastStatus + ".");
+  }
+  const ga4Rows = Number(ga4Freshness?.total_rows || 0);
+  const ga4Days = ga4Freshness?.days_since_latest_report === null || ga4Freshness?.days_since_latest_report === void 0 ? null : Number(ga4Freshness.days_since_latest_report);
+  const ga4LastStatus = String(ga4Freshness?.last_sync_status || "").toLowerCase();
+  if (ga4Rows > 0) {
+    if (ga4Days !== null && ga4Days > 3) warn("GA4 freshness is " + ga4Days + " days old (threshold 3).");
+    if (["failed", "partial", "error"].includes(ga4LastStatus)) warn("Latest GA4 sync run status: " + ga4LastStatus + ".");
+  }
+  const etsyRows = Number(etsyFreshness?.total_rows || 0);
+  const etsyDays = etsyFreshness?.days_since_latest_report === null || etsyFreshness?.days_since_latest_report === void 0 ? null : Number(etsyFreshness.days_since_latest_report);
+  const etsyLastStatus = String(etsyFreshness?.last_sync_status || "").toLowerCase();
+  if (etsyRows > 0) {
+    if (etsyDays !== null && etsyDays > 7) warn("Etsy freshness is " + etsyDays + " days old (threshold 7).");
+    if (["failed", "partial", "error"].includes(etsyLastStatus)) warn("Latest Etsy sync run status: " + etsyLastStatus + ".");
+  }
+  const googleAdsRows = Number(googleAdsFreshness?.total_rows || 0);
+  const googleAdsDays = googleAdsFreshness?.days_since_latest_report === null || googleAdsFreshness?.days_since_latest_report === void 0 ? null : Number(googleAdsFreshness.days_since_latest_report);
+  const googleAdsLastStatus = String(googleAdsFreshness?.last_sync_status || "").toLowerCase();
+  if (googleAdsRows > 0) {
+    if (googleAdsDays !== null && googleAdsDays > 4) {
+      warn("Google Ads freshness is " + googleAdsDays + " days old (threshold 4).");
+    }
+    if (["failed", "partial", "error"].includes(googleAdsLastStatus)) {
+      warn("Latest Google Ads sync run status: " + googleAdsLastStatus + ".");
+    }
+  }
+  const commercialOrders = Number(dq.commercial_orders || 0);
+  const activeItems = Number(dq.active_items || 0);
+  return json6({
+    success: true,
+    data_quality: {
+      ...dq,
+      freshness_minutes: freshnessMinutes,
+      mapped_order_pct: commercialOrders > 0 ? Math.round(Number(dq.mapped_orders || 0) / commercialOrders * 1e3) / 10 : null,
+      mapped_item_pct: activeItems > 0 ? Math.round((activeItems - Number(dq.missing_product_id_items || 0)) / activeItems * 1e3) / 10 : null,
+      exact_item_pct: activeItems > 0 ? Math.round(Number(dq.exact_items || 0) / activeItems * 1e3) / 10 : null,
+      unallocated_item_pct: activeItems > 0 ? Math.round(Number(dq.unallocated_items || 0) / activeItems * 1e3) / 10 : null,
+      zero_total_orders: zeroTotalOrders,
+      status: level,
+      warnings
+    },
+    thresholds: {
+      freshness_warning_minutes: 30,
+      note: "warning: sync older than 30 min (expected Make.com cadence 15 min); critical: no successful sync, failed last run, or invalid product refs"
+    },
+    recent_runs: runs.results || [],
+    channel_freshness: freshness.results || [],
+    gsc_freshness: {
+      available: !!gscFreshness,
+      total_rows: gscRows,
+      latest_report_date: gscFreshness?.latest_report_date || null,
+      days_since_latest_report: gscDays,
+      last_success_sync_at: gscFreshness?.last_success_sync_at || null,
+      last_sync_at: gscFreshness?.last_sync_at || null,
+      last_sync_status: gscLastStatus || null,
+      sync_errors_7d: Number(gscFreshness?.sync_errors_7d || 0),
+      status: gscRows === 0 ? "empty" : gscDays !== null && gscDays > 4 || ["failed", "partial", "error"].includes(gscLastStatus) ? "warning" : "ok",
+      caveat: "GSC data is typically delayed by 1\u20132 days; freshness warning threshold = 4 days."
+    },
+    ga4_freshness: {
+      available: !!ga4Freshness,
+      total_rows: ga4Rows,
+      latest_report_date: ga4Freshness?.latest_report_date || null,
+      days_since_latest_report: ga4Days,
+      last_success_sync_at: ga4Freshness?.last_success_sync_at || null,
+      last_sync_at: ga4Freshness?.last_sync_at || null,
+      last_sync_status: ga4LastStatus || null,
+      sync_errors_7d: Number(ga4Freshness?.sync_errors_7d || 0),
+      status: ga4Rows === 0 ? "empty" : ga4Days !== null && ga4Days > 3 || ["failed", "partial", "error"].includes(ga4LastStatus) ? "warning" : "ok",
+      caveat: "GA4 event data may finalize with delay; freshness warning threshold = 3 days."
+    },
+    etsy_freshness: {
+      available: !!etsyFreshness,
+      total_rows: etsyRows,
+      latest_report_date: etsyFreshness?.latest_report_date || null,
+      days_since_latest_report: etsyDays,
+      last_success_sync_at: etsyFreshness?.last_success_sync_at || null,
+      last_sync_at: etsyFreshness?.last_sync_at || null,
+      last_sync_status: etsyLastStatus || null,
+      sync_errors_7d: Number(etsyFreshness?.sync_errors_7d || 0),
+      total_master_listings: Number(etsyFreshness?.total_master_listings || 0),
+      active_master_listings: Number(etsyFreshness?.active_master_listings || 0),
+      inactive_master_listings: Number(etsyFreshness?.inactive_master_listings || 0),
+      status: etsyRows === 0 ? "empty" : etsyDays !== null && etsyDays > 7 || ["failed", "partial", "error"].includes(etsyLastStatus) ? "warning" : "ok",
+      caveat: "Etsy metrics depend on source exports/API windows; freshness warning threshold = 7 days."
+    },
+    google_ads_freshness: {
+      available: !!googleAdsFreshness,
+      total_rows: googleAdsRows,
+      latest_report_date: googleAdsFreshness?.latest_report_date || null,
+      days_since_latest_report: googleAdsDays,
+      last_success_sync_at: googleAdsFreshness?.last_success_sync_at || null,
+      last_sync_at: googleAdsFreshness?.last_sync_at || null,
+      last_sync_status: googleAdsLastStatus || null,
+      sync_errors_7d: Number(googleAdsFreshness?.sync_errors_7d || 0),
+      status: googleAdsRows === 0 ? "empty" : googleAdsDays !== null && googleAdsDays > 4 || ["failed", "partial", "error"].includes(googleAdsLastStatus) ? "warning" : "ok",
+      caveat: "Google Ads conversion value is platform-attributed and directional only; keep separate from canonical D1 order revenue."
+    },
+    coverage: {
+      first_order_day: spanRow?.first_order_day ?? null,
+      last_order_day: spanRow?.last_order_day ?? null,
+      total_orders: Number(spanRow?.total_orders || 0),
+      channels: Number(spanRow?.channels || 0),
+      by_year: coverageYear.results || [],
+      by_channel: coverageChannel.results || []
+    }
+  });
+}
+__name(getDataQuality, "getDataQuality");
+var EXCEPTION_TYPES = {
+  missing_product_id: {
+    description: "Active items on commercial orders without a Product_ID",
+    sql: `SELECT ai.order_day, ai.channel_norm, co.source_system, co.source_order_id, co.status,
+                 ai.raw_item_text, ai.quantity, ai.revenue_status
+          FROM analysis_active_items ai
+          JOIN analysis_commercial_orders co ON co.id = ai.sales_order_id
+          WHERE ai.product_id IS NULL
+          ORDER BY ai.order_day DESC, ai.id`
+  },
+  unmapped_orders: {
+    description: "Commercial orders where no item has a Product_ID",
+    sql: `SELECT co.order_day, co.channel_norm, co.source_system, co.source_order_id, co.status, co.order_total, co.currency
+          FROM analysis_commercial_orders co
+          JOIN analysis_order_mapping om ON om.sales_order_id = co.id
+          WHERE om.derived_mapping_status = 'Unmapped'
+          ORDER BY co.order_day DESC, co.id`
+  },
+  itemless_orders: {
+    description: "Commercial orders with no active items",
+    sql: `SELECT co.order_day, co.channel_norm, co.source_system, co.source_order_id, co.status, co.order_total, co.currency
+          FROM analysis_commercial_orders co
+          JOIN analysis_order_mapping om ON om.sales_order_id = co.id
+          WHERE om.derived_mapping_status = 'Itemless'
+          ORDER BY co.order_day DESC, co.id`
+  },
+  zero_totals: {
+    description: "Commercial orders with a null/zero order total",
+    sql: `SELECT order_day, channel_norm, source_system, source_order_id, status, order_total, currency
+          FROM analysis_commercial_orders
+          WHERE order_total IS NULL OR order_total <= 0
+          ORDER BY order_day DESC, id`
+  },
+  invalid_product_refs: {
+    description: "Active items referencing a non-existent product id",
+    sql: `SELECT ai.order_day, ai.channel_norm, ai.product_id, co.source_system, co.source_order_id,
+                 ai.raw_item_text, ai.quantity
+          FROM analysis_active_items ai
+          JOIN analysis_commercial_orders co ON co.id = ai.sales_order_id
+          LEFT JOIN products p ON p.id = ai.product_id
+          WHERE ai.product_id IS NOT NULL AND p.id IS NULL
+          ORDER BY ai.order_day DESC, ai.id`
+  },
+  unknown_sources: {
+    description: "Source labels outside the known channel list",
+    sql: `SELECT source_system, COUNT(*) AS orders, MIN(substr(order_date, 1, 10)) AS first_order_day,
+                 MAX(substr(order_date, 1, 10)) AS last_order_day
+          FROM sales_orders
+          WHERE lower(trim(source_system)) NOT IN
+            ('shopee', 'lazada', 'tiktok', 'line', 'whatsapp', 'etsy', 'ebay', 'facebook', 'website', 'manual')
+          GROUP BY source_system
+          ORDER BY orders DESC`
+  },
+  unknown_status: {
+    description: "Orders whose status is outside the known status taxonomy",
+    sql: `SELECT substr(order_date, 1, 10) AS order_day, source_system, source_order_id, status, order_total, currency
+          FROM sales_orders
+          WHERE status IS NULL OR lower(status) NOT IN
+            ('pending', 'paid', 'processing', 'shipped', 'completed', 'cancelled', 'refunded', 'archived')
+          ORDER BY order_date DESC, id`
+  },
+  sync_errors: {
+    description: "Sync runs with a failed/partial/error status in the last 7 days",
+    sql: `SELECT id, source, scenario, started_at, finished_at, status,
+                 records_received, records_rejected, substr(COALESCE(error_message, ''), 1, 300) AS error_message
+          FROM sync_runs
+          WHERE status IN ('failed', 'partial', 'error')
+            AND COALESCE(finished_at, created_at) >= datetime('now', '-7 day')
+          ORDER BY COALESCE(finished_at, created_at) DESC`
+  }
+};
+async function getExceptions(env, url) {
+  const type = (url.searchParams.get("type") || "").trim();
+  const def = EXCEPTION_TYPES[type];
+  if (!def) {
+    return err2("INVALID_EXCEPTION_TYPE", "type must be one of: " + Object.keys(EXCEPTION_TYPES).join(", "));
+  }
+  const rows = await env.DB.prepare(def.sql + " LIMIT 100").all();
+  return json6({
+    success: true,
+    type,
+    description: def.description,
+    count: (rows.results || []).length,
+    truncated: (rows.results || []).length === 100,
+    rows: rows.results || []
+  });
+}
+__name(getExceptions, "getExceptions");
+async function getProfitability(env, f) {
+  const range = dayRangeWhere(f);
+  const binds = [...range.binds];
+  let channelSql = "";
+  if (f.channel) {
+    channelSql = " AND channel_norm = ?";
+    binds.push(f.channel);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(*)                                                   AS orders,
+         SUM(order_total)                                           AS revenue,
+         SUM(cost_coverage = 'FULL')                                AS full_cost_orders,
+         SUM(cost_coverage = 'PARTIAL')                             AS partial_cost_orders,
+         SUM(cost_coverage = 'NONE')                                AS no_cost_orders,
+         SUM(cost_coverage = 'ITEMLESS')                            AS itemless_orders,
+         SUM(CASE WHEN gross_margin_thb IS NOT NULL THEN order_total END) AS gross_covered_revenue,
+         SUM(CASE WHEN gross_margin_thb IS NOT NULL THEN production_cost_thb END) AS production_cost_thb,
+         SUM(gross_margin_thb)                                      AS gross_margin_thb,
+         SUM(CASE WHEN contribution_before_shipping_thb IS NOT NULL THEN fees_thb END) AS fees_thb,
+         SUM(CASE WHEN contribution_before_shipping_thb IS NOT NULL THEN order_total END) AS contrib_bs_covered_revenue,
+         SUM(contribution_before_shipping_thb)                      AS contribution_before_shipping_thb,
+         SUM(CASE WHEN contribution_margin_thb IS NOT NULL THEN shipping_cost_thb END) AS shipping_cost_thb,
+         SUM(CASE WHEN contribution_margin_thb IS NOT NULL THEN order_total END) AS contrib_covered_revenue,
+         SUM(contribution_margin_thb)                               AS contribution_margin_thb,
+         MAX(CASE WHEN estimate_cost_items > 0 OR fees_are_estimate = 1 OR shipping_is_estimate = 1 THEN 1 ELSE 0 END) AS contains_estimates
+       FROM analysis_profit_orders
+       WHERE 1=1${range.sql}${channelSql}`
+    ).bind(...binds).first();
+    const channels = await env.DB.prepare(
+      `SELECT
+         channel_norm,
+         COUNT(*)                        AS orders,
+         SUM(order_total)                AS revenue,
+         SUM(cost_coverage = 'FULL')     AS full_cost_orders,
+         SUM(CASE WHEN gross_margin_thb IS NOT NULL THEN order_total END) AS gross_covered_revenue,
+         SUM(gross_margin_thb)           AS gross_margin_thb,
+         SUM(CASE WHEN contribution_before_shipping_thb IS NOT NULL THEN order_total END) AS contrib_bs_covered_revenue,
+         SUM(contribution_before_shipping_thb) AS contribution_before_shipping_thb,
+         SUM(contribution_margin_thb)    AS contribution_margin_thb,
+         MAX(CASE WHEN shipping_cost_thb IS NULL THEN 1 ELSE 0 END) AS shipping_missing
+       FROM analysis_profit_orders
+       WHERE 1=1${range.sql}${channelSql}
+       GROUP BY channel_norm
+       ORDER BY revenue DESC`
+    ).bind(...binds).all();
+    const monthBinds = [];
+    let monthWhere = "";
+    if (f.start) {
+      monthWhere += " AND month >= ?";
+      monthBinds.push(f.start.slice(0, 7));
+    }
+    if (f.end) {
+      monthWhere += " AND month <= ?";
+      monthBinds.push(f.end.slice(0, 7));
+    }
+    let monthChannelSql = "";
+    if (f.channel) {
+      monthChannelSql = " AND channel_norm = ?";
+      monthBinds.push(f.channel);
+    }
+    const monthly = await env.DB.prepare(
+      `SELECT month,
+              SUM(orders) AS orders,
+              SUM(revenue) AS revenue,
+              SUM(gross_covered_revenue) AS gross_covered_revenue,
+              SUM(gross_margin_thb) AS gross_margin_thb,
+              SUM(contrib_bs_covered_revenue) AS contrib_bs_covered_revenue,
+              SUM(contribution_before_shipping_thb) AS contribution_before_shipping_thb,
+              SUM(contribution_margin_thb) AS contribution_margin_thb,
+              MAX(contains_estimates) AS contains_estimates
+       FROM analysis_profit_monthly
+       WHERE 1=1${monthWhere}${monthChannelSql}
+       GROUP BY month
+       ORDER BY month DESC
+       LIMIT 24`
+    ).bind(...monthBinds).all();
+    const prodBinds = [...range.binds];
+    let prodChannelSql = "";
+    if (f.channel) {
+      prodChannelSql = " AND pi.channel_norm = ?";
+      prodBinds.push(f.channel);
+    }
+    const products = await env.DB.prepare(
+      `SELECT
+         pi.product_id,
+         COALESCE(p.title_en, '(unmapped)') AS product_title,
+         p.slug AS product_slug,
+         COUNT(*) AS items,
+         SUM(pi.quantity) AS units,
+         SUM(CASE WHEN pi.revenue_status = 'EXACT' THEN pi.line_revenue END) AS exact_revenue,
+         SUM(pi.cost_status = 'COSTED') AS costed_items,
+         SUM(CASE WHEN pi.cost_status = 'COSTED' THEN pi.item_production_cost_thb END) AS production_cost_thb,
+         SUM(CASE WHEN pi.revenue_status = 'EXACT' AND pi.cost_status = 'COSTED'
+                  THEN pi.line_revenue - pi.item_production_cost_thb END) AS line_margin_before_fees_thb,
+         SUM(CASE WHEN pi.revenue_status = 'EXACT' AND pi.cost_status = 'COSTED'
+                  THEN pi.line_revenue END) AS line_margin_covered_revenue,
+         MAX(pi.cost_is_estimate) AS cost_is_estimate
+       FROM analysis_profit_items pi
+       LEFT JOIN products p ON p.id = pi.product_id
+       WHERE 1=1${range.sql.replace(/order_day/g, "pi.order_day")}${prodChannelSql}
+       GROUP BY pi.product_id, p.title_en, p.slug
+       ORDER BY line_margin_before_fees_thb DESC NULLS LAST`
+    ).bind(...prodBinds).all();
+    const afterAds = await env.DB.prepare(
+      `SELECT month, orders, revenue, contribution_before_shipping_thb,
+              contrib_bs_covered_revenue, ads_cost_thb, contribution_after_ads_thb
+       FROM analysis_profit_after_ads_monthly
+       WHERE 1=1${monthWhere}
+       ORDER BY month DESC
+       LIMIT 24`
+    ).bind(...monthBinds.slice(0, monthWhere.split("?").length - 1)).all();
+    const coverage = await env.DB.prepare("SELECT * FROM analysis_profit_coverage").first();
+    const pct = /* @__PURE__ */ __name((num, base) => {
+      const n = Number(num), b = Number(base);
+      if (!Number.isFinite(n) || !Number.isFinite(b) || b <= 0) return null;
+      return Math.round(n / b * 1e3) / 10;
+    }, "pct");
+    return json6({
+      success: true,
+      filters: { start: f.start, end: f.end, channel: f.channel },
+      currency: "THB",
+      note: "Margins are computed only over covered orders; percentages use each metric's own covered-revenue base. Estimates are labelled. Ad spend is month-aggregate only (never per order).",
+      summary: {
+        ...summary,
+        gross_margin_pct: pct(summary?.gross_margin_thb, summary?.gross_covered_revenue),
+        contribution_before_shipping_pct: pct(summary?.contribution_before_shipping_thb, summary?.contrib_bs_covered_revenue),
+        contribution_margin_pct: pct(summary?.contribution_margin_thb, summary?.contrib_covered_revenue)
+      },
+      channels: channels.results || [],
+      monthly: monthly.results || [],
+      products: products.results || [],
+      after_ads: afterAds.results || [],
+      coverage
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table") || msg.includes("no such view")) {
+      return err2("PROFIT_VIEWS_MISSING", "Profitability views not found \u2014 apply migration 053_profitability_layer.sql first.", 500);
+    }
+    throw e;
+  }
+}
+__name(getProfitability, "getProfitability");
+async function handleAdminAnalysis(request, env) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+      }
+    });
+  }
+  const url = new URL(request.url);
+  const isRecompute = request.method === "POST" && url.pathname.replace(/\/+$/, "").endsWith("/opportunity/recompute");
+  if (request.method !== "GET" && !isRecompute) {
+    return err2("METHOD_NOT_ALLOWED", "Only GET is supported (POST only on /opportunity/recompute).", 405);
+  }
+  const auth = await authorizeAdmin5(request, env);
+  if (!auth.ok) return err2("UNAUTHORIZED", auth.error, auth.status);
+  const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/analysis/, "") || "/";
+  const productMatch = sub.match(/^\/product\/(\d+)$/);
+  if (productMatch) return getProductDetail(env, productMatch[1]);
+  if (sub === "/data-quality") return getDataQuality(env);
+  if (sub === "/data-quality/exceptions") return getExceptions(env, url);
+  if (sub === "/opportunity") return getOpportunity(env);
+  if (sub === "/opportunity/recompute") return recomputeOpportunityHandler(request, env);
+  const parsed = parseFilters(url);
+  if (!parsed.ok) return parsed.res;
+  const f = parsed.f;
+  if (sub === "/gsc") return getGsc(env, f);
+  if (sub === "/ga4") return getGa4(env, f);
+  if (sub === "/etsy") return getEtsy(env, f);
+  if (sub === "/google-ads") return getGoogleAds(env, f);
+  if (sub === "/quotes") return getQuotes(env, f);
+  if (sub === "/growth-signals") return getGrowthSignals(env, f);
+  if (sub === "/profitability") return getProfitability(env, f);
+  if (sub === "/" || sub === "/summary") return getSummary(env, f);
+  if (sub === "/sales") return getSales(env, f);
+  if (sub === "/products") return getProducts(env, f);
+  if (sub === "/channels") return getChannels(env, f);
+  return err2("ROUTE_NOT_FOUND", "Unknown analysis route: " + sub, 404);
+}
+__name(handleAdminAnalysis, "handleAdminAnalysis");
+
+// ../workers/api/admin-cost-model.ts
+function json7(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    }
+  });
+}
+__name(json7, "json");
+function err3(code, message, status = 400) {
+  return json7({ success: false, error_code: code, message }, status);
+}
+__name(err3, "err");
+function isProductionHost7(hostname) {
+  if (!hostname) return false;
+  if (hostname === "localhost" || hostname === "127.0.0.1") return false;
+  if (hostname.endsWith(".local")) return false;
+  return hostname === "www.mildmate.com" || hostname === "mildmate.com";
+}
+__name(isProductionHost7, "isProductionHost");
+function collectRoles9(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  const add = /* @__PURE__ */ __name((v) => {
+    if (v !== void 0 && v !== null) values.push(v);
+  }, "add");
+  add(raw.role);
+  add(raw.roles);
+  add(raw.org_role);
+  add(raw.orgRole);
+  add(raw.public_metadata?.role);
+  add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.role);
+  add(raw.unsafe_metadata?.roles);
+  add(raw.metadata?.role);
+  add(raw.metadata?.roles);
+  add(raw["https://mildmate.com/role"]);
+  add(raw["https://mildmate.com/roles"]);
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles9, "collectRoles");
+function hasAdminRole9(rawClaims) {
+  const roles = collectRoles9(rawClaims);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole9, "hasAdminRole");
+function emailAllowed9(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed9, "emailAllowed");
+async function authorizeAdmin6(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const hasBearer = authHeader.startsWith("Bearer ");
+  if (hasBearer) {
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) {
+    } else {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) {
+        return { ok: true };
+      }
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find(function(e) {
+              return e.id === user.primary_email_address_id;
+            })?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed9(email, env)) return { ok: true };
+            if (hasAdminRole9(metadata)) return { ok: true };
+          }
+        } catch (e) {
+          console.error("Clerk API lookup failed:", e?.message || e);
+        }
+      }
+      return { ok: false, status: 403, error: "Forbidden: admin role required" };
+    }
+  }
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!providedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost7(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  if (!configuredSecret) return { ok: true };
+  if (providedSecret === configuredSecret) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
+}
+__name(authorizeAdmin6, "authorizeAdmin");
+var DATE_RE6 = /^\d{4}-\d{2}-\d{2}$/;
+var CHANNEL_RE2 = /^[a-z0-9-]{1,30}$/;
+var FORMULA_EFFECTIVE_FROM = "2023-01-01";
+function parseDateOrToday(raw) {
+  const v = String(raw || "").trim();
+  if (!v) return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  if (!DATE_RE6.test(v)) return null;
+  return v;
+}
+__name(parseDateOrToday, "parseDateOrToday");
+function parseMoney(raw, min, max) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < min || n > max) return null;
+  return Math.round(n * 100) / 100;
+}
+__name(parseMoney, "parseMoney");
+async function ensureTables(env) {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cost_model_products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, product_id INTEGER NOT NULL,
+    production_cost_thb REAL NOT NULL, cost_source TEXT NOT NULL DEFAULT 'formula',
+    is_estimate INTEGER NOT NULL DEFAULT 1, effective_from TEXT NOT NULL DEFAULT (date('now')),
+    note TEXT, modeled_price_thb REAL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(product_id, effective_from, cost_source))`).run();
+  try {
+    await env.DB.prepare("ALTER TABLE cost_model_products ADD COLUMN modeled_price_thb REAL").run();
+  } catch {
+  }
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cost_model_channel_fees (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, channel TEXT NOT NULL,
+    marketplace_fee_pct REAL NOT NULL DEFAULT 0, payment_fee_pct REAL NOT NULL DEFAULT 0,
+    payment_fee_fixed_thb REAL NOT NULL DEFAULT 0, other_fee_thb_per_order REAL NOT NULL DEFAULT 0,
+    is_estimate INTEGER NOT NULL DEFAULT 1, effective_from TEXT NOT NULL DEFAULT (date('now')),
+    note TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(channel, effective_from))`).run();
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cost_model_shipping (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, channel TEXT NOT NULL,
+    avg_shipping_cost_thb REAL NOT NULL, is_estimate INTEGER NOT NULL DEFAULT 1,
+    effective_from TEXT NOT NULL DEFAULT (date('now')), note TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(channel, effective_from))`).run();
+}
+__name(ensureTables, "ensureTables");
+async function loadCostParams(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT key, value FROM pricing_params"
+  ).all();
+  const rows = results || [];
+  const p = { fabricRate: {}, sewingTiers: [], duvetSewingTiers: [], fixed: {} };
+  for (const row of rows) {
+    const k = String(row.key || "");
+    const v = Number(row.value);
+    if (!k || !Number.isFinite(v)) continue;
+    if (k.startsWith("fabric_rate_")) {
+      p.fabricRate[k.replace("fabric_rate_", "")] = v;
+    } else if (k.startsWith("sewing_tier") && k.endsWith("_cost")) {
+      const m = k.match(/sewing_tier(\d+)_cost/);
+      const maxKey = m ? "sewing_tier" + m[1] + "_max" : null;
+      const maxRow = maxKey ? rows.find((r) => r.key === maxKey) : null;
+      p.sewingTiers.push({ max: maxRow ? Number(maxRow.value) : Infinity, cost: v });
+    } else if (k.startsWith("duvet_sewing_tier") && k.endsWith("_cost")) {
+      const m = k.match(/duvet_sewing_tier(\d+)_cost/);
+      const maxKey = m ? "duvet_sewing_tier" + m[1] + "_max" : null;
+      const maxRow = maxKey ? rows.find((r) => r.key === maxKey) : null;
+      p.duvetSewingTiers.push({ max: maxRow ? Number(maxRow.value) : Infinity, cost: v });
+    } else {
+      p.fixed[k] = v;
+    }
+  }
+  p.sewingTiers.sort((a, b) => a.max - b.max);
+  p.duvetSewingTiers.sort((a, b) => a.max - b.max);
+  return p;
+}
+__name(loadCostParams, "loadCostParams");
+var CLIENT_CONSTANTS = {
+  sqcm_per_yard: 23744,
+  // configurator fallback (matches live pricing behavior)
+  waste_factor_pillowcase: 60,
+  protector_fabric_tier1_max: 3200,
+  protector_fabric_tier1_cost: 550,
+  protector_fabric_tier2_max: 6620,
+  protector_fabric_tier2_cost: 670,
+  protector_fabric_tier3_max: 8e3,
+  protector_fabric_tier3_cost: 920,
+  protector_fabric_tier4_max: 9e3,
+  protector_fabric_tier4_cost: 980,
+  protector_fabric_tier5_max: 10300,
+  protector_fabric_tier5_cost: 1100,
+  protector_fabric_tier6_max: 11300,
+  protector_fabric_tier6_cost: 1200,
+  protector_fabric_tier7_cost: 1300,
+  protector_depth_tier1_min: 0,
+  protector_depth_tier1_cost: 0,
+  protector_depth_tier2_min: 30,
+  protector_depth_tier2_cost: 200,
+  protector_depth_tier3_min: 52,
+  protector_depth_tier3_cost: 400,
+  protector_depth_tier4_min: 57,
+  protector_depth_tier4_cost: 600
+};
+function param(p, key, fallback) {
+  const v = p.fixed[key];
+  if (Number.isFinite(v)) return v;
+  const c = CLIENT_CONSTANTS[key];
+  if (Number.isFinite(c)) return c;
+  return fallback;
+}
+__name(param, "param");
+function tierCost(tiers, area) {
+  for (const t of tiers) {
+    if (area <= t.max) return t.cost;
+  }
+  return tiers.length ? tiers[tiers.length - 1].cost : 0;
+}
+__name(tierCost, "tierCost");
+function fabricCostPerArea(p, areaSqCm, fabric) {
+  const rate = p.fabricRate[fabric] !== void 0 ? p.fabricRate[fabric] : param(p, "fabric_rate_" + fabric, 100);
+  const sqcmPerYard = param(p, "sqcm_per_yard", 23744);
+  const waste = 1 + param(p, "waste_factor_fabric", 20) / 100;
+  return areaSqCm * rate / sqcmPerYard * waste;
+}
+__name(fabricCostPerArea, "fabricCostPerArea");
+function protectorFabricTierCost(p, areaSqInch) {
+  for (let i = 1; i <= 6; i++) {
+    const max = param(p, "protector_fabric_tier" + i + "_max", Infinity);
+    if (areaSqInch <= max) return param(p, "protector_fabric_tier" + i + "_cost", 0);
+  }
+  return param(p, "protector_fabric_tier7_cost", 1300);
+}
+__name(protectorFabricTierCost, "protectorFabricTierCost");
+function protectorDepthCost(p, depthCm) {
+  let cost = 0;
+  for (let i = 1; i <= 4; i++) {
+    if (depthCm >= param(p, "protector_depth_tier" + i + "_min", 0)) {
+      cost = param(p, "protector_depth_tier" + i + "_cost", 0);
+    }
+  }
+  return cost;
+}
+__name(protectorDepthCost, "protectorDepthCost");
+function packingDelivery(p, protectorClass) {
+  return protectorClass ? param(p, "protector_packing", 200) + param(p, "protector_delivery", 80) : param(p, "packing_cost", 100) + param(p, "delivery_cost", 70);
+}
+__name(packingDelivery, "packingDelivery");
+function fittedSubtotal(p, w, l, d, fabric) {
+  const fw = w + 2 * d + param(p, "sewing_allowance_cm", 14);
+  const fl = l + 2 * d + param(p, "sewing_allowance_cm", 14);
+  const area = fw * fl;
+  const fabricCost = fabricCostPerArea(p, area, fabric);
+  const sewing = tierCost(p.sewingTiers, area);
+  const accessories = fabricCost * param(p, "accessories_rate", 10) / 100;
+  return fabricCost + sewing + accessories + packingDelivery(p, false);
+}
+__name(fittedSubtotal, "fittedSubtotal");
+function flatSubtotal(p, w, l, d, fabric) {
+  const tuck = param(p, "flat_tuck_cm", 25);
+  const fw = w + 2 * d + 2 * tuck;
+  const fl = l + 2 * d + 2 * tuck;
+  const area = fw * fl;
+  const fabricCost = fabricCostPerArea(p, area, fabric);
+  const sewing = param(p, "flat_sewing_cost", 250);
+  return fabricCost + sewing + packingDelivery(p, false);
+}
+__name(flatSubtotal, "flatSubtotal");
+function duvetSubtotal(p, w, l, fabric) {
+  const rawArea = 2 * (w + 5) * (l + 5);
+  const waste = 1 + param(p, "waste_factor_fabric", 20) / 100;
+  const rate = p.fabricRate[fabric] !== void 0 ? p.fabricRate[fabric] : param(p, "fabric_rate_" + fabric, 100);
+  const sqcmPerYard = param(p, "sqcm_per_yard", 23744);
+  const fabricCost = rawArea * waste * rate / sqcmPerYard;
+  const zipper = param(p, "zipper_rate", 0.4) * (2 * l + w);
+  const sewing = tierCost(p.duvetSewingTiers, rawArea);
+  return fabricCost + zipper + sewing + packingDelivery(p, false);
+}
+__name(duvetSubtotal, "duvetSubtotal");
+function pillowcaseSubtotal(p, w, l, fabric, variant) {
+  let rawArea = 2 * (w + 5) * (l + 5);
+  if (variant === "sham") rawArea *= 1.15;
+  const waste = 1 + param(p, "waste_factor_pillowcase", 60) / 100;
+  const rate = p.fabricRate[fabric] !== void 0 ? p.fabricRate[fabric] : param(p, "fabric_rate_" + fabric, 100);
+  const sqcmPerYard = param(p, "sqcm_per_yard", 23744);
+  const fabricCost = rawArea * waste * rate / sqcmPerYard;
+  const zipper = variant === "zipper" ? param(p, "zipper_rate", 0.4) * Math.max(w, l) : 0;
+  const sewing = variant === "sham" ? param(p, "pillow_sham_sewing_cost", 50) : param(p, "pillow_sewing_cost", 40);
+  return fabricCost + zipper + sewing + packingDelivery(p, false);
+}
+__name(pillowcaseSubtotal, "pillowcaseSubtotal");
+function pillowProtectorSubtotal(p, w, l) {
+  const rawArea = 2 * (w + 5) * (l + 5);
+  const waste = 1 + param(p, "waste_factor_pillowcase", 60) / 100;
+  const area = rawArea * waste;
+  const tpuRate = param(p, "fabric_rate_tpu", 120);
+  const tpuSqcmPerLm = param(p, "tpu_sqcm_per_lm", 21e3);
+  const fabricCost = area * (tpuRate / tpuSqcmPerLm);
+  const zipper = param(p, "zipper_rate", 0.4) * Math.max(w, l);
+  const sewing = param(p, "pillow_sewing_cost", 40);
+  return fabricCost + zipper + sewing + packingDelivery(p, false);
+}
+__name(pillowProtectorSubtotal, "pillowProtectorSubtotal");
+function encasementSubtotal(p, w, l, d) {
+  const area = 2 * (w * l + w * d + l * d);
+  const tpuRate = param(p, "fabric_rate_tpu", 120);
+  const tpuBolt = param(p, "tpu_bolt_width_cm", 210);
+  const tpuSqcmPerLm = 100 * tpuBolt;
+  const waste = 1 + param(p, "waste_factor_fabric", 20) / 100;
+  const fabricCost = tpuRate * area / tpuSqcmPerLm * waste;
+  const sewing = param(p, "encasement_sewing_cost", 300);
+  const zipper = param(p, "zipper_rate", 0.4) * (2 * l + w);
+  return fabricCost + sewing + zipper + packingDelivery(p, false);
+}
+__name(encasementSubtotal, "encasementSubtotal");
+function protectorSubtotal(p, w, l, d) {
+  const areaSqInch = w * l / 6.4516;
+  const fabricTier = protectorFabricTierCost(p, areaSqInch);
+  const depthCost = protectorDepthCost(p, d);
+  return fabricTier + depthCost + packingDelivery(p, true);
+}
+__name(protectorSubtotal, "protectorSubtotal");
+function vberthSubtotal(p, hw, fw, l, d, fabric) {
+  return fittedSubtotal(p, Math.max(hw, fw), l, d, fabric);
+}
+__name(vberthSubtotal, "vberthSubtotal");
+function marineTopSubtotal(p, hw, fw, l, d, fabric) {
+  const tuck = param(p, "flat_tuck_cm", 25);
+  const side = d + tuck;
+  const w = Math.max(hw, fw) + 2 * side;
+  const fl = l + 2 * side;
+  const area = w * fl;
+  const fabricCost = fabricCostPerArea(p, area, fabric);
+  const sewing = param(p, "flat_sewing_cost", 250);
+  return fabricCost + sewing + packingDelivery(p, false);
+}
+__name(marineTopSubtotal, "marineTopSubtotal");
+var REFERENCE_CONFIG = {
+  "standard-fitted-sheet": { family: "fitted", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin \u2014 first option of MildMate fitted-sheet size list" },
+  "deep-pocket-fitted-sheet": { family: "fitted", dims: { w: 99, l: 191, d: 51 }, sizeNote: "US Twin \u2014 deep-pocket 51cm override (configurator)" },
+  "dorm-fitted-sheet": { family: "fitted", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin \u2014 first option of fitted-sheet size list" },
+  "pet-owner-fitted-sheet": { family: "fitted", dims: { w: 99, l: 191, d: 30 }, fabric: "breezeplus", sizeNote: "US Twin \u2014 first option; fabric BreezePlus (configurator default for Pet Owner)" },
+  "family-fitted-sheet": { family: "fitted", dims: { w: 198, l: 203, d: 30 }, sizeNote: "2\xD7 Twin XL \u2014 first option of family size list" },
+  "rv-truck-fitted-sheet": { family: "fitted", dims: { w: 81, l: 203, d: 30 }, sizeNote: "32\xD780 Narrow \u2014 first option of truck-fitted-sheet size list" },
+  "flat-sheet-standard": { family: "flat", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin \u2014 first option of fitted-sheet size list (flat sheets share it)" },
+  "flat-sheet-extra-deep-pocket": { family: "flat", dims: { w: 99, l: 191, d: 51 }, sizeNote: "US Twin \u2014 deep-pocket 51cm override (configurator)" },
+  "co-sleeping-top-sheet": { family: "flat", dims: { w: 198, l: 203, d: 30 }, sizeNote: "2\xD7 Twin XL \u2014 first option of family size list (co-sleeping uses it)" },
+  "3-sided-duvet": { family: "duvet", dims: { w: 173, l: 218 }, sizeNote: "US Twin duvet \u2014 first option of duvet size list" },
+  "pet-owner-duvet-cover": { family: "duvet", dims: { w: 173, l: 218 }, fabric: "breezeplus", sizeNote: "US Twin duvet; fabric BreezePlus (configurator default for Pet Owner)" },
+  "duvet-cover-marine": { family: "duvet", dims: { w: 173, l: 218 }, sizeNote: "US Twin duvet \u2014 first option of duvet size list" },
+  "duvet-cover-rv": { family: "duvet", dims: { w: 173, l: 218 }, sizeNote: "US Twin duvet \u2014 first option of duvet size list" },
+  "duvet-cover-dorm": { family: "duvet", dims: { w: 173, l: 218 }, sizeNote: "US Twin duvet \u2014 first option of duvet size list" },
+  "weighted-duvet-cover": { family: "duvet", dims: { w: 173, l: 218 }, sizeNote: "US Twin duvet \u2014 first option of duvet size list (derived markup is selling-side only)" },
+  "pillowcase-envelope": { family: "pillowcase", dims: { w: 51, l: 66 }, variant: "envelope", sizeNote: "US Standard \u2014 first option of pillow size list" },
+  "pillowcase-zipper": { family: "pillowcase", dims: { w: 51, l: 66 }, variant: "zipper", sizeNote: "US Standard \u2014 first option of pillow size list" },
+  "pillowcase-sham": { family: "pillowcase", dims: { w: 51, l: 66 }, variant: "sham", sizeNote: "US Standard \u2014 first option of pillow size list" },
+  "pillow-protector-general": { family: "pillow_protector", dims: { w: 51, l: 66 }, sizeNote: "US Standard \u2014 first option of pillow size list" },
+  "mattress-protector-standard": { family: "protector", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin \u2014 protector pages use the fitted-sheet size list" },
+  "mattress-protector-deep-pocket": { family: "protector", dims: { w: 99, l: 191, d: 51 }, sizeNote: "US Twin \u2014 deep-pocket 51cm override (configurator)" },
+  "pet-proof-mattress-protector": { family: "protector", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin \u2014 protector pages use the fitted-sheet size list; TPU class" },
+  "mattress-protector-family": { family: "protector", dims: { w: 198, l: 203, d: 30 }, sizeNote: "2\xD7 Twin XL \u2014 first option of family size list" },
+  "custom-waterproof-cushion-protector": { family: "protector", dims: { w: 60, l: 60, d: 15 }, sizeNote: "CONTROLLED ASSUMPTION 60\xD760\xD715 \u2014 cushion has no size list (owner-approved 2026-10-02)" },
+  "mattress-encasement-general": { family: "encasement", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin \u2014 encasement pages use the fitted-sheet size list" },
+  "rv-truck-mattress-encasement": { family: "encasement", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin \u2014 code gives encasement pages the fitted-sheet size list (flagged)" },
+  "marine-fitted-sheet": { family: "vberth", dims: { hw: 175, fw: 100, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION HW175\xD7FW100\xD7L190\xD7D20 \u2014 no stored marine geometry (owner-approved 2026-10-02)" },
+  "marine-mattress-protector": { family: "protector", dims: { w: 175, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION W175\xD7L190\xD7D20 \u2014 marine page prices via the protector formula (verified in configurator updateCustomPrice); owner-approved 2026-10-02" },
+  "marine-top-sheet": { family: "marine_top", dims: { hw: 175, fw: 100, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION HW175\xD7FW100\xD7L190\xD7D20 \u2014 no stored marine geometry (owner-approved 2026-10-02)" }
+};
+var MARGIN_KEYS = {
+  "standard-fitted-sheet": { key: "standard", fallback: 30 },
+  "deep-pocket-fitted-sheet": { key: "standard", fallback: 30 },
+  "dorm-fitted-sheet": { key: "standard", fallback: 30 },
+  "pet-owner-fitted-sheet": { key: "standard", fallback: 30 },
+  "family-fitted-sheet": { key: "family", fallback: 50 },
+  "rv-truck-fitted-sheet": { key: "rv_truck", fallback: 45 },
+  "flat-sheet-standard": { key: "standard", fallback: 30 },
+  "flat-sheet-extra-deep-pocket": { key: "standard", fallback: 30 },
+  "co-sleeping-top-sheet": { key: "family", fallback: 50 },
+  "3-sided-duvet": { key: "duvet", fallback: 30 },
+  "pet-owner-duvet-cover": { key: "duvet", fallback: 30 },
+  "duvet-cover-marine": { key: "duvet", fallback: 30 },
+  "duvet-cover-rv": { key: "duvet", fallback: 30 },
+  "duvet-cover-dorm": { key: "duvet", fallback: 30 },
+  "weighted-duvet-cover": { key: "duvet", fallback: 30, derived: true },
+  "pillowcase-envelope": { key: "pillow", fallback: 15 },
+  "pillowcase-zipper": { key: "pillow", fallback: 15 },
+  "pillowcase-sham": { key: "pillow", fallback: 15 },
+  "pillow-protector-general": { key: "pillow_protector", fallback: 35 },
+  "mattress-protector-standard": { key: "protector_standard", fallback: 15 },
+  "mattress-protector-deep-pocket": { key: "protector_deep", fallback: 25 },
+  "pet-proof-mattress-protector": { key: "protector_standard", fallback: 15 },
+  "mattress-protector-family": { key: "family", fallback: 50 },
+  "custom-waterproof-cushion-protector": { key: "cushion_protector", fallback: 30 },
+  "mattress-encasement-general": { key: "encasement", fallback: 50 },
+  "rv-truck-mattress-encasement": { key: "rv_truck", fallback: 45 },
+  // client chain: rv-truck match precedes encasement
+  "marine-fitted-sheet": { key: "marine", fallback: 680 },
+  "marine-top-sheet": { key: "marine", fallback: 680 },
+  "marine-mattress-protector": { key: "protector_standard", fallback: 15 }
+  // client chain: protector branch, protector_standard
+};
+function ceilTo100(v) {
+  return Math.ceil(v / 100) * 100;
+}
+__name(ceilTo100, "ceilTo100");
+function deriveFormulaCost(p, slug) {
+  const cfg = REFERENCE_CONFIG[slug];
+  if (!cfg) return null;
+  const fabric = cfg.fabric || "cloudsoft";
+  let cost;
+  switch (cfg.family) {
+    case "fitted":
+      cost = fittedSubtotal(p, cfg.dims.w, cfg.dims.l, cfg.dims.d || 0, fabric);
+      break;
+    case "flat":
+      cost = flatSubtotal(p, cfg.dims.w, cfg.dims.l, cfg.dims.d || 0, fabric);
+      break;
+    case "duvet":
+      cost = duvetSubtotal(p, cfg.dims.w, cfg.dims.l, fabric);
+      break;
+    case "pillowcase":
+      cost = pillowcaseSubtotal(p, cfg.dims.w, cfg.dims.l, fabric, cfg.variant || "envelope");
+      break;
+    case "pillow_protector":
+      cost = pillowProtectorSubtotal(p, cfg.dims.w, cfg.dims.l);
+      break;
+    case "encasement":
+      cost = encasementSubtotal(p, cfg.dims.w, cfg.dims.l, cfg.dims.d || 0);
+      break;
+    case "protector":
+      cost = protectorSubtotal(p, cfg.dims.w, cfg.dims.l, cfg.dims.d || 0);
+      break;
+    case "vberth":
+      cost = vberthSubtotal(p, cfg.dims.hw, cfg.dims.fw, cfg.dims.l, cfg.dims.d || 0, fabric);
+      break;
+    case "marine_top":
+      cost = marineTopSubtotal(p, cfg.dims.hw, cfg.dims.fw, cfg.dims.l, cfg.dims.d || 0, fabric);
+      break;
+    default:
+      return null;
+  }
+  if (!Number.isFinite(cost) || cost <= 0) return null;
+  let modeledPrice = null;
+  const mk = MARGIN_KEYS[slug];
+  if (mk) {
+    const marginRate = param(p, "margin_rate_" + mk.key, mk.fallback) / 100;
+    const opsRate = param(p, "ops_rate", 15) / 100;
+    const mktRate = param(p, "mkt_rate", 20) / 100;
+    let price = ceilTo100(cost * (1 + opsRate + mktRate + marginRate));
+    if (mk.derived) {
+      const derivedPct = param(p, "derived_markup_weighted-duvet-cover", 10);
+      price = ceilTo100(price * (1 + derivedPct / 100));
+    }
+    modeledPrice = price;
+  }
+  const dimsText = cfg.dims.hw !== void 0 ? `HW${cfg.dims.hw}xFW${cfg.dims.fw}xL${cfg.dims.l}xD${cfg.dims.d || 0}` : cfg.dims.d !== void 0 && cfg.family !== "duvet" && cfg.family !== "pillowcase" && cfg.family !== "pillow_protector" ? `${cfg.dims.w}x${cfg.dims.l}x${cfg.dims.d}` : `${cfg.dims.w}x${cfg.dims.l}`;
+  return {
+    cost: Math.round(cost * 100) / 100,
+    modeledPrice,
+    family: cfg.family,
+    dimsText,
+    note: `ESTIMATED: formula pre-markup subtotal (fabric+sewing+zipper/accessories+packing+delivery) from live D1 pricing_params at reference size ${dimsText} cm. ${cfg.sizeNote}.`
+  };
+}
+__name(deriveFormulaCost, "deriveFormulaCost");
+async function getCostModel(env) {
+  await ensureTables(env);
+  const today2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  const products = await env.DB.prepare(`
+    SELECT p.id AS product_id, p.slug, p.title_en, p.base_price_thb, p.is_active,
+           c.production_cost_thb, c.modeled_price_thb, c.cost_source, c.is_estimate, c.effective_from, c.note
+    FROM products p
+    LEFT JOIN cost_model_products c ON c.id = (
+      SELECT c2.id FROM cost_model_products c2
+      WHERE c2.product_id = p.id AND c2.effective_from <= ?1
+      ORDER BY c2.effective_from DESC,
+               CASE WHEN c2.cost_source = 'verified' THEN 1 ELSE 0 END DESC,
+               c2.id DESC
+      LIMIT 1
+    )
+    WHERE p.is_active = 1
+    ORDER BY p.id
+  `).bind(today2).all();
+  const costRows = await env.DB.prepare(
+    "SELECT * FROM cost_model_products ORDER BY product_id, effective_from DESC"
+  ).all();
+  const fees = await env.DB.prepare(
+    "SELECT * FROM cost_model_channel_fees ORDER BY channel, effective_from DESC"
+  ).all();
+  const shipping = await env.DB.prepare(
+    "SELECT * FROM cost_model_shipping ORDER BY channel, effective_from DESC"
+  ).all();
+  let coverage = null;
+  try {
+    coverage = await env.DB.prepare("SELECT * FROM analysis_profit_coverage").first();
+  } catch {
+  }
+  return json7({
+    success: true,
+    products: products.results || [],
+    cost_rows: costRows.results || [],
+    fees: fees.results || [],
+    shipping: shipping.results || [],
+    coverage
+  });
+}
+__name(getCostModel, "getCostModel");
+async function putProductCost(env, body) {
+  await ensureTables(env);
+  const productId = Number(body?.product_id);
+  if (!Number.isInteger(productId) || productId < 1) return err3("INVALID_PRODUCT_ID", "product_id must be a positive integer.");
+  const cost = parseMoney(body?.production_cost_thb, 0.01, 1e6);
+  if (cost === null) return err3("INVALID_COST", "production_cost_thb must be a positive THB amount.");
+  const effectiveFrom = parseDateOrToday(body?.effective_from);
+  if (!effectiveFrom) return err3("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
+  const note = String(body?.note || "").trim().slice(0, 500) || null;
+  const isEstimate = body?.is_estimate === void 0 ? 0 : body.is_estimate ? 1 : 0;
+  const product = await env.DB.prepare("SELECT id, slug FROM products WHERE id = ?1").bind(productId).first();
+  if (!product) return err3("UNKNOWN_PRODUCT", "No product with id " + productId, 404);
+  await env.DB.prepare(`
+    INSERT INTO cost_model_products (product_id, production_cost_thb, cost_source, is_estimate, effective_from, note)
+    VALUES (?1, ?2, 'verified', ?3, ?4, ?5)
+    ON CONFLICT(product_id, effective_from, cost_source)
+    DO UPDATE SET production_cost_thb = ?2, is_estimate = ?3, note = ?5, updated_at = CURRENT_TIMESTAMP
+  `).bind(productId, cost, isEstimate, effectiveFrom, note).run();
+  return json7({ success: true, product_id: productId, slug: product.slug, production_cost_thb: cost, effective_from: effectiveFrom, cost_source: "verified", is_estimate: isEstimate });
+}
+__name(putProductCost, "putProductCost");
+async function putChannelFees(env, body) {
+  await ensureTables(env);
+  const channel = String(body?.channel || "").trim().toLowerCase();
+  if (!CHANNEL_RE2.test(channel)) return err3("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
+  const marketplacePct = parseMoney(body?.marketplace_fee_pct ?? 0, 0, 50);
+  const paymentPct = parseMoney(body?.payment_fee_pct ?? 0, 0, 50);
+  const paymentFixed = parseMoney(body?.payment_fee_fixed_thb ?? 0, 0, 1e4);
+  const otherFee = parseMoney(body?.other_fee_thb_per_order ?? 0, 0, 1e4);
+  if (marketplacePct === null || paymentPct === null) return err3("INVALID_FEE_PCT", "Fee percentages must be between 0 and 50.");
+  if (paymentFixed === null || otherFee === null) return err3("INVALID_FEE_THB", "Fixed fees must be between 0 and 10000 THB.");
+  const effectiveFrom = parseDateOrToday(body?.effective_from);
+  if (!effectiveFrom) return err3("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
+  const note = String(body?.note || "").trim().slice(0, 500) || null;
+  const isEstimate = body?.is_estimate === void 0 ? 1 : body.is_estimate ? 1 : 0;
+  await env.DB.prepare(`
+    INSERT INTO cost_model_channel_fees
+      (channel, marketplace_fee_pct, payment_fee_pct, payment_fee_fixed_thb, other_fee_thb_per_order, is_estimate, effective_from, note)
+    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+    ON CONFLICT(channel, effective_from)
+    DO UPDATE SET marketplace_fee_pct = ?2, payment_fee_pct = ?3, payment_fee_fixed_thb = ?4,
+                  other_fee_thb_per_order = ?5, is_estimate = ?6, note = ?8, updated_at = CURRENT_TIMESTAMP
+  `).bind(channel, marketplacePct, paymentPct, paymentFixed, otherFee, isEstimate, effectiveFrom, note).run();
+  return json7({ success: true, channel, effective_from: effectiveFrom });
+}
+__name(putChannelFees, "putChannelFees");
+async function putShipping(env, body) {
+  await ensureTables(env);
+  const channel = String(body?.channel || "").trim().toLowerCase();
+  if (!CHANNEL_RE2.test(channel)) return err3("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
+  const cost = parseMoney(body?.avg_shipping_cost_thb, 0, 1e5);
+  if (cost === null) return err3("INVALID_SHIPPING_COST", "avg_shipping_cost_thb must be between 0 and 100000 THB.");
+  const effectiveFrom = parseDateOrToday(body?.effective_from);
+  if (!effectiveFrom) return err3("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
+  const note = String(body?.note || "").trim().slice(0, 500) || null;
+  const isEstimate = body?.is_estimate === void 0 ? 1 : body.is_estimate ? 1 : 0;
+  await env.DB.prepare(`
+    INSERT INTO cost_model_shipping (channel, avg_shipping_cost_thb, is_estimate, effective_from, note)
+    VALUES (?1, ?2, ?3, ?4, ?5)
+    ON CONFLICT(channel, effective_from)
+    DO UPDATE SET avg_shipping_cost_thb = ?2, is_estimate = ?3, note = ?5, updated_at = CURRENT_TIMESTAMP
+  `).bind(channel, cost, isEstimate, effectiveFrom, note).run();
+  return json7({ success: true, channel, avg_shipping_cost_thb: cost, effective_from: effectiveFrom });
+}
+__name(putShipping, "putShipping");
+async function recalculateFormulaCosts(env) {
+  await ensureTables(env);
+  const params = await loadCostParams(env);
+  const products = await env.DB.prepare(
+    "SELECT id, slug FROM products WHERE is_active = 1 ORDER BY id"
+  ).all();
+  const updated = [];
+  const skipped = [];
+  for (const p of products.results || []) {
+    const slug = String(p.slug || "");
+    const derived = deriveFormulaCost(params, slug);
+    if (!derived) {
+      skipped.push({ product_id: p.id, slug: p.slug, reason: "no cost formula \u2014 requires owner-verified cost (UNKNOWN otherwise, never zero)" });
+      continue;
+    }
+    await env.DB.prepare(`
+      INSERT INTO cost_model_products (product_id, production_cost_thb, cost_source, is_estimate, effective_from, note, modeled_price_thb)
+      VALUES (?1, ?2, 'formula', 1, ?3, ?4, ?5)
+      ON CONFLICT(product_id, effective_from, cost_source)
+      DO UPDATE SET production_cost_thb = ?2, note = ?4, modeled_price_thb = ?5, updated_at = CURRENT_TIMESTAMP
+    `).bind(p.id, derived.cost, FORMULA_EFFECTIVE_FROM, derived.note, derived.modeledPrice).run();
+    updated.push({
+      product_id: p.id,
+      slug: p.slug,
+      family: derived.family,
+      reference_size: derived.dimsText,
+      production_cost_thb: derived.cost,
+      modeled_price_thb: derived.modeledPrice
+    });
+  }
+  return json7({
+    success: true,
+    effective_from: FORMULA_EFFECTIVE_FROM,
+    params_source: "live D1 pricing_params (+ configurator constants where D1 lacks the key)",
+    updated_count: updated.length,
+    skipped_count: skipped.length,
+    updated,
+    skipped
+  });
+}
+__name(recalculateFormulaCosts, "recalculateFormulaCosts");
+async function deleteRow(env, url) {
+  await ensureTables(env);
+  const table = String(url.searchParams.get("table") || "").trim();
+  const id = Number(url.searchParams.get("id") || "");
+  const tables = {
+    products: "cost_model_products",
+    fees: "cost_model_channel_fees",
+    shipping: "cost_model_shipping"
+  };
+  if (!tables[table]) return err3("INVALID_TABLE", "table must be products, fees, or shipping.");
+  if (!Number.isInteger(id) || id < 1) return err3("INVALID_ID", "id must be a positive integer.");
+  const result = await env.DB.prepare("DELETE FROM " + tables[table] + " WHERE id = ?1").bind(id).run();
+  return json7({ success: true, table: tables[table], id, deleted: result?.meta?.changes ?? null });
+}
+__name(deleteRow, "deleteRow");
+async function handleAdminCostModel(request, env) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+      }
+    });
+  }
+  const auth = await authorizeAdmin6(request, env);
+  if (!auth.ok) return err3("UNAUTHORIZED", auth.error, auth.status);
+  const url = new URL(request.url);
+  const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/cost-model/, "") || "/";
+  let body = null;
+  if (request.method === "PUT" || request.method === "POST") {
+    try {
+      body = await request.json();
+    } catch {
+      return err3("INVALID_JSON", "Request body must be valid JSON.");
+    }
+  }
+  if (request.method === "GET" && sub === "/") return getCostModel(env);
+  if (request.method === "PUT" && sub === "/product") return putProductCost(env, body);
+  if (request.method === "PUT" && sub === "/fees") return putChannelFees(env, body);
+  if (request.method === "PUT" && sub === "/shipping") return putShipping(env, body);
+  if (request.method === "POST" && sub === "/recalculate") return recalculateFormulaCosts(env);
+  if (request.method === "DELETE" && sub === "/row") return deleteRow(env, url);
+  return err3("ROUTE_NOT_FOUND", "Unknown cost-model route: " + request.method + " " + sub, 404);
+}
+__name(handleAdminCostModel, "handleAdminCostModel");
+
+// ../workers/api/shipping.ts
+var shippingSchemaReady = false;
+var shippingSchemaPromise = null;
+function json8(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    }
+  });
+}
+__name(json8, "json");
 function toAmount(v) {
   const n = Number(v);
   if (!Number.isFinite(n) || n < 0) return 0;
@@ -4555,7 +12922,7 @@ async function handleShippingCalculate(request, env) {
     });
   }
   if (request.method !== "GET" && request.method !== "POST") {
-    return json5({ error: "Method not allowed" }, 405);
+    return json8({ error: "Method not allowed" }, 405);
   }
   try {
     let country = "";
@@ -4591,15 +12958,15 @@ async function handleShippingCalculate(request, env) {
       totalQty: qty,
       items
     });
-    return json5({ ok: true, ...quote });
+    return json8({ ok: true, ...quote });
   } catch (e) {
-    return json5({ error: e?.message || "Shipping quote unavailable" }, 500);
+    return json8({ error: e?.message || "Shipping quote unavailable" }, 500);
   }
 }
 __name(handleShippingCalculate, "handleShippingCalculate");
 
 // ../workers/api/admin-shipping.ts
-function json6(body, status = 200) {
+function json9(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -4608,19 +12975,19 @@ function json6(body, status = 200) {
     }
   });
 }
-__name(json6, "json");
+__name(json9, "json");
 function toAmount2(v) {
   return toAmount(v);
 }
 __name(toAmount2, "toAmount");
-function isProductionHost6(hostname) {
+function isProductionHost8(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost6, "isProductionHost");
-function collectRoles7(raw) {
+__name(isProductionHost8, "isProductionHost");
+function collectRoles10(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -4645,21 +13012,21 @@ function collectRoles7(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles7, "collectRoles");
-function hasAdminRole7(rawClaims) {
-  const roles = collectRoles7(rawClaims);
+__name(collectRoles10, "collectRoles");
+function hasAdminRole10(rawClaims) {
+  const roles = collectRoles10(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole7, "hasAdminRole");
-function emailAllowed7(email, env) {
+__name(hasAdminRole10, "hasAdminRole");
+function emailAllowed10(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed7, "emailAllowed");
-async function authorizeAdmin5(request, env) {
+__name(emailAllowed10, "emailAllowed");
+async function authorizeAdmin7(request, env) {
   const host = new URL(request.url).hostname;
   if (host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1")) {
     return { ok: true };
@@ -4671,7 +13038,7 @@ async function authorizeAdmin5(request, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
+      if (hasAdminRole10(raw) || emailAllowed10(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -4687,8 +13054,8 @@ async function authorizeAdmin5(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed7(email, env)) return { ok: true };
-            if (hasAdminRole7(metadata)) return { ok: true };
+            if (emailAllowed10(email, env)) return { ok: true };
+            if (hasAdminRole10(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -4702,7 +13069,7 @@ async function authorizeAdmin5(request, env) {
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const prodHost = isProductionHost6(host);
+  const prodHost = isProductionHost8(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -4711,7 +13078,7 @@ async function authorizeAdmin5(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin5, "authorizeAdmin");
+__name(authorizeAdmin7, "authorizeAdmin");
 function normalizeCountryName(raw, countryCode) {
   const name = String(raw || "").trim();
   if (name) return name;
@@ -4729,8 +13096,8 @@ async function getUsdRatePerThb(env) {
 }
 __name(getUsdRatePerThb, "getUsdRatePerThb");
 async function handleAdminShippingRates(request, env) {
-  const auth = await authorizeAdmin5(request, env);
-  if (!auth.ok) return json6({ error: auth.error }, auth.status);
+  const auth = await authorizeAdmin7(request, env);
+  if (!auth.ok) return json9({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -4774,19 +13141,19 @@ async function handleAdminShippingRates(request, env) {
         updated_at: r.updated_at
       };
     });
-    return json6({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
+    return json9({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "POST" || request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json6({ error: "Invalid JSON body" }, 400);
+      return json9({ error: "Invalid JSON body" }, 400);
     }
     const countryCode = normalizeCountryCode(body.country_code || body.country || "");
     const serviceLevel = normalizeServiceLevel(body.service_level || "express");
     if (!countryCode) {
-      return json6({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
+      return json9({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
     }
     const countryName = normalizeCountryName(body.country_name, countryCode);
     const t1f = toAmount2(body.tier1_first_thb || body.tier1_first || 0);
@@ -4814,7 +13181,7 @@ async function handleAdminShippingRates(request, env) {
         is_active = excluded.is_active,
         updated_at = datetime('now')`
     ).bind(countryCode, serviceLevel, countryName, t1f, t2f, t3f, etaMinDays, etaMaxDays, etaNote, isActive).run();
-    return json6({
+    return json9({
       success: true,
       rate: {
         service_level: serviceLevel,
@@ -4834,17 +13201,17 @@ async function handleAdminShippingRates(request, env) {
     const url = new URL(request.url);
     const countryCode = normalizeCountryCode(url.searchParams.get("country") || "");
     const serviceLevel = normalizeServiceLevel(url.searchParams.get("service_level") || "express");
-    if (!countryCode) return json6({ error: "country query param is required" }, 400);
-    if (countryCode === "OTHER") return json6({ error: "OTHER cannot be deleted" }, 400);
+    if (!countryCode) return json9({ error: "country query param is required" }, 400);
+    if (countryCode === "OTHER") return json9({ error: "OTHER cannot be deleted" }, 400);
     await env.DB.prepare("DELETE FROM shipping_service_rates WHERE country_code = ?1 AND service_level = ?2").bind(countryCode, serviceLevel).run();
-    return json6({ success: true, country_code: countryCode, service_level: serviceLevel });
+    return json9({ success: true, country_code: countryCode, service_level: serviceLevel });
   }
-  return json6({ error: "Method not allowed" }, 405);
+  return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingRates, "handleAdminShippingRates");
 async function handleAdminShippingProductTiers(request, env) {
-  const auth = await authorizeAdmin5(request, env);
-  if (!auth.ok) return json6({ error: auth.error }, auth.status);
+  const auth = await authorizeAdmin7(request, env);
+  if (!auth.ok) return json9({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -4868,19 +13235,19 @@ async function handleAdminShippingProductTiers(request, env) {
       category: String(r.category || ""),
       tier: Number(r.tier || 2)
     }));
-    return json6({ product_tiers: tiers });
+    return json9({ product_tiers: tiers });
   }
   if (request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json6({ error: "Invalid JSON" }, 400);
+      return json9({ error: "Invalid JSON" }, 400);
     }
     const slug = String(body.product_slug || "").trim();
     const tier = Number(body.tier);
-    if (!slug) return json6({ error: "product_slug required" }, 400);
-    if (![1, 2, 3].includes(tier)) return json6({ error: "tier must be 1, 2, or 3" }, 400);
+    if (!slug) return json9({ error: "product_slug required" }, 400);
+    if (![1, 2, 3].includes(tier)) return json9({ error: "tier must be 1, 2, or 3" }, 400);
     await env.DB.prepare(
       `INSERT INTO shipping_product_tiers (product_slug, tier, updated_at)
        VALUES (?1, ?2, datetime('now'))
@@ -4888,14 +13255,14 @@ async function handleAdminShippingProductTiers(request, env) {
          tier = excluded.tier,
          updated_at = datetime('now')`
     ).bind(slug, tier).run();
-    return json6({ success: true, product_slug: slug, tier });
+    return json9({ success: true, product_slug: slug, tier });
   }
-  return json6({ error: "Method not allowed" }, 405);
+  return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
 async function handleAdminShippingAddRates(request, env) {
-  const auth = await authorizeAdmin5(request, env);
-  if (!auth.ok) return json6({ error: auth.error }, auth.status);
+  const auth = await authorizeAdmin7(request, env);
+  if (!auth.ok) return json9({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -4923,34 +13290,34 @@ async function handleAdminShippingAddRates(request, env) {
       const thb = toAmount2(r.add_thb);
       addRates[t] = { add_thb: thb, add_usd: toAmount2(thb * usdRate) };
     }
-    return json6({ add_rates: addRates, usd_rate_per_thb: usdRate });
+    return json9({ add_rates: addRates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json6({ error: "Invalid JSON" }, 400);
+      return json9({ error: "Invalid JSON" }, 400);
     }
     const tier = Number(body.tier);
     const addThb = toAmount2(body.add_thb);
-    if (![1, 2, 3].includes(tier)) return json6({ error: "tier must be 1, 2, or 3" }, 400);
+    if (![1, 2, 3].includes(tier)) return json9({ error: "tier must be 1, 2, or 3" }, 400);
     await env.DB.prepare(
       `INSERT INTO shipping_add_rates (tier, add_thb, updated_at)
        VALUES (?1, ?2, datetime('now'))
        ON CONFLICT(tier) DO UPDATE SET
          add_thb = excluded.add_thb, updated_at = datetime('now')`
     ).bind(tier, addThb).run();
-    return json6({ success: true, tier, add_thb: addThb });
+    return json9({ success: true, tier, add_thb: addThb });
   }
-  return json6({ error: "Method not allowed" }, 405);
+  return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingAddRates, "handleAdminShippingAddRates");
 
 // ../workers/api/admin-quotes.ts
 var quoteSchemaReady = false;
 var quoteSchemaPromise = null;
-function json7(body, status = 200) {
+function json10(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -4961,20 +13328,20 @@ function json7(body, status = 200) {
     }
   });
 }
-__name(json7, "json");
-function isProductionHost7(hostname) {
+__name(json10, "json");
+function isProductionHost9(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost7, "isProductionHost");
+__name(isProductionHost9, "isProductionHost");
 function isPreviewHashHost(hostname) {
   if (!hostname) return false;
   return /^[a-f0-9]{8,}\.mildmate-new\.pages\.dev$/i.test(hostname);
 }
 __name(isPreviewHashHost, "isPreviewHashHost");
-function collectRoles8(raw) {
+function collectRoles11(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -4999,21 +13366,21 @@ function collectRoles8(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles8, "collectRoles");
-function hasAdminRole8(raw) {
-  const roles = collectRoles8(raw);
+__name(collectRoles11, "collectRoles");
+function hasAdminRole11(raw) {
+  const roles = collectRoles11(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole8, "hasAdminRole");
-function emailAllowed8(email, env) {
+__name(hasAdminRole11, "hasAdminRole");
+function emailAllowed11(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed8, "emailAllowed");
-async function authorizeAdmin6(request, env) {
+__name(emailAllowed11, "emailAllowed");
+async function authorizeAdmin8(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   const host = new URL(request.url).hostname;
@@ -5021,7 +13388,7 @@ async function authorizeAdmin6(request, env) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) return { ok: true };
+      if (hasAdminRole11(raw) || emailAllowed11(verified.payload.email || "", env)) return { ok: true };
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -5033,8 +13400,8 @@ async function authorizeAdmin6(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed8(email, env)) return { ok: true };
-            if (hasAdminRole8(metadata)) return { ok: true };
+            if (emailAllowed11(email, env)) return { ok: true };
+            if (hasAdminRole11(metadata)) return { ok: true };
           }
         } catch {
         }
@@ -5047,14 +13414,14 @@ async function authorizeAdmin6(request, env) {
   const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
-  const prodHost = isProductionHost7(host);
+  const prodHost = isProductionHost9(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
   if (!configuredSecret) return { ok: true };
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin6, "authorizeAdmin");
+__name(authorizeAdmin8, "authorizeAdmin");
 async function ensureQuoteSchema(env) {
   if (quoteSchemaReady) return;
   if (!quoteSchemaPromise) {
@@ -5074,6 +13441,7 @@ async function ensureQuoteSchema(env) {
       if (!existing.has("status")) alters.push("ALTER TABLE custom_quotes ADD COLUMN status TEXT DEFAULT 'pending'");
       if (!existing.has("quoted_price")) alters.push("ALTER TABLE custom_quotes ADD COLUMN quoted_price INTEGER");
       if (!existing.has("quoted_price_usd")) alters.push("ALTER TABLE custom_quotes ADD COLUMN quoted_price_usd INTEGER");
+      if (!existing.has("free_shipping")) alters.push("ALTER TABLE custom_quotes ADD COLUMN free_shipping INTEGER DEFAULT 0");
       if (!existing.has("expires_at")) alters.push("ALTER TABLE custom_quotes ADD COLUMN expires_at DATETIME");
       if (!existing.has("created_at")) alters.push("ALTER TABLE custom_quotes ADD COLUMN created_at DATETIME");
       for (const sql of alters) await env.DB.prepare(sql).run();
@@ -5146,66 +13514,228 @@ async function sendMagicLinkEmail(env, request, quote) {
   const prettyProduct = product.replace(/\b\w/g, (c) => c.toUpperCase()) || "Custom Product";
   const expires = quote.expires_at ? /* @__PURE__ */ new Date(String(quote.expires_at).replace(" ", "T") + "Z") : null;
   const expiryText = expires && !isNaN(expires.getTime()) ? expires.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : null;
-  const priceLine = hasUsdPrice ? `$${priceUsd.toLocaleString()} USD (approx. \u0E3F${priceThb.toLocaleString()} THB)` : `\u0E3F${priceThb.toLocaleString()} THB`;
-  const body = [
-    `Hi ${quote.customer_name || "there"},`,
+  let dimStr = "\u2014";
+  let shapeLine = "";
+  try {
+    const d = JSON.parse(String(quote.dimensions || "{}"));
+    if (d && typeof d === "object") {
+      const unit = d.unit || "cm";
+      if (d.shape_code || d.shape_name || d.values) {
+        const shapeCode = d.shape_code ? String(d.shape_code) : "";
+        const shapeName = d.shape_name ? String(d.shape_name) : "";
+        if (shapeCode || shapeName) {
+          shapeLine = `Boat Mattress Shape: ${shapeCode}${shapeCode && shapeName ? ". " : ""}${shapeName}`.trim();
+        }
+        if (d.values && typeof d.values === "object") {
+          const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+          const keys = Object.keys(d.values).sort((a, b) => {
+            const ai = order.indexOf(a);
+            const bi = order.indexOf(b);
+            if (ai === -1 && bi === -1) return a.localeCompare(b);
+            if (ai === -1) return 1;
+            if (bi === -1) return -1;
+            return ai - bi;
+          });
+          dimStr = keys.map((k) => `${k}: ${d.values[k]} ${unit}`).join("\n");
+        }
+      } else if (d.w && d.l) {
+        dimStr = d.d ? `${d.w} \xD7 ${d.l} \xD7 ${d.d} ${unit}` : `${d.w} \xD7 ${d.l} ${unit}`;
+      }
+    }
+  } catch {
+    dimStr = String(quote.dimensions || "\u2014");
+  }
+  const specsLines = [`Product: ${prettyProduct}`];
+  if (shapeLine) specsLines.push(shapeLine);
+  specsLines.push(`Dimensions: ${dimStr}`);
+  if (quote.fabric) specsLines.push(`Fabric: ${quote.fabric}`);
+  if (quote.color) specsLines.push(`Colour: ${quote.color}`);
+  const priceLine = hasUsdPrice ? `$${priceUsd.toLocaleString()} USD` : `\u0E3F${priceThb.toLocaleString()} THB`;
+  const esc = /* @__PURE__ */ __name((s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"), "esc");
+  const customerName = String(quote.customer_name || "there").trim() || "there";
+  const headingText = "Ready to Order?";
+  const ctaText = "View Quote & Order";
+  const specsText = specsLines.join("\n");
+  const expiryLineText = expiryText ? `
+This quote is valid until ${expiryText}.
+` : "";
+  const textBody = [
+    `Hi ${customerName},`,
     "",
-    `Your custom quote is ready: ${quote.quote_id}`,
-    `Product: ${prettyProduct}`,
-    `Price: ${priceLine}`,
-    expiryText ? `Valid until: ${expiryText}` : "",
+    "Your custom quote is ready.",
     "",
-    "Use this secure link to add your quote directly to cart:",
-    quoteLink,
+    "\u2501\u2501\u2501 Your Order \u2501\u2501\u2501",
+    specsText,
     "",
-    "If you have any questions, reply to this email and our team will help.",
+    `Confirmed Price: ${priceLine}`,
+    "Shipping: Included for Thailand orders / Calculated at checkout (all other destinations).",
+    "Made to order within 5\u20137 business days before dispatch.",
     "",
-    "MildMate Team"
+    "Please review your measurements carefully before ordering \u2014 this item will be made specifically for you.",
+    "",
+    "\u2501\u2501\u2501 Ready to Order? \u2501\u2501\u2501",
+    `${ctaText}: ${quoteLink}`,
+    expiryLineText,
+    "How to Order:",
+    "1. Open your custom quote.",
+    "2. Click Add to Cart.",
+    "3. Proceed to Checkout and complete payment.",
+    "",
+    "If the button doesn't work, copy and paste the link above into your browser.",
+    "",
+    "Need help or have a measurement question? Simply reply to this email \u2014 we're here to help.",
+    "",
+    "\u2014 The MildMate Team"
   ].filter(Boolean).join("\n");
+  const ctaUrl = esc(quoteLink);
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no">
+<title>${esc(ctaText)} \u2014 MildMate Quote ${esc(String(quote.quote_id || ""))}</title>
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;color:#1e293b;-webkit-text-size-adjust:100%">
+<span style="display:none;visibility:hidden;mso-hide:all;font-size:1px;color:#f8fafc;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden">${esc(headingText)} Open your MildMate quote, review your custom details, and complete your order in three quick steps.</span>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f8fafc">
+<tr><td align="center" style="padding:24px 12px">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
+<tr><td style="padding:28px 24px 8px 24px;text-align:center">
+<div style="font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#2c96f4">MildMate Custom Quote</div>
+<h1 style="margin:8px 0 4px 0;font-size:22px;line-height:1.3;font-weight:700;color:#0f172a">Hi ${esc(customerName)}, your quote is ready</h1>
+<p style="margin:0;font-size:14px;color:#64748b">Quote ID: ${esc(String(quote.quote_id || ""))}</p>
+</td></tr>
+<tr><td style="padding:16px 24px">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+<tr><td style="padding:16px 18px">
+<div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Your Order</div>
+${specsLines.map(
+    (l) => `<div style="font-size:14px;color:#1e293b;line-height:1.55;margin:0"><strong style="color:#0f172a">${l.split(":")[0]}</strong>:${l.indexOf(":") >= 0 ? esc(l.slice(l.indexOf(":") + 1)) : ""}</div>`
+  ).join("")}
+<div style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:16px;font-weight:700;color:#0f172a">Confirmed Price: ${esc(priceLine)}</div>
+<div style="font-size:13px;color:#64748b;line-height:1.5;margin-top:6px">Shipping: Included for Thailand orders \xB7 Calculated at checkout (all other destinations).</div>
+<div style="font-size:13px;color:#64748b;line-height:1.5;margin-top:4px">Made to order within 5\u20137 business days before dispatch.</div>
+</td></tr>
+</table>
+</td></tr>
+<tr><td align="center" style="padding:20px 24px 8px 24px">
+<div style="font-size:13px;font-weight:700;color:#0f172a;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px">${esc(headingText)}</div>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+<tr><td align="center" style="border-radius:8px;background:#2c96f4">
+<a href="${ctaUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:18px 36px;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;line-height:1.2;letter-spacing:0.01em">${esc(ctaText)}</a>
+</td></tr>
+</table>
+<div style="font-size:12px;color:#64748b;margin-top:14px;line-height:1.5;word-break:break-all">Or copy this link:<br><a href="${ctaUrl}" target="_blank" rel="noopener" style="color:#1a7fd4;text-decoration:underline">${esc(quoteLink)}</a></div>
+</td></tr>
+<tr><td style="padding:20px 24px 12px 24px">
+<div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:10px">How to Order</div>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+${[
+    { n: "1", label: "Open your custom quote using the button above." },
+    { n: "2", label: "Click <strong>Add to Cart</strong> on the quote page." },
+    { n: "3", label: "Proceed to <strong>Checkout</strong> and complete payment." }
+  ].map(
+    (s) => `<tr><td width="32" valign="top" style="padding:6px 0"><div style="display:inline-block;width:24px;height:24px;line-height:24px;border-radius:12px;background:#2c96f4;color:#ffffff;font-size:13px;font-weight:700;text-align:center">${s.n}</div></td><td style="padding:6px 0 6px 10px;font-size:14px;color:#1e293b;line-height:1.5">${s.label}</td></tr>`
+  ).join("")}
+</table>
+</td></tr>
+${expiryText ? `<tr><td style="padding:8px 24px 24px 24px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px"><tr><td style="padding:12px 16px;font-size:13px;color:#1e3a8a;line-height:1.45">This quote is valid until <strong>${esc(expiryText)}</strong>. After that, please request a fresh quote.</td></tr></table></td></tr>` : ""}
+<tr><td style="padding:8px 24px 24px 24px;font-size:12px;color:#64748b;line-height:1.5;text-align:center">
+Need help or have a measurement question? Simply reply to this email \u2014 we're here to help.<br><br>
+<strong style="color:#0f172a">The MildMate Team</strong><br>
+<a href="${esc(quoteLink)}" target="_blank" rel="noopener" style="color:#1a7fd4;text-decoration:underline">${esc(quoteLink)}</a>
+</td></tr>
+</table>
+<div style="font-size:11px;color:#94a3b8;margin-top:14px;text-align:center">Sent because you requested a custom quote on mildmate.com.</div>
+</td></tr>
+</table>
+</body>
+</html>`;
   const result = await sendEmail(env, {
     to: String(quote.email).trim().toLowerCase(),
     from: env.QUOTE_FROM_EMAIL || "MildMate <orders@mildmate.com>",
     replyTo: env.QUOTE_REPLY_TO || "orders@mildmate.com",
-    subject: `Your MildMate quote ${quote.quote_id} is ready`,
-    text: body
+    subject: `${ctaText} \u2014 your MildMate Quote ${quote.quote_id}`,
+    text: textBody,
+    html: htmlBody
   });
   return { success: result.success, error: result.error };
 }
 __name(sendMagicLinkEmail, "sendMagicLinkEmail");
 async function handleAdminQuotes(request, env) {
-  if (request.method === "OPTIONS") return json7({ ok: true });
-  const auth = await authorizeAdmin6(request, env);
-  if (!auth.ok) return json7({ error: auth.error }, auth.status);
+  if (request.method === "OPTIONS") return json10({ ok: true });
+  const auth = await authorizeAdmin8(request, env);
+  if (!auth.ok) return json10({ error: auth.error }, auth.status);
   await ensureQuoteSchema(env);
   const db = env.DB;
   const url = new URL(request.url);
   const method = request.method;
   if (method === "GET") {
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
-    const statusFilter = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const q = String(url.searchParams.get("q") || "").trim();
+    const rawStatus = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const archivedParam = String(url.searchParams.get("archived") || "").trim().toLowerCase();
+    const fromDate = String(url.searchParams.get("from") || "").trim();
+    const toDate = String(url.searchParams.get("to") || "").trim();
+    const sort = String(url.searchParams.get("sort") || "created_at_desc").trim().toLowerCase();
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const requestedPageSize = Number(url.searchParams.get("page_size") || 25);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+    const allowedPageSizes = /* @__PURE__ */ new Set([10, 25, 50, 100]);
+    const pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 25;
+    const offset = (page - 1) * pageSize;
     const allowedStatus = /* @__PURE__ */ new Set(["pending", "approved", "rejected", "expired", "archived"]);
+    const statuses = rawStatus ? rawStatus.split(",").map((s) => s.trim().toLowerCase()).filter((s) => allowedStatus.has(s)) : [];
+    const archivedMode = archivedParam === "all" || archivedParam === "archived" || archivedParam === "active" ? archivedParam : "active";
     const where = [];
     const binds = [];
-    if (statusFilter && statusFilter !== "all" && allowedStatus.has(statusFilter)) {
-      where.push("LOWER(COALESCE(status,'pending')) = ?");
-      binds.push(statusFilter);
-    } else if (!statusFilter || statusFilter === "all") {
+    if (archivedMode === "active") {
       where.push("LOWER(COALESCE(status,'pending')) != 'archived'");
+    } else if (archivedMode === "archived") {
+      where.push("LOWER(COALESCE(status,'pending')) = 'archived'");
+    }
+    if (statuses.length) {
+      where.push(`LOWER(COALESCE(status,'pending')) IN (${statuses.map(() => "?").join(",")})`);
+      binds.push(...statuses);
+    }
+    if (fromDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) >= ?");
+      binds.push(fromDate);
+    }
+    if (toDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) <= ?");
+      binds.push(toDate);
+    }
+    if (q) {
+      const qLike = `%${q}%`;
+      where.push(`(
+        quote_id LIKE ?
+        OR customer_name LIKE ?
+        OR email LIKE ?
+        OR telephone LIKE ?
+        OR product_slug LIKE ?
+        OR fabric LIKE ?
+        OR color LIKE ?
+      )`);
+      binds.push(qLike, qLike, qLike, qLike, qLike, qLike, qLike);
     }
     const whereSql = where.length ? ` WHERE ${where.join(" AND ")}` : "";
-    const limit = 50;
-    const offset = (page - 1) * limit;
-    const rows = await db.prepare(
-      `SELECT id, quote_id, customer_name, email, telephone, address, product_slug, dimensions, fabric, color,
-              status, quoted_price, quoted_price_usd, expires_at, created_at
-       FROM custom_quotes
-       ${whereSql}
-       ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC
-       LIMIT ${limit} OFFSET ${offset}`
-    ).bind(...binds).all();
+    const orderSql = sort === "created_at_asc" ? "ORDER BY COALESCE(created_at, datetime('now')) ASC, id ASC" : "ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC";
     const totalRow = await db.prepare(
       `SELECT COUNT(*) as cnt FROM custom_quotes ${whereSql}`
     ).bind(...binds).first();
+    const total = Number(totalRow?.cnt || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const rows = await db.prepare(
+      `SELECT id, quote_id, customer_name, email, telephone, address, product_slug, dimensions, fabric, color,
+              status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
+       FROM custom_quotes
+       ${whereSql}
+       ${orderSql}
+       LIMIT ?
+       OFFSET ?`
+    ).bind(...binds, pageSize, offset).all();
     const quotes = (rows.results || []).map((r) => {
       let dims = r.dimensions;
       try {
@@ -5230,17 +13760,27 @@ async function handleAdminQuotes(request, env) {
         quoted_price_thb: priceThb,
         quoted_price_usd: priceUsd,
         quoted_price_currency: hasExplicitUsd ? "USD" : priceThb ? "THB" : null,
+        free_shipping: Number(r.free_shipping || 0) === 1,
         expires_at: r.expires_at || null,
         created_at: r.created_at || null,
         size_text: dims && typeof dims === "object" ? dims.size_text || "" : "",
         quote_url: buildQuoteLink(request, r.quote_id)
       };
     });
-    return json7({
+    return json10({
       quotes,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages
+      },
+      // Backward compatibility
       page,
-      total: totalRow?.cnt || 0,
-      status: statusFilter || "all"
+      total,
+      status: rawStatus || "all",
+      archived: archivedMode,
+      sort
     });
   }
   if (method === "POST") {
@@ -5248,7 +13788,7 @@ async function handleAdminQuotes(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json7({ error: "Invalid JSON" }, 400);
+      return json10({ error: "Invalid JSON" }, 400);
     }
     const customerName = String(body.customer_name || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
@@ -5264,6 +13804,7 @@ async function handleAdminQuotes(request, env) {
     const status = String(body.status || "pending").trim().toLowerCase();
     const quoteCurrency = String(body.quoted_price_currency || "").trim().toUpperCase();
     const isUsdQuote = quoteCurrency === "USD";
+    const freeShipping = body.free_shipping === true || body.free_shipping === 1 || body.free_shipping === "1";
     let quotedPriceThb = null;
     let quotedPriceUsd = null;
     if (isUsdQuote) {
@@ -5283,22 +13824,22 @@ async function handleAdminQuotes(request, env) {
     }
     const expiresAt = normalizeDateInput(body.expires_at);
     const sendEmailNow = !!body.send_email;
-    if (!customerName) return json7({ error: "customer_name is required" }, 400);
-    if (!email || !email.includes("@")) return json7({ error: "Valid email is required" }, 400);
-    if (!productSlug) return json7({ error: "product_slug is required" }, 400);
-    if (!dimensions) return json7({ error: "dimensions or size_text is required" }, 400);
+    if (!customerName) return json10({ error: "customer_name is required" }, 400);
+    if (!email || !email.includes("@")) return json10({ error: "Valid email is required" }, 400);
+    if (!productSlug) return json10({ error: "product_slug is required" }, 400);
+    if (!dimensions) return json10({ error: "dimensions or size_text is required" }, 400);
     if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) {
-      return json7({ error: "Invalid status" }, 400);
+      return json10({ error: "Invalid status" }, 400);
     }
     if (status === "approved" && (!quotedPriceThb || quotedPriceThb <= 0)) {
-      return json7({ error: "A price (THB or USD) is required for approved status" }, 400);
+      return json10({ error: "A price (THB or USD) is required for approved status" }, 400);
     }
     const quoteId = await generateQuoteId(db);
     await db.prepare(
       `INSERT INTO custom_quotes
-        (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, status, quoted_price, quoted_price_usd, expires_at, created_at)
+        (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at)
        VALUES
-        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, datetime('now'))`
+        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, datetime('now'))`
     ).bind(
       quoteId,
       customerName,
@@ -5312,6 +13853,7 @@ async function handleAdminQuotes(request, env) {
       status,
       quotedPriceThb,
       quotedPriceUsd,
+      freeShipping ? 1 : 0,
       expiresAt
     ).run();
     let emailStatus = { success: false, skipped: true };
@@ -5327,7 +13869,7 @@ async function handleAdminQuotes(request, env) {
         expires_at: expiresAt
       });
     }
-    return json7({
+    return json10({
       success: true,
       quote_id: quoteId,
       quote_url: buildQuoteLink(request, quoteId),
@@ -5340,21 +13882,21 @@ async function handleAdminQuotes(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json7({ error: "Invalid JSON" }, 400);
+      return json10({ error: "Invalid JSON" }, 400);
     }
     const quoteId = String(body.quote_id || "").trim();
-    if (!quoteId) return json7({ error: "quote_id is required" }, 400);
+    if (!quoteId) return json10({ error: "quote_id is required" }, 400);
     const current = await db.prepare(
       `SELECT quote_id, dimensions, status, quoted_price, quoted_price_usd
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
-    if (!current) return json7({ error: "Quote not found" }, 404);
+    if (!current) return json10({ error: "Quote not found" }, 404);
     const updates = [];
     const binds = [];
     const status = body.status != null ? String(body.status).trim().toLowerCase() : null;
     if (status != null) {
-      if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) return json7({ error: "Invalid status" }, 400);
+      if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) return json10({ error: "Invalid status" }, 400);
       updates.push("status = ?");
       binds.push(status);
     }
@@ -5364,7 +13906,7 @@ async function handleAdminQuotes(request, env) {
     const isUsdUpdate = quoteCurrency === "USD";
     if (isUsdUpdate && body.quoted_price_usd != null && body.quoted_price_usd !== "") {
       priceUsd = Math.round(Number(body.quoted_price_usd));
-      if (!priceUsd || priceUsd <= 0) return json7({ error: "quoted_price_usd must be a positive number" }, 400);
+      if (!priceUsd || priceUsd <= 0) return json10({ error: "quoted_price_usd must be a positive number" }, 400);
       const rate = await getUsdRate(db);
       priceThb = Math.round(priceUsd * rate);
       updates.push("quoted_price = ?");
@@ -5373,7 +13915,7 @@ async function handleAdminQuotes(request, env) {
       binds.push(priceUsd);
     } else if (body.quoted_price_thb != null && body.quoted_price_thb !== "") {
       priceThb = Math.round(Number(body.quoted_price_thb));
-      if (!priceThb || priceThb <= 0) return json7({ error: "quoted_price_thb must be a positive number" }, 400);
+      if (!priceThb || priceThb <= 0) return json10({ error: "quoted_price_thb must be a positive number" }, 400);
       updates.push("quoted_price = ?");
       binds.push(priceThb);
       updates.push("quoted_price_usd = NULL");
@@ -5391,6 +13933,11 @@ async function handleAdminQuotes(request, env) {
       updates.push("color = ?");
       binds.push(String(body.color || "").trim() || null);
     }
+    if (body.free_shipping !== void 0) {
+      const freeShipping = body.free_shipping === true || body.free_shipping === 1 || body.free_shipping === "1";
+      updates.push("free_shipping = ?");
+      binds.push(freeShipping ? 1 : 0);
+    }
     if (body.dimensions !== void 0 || body.size_text !== void 0) {
       let dims = {};
       if (body.dimensions !== void 0) {
@@ -5398,7 +13945,7 @@ async function handleAdminQuotes(request, env) {
           try {
             dims = JSON.parse(body.dimensions);
           } catch {
-            return json7({ error: "Invalid dimensions JSON" }, 400);
+            return json10({ error: "Invalid dimensions JSON" }, 400);
           }
         } else if (body.dimensions && typeof body.dimensions === "object") {
           dims = body.dimensions;
@@ -5423,9 +13970,9 @@ async function handleAdminQuotes(request, env) {
     const targetStatus = status || String(current.status || "pending").toLowerCase();
     const finalPriceThb = priceThb != null ? priceThb : Number(current.quoted_price || 0);
     if (targetStatus === "approved" && (!finalPriceThb || finalPriceThb <= 0)) {
-      return json7({ error: "A price (THB or USD) is required for approved status" }, 400);
+      return json10({ error: "A price (THB or USD) is required for approved status" }, 400);
     }
-    if (!updates.length && !body.send_email) return json7({ error: "No update fields provided" }, 400);
+    if (!updates.length && !body.send_email) return json10({ error: "No update fields provided" }, 400);
     if (updates.length) {
       await db.prepare(`UPDATE custom_quotes SET ${updates.join(", ")} WHERE quote_id = ?`).bind(...binds, quoteId).run();
     }
@@ -5434,25 +13981,25 @@ async function handleAdminQuotes(request, env) {
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
-    if (!row) return json7({ error: "Quote not found" }, 404);
+    if (!row) return json10({ error: "Quote not found" }, 404);
     let emailStatus = { success: false, skipped: true };
     if (body.send_email) {
       emailStatus = await sendMagicLinkEmail(env, request, row);
       if (!emailStatus.success) {
-        return json7({
+        return json10({
           error: emailStatus.error || "Failed to send quote email",
           quote_id: quoteId
         }, 400);
       }
     }
-    return json7({
+    return json10({
       success: true,
       quote_id: quoteId,
       quote_url: buildQuoteLink(request, quoteId),
       email_sent: !!emailStatus.success
     });
   }
-  return json7({ error: "Method not allowed" }, 405);
+  return json10({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminQuotes, "handleAdminQuotes");
 
@@ -5614,7 +14161,7 @@ async function handleDiscountClaim(request, env) {
 __name(handleDiscountClaim, "handleDiscountClaim");
 
 // ../workers/api/admin-contacts.ts
-function json8(body, status = 200) {
+function json11(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -5623,8 +14170,8 @@ function json8(body, status = 200) {
     }
   });
 }
-__name(json8, "json");
-function collectRoles9(raw) {
+__name(json11, "json");
+function collectRoles12(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -5649,35 +14196,35 @@ function collectRoles9(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles9, "collectRoles");
-function hasAdminRole9(raw) {
-  const roles = collectRoles9(raw);
+__name(collectRoles12, "collectRoles");
+function hasAdminRole12(raw) {
+  const roles = collectRoles12(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole9, "hasAdminRole");
-function emailAllowed9(email, env) {
+__name(hasAdminRole12, "hasAdminRole");
+function emailAllowed12(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed9, "emailAllowed");
-function isProductionHost8(hostname) {
+__name(emailAllowed12, "emailAllowed");
+function isProductionHost10(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost8, "isProductionHost");
-async function authorizeAdmin7(request, env) {
+__name(isProductionHost10, "isProductionHost");
+async function authorizeAdmin9(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) return { ok: true };
+      if (hasAdminRole12(raw) || emailAllowed12(verified.payload.email || "", env)) return { ok: true };
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -5689,8 +14236,8 @@ async function authorizeAdmin7(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed9(email, env)) return { ok: true };
-            if (hasAdminRole9(metadata)) return { ok: true };
+            if (emailAllowed12(email, env)) return { ok: true };
+            if (hasAdminRole12(metadata)) return { ok: true };
           }
         } catch (e) {
         }
@@ -5702,17 +14249,17 @@ async function authorizeAdmin7(request, env) {
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost8(host);
+  const prodHost = isProductionHost10(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
   if (!configuredSecret) return { ok: true };
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin7, "authorizeAdmin");
+__name(authorizeAdmin9, "authorizeAdmin");
 async function handleAdminContacts(request, env) {
-  const auth = await authorizeAdmin7(request, env);
-  if (!auth.ok) return json8({ error: auth.error }, auth.status);
+  const auth = await authorizeAdmin9(request, env);
+  if (!auth.ok) return json11({ error: auth.error }, auth.status);
   const url = new URL(request.url);
   const method = request.method;
   const db = env.DB;
@@ -5728,7 +14275,7 @@ async function handleAdminContacts(request, env) {
     const totalRow = await db.prepare(
       "SELECT COUNT(*) as cnt FROM contacts" + (onlySubscribed ? " WHERE is_subscribed = 1" : "")
     ).first();
-    return json8({
+    return json11({
       contacts: results,
       total: totalRow?.cnt || 0,
       page,
@@ -5740,71 +14287,91 @@ async function handleAdminContacts(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json8({ error: "Invalid JSON" }, 400);
+      return json11({ error: "Invalid JSON" }, 400);
     }
     const email = (body.email || "").trim().toLowerCase();
-    if (!email) return json8({ error: "Email required" }, 400);
+    if (!email) return json11({ error: "Email required" }, 400);
     if (body.unsubscribe !== void 0 && body.unsubscribe) {
       await db.prepare("UPDATE contacts SET is_subscribed = 0, sources = TRIM(REPLACE(REPLACE(REPLACE(sources, ',subscribe', ''), 'subscribe,', ''), 'subscribe', ''), ','), last_seen = datetime('now') WHERE email = ?").bind(email).run();
-      return json8({ success: true, message: "Unsubscribed" });
+      return json11({ success: true, message: "Unsubscribed" });
     }
     if (body.name) {
       await db.prepare("UPDATE contacts SET name = ?, last_seen = datetime('now') WHERE email = ?").bind(body.name, email).run();
-      return json8({ success: true });
+      return json11({ success: true });
     }
-    return json8({ error: "No valid update field" }, 400);
+    return json11({ error: "No valid update field" }, 400);
   }
-  return json8({ error: "Method not allowed" }, 405);
+  return json11({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminContacts, "handleAdminContacts");
 
-// ../workers/api/color-inventory.ts
-async function handleColorInventory(request, env) {
-  const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=60" };
-  if (request.method === "OPTIONS") return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
-  try {
-    const rows = await env.DB.prepare("SELECT fabric, color, in_stock FROM fabric_color_inventory ORDER BY fabric, color").all();
-    return new Response(JSON.stringify({ inventory: rows.results || [] }), { headers });
-  } catch (e) {
-    return new Response(JSON.stringify({ inventory: [] }), { headers });
-  }
-}
-
-// ../workers/api/admin-color-inventory.ts
-async function handleAdminColorInventory(request, env) {
-  const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
-  if (request.method === "OPTIONS") return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" } });
-  const hostname = (request.headers.get("Host") || "").toLowerCase();
-  const isProd = hostname === "www.mildmate.com" || hostname === "mildmate.com" || hostname.endsWith(".mildmate.com");
-  if (request.method === "PUT" || request.method === "GET") {
-    const authHeader = request.headers.get("Authorization") || "";
-    if (authHeader.startsWith("Bearer ")) {
-      const verified = await verifyClerkJwt(request, env);
-      if (!verified.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
-    } else if (isProd) {
-      const secret = (request.headers.get("X-Admin-Secret") || "").trim();
-      const expected = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-      if (!secret || !expected || secret !== expected) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
-    }
-  }
-  const db = env.DB;
-  if (request.method === "GET") {
-    const rows = await db.prepare("SELECT fabric, color, in_stock, updated_at FROM fabric_color_inventory ORDER BY fabric, color").all();
-    return new Response(JSON.stringify({ inventory: rows.results || [] }), { headers });
-  }
-  if (request.method === "PUT") {
-    let body;
-    try { body = await request.json(); } catch { return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers }); }
-    if (!Array.isArray(body.updates) || body.updates.length === 0) return new Response(JSON.stringify({ error: "updates array required" }), { status: 400, headers });
-    for (const item of body.updates) {
-      await db.prepare("INSERT INTO fabric_color_inventory (fabric, color, in_stock, updated_at) VALUES (?, ?, ?, datetime('now')) ON CONFLICT(fabric, color) DO UPDATE SET in_stock = excluded.in_stock, updated_at = excluded.updated_at").bind(String(item.fabric), String(item.color), item.in_stock ? 1 : 0).run();
-    }
-    return new Response(JSON.stringify({ success: true, updated: body.updates.length }), { headers });
-  }
-  return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
-}
-
 // ../workers/api/admin-promo.ts
+function isProductionHost11(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
+}
+__name(isProductionHost11, "isProductionHost");
+function hasAdminRole13(raw) {
+  if (!raw) return false;
+  const candidates = [];
+  if (raw.role) candidates.push(raw.role);
+  if (raw.roles) candidates.push(raw.roles);
+  if (raw.public_metadata?.role) candidates.push(raw.public_metadata.role);
+  if (raw.publicMetadata?.role) candidates.push(raw.publicMetadata.role);
+  if (raw.metadata?.role) candidates.push(raw.metadata.role);
+  if (raw.organization_role) candidates.push(raw.organization_role);
+  if (raw.org_role) candidates.push(raw.org_role);
+  const flat = [];
+  for (const c of candidates) {
+    if (Array.isArray(c)) flat.push(...c.map(String));
+    else if (typeof c === "string") flat.push(c);
+  }
+  return flat.some((v) => {
+    const r = String(v).toLowerCase();
+    return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
+  });
+}
+__name(hasAdminRole13, "hasAdminRole");
+function emailAllowed13(email, env) {
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return !!email && allow.includes(email.toLowerCase());
+}
+__name(emailAllowed13, "emailAllowed");
+async function authorizeAdmin10(request, env) {
+  const hostname = request.headers.get("Host") || "";
+  if (!isProductionHost11(hostname)) return { ok: true };
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
+    const raw = verified.payload?.raw || {};
+    if (hasAdminRole13(raw)) return { ok: true };
+    const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
+    if (emailAllowed13(jwtEmail, env)) return { ok: true };
+    const sub = String(verified.payload?.sub || "").trim();
+    const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
+    if (sub && clerkKey) {
+      try {
+        const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+          headers: { Authorization: "Bearer " + clerkKey }
+        });
+        if (clerkResp.ok) {
+          const user = await clerkResp.json();
+          const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
+          const metadata = user.public_metadata || {};
+          if (emailAllowed13(email, env) || hasAdminRole13(metadata)) return { ok: true };
+        }
+      } catch {
+      }
+    }
+    return { ok: false, status: 403, error: "Forbidden: admin role required" };
+  }
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const expectedSecret = String(env.ADMIN_SECRET || "").trim();
+  if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
+}
+__name(authorizeAdmin10, "authorizeAdmin");
 async function handleAdminPromo(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -5815,31 +14382,17 @@ async function handleAdminPromo(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  // Auth: only write ops need Bearer/Secret — GET is covered by admin middleware cookie gate
-  const _promoHostname = (request.headers.get("Host") || "").toLowerCase();
-  const _promoProdHost = _promoHostname === "www.mildmate.com" || _promoHostname === "mildmate.com" || _promoHostname.endsWith(".mildmate.com");
+  const auth = await authorizeAdmin10(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
+  }
   const db = env.DB;
   const url = new URL(request.url);
   const method = request.method;
-  if (method === "POST" || method === "DELETE") {
-    const _promoAuthHeader2 = request.headers.get("Authorization") || "";
-    if (_promoAuthHeader2.startsWith("Bearer ")) {
-      const _promoVerified2 = await verifyClerkJwt(request, env);
-      if (!_promoVerified2.valid) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
-      }
-    } else if (_promoProdHost) {
-      const _promoSecret2 = (request.headers.get("X-Admin-Secret") || "").trim();
-      const _promoExpected2 = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-      if (!_promoSecret2 || !_promoExpected2 || _promoSecret2 !== _promoExpected2) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
-      }
-    }
-  }
   if (method === "GET") {
     const rows = await db.prepare(`
       SELECT
-        p.id, p.code, p.discount_pct, p.free_shipping, p.order_minimum_usd, p.duration_days,
+        p.id, p.code, p.discount_pct, p.free_shipping, p.order_minimum_thb, p.duration_days,
         p.max_uses, p.use_count, p.per_email_limit, p.is_active,
         p.created_by, p.created_at, p.expires_at,
         (SELECT COUNT(*) FROM promo_redemptions pr WHERE pr.promo_id = p.id) as total_redemptions
@@ -5871,6 +14424,7 @@ async function handleAdminPromo(request, env) {
     const {
       code,
       discount_pct,
+      free_shipping = 0,
       order_minimum_thb = 0,
       duration_days = 7,
       max_uses = 1,
@@ -5900,11 +14454,12 @@ async function handleAdminPromo(request, env) {
     expiresAt.setDate(expiresAt.getDate() + Number(duration_days));
     const expiresAtISO = expiresAt.toISOString().replace("T", " ").substring(0, 19);
     await db.prepare(`
-      INSERT INTO promo_codes (code, discount_pct, order_minimum_usd, duration_days, max_uses, per_email_limit, created_by, expires_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO promo_codes (code, discount_pct, free_shipping, order_minimum_usd, duration_days, max_uses, per_email_limit, created_by, expires_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       normalizedCode,
       Number(discount_pct),
+      free_shipping ? 1 : 0,
       Number(order_minimum_thb),
       Number(duration_days),
       max_uses === null ? null : Number(max_uses),
@@ -5923,6 +14478,255 @@ async function handleAdminPromo(request, env) {
 }
 __name(handleAdminPromo, "handleAdminPromo");
 
+// ../workers/api/boat-models.ts
+function parseDimensionsJson(raw) {
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!parsed || typeof parsed !== "object") return {};
+    const out = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      const key = String(k || "").trim().toUpperCase();
+      const num = Number(v);
+      if (!key || !Number.isFinite(num) || num <= 0) continue;
+      out[key] = Math.round(num * 100) / 100;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+__name(parseDimensionsJson, "parseDimensionsJson");
+async function ensureBoatModelsColumn(env, name, def) {
+  try {
+    await env.DB.prepare(`ALTER TABLE boat_models ADD COLUMN ${name} ${def}`).run();
+  } catch (e) {
+    const msg = String(e?.message || "").toLowerCase();
+    if (!msg.includes("duplicate column")) throw e;
+  }
+}
+__name(ensureBoatModelsColumn, "ensureBoatModelsColumn");
+async function ensureBoatModelsTable(env) {
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS boat_models (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      model_key TEXT NOT NULL UNIQUE,
+      model_label TEXT,
+      model_name TEXT NOT NULL,
+      model_year INTEGER,
+      sale_price_usd REAL,
+      shape_code TEXT NOT NULL,
+      dimensions_json TEXT NOT NULL,
+      notes TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+  await ensureBoatModelsColumn(env, "model_label", "TEXT");
+  await ensureBoatModelsColumn(env, "model_year", "INTEGER");
+  await ensureBoatModelsColumn(env, "sale_price_usd", "REAL");
+}
+__name(ensureBoatModelsTable, "ensureBoatModelsTable");
+async function handleBoatModels(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "public, max-age=120"
+  };
+  if (request.method === "OPTIONS") {
+    return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
+  }
+  if (request.method !== "GET") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+  }
+  try {
+    await ensureBoatModelsTable(env);
+    const url = new URL(request.url);
+    const q = String(url.searchParams.get("q") || "").trim().toLowerCase();
+    const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 250);
+    const includeDimensions = String(url.searchParams.get("include_dimensions") || "").trim() === "1";
+    let sql = `
+      SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, updated_at
+      FROM boat_models
+      WHERE is_active = 1
+        AND model_year IS NOT NULL
+        AND sale_price_usd IS NOT NULL
+        AND sale_price_usd > 0
+    `;
+    let stmt;
+    if (q) {
+      sql += " AND (lower(model_label) LIKE ?1 OR lower(model_name) LIKE ?1 OR lower(model_key) LIKE ?1 OR CAST(model_year AS TEXT) LIKE ?1) ORDER BY model_label ASC, model_name ASC, model_year ASC LIMIT ?2";
+      stmt = env.DB.prepare(sql).bind(`%${q}%`, limit);
+    } else {
+      sql += " ORDER BY model_label ASC, model_name ASC, model_year ASC LIMIT ?1";
+      stmt = env.DB.prepare(sql).bind(limit);
+    }
+    const rows = await stmt.all();
+    const models = (rows.results || []).map((r) => ({
+      id: r.id,
+      model_key: r.model_key,
+      model_label: r.model_label && String(r.model_label).trim() || `${r.model_name || ""}${r.model_year ? " - " + r.model_year : ""}`.trim(),
+      model_name: r.model_name,
+      model_year: r.model_year == null ? null : Number(r.model_year),
+      price_usd: r.sale_price_usd == null ? null : Math.round(Number(r.sale_price_usd) * 100) / 100,
+      shape_code: r.shape_code,
+      ...includeDimensions ? { dimensions: parseDimensionsJson(r.dimensions_json) } : {},
+      updated_at: r.updated_at || null
+    }));
+    return new Response(JSON.stringify({ models }), { headers });
+  } catch (e) {
+    return new Response(JSON.stringify({ models: [], error: e?.message || "Failed to load boat models" }), { status: 500, headers });
+  }
+}
+__name(handleBoatModels, "handleBoatModels");
+
+// ../workers/api/admin-boat-models.ts
+function normalizeModelKey(input) {
+  return String(input || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+__name(normalizeModelKey, "normalizeModelKey");
+function sanitizeDimensions(raw) {
+  const out = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [key, val] of Object.entries(raw)) {
+    const k = String(key || "").trim().toUpperCase();
+    if (!k) continue;
+    const n = Number(val);
+    if (!Number.isFinite(n) || n <= 0) continue;
+    out[k] = Math.round(n * 100) / 100;
+  }
+  return out;
+}
+__name(sanitizeDimensions, "sanitizeDimensions");
+async function ensureBoatModelsColumn2(env, name, def) {
+  try {
+    await env.DB.prepare(`ALTER TABLE boat_models ADD COLUMN ${name} ${def}`).run();
+  } catch (e) {
+    const msg = String(e?.message || "").toLowerCase();
+    if (!msg.includes("duplicate column")) throw e;
+  }
+}
+__name(ensureBoatModelsColumn2, "ensureBoatModelsColumn");
+async function ensureBoatModelsTable2(env) {
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS boat_models (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      model_key TEXT NOT NULL UNIQUE,
+      model_label TEXT,
+      model_name TEXT NOT NULL,
+      model_year INTEGER,
+      sale_price_usd REAL,
+      shape_code TEXT NOT NULL,
+      dimensions_json TEXT NOT NULL,
+      notes TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+  await ensureBoatModelsColumn2(env, "model_label", "TEXT");
+  await ensureBoatModelsColumn2(env, "model_year", "INTEGER");
+  await ensureBoatModelsColumn2(env, "sale_price_usd", "REAL");
+  await ensureBoatModelsColumn2(env, "schematic_key", "TEXT");
+  await ensureBoatModelsColumn2(env, "schematic_url", "TEXT");
+}
+__name(ensureBoatModelsTable2, "ensureBoatModelsTable");
+async function authorizeAdmin11(request, env) {
+  return authorizeAdminBrowser(request, env);
+}
+__name(authorizeAdmin11, "authorizeAdmin");
+async function handleAdminBoatModels(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
+  };
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  const auth = await authorizeAdmin11(request, env);
+  if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
+  await ensureBoatModelsTable2(env);
+  if (request.method === "GET") {
+    const rows = await env.DB.prepare(
+      `SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, schematic_key, schematic_url, is_active, updated_at
+       FROM boat_models
+       ORDER BY model_label ASC, model_name ASC, model_year ASC, updated_at DESC, id DESC`
+    ).all();
+    return new Response(JSON.stringify({ models: rows.results || [] }), { headers });
+  }
+  if (request.method === "DELETE") {
+    let body = {};
+    try {
+      body = await request.json();
+    } catch {
+    }
+    const id = Number(body.id || 0);
+    if (!id) return new Response(JSON.stringify({ error: "id is required" }), { status: 400, headers });
+    await env.DB.prepare("DELETE FROM boat_models WHERE id = ?1").bind(id).run();
+    return new Response(JSON.stringify({ success: true }), { headers });
+  }
+  if (request.method === "POST" || request.method === "PUT") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
+    }
+    const id = Number(body.id || 0);
+    const modelName = String(body.model_name || "").trim();
+    const shapeCode = String(body.shape_code || "").trim();
+    const notes = String(body.notes || "").trim();
+    const modelYear = Number(body.model_year);
+    const priceUsd = Number(body.price_usd);
+    const isActive = body.is_active === 0 || body.is_active === false ? 0 : 1;
+    const dimensions = sanitizeDimensions(body.dimensions || {});
+    const hasDimensionsPayload = body.dimensions && typeof body.dimensions === "object" && Object.keys(body.dimensions).length > 0;
+    const modelLabel = String(body.model_label || `${modelName} - ${modelYear || ""}`).trim();
+    const modelKey = normalizeModelKey(body.model_key || modelLabel);
+    const schematicKey = String(body.schematic_key || "").trim();
+    const schematicUrl = String(body.schematic_url || "").trim();
+    if (!modelName) return new Response(JSON.stringify({ error: "model_name is required" }), { status: 400, headers });
+    if (!modelLabel) return new Response(JSON.stringify({ error: "model_label is required" }), { status: 400, headers });
+    if (!modelKey) return new Response(JSON.stringify({ error: "model_key is required" }), { status: 400, headers });
+    if (!Number.isFinite(modelYear) || modelYear < 1900 || modelYear > 2100) {
+      return new Response(JSON.stringify({ error: "model_year must be between 1900 and 2100" }), { status: 400, headers });
+    }
+    if (!Number.isFinite(priceUsd) || priceUsd <= 0) {
+      return new Response(JSON.stringify({ error: "price_usd must be greater than 0" }), { status: 400, headers });
+    }
+    if (!/^(0[1-9]|1[0-4])$/.test(shapeCode)) {
+      return new Response(JSON.stringify({ error: "shape_code must be 01-14" }), { status: 400, headers });
+    }
+    if (schematicKey && !/^products\//i.test(schematicKey)) {
+      return new Response(JSON.stringify({ error: "schematic_key must start with products/" }), { status: 400, headers });
+    }
+    let dimensionsJson = JSON.stringify(dimensions);
+    if (id > 0) {
+      if (!hasDimensionsPayload || !Object.keys(dimensions).length) {
+        const existingRow = await env.DB.prepare("SELECT dimensions_json FROM boat_models WHERE id = ?1").bind(id).first();
+        dimensionsJson = String(existingRow?.dimensions_json || "{}");
+      }
+      await env.DB.prepare(
+        `UPDATE boat_models
+         SET model_key = ?1, model_label = ?2, model_name = ?3, model_year = ?4, sale_price_usd = ?5, shape_code = ?6, dimensions_json = ?7, notes = ?8, schematic_key = ?9, schematic_url = ?10, is_active = ?11, updated_at = datetime('now')
+         WHERE id = ?12`
+      ).bind(modelKey, modelLabel, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, schematicKey || null, schematicUrl || null, isActive, id).run();
+      return new Response(JSON.stringify({ success: true, id }), { headers });
+    }
+    const existing = await env.DB.prepare("SELECT id FROM boat_models WHERE model_key = ?1").bind(modelKey).first();
+    if (existing?.id) {
+      return new Response(JSON.stringify({ error: "model_key already exists. Use a unique key." }), { status: 409, headers });
+    }
+    const insert = await env.DB.prepare(
+      `INSERT INTO boat_models (model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, schematic_key, schematic_url, is_active, updated_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, datetime('now'))`
+    ).bind(modelKey, modelLabel, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, schematicKey || null, schematicUrl || null, isActive).run();
+    return new Response(JSON.stringify({ success: true, id: insert.meta?.last_row_id || null }), { headers });
+  }
+  return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+}
+__name(handleAdminBoatModels, "handleAdminBoatModels");
+
 // ../workers/api/admin-blog.ts
 var R2_PUBLIC_BASE4 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 var BLOG_CATEGORY_OPTIONS = [
@@ -5936,7 +14740,7 @@ var BLOG_CATEGORY_OPTIONS = [
   "Product News",
   "Other"
 ];
-function isProductionHost9(hostname) {
+function isProductionHost12(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
   if (host === "localhost" || host === "127.0.0.1") return false;
@@ -5944,8 +14748,8 @@ function isProductionHost9(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost9, "isProductionHost");
-function collectRoles10(raw) {
+__name(isProductionHost12, "isProductionHost");
+function collectRoles13(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -5969,27 +14773,27 @@ function collectRoles10(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles10, "collectRoles");
-function hasAdminRole10(raw) {
-  const roles = collectRoles10(raw);
+__name(collectRoles13, "collectRoles");
+function hasAdminRole14(raw) {
+  const roles = collectRoles13(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole10, "hasAdminRole");
-function emailAllowed10(email, env) {
+__name(hasAdminRole14, "hasAdminRole");
+function emailAllowed14(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed10, "emailAllowed");
+__name(emailAllowed14, "emailAllowed");
 function getClerkSessionTokenFromCookie(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin8(request, env) {
+async function authorizeAdmin12(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const cookieToken = getClerkSessionTokenFromCookie(request);
   const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
@@ -6005,7 +14809,7 @@ async function authorizeAdmin8(request, env) {
     const verified = await verifyClerkJwt(verifyRequest, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole10(raw) || emailAllowed10(verified.payload.email || "", env)) {
+      if (hasAdminRole14(raw) || emailAllowed14(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -6019,8 +14823,8 @@ async function authorizeAdmin8(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed10(email, env)) return { ok: true };
-            if (hasAdminRole10(metadata)) return { ok: true };
+            if (emailAllowed14(email, env)) return { ok: true };
+            if (hasAdminRole14(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -6033,7 +14837,7 @@ async function authorizeAdmin8(request, env) {
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost9(host);
+  const prodHost = isProductionHost12(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -6042,7 +14846,7 @@ async function authorizeAdmin8(request, env) {
   if (provided === configured) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin8, "authorizeAdmin");
+__name(authorizeAdmin12, "authorizeAdmin");
 function normalizeCategories(raw) {
   if (!Array.isArray(raw)) return [];
   const cleaned = raw.map((x) => String(x || "").trim()).filter(Boolean);
@@ -6065,7 +14869,7 @@ async function handleAdminBlog(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  const auth = await authorizeAdmin8(request, env);
+  const auth = await authorizeAdmin12(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
@@ -6403,7 +15207,7 @@ function normalizeReviewDate(raw) {
   return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 }
 __name(normalizeReviewDate, "normalizeReviewDate");
-function isProductionHost10(hostname) {
+function isProductionHost13(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
   if (host === "localhost" || host === "127.0.0.1") return false;
@@ -6411,8 +15215,8 @@ function isProductionHost10(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost10, "isProductionHost");
-function collectRoles11(raw) {
+__name(isProductionHost13, "isProductionHost");
+function collectRoles14(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -6436,27 +15240,27 @@ function collectRoles11(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles11, "collectRoles");
-function hasAdminRole11(raw) {
-  const roles = collectRoles11(raw);
+__name(collectRoles14, "collectRoles");
+function hasAdminRole15(raw) {
+  const roles = collectRoles14(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole11, "hasAdminRole");
-function emailAllowed11(email, env) {
+__name(hasAdminRole15, "hasAdminRole");
+function emailAllowed15(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed11, "emailAllowed");
+__name(emailAllowed15, "emailAllowed");
 function getClerkSessionTokenFromCookie2(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin9(request, env) {
+async function authorizeAdmin13(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const cookieToken = getClerkSessionTokenFromCookie2(request);
   const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
@@ -6472,7 +15276,7 @@ async function authorizeAdmin9(request, env) {
     const verified = await verifyClerkJwt(verifyRequest, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole11(raw) || emailAllowed11(verified.payload.email || "", env)) {
+      if (hasAdminRole15(raw) || emailAllowed15(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -6486,8 +15290,8 @@ async function authorizeAdmin9(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed11(email, env)) return { ok: true };
-            if (hasAdminRole11(metadata)) return { ok: true };
+            if (emailAllowed15(email, env)) return { ok: true };
+            if (hasAdminRole15(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -6500,7 +15304,7 @@ async function authorizeAdmin9(request, env) {
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost10(host);
+  const prodHost = isProductionHost13(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -6509,7 +15313,7 @@ async function authorizeAdmin9(request, env) {
   if (provided === configured) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin9, "authorizeAdmin");
+__name(authorizeAdmin13, "authorizeAdmin");
 async function handleReviews(request, env) {
   const url = new URL(request.url);
   if (url.pathname.startsWith("/api/admin/reviews")) {
@@ -6599,7 +15403,7 @@ __name(handleReviews, "handleReviews");
 async function handleAdminReviews(request, env) {
   const url = new URL(request.url);
   const headers = { "Content-Type": "application/json" };
-  const auth = await authorizeAdmin9(request, env);
+  const auth = await authorizeAdmin13(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
@@ -6804,24 +15608,16 @@ __name(handleAdminReviews, "handleAdminReviews");
 
 // ../workers/api/admin-recovery-test.ts
 async function sendRecoveryEmail(env, to, subject, html) {
-  try {
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${env.RESEND_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
-        to: [to],
-        subject,
-        html
-      })
-    });
-    return resp.ok;
-  } catch (e) {
-    return false;
-  }
+  const text = `You left something behind \u2014 your MildMate cart is waiting.
+Return to your cart: https://www.mildmate.com/checkout/`;
+  const result = await sendEmail(env, {
+    to,
+    from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
+    subject,
+    text,
+    html
+  });
+  return result.success;
 }
 __name(sendRecoveryEmail, "sendRecoveryEmail");
 function escHtml2(s) {
@@ -6835,22 +15631,87 @@ function formatPrice(thb, usd) {
   return parts.join(" / ") || "\u2014";
 }
 __name(formatPrice, "formatPrice");
+function generateTestCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  return "TEST-" + code;
+}
+__name(generateTestCode, "generateTestCode");
+function buildRows(items) {
+  let rows = "";
+  items.forEach((item) => {
+    const dims = item.dimensions ? [item.dimensions.w, item.dimensions.l, item.dimensions.d].filter(Boolean).join("\xD7") + " " + (item.dimensions.unit || "cm") : "";
+    const specs = [item.fabric, item.color, dims].filter(Boolean).join(" \xB7 ");
+    rows += `<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0"><div style="font-weight:700;color:#0F172A;font-size:15px">${escHtml2(item.product_name || "Custom Order")}</div>${specs ? `<div style="font-size:13px;color:#64748b;margin-top:2px">${escHtml2(specs)}</div>` : ""}</td><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;font-size:15px">${formatPrice(item.price_thb, item.price_usd)}</td></tr>`;
+  });
+  return rows;
+}
+__name(buildRows, "buildRows");
+function cartTotals(items) {
+  let usd = 0, thb = 0;
+  for (const item of items) {
+    usd += (item.price_usd || 0) * (item.qty || 1);
+    thb += (item.price_thb || 0) * (item.qty || 1);
+  }
+  return { usd, thb };
+}
+__name(cartTotals, "cartTotals");
+function buildStage1Html(items) {
+  const rows = buildRows(items);
+  const total = cartTotals(items);
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:32px 24px;text-align:center"><h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px">You left something behind</h1><p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0">Your MildMate cart is waiting for you</p></td></tr><tr><td style="padding:24px"><p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 24px">Hi there, we noticed you added custom bedding to your cart but didn&rsquo;t complete your order.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px"><tr><td colspan="2" style="padding:14px 16px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:13px">${items.length} item(s) \u2014 ${formatPrice(total.thb, total.usd)}</td></tr>${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><a href="https://www.mildmate.com/checkout/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Return to Your Cart</a></td></tr></table></td></tr></table></body></html>`;
+}
+__name(buildStage1Html, "buildStage1Html");
+function buildStage2Html(items, discountCode, discountPct) {
+  const rows = buildRows(items);
+  const total = cartTotals(items);
+  const discountUsd = Math.round(total.usd * discountPct / 100);
+  const checkoutUrl = "https://www.mildmate.com/checkout/?code=" + discountCode;
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:32px 24px;text-align:center"><h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px">Still thinking?</h1><p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0">Here&rsquo;s ${discountPct}% off</p></td></tr><tr><td style="padding:24px"><p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 24px">Your MildMate cart is still waiting. Here&rsquo;s a special offer.</p><div style="background:#F0F9FF;border:2px dashed #2c96f4;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px"><p style="margin:0 0 8px;font-size:13px;color:#64748b">Your discount code</p><p style="margin:0;font-size:28px;font-weight:700;color:#2c96f4;letter-spacing:2px">${discountCode}</p><p style="margin:8px 0 0;font-size:14px;color:#0F172A;font-weight:600">${discountPct}% off \u2014 save $${discountUsd}</p></div><table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px"><tr><td colspan="2" style="padding:14px 16px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:13px">${items.length} item(s) \u2014 ${formatPrice(total.thb, total.usd)}</td></tr>${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><a href="${checkoutUrl}" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Claim ${discountPct}% Off &amp; Return to Cart</a></td></tr></table></td></tr></table></body></html>`;
+}
+__name(buildStage2Html, "buildStage2Html");
+function buildStage3Html(items, discountCode, discountPct) {
+  const rows = buildRows(items);
+  const total = cartTotals(items);
+  const discountUsd = Math.round(total.usd * discountPct / 100);
+  const checkoutUrl = "https://www.mildmate.com/checkout/?code=" + discountCode;
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:linear-gradient(135deg,#FF6B35,#E85D2C);padding:32px 24px;text-align:center"><h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px">Last chance</h1><p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0">Your ${discountPct}% off expires soon</p></td></tr><tr><td style="padding:24px"><p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 24px">Your MildMate cart is about to expire. If you still want custom-fit bedding, now is the time.</p><div style="background:#FFF8F5;border:2px dashed #FF6B35;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px"><p style="margin:0 0 8px;font-size:13px;color:#64748b">Your discount code</p><p style="margin:0;font-size:28px;font-weight:700;color:#FF6B35;letter-spacing:2px">${discountCode}</p><p style="margin:8px 0 0;font-size:14px;color:#0F172A;font-weight:600">${discountPct}% off \u2014 save $${discountUsd} &bull; expires in 3 days</p></div><table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px"><tr><td colspan="2" style="padding:14px 16px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:13px">${items.length} item(s) \u2014 ${formatPrice(total.thb, total.usd)}</td></tr>${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><a href="${checkoutUrl}" style="display:inline-block;background:#FF6B35;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Use Your ${discountPct}% Off Before It Expires</a></td></tr></table></td></tr></table></body></html>`;
+}
+__name(buildStage3Html, "buildStage3Html");
 async function handleAdminRecoveryTest(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
   if (request.method === "OPTIONS") {
-    return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret" } });
+    return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret" } });
   }
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
+  const auth = await authorizeAdminBrowser(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
+  }
   const url = new URL(request.url);
   const testEmail = url.searchParams.get("email") || "";
+  let stage = parseInt(url.searchParams.get("stage") || "1", 10);
+  if (stage !== 2 && stage !== 3) stage = 1;
   const db = env.DB;
   if (!env.RESEND_API_KEY) {
     return new Response(JSON.stringify({ error: "RESEND_API_KEY not set" }), { status: 500, headers });
+  }
+  let stageDiscount = 10;
+  if (stage !== 1) {
+    try {
+      const { results: cfgRows } = await db.prepare("SELECT key, value FROM recovery_config WHERE key IN ('stage2_discount','stage3_discount')").all();
+      const map = {};
+      for (const row of cfgRows || []) map[row.key] = row.value;
+      const raw = Number(stage === 2 ? map.stage2_discount : map.stage3_discount);
+      if (Number.isFinite(raw) && raw > 0) stageDiscount = raw;
+    } catch {
+    }
   }
   const cutoff = new Date(Date.now() - 24 * 3600 * 1e3).toISOString().replace("T", " ").slice(0, 19);
   let query = "SELECT id, email, cart_json FROM abandoned_carts WHERE recovered = 0 AND recovery_stage = 0 AND created_at < ?";
@@ -6875,19 +15736,22 @@ async function handleAdminRecoveryTest(request, env) {
         continue;
       }
       if (!items.length) continue;
-      let totalUsd = 0;
-      for (const item of items) totalUsd += (item.price_usd || 0) * (item.qty || 1);
-      let rows = "";
-      items.forEach((item) => {
-        const dims = item.dimensions ? [item.dimensions.w, item.dimensions.l, item.dimensions.d].filter(Boolean).join("\xD7") + " " + (item.dimensions.unit || "cm") : "";
-        const specs = [item.fabric, item.color, dims].filter(Boolean).join(" \xB7 ");
-        rows += `<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0"><div style="font-weight:700;color:#0F172A;font-size:15px">${escHtml2(item.product_name || "Custom Order")}</div>${specs ? `<div style="font-size:13px;color:#64748b;margin-top:2px">${escHtml2(specs)}</div>` : ""}</td><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;font-size:15px">${formatPrice(item.price_thb, item.price_usd)}</td></tr>`;
-      });
-      const subject = "You left something behind \u2014 your MildMate cart";
-      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:32px 24px;text-align:center"><h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px">You left something behind</h1><p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0">Your MildMate cart is waiting for you</p></td></tr><tr><td style="padding:24px"><p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 24px">Hi there, we noticed you added custom bedding to your cart but didn&rsquo;t complete your order.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px"><tr><td colspan="2" style="padding:14px 16px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:13px">${items.length} item(s)</td></tr>${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><a href="https://mildmate-new.pages.dev/checkout/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Return to Your Cart</a></td></tr></table></td></tr></table></body></html>`;
+      let subject;
+      let html;
+      if (stage === 2) {
+        const code = generateTestCode();
+        subject = `Still thinking? Here's ${stageDiscount}% off \u2014 your MildMate cart`;
+        html = buildStage2Html(items, code, stageDiscount);
+      } else if (stage === 3) {
+        const code = generateTestCode();
+        subject = `Last chance \u2014 your ${stageDiscount}% off expires soon`;
+        html = buildStage3Html(items, code, stageDiscount);
+      } else {
+        subject = "You left something behind \u2014 your MildMate cart";
+        html = buildStage1Html(items);
+      }
       const ok = await sendRecoveryEmail(env, cart.email, subject, html);
       if (ok) {
-        await db.prepare("UPDATE abandoned_carts SET recovery_sent_at = datetime('now') WHERE id = ?").bind(cart.id).run();
         sent++;
       } else {
         errors.push(`Failed to send to ${cart.email}`);
@@ -6896,17 +15760,17 @@ async function handleAdminRecoveryTest(request, env) {
       errors.push(`Error for cart ${cart.id}: ${e.message}`);
     }
   }
-  return new Response(JSON.stringify({ sent, total: carts.length, errors: errors.length ? errors : void 0 }), { headers });
+  return new Response(JSON.stringify({ sent, stage, total: carts.length, errors: errors.length ? errors : void 0 }), { headers });
 }
 __name(handleAdminRecoveryTest, "handleAdminRecoveryTest");
 
 // ../workers/api/admin-thankyou-dispatch.ts
-function isProductionHost11(hostname) {
+function isProductionHost14(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost11, "isProductionHost");
-function hasAdminRole12(raw) {
+__name(isProductionHost14, "isProductionHost");
+function hasAdminRole16(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -6926,16 +15790,16 @@ function hasAdminRole12(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole12, "hasAdminRole");
-async function authorizeAdmin10(request, env) {
+__name(hasAdminRole16, "hasAdminRole");
+async function authorizeAdmin14(request, env) {
   const hostname = request.headers.get("Host") || "";
-  if (!isProductionHost11(hostname)) return { ok: true };
+  if (!isProductionHost14(hostname)) return { ok: true };
   const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
-    if (hasAdminRole12(raw)) return { ok: true };
+    if (hasAdminRole16(raw)) return { ok: true };
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
     const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
     if (jwtEmail && allow.includes(jwtEmail)) return { ok: true };
@@ -6946,30 +15810,22 @@ async function authorizeAdmin10(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin10, "authorizeAdmin");
+__name(authorizeAdmin14, "authorizeAdmin");
 async function sendThankyouEmail(env, to, discountCode, discountPct) {
-  try {
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${env.RESEND_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
-        to: [to],
-        subject: `Thank you \u2014 here's ${discountPct}% off your next MildMate order`,
-        html: `<!doctype html><html><body style="font-family:Arial,sans-serif"><h2>Thank you for your order</h2><p>Here is your repeat-buyer discount code:</p><p style="font-size:22px;font-weight:700">${discountCode}</p><p>${discountPct}% off your next order (valid for 1 year).</p><p><a href="https://www.mildmate.com/">Shop MildMate</a></p></body></html>`
-      })
-    });
-    if (!resp.ok) {
-      const body = await resp.text().catch(() => "");
-      return { ok: false, error: body || `HTTP ${resp.status}` };
-    }
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e?.message || "send failed" };
-  }
+  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif"><h2>Thank you for your order</h2><p>Here is your repeat-buyer discount code:</p><p style="font-size:22px;font-weight:700">${discountCode}</p><p>${discountPct}% off your next order (valid for 1 year).</p><p><a href="https://www.mildmate.com/">Shop MildMate</a></p></body></html>`;
+  const text = `Thank you for your order.
+
+Your repeat-buyer discount code: ${discountCode}
+Discount: ${discountPct}% off your next order (valid for 1 year).
+Shop: https://www.mildmate.com/`;
+  const result = await sendEmail(env, {
+    to,
+    from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
+    subject: `Thank you \u2014 here's ${discountPct}% off your next MildMate order`,
+    text,
+    html
+  });
+  return { ok: result.success, error: result.error };
 }
 __name(sendThankyouEmail, "sendThankyouEmail");
 async function ensureThankyouQueueSchema(env) {
@@ -6995,7 +15851,7 @@ async function handleAdminThankyouDispatch(request, env) {
   };
   if (request.method === "OPTIONS") return new Response(null, { headers });
   if (request.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
-  const auth = await authorizeAdmin10(request, env);
+  const auth = await authorizeAdmin14(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   if (!env.RESEND_API_KEY) return new Response(JSON.stringify({ error: "RESEND_API_KEY not configured" }), { status: 500, headers });
   await ensureThankyouQueueSchema(env);
@@ -7068,11 +15924,11 @@ async function handleAdminThankyouDispatch(request, env) {
       if (sentItems.length < 30) sentItems.push({ id: queueId, order_id: orderId, email, code, discount_pct: pct });
     } else {
       failed++;
-      const err = rs.error || "unknown error";
+      const err4 = rs.error || "unknown error";
       failedEmails.push(email);
-      await env.DB.prepare("UPDATE thankyou_queue SET last_error = ?1 WHERE id = ?2").bind(err.slice(0, 500), queueId).run();
-      if (failedItems.length < 30) failedItems.push({ id: queueId, order_id: orderId, email, code, error: err });
-      if (errors.length < 10) errors.push(`id ${queueId}: ${err}`);
+      await env.DB.prepare("UPDATE thankyou_queue SET last_error = ?1 WHERE id = ?2").bind(err4.slice(0, 500), queueId).run();
+      if (failedItems.length < 30) failedItems.push({ id: queueId, order_id: orderId, email, code, error: err4 });
+      if (errors.length < 10) errors.push(`id ${queueId}: ${err4}`);
     }
   }
   return new Response(JSON.stringify({
@@ -7093,12 +15949,12 @@ async function handleAdminThankyouDispatch(request, env) {
 __name(handleAdminThankyouDispatch, "handleAdminThankyouDispatch");
 
 // ../workers/api/admin-offers.ts
-function isProductionHost12(hostname) {
+function isProductionHost15(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost12, "isProductionHost");
-function hasAdminRole13(raw) {
+__name(isProductionHost15, "isProductionHost");
+function hasAdminRole17(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -7118,23 +15974,23 @@ function hasAdminRole13(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole13, "hasAdminRole");
-function emailAllowed12(email, env) {
+__name(hasAdminRole17, "hasAdminRole");
+function emailAllowed16(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed12, "emailAllowed");
-async function authorizeAdmin11(request, env) {
+__name(emailAllowed16, "emailAllowed");
+async function authorizeAdmin15(request, env) {
   const hostname = request.headers.get("Host") || "";
-  if (!isProductionHost12(hostname)) return { ok: true };
+  if (!isProductionHost15(hostname)) return { ok: true };
   const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
-    if (hasAdminRole13(raw)) return { ok: true };
+    if (hasAdminRole17(raw)) return { ok: true };
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
-    if (emailAllowed12(jwtEmail, env)) return { ok: true };
+    if (emailAllowed16(jwtEmail, env)) return { ok: true };
     const sub = String(verified.payload?.sub || "").trim();
     const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
     if (sub && clerkKey) {
@@ -7146,7 +16002,7 @@ async function authorizeAdmin11(request, env) {
           const user = await clerkResp.json();
           const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
           const metadata = user.public_metadata || {};
-          if (emailAllowed12(email, env) || hasAdminRole13(metadata)) return { ok: true };
+          if (emailAllowed16(email, env) || hasAdminRole17(metadata)) return { ok: true };
         }
       } catch {
       }
@@ -7158,7 +16014,7 @@ async function authorizeAdmin11(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin11, "authorizeAdmin");
+__name(authorizeAdmin15, "authorizeAdmin");
 var KEY_MAP = {
   basketThreshold: "basket_threshold_usd",
   stage2Enabled: "stage2_enabled",
@@ -7168,22 +16024,38 @@ var KEY_MAP = {
   expiryDays: "discount_expiry_days",
   cronHour: "cron_hour_utc",
   thankyou: "thankyou_discount",
-  thankyouHours: "thankyou_send_after_hours"
+  thankyouHours: "thankyou_send_after_hours",
+  quoteFollowupEnabled: "quote_followup_enabled",
+  quoteFollowupAgeHours: "quote_followup_age_hours",
+  quoteFollowupExpiryWindowDays: "quote_followup_expiry_window_days",
+  quoteFollowupDailyCap: "quote_followup_daily_cap",
+  quoteFollowupEmailCooldownHours: "quote_followup_email_cooldown_hours"
 };
 function toBoolString(v) {
   return v === true || String(v).toLowerCase() === "true" ? "true" : "false";
 }
 __name(toBoolString, "toBoolString");
+function numOr(v, def) {
+  if (v === null || v === void 0 || v === "") return def;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : def;
+}
+__name(numOr, "numOr");
 function normalizeOffersInput(input) {
-  const basketThreshold = Math.max(0, Math.min(1e4, Number(input?.basketThreshold || 150)));
+  const basketThreshold = Math.max(0, Math.min(1e4, numOr(input?.basketThreshold, 150)));
   const stage2Enabled = toBoolString(input?.stage2Enabled !== false);
-  const stage2Discount = Math.max(1, Math.min(95, Number(input?.stage2Discount || 10)));
+  const stage2Discount = Math.max(1, Math.min(95, numOr(input?.stage2Discount, 10)));
   const stage3Enabled = toBoolString(input?.stage3Enabled !== false);
-  const stage3Discount = Math.max(1, Math.min(95, Number(input?.stage3Discount || 10)));
-  const expiryDays = Math.max(1, Math.min(3650, Number(input?.expiryDays || 60)));
-  const cronHour = Math.max(0, Math.min(23, Number(input?.cronHour || 10)));
-  const thankyou = Math.max(1, Math.min(95, Number(input?.thankyou || 20)));
-  const thankyouHours = Math.max(0, Math.min(720, Number(input?.thankyouHours || 1)));
+  const stage3Discount = Math.max(1, Math.min(95, numOr(input?.stage3Discount, 10)));
+  const expiryDays = Math.max(1, Math.min(3650, numOr(input?.expiryDays, 60)));
+  const cronHour = Math.max(0, Math.min(23, numOr(input?.cronHour, 10)));
+  const thankyou = Math.max(1, Math.min(95, numOr(input?.thankyou, 20)));
+  const thankyouHours = Math.max(0, Math.min(720, numOr(input?.thankyouHours, 1)));
+  const quoteFollowupEnabled = toBoolString(input?.quoteFollowupEnabled === true || String(input?.quoteFollowupEnabled).toLowerCase() === "true");
+  const quoteFollowupAgeHours = Math.max(1, Math.min(720, numOr(input?.quoteFollowupAgeHours, 72)));
+  const quoteFollowupExpiryWindowDays = Math.max(1, Math.min(30, numOr(input?.quoteFollowupExpiryWindowDays, 7)));
+  const quoteFollowupDailyCap = Math.max(1, Math.min(200, numOr(input?.quoteFollowupDailyCap, 20)));
+  const quoteFollowupEmailCooldownHours = Math.max(1, Math.min(720, numOr(input?.quoteFollowupEmailCooldownHours, 24)));
   return {
     [KEY_MAP.basketThreshold]: String(Math.round(basketThreshold)),
     [KEY_MAP.stage2Enabled]: stage2Enabled,
@@ -7193,7 +16065,12 @@ function normalizeOffersInput(input) {
     [KEY_MAP.expiryDays]: String(Math.round(expiryDays)),
     [KEY_MAP.cronHour]: String(Math.round(cronHour)),
     [KEY_MAP.thankyou]: String(Math.round(thankyou)),
-    [KEY_MAP.thankyouHours]: String(Math.round(thankyouHours))
+    [KEY_MAP.thankyouHours]: String(Math.round(thankyouHours)),
+    [KEY_MAP.quoteFollowupEnabled]: quoteFollowupEnabled,
+    [KEY_MAP.quoteFollowupAgeHours]: String(Math.round(quoteFollowupAgeHours)),
+    [KEY_MAP.quoteFollowupExpiryWindowDays]: String(Math.round(quoteFollowupExpiryWindowDays)),
+    [KEY_MAP.quoteFollowupDailyCap]: String(Math.round(quoteFollowupDailyCap)),
+    [KEY_MAP.quoteFollowupEmailCooldownHours]: String(Math.round(quoteFollowupEmailCooldownHours))
   };
 }
 __name(normalizeOffersInput, "normalizeOffersInput");
@@ -7201,15 +16078,20 @@ function parseOffersConfig(rows) {
   const map = {};
   for (const row of rows || []) map[String(row.key)] = String(row.value);
   return {
-    basketThreshold: Number(map[KEY_MAP.basketThreshold] || 150),
+    basketThreshold: numOr(map[KEY_MAP.basketThreshold], 150),
     stage2Enabled: map[KEY_MAP.stage2Enabled] !== "false",
-    stage2Discount: Number(map[KEY_MAP.stage2Discount] || 10),
+    stage2Discount: numOr(map[KEY_MAP.stage2Discount], 10),
     stage3Enabled: map[KEY_MAP.stage3Enabled] !== "false",
-    stage3Discount: Number(map[KEY_MAP.stage3Discount] || 10),
-    expiryDays: Number(map[KEY_MAP.expiryDays] || 60),
-    cronHour: Number(map[KEY_MAP.cronHour] || 10),
-    thankyou: Number(map[KEY_MAP.thankyou] || 20),
-    thankyouHours: Number(map[KEY_MAP.thankyouHours] || 1)
+    stage3Discount: numOr(map[KEY_MAP.stage3Discount], 10),
+    expiryDays: numOr(map[KEY_MAP.expiryDays], 60),
+    cronHour: numOr(map[KEY_MAP.cronHour], 10),
+    thankyou: numOr(map[KEY_MAP.thankyou], 20),
+    thankyouHours: numOr(map[KEY_MAP.thankyouHours], 1),
+    quoteFollowupEnabled: map[KEY_MAP.quoteFollowupEnabled] === "true",
+    quoteFollowupAgeHours: numOr(map[KEY_MAP.quoteFollowupAgeHours], 72),
+    quoteFollowupExpiryWindowDays: numOr(map[KEY_MAP.quoteFollowupExpiryWindowDays], 7),
+    quoteFollowupDailyCap: numOr(map[KEY_MAP.quoteFollowupDailyCap], 20),
+    quoteFollowupEmailCooldownHours: numOr(map[KEY_MAP.quoteFollowupEmailCooldownHours], 24)
   };
 }
 __name(parseOffersConfig, "parseOffersConfig");
@@ -7221,7 +16103,7 @@ async function handleAdminOffers(request, env) {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
   };
   if (request.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin11(request, env);
+  const auth = await authorizeAdmin15(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   if (request.method === "GET") {
     const keys = Object.values(KEY_MAP);
@@ -7250,12 +16132,12 @@ async function handleAdminOffers(request, env) {
 __name(handleAdminOffers, "handleAdminOffers");
 
 // ../workers/api/admin-campaigns.ts
-function isProductionHost13(hostname) {
+function isProductionHost16(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost13, "isProductionHost");
-function hasAdminRole14(raw) {
+__name(isProductionHost16, "isProductionHost");
+function hasAdminRole18(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -7275,23 +16157,23 @@ function hasAdminRole14(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole14, "hasAdminRole");
-function emailAllowed13(email, env) {
+__name(hasAdminRole18, "hasAdminRole");
+function emailAllowed17(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed13, "emailAllowed");
-async function authorizeAdmin12(request, env) {
+__name(emailAllowed17, "emailAllowed");
+async function authorizeAdmin16(request, env) {
   const hostname = request.headers.get("Host") || "";
-  if (!isProductionHost13(hostname)) return { ok: true };
+  if (!isProductionHost16(hostname)) return { ok: true };
   const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
-    if (hasAdminRole14(raw)) return { ok: true };
+    if (hasAdminRole18(raw)) return { ok: true };
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
-    if (emailAllowed13(jwtEmail, env)) return { ok: true };
+    if (emailAllowed17(jwtEmail, env)) return { ok: true };
     const sub = String(verified.payload?.sub || "").trim();
     const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
     if (sub && clerkKey) {
@@ -7303,7 +16185,7 @@ async function authorizeAdmin12(request, env) {
           const user = await clerkResp.json();
           const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
           const metadata = user.public_metadata || {};
-          if (emailAllowed13(email, env) || hasAdminRole14(metadata)) return { ok: true };
+          if (emailAllowed17(email, env) || hasAdminRole18(metadata)) return { ok: true };
         }
       } catch {
       }
@@ -7315,7 +16197,7 @@ async function authorizeAdmin12(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin12, "authorizeAdmin");
+__name(authorizeAdmin16, "authorizeAdmin");
 async function ensureCampaignsSchema(env) {
   await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS marketing_campaigns (
@@ -7331,18 +16213,101 @@ async function ensureCampaignsSchema(env) {
   ).run();
 }
 __name(ensureCampaignsSchema, "ensureCampaignsSchema");
+function normalizeProductSlugs(input) {
+  const raw = Array.isArray(input) ? input : [];
+  const out = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const v of raw) {
+    const slug = String(v || "").trim();
+    if (!slug) continue;
+    const key = slug.toLowerCase();
+    if (key === "all" || key === "*") continue;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(slug);
+  }
+  return out;
+}
+__name(normalizeProductSlugs, "normalizeProductSlugs");
+function parseIsoDate(value) {
+  const ts = new Date(String(value || "").trim()).getTime();
+  return Number.isFinite(ts) ? ts : NaN;
+}
+__name(parseIsoDate, "parseIsoDate");
+async function getActiveListings(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT slug, title_en, image_url, base_price_usd, base_price_thb, category, product_type, is_active FROM products WHERE slug IS NOT NULL AND slug != '' AND COALESCE(is_active, 1) = 1 ORDER BY COALESCE(sort_order, 9999), title_en"
+  ).all();
+  return (results || []).map((r) => ({
+    slug: r.slug,
+    title_en: r.title_en || r.slug,
+    image_url: r.image_url || "",
+    base_price_usd: Number(r.base_price_usd || 0),
+    base_price_thb: Number(r.base_price_thb || 0),
+    category: r.category || "",
+    product_type: r.product_type || "",
+    is_active: Number(r.is_active || 1) === 1
+  }));
+}
+__name(getActiveListings, "getActiveListings");
+async function validateCampaignPayload(body, env, requireId = false) {
+  const id = String(body?.id || "").trim();
+  const name = String(body?.name || "").trim();
+  const discountRaw = Number(body?.discount);
+  const discount = Math.round(discountRaw);
+  const startDateRaw = String(body?.startDate || "").trim();
+  const endDateRaw = String(body?.endDate || "").trim();
+  const productSlugs = normalizeProductSlugs(body?.productSlugs);
+  if (requireId && !id) return { ok: false, error: "Campaign id is required" };
+  if (!name || name.length < 3 || name.length > 80) return { ok: false, error: "Campaign name must be 3-80 characters" };
+  if (!Number.isFinite(discountRaw) || !Number.isInteger(discountRaw) || discount < 1 || discount > 90) {
+    return { ok: false, error: "Discount must be an integer between 1 and 90" };
+  }
+  if (!startDateRaw || !endDateRaw) return { ok: false, error: "Start/end dates are required" };
+  const startTs = parseIsoDate(startDateRaw);
+  const endTs = parseIsoDate(endDateRaw);
+  if (!Number.isFinite(startTs) || !Number.isFinite(endTs)) return { ok: false, error: "Invalid date format" };
+  if (endTs <= startTs) return { ok: false, error: "End date must be after start date" };
+  if (!productSlugs.length) return { ok: false, error: "At least one product is required" };
+  const maybeAll = (Array.isArray(body?.productSlugs) ? body.productSlugs : []).some((v) => String(v || "").trim().toLowerCase() === "all");
+  if (maybeAll) return { ok: false, error: '"All listings" is not allowed. Select specific listings.' };
+  const placeholders = productSlugs.map((_, i) => `?${i + 1}`).join(", ");
+  const found = await env.DB.prepare(
+    `SELECT slug FROM products WHERE COALESCE(is_active, 1) = 1 AND slug IN (${placeholders})`
+  ).bind(...productSlugs).all();
+  const foundSet = new Set((found.results || []).map((r) => String(r.slug || "")));
+  const invalid = productSlugs.filter((slug) => !foundSet.has(slug));
+  if (invalid.length) return { ok: false, error: "Invalid or inactive product slugs: " + invalid.join(", ") };
+  return {
+    ok: true,
+    normalized: {
+      id,
+      name,
+      discount,
+      productSlugs,
+      startDate: new Date(startTs).toISOString(),
+      endDate: new Date(endTs).toISOString()
+    }
+  };
+}
+__name(validateCampaignPayload, "validateCampaignPayload");
 async function handleAdminCampaigns(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
   };
   if (request.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin12(request, env);
+  const auth = await authorizeAdmin16(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   await ensureCampaignsSchema(env);
+  const url = new URL(request.url);
   if (request.method === "GET") {
+    if (url.searchParams.get("mode") === "listings") {
+      const listings = await getActiveListings(env);
+      return new Response(JSON.stringify({ products: listings }), { headers });
+    }
     const { results } = await env.DB.prepare(
       "SELECT id, name, discount_pct, product_slugs, start_date, end_date, is_active, created_at FROM marketing_campaigns ORDER BY created_at DESC"
     ).all();
@@ -7371,19 +16336,31 @@ async function handleAdminCampaigns(request, env) {
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
-    const name = String(body?.name || "").trim();
-    const discount = Math.max(1, Math.min(90, Number(body?.discount || 15)));
-    const startDate = String(body?.startDate || "").trim();
-    const endDate = String(body?.endDate || "").trim();
-    const productSlugs = Array.isArray(body?.productSlugs) ? body.productSlugs.map((s) => String(s || "").trim()).filter(Boolean) : [];
-    if (!name) return new Response(JSON.stringify({ error: "Campaign name is required" }), { status: 400, headers });
-    if (!startDate || !endDate) return new Response(JSON.stringify({ error: "Start/end dates are required" }), { status: 400, headers });
-    if (!productSlugs.length) return new Response(JSON.stringify({ error: "At least one product is required" }), { status: 400, headers });
+    const valid = await validateCampaignPayload(body, env, false);
+    if (!valid.ok) return new Response(JSON.stringify({ error: valid.error }), { status: 400, headers });
+    const payload = valid.normalized;
     const id = String(body?.id || "camp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
     await env.DB.prepare(
       "INSERT INTO marketing_campaigns (id, name, discount_pct, product_slugs, start_date, end_date, is_active) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1)"
-    ).bind(id, name, Math.round(discount), JSON.stringify(productSlugs), startDate, endDate).run();
+    ).bind(id, payload.name, payload.discount, JSON.stringify(payload.productSlugs), payload.startDate, payload.endDate).run();
     return new Response(JSON.stringify({ ok: true, id }), { headers });
+  }
+  if (request.method === "PUT") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
+    }
+    const valid = await validateCampaignPayload(body, env, true);
+    if (!valid.ok) return new Response(JSON.stringify({ error: valid.error }), { status: 400, headers });
+    const payload = valid.normalized;
+    const updated = await env.DB.prepare(
+      "UPDATE marketing_campaigns SET name = ?1, discount_pct = ?2, product_slugs = ?3, start_date = ?4, end_date = ?5 WHERE id = ?6"
+    ).bind(payload.name, payload.discount, JSON.stringify(payload.productSlugs), payload.startDate, payload.endDate, payload.id).run();
+    const changes = Number(updated?.meta?.changes || 0);
+    if (!changes) return new Response(JSON.stringify({ error: "Campaign not found" }), { status: 404, headers });
+    return new Response(JSON.stringify({ ok: true, id: payload.id }), { headers });
   }
   if (request.method === "DELETE") {
     let id = "";
@@ -7392,7 +16369,7 @@ async function handleAdminCampaigns(request, env) {
       id = String(body?.id || "").trim();
     } catch {
     }
-    if (!id) id = String(new URL(request.url).searchParams.get("id") || "").trim();
+    if (!id) id = String(url.searchParams.get("id") || "").trim();
     if (!id) return new Response(JSON.stringify({ error: "id is required" }), { status: 400, headers });
     await env.DB.prepare("DELETE FROM marketing_campaigns WHERE id = ?1").bind(id).run();
     return new Response(JSON.stringify({ ok: true }), { headers });
@@ -7401,10 +16378,303 @@ async function handleAdminCampaigns(request, env) {
 }
 __name(handleAdminCampaigns, "handleAdminCampaigns");
 
+// ../workers/api/campaigns.ts
+async function ensureCampaignsSchema2(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS marketing_campaigns (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      discount_pct INTEGER NOT NULL,
+      product_slugs TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+}
+__name(ensureCampaignsSchema2, "ensureCampaignsSchema");
+async function handleCampaigns(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+  };
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  if (request.method !== "GET") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+  await ensureCampaignsSchema2(env);
+  const { results } = await env.DB.prepare(
+    "SELECT id, name, discount_pct, product_slugs, start_date, end_date FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now') ORDER BY discount_pct DESC, created_at DESC"
+  ).all();
+  const campaigns = (results || []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    discount: Number(r.discount_pct || 0),
+    productSlugs: (() => {
+      try {
+        return JSON.parse(r.product_slugs || "[]");
+      } catch {
+        return [];
+      }
+    })(),
+    startDate: r.start_date,
+    endDate: r.end_date,
+    isActive: true
+  }));
+  return new Response(JSON.stringify({ campaigns }), { headers });
+}
+__name(handleCampaigns, "handleCampaigns");
+
+// ../workers/api/admin-accounts.ts
+function getClerkSessionToken(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
+  return cookieMatch ? cookieMatch[1] : "";
+}
+__name(getClerkSessionToken, "getClerkSessionToken");
+function collectRoles15(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  const add = /* @__PURE__ */ __name((v) => {
+    if (v !== void 0 && v !== null) values.push(v);
+  }, "add");
+  add(raw.role);
+  add(raw.roles);
+  add(raw.org_role);
+  add(raw.orgRole);
+  add(raw.public_metadata?.role);
+  add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.roles);
+  add(raw.metadata?.role);
+  add(raw.metadata?.roles);
+  add(raw["https://mildmate.com/role"]);
+  add(raw["https://mildmate.com/roles"]);
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles15, "collectRoles");
+function hasAdminRole19(raw) {
+  const roles = collectRoles15(raw);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole19, "hasAdminRole");
+function emailAllowed18(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed18, "emailAllowed");
+function getPrimaryClerkEmail3(user) {
+  if (!user || typeof user !== "object") return "";
+  const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
+  const primaryId = user.primary_email_address_id;
+  const primary = list.find((e) => e && e.id === primaryId);
+  return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
+}
+__name(getPrimaryClerkEmail3, "getPrimaryClerkEmail");
+async function isClerkAdmin2(request, env) {
+  try {
+    const authHeader = request.headers.get("Authorization") || "";
+    const hasBearer = authHeader.startsWith("Bearer ");
+    const token = hasBearer ? authHeader.slice(7).trim() : getClerkSessionToken(request);
+    if (!token) return false;
+    const verifyReq = new Request(request.url, {
+      method: request.method,
+      headers: new Headers({
+        ...Object.fromEntries(request.headers.entries()),
+        Authorization: `Bearer ${token}`
+      })
+    });
+    const verified = await verifyClerkJwt(verifyReq, env);
+    if (!verified.valid) return false;
+    const raw = verified.payload.raw || {};
+    const email = String(verified.payload.email || "").trim().toLowerCase();
+    if (hasAdminRole19(raw) || emailAllowed18(email, env)) return true;
+    const sub = String(verified.payload.sub || "").trim();
+    const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
+    if (!sub || !clerkKey) return false;
+    const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+      headers: { Authorization: "Bearer " + clerkKey }
+    });
+    if (!clerkResp.ok) return false;
+    const user = await clerkResp.json();
+    const clerkEmail = getPrimaryClerkEmail3(user);
+    const metadataRaw = {
+      role: user?.public_metadata?.role,
+      roles: user?.public_metadata?.roles,
+      org_role: user?.public_metadata?.org_role,
+      orgRole: user?.public_metadata?.orgRole,
+      public_metadata: user?.public_metadata || {},
+      unsafe_metadata: user?.unsafe_metadata || {},
+      metadata: user?.private_metadata || {}
+    };
+    return emailAllowed18(clerkEmail, env) || hasAdminRole19(metadataRaw);
+  } catch {
+    return false;
+  }
+}
+__name(isClerkAdmin2, "isClerkAdmin");
+async function ensureAdminAccountsTable(db) {
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS admin_accounts (
+      email TEXT PRIMARY KEY,
+      role TEXT NOT NULL DEFAULT 'Admin',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_active TEXT
+    )
+  `).run();
+}
+__name(ensureAdminAccountsTable, "ensureAdminAccountsTable");
+async function handleAdminAccounts(request, env) {
+  const host = new URL(request.url).hostname;
+  const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
+  if (!isDev) {
+    const clerkOk = await isClerkAdmin2(request, env);
+    if (!clerkOk) {
+      const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+      const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+      if (!provided || configured && provided !== configured) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+    }
+  }
+  await ensureAdminAccountsTable(env.DB);
+  if (request.method === "GET") {
+    const { results } = await env.DB.prepare(
+      "SELECT email, role, created_at, last_active FROM admin_accounts ORDER BY created_at DESC"
+    ).all();
+    return new Response(JSON.stringify({ accounts: results || [] }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  if (request.method === "POST") {
+    try {
+      const body = await request.json();
+      const email = String(body.email || "").trim().toLowerCase();
+      const role = String(body.role || "Admin").trim();
+      if (!email || !email.includes("@")) {
+        return new Response(JSON.stringify({ error: "Valid email is required" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+      if (role !== "Admin" && role !== "Super Admin") {
+        return new Response(JSON.stringify({ error: "Role must be Admin or Super Admin" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+      await env.DB.prepare(
+        `INSERT INTO admin_accounts (email, role, created_at, last_active)
+         VALUES (?1, ?2, datetime('now'), NULL)
+         ON CONFLICT(email) DO UPDATE SET role = excluded.role`
+      ).bind(email, role).run();
+      return new Response(JSON.stringify({ success: true, email, role }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e?.message || "Failed to save admin account" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  }
+  if (request.method === "DELETE") {
+    try {
+      const url = new URL(request.url);
+      const email = String(url.searchParams.get("email") || "").trim().toLowerCase();
+      if (!email) {
+        return new Response(JSON.stringify({ error: "email is required" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+      await env.DB.prepare("DELETE FROM admin_accounts WHERE email = ?1").bind(email).run();
+      return new Response(JSON.stringify({ success: true, email }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e?.message || "Failed to delete admin account" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  }
+  return new Response(JSON.stringify({ error: "Method not allowed" }), {
+    status: 405,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+__name(handleAdminAccounts, "handleAdminAccounts");
+
+// ../workers/api/admin-color-inventory.ts
+async function handleAdminColorInventory(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*"
+  };
+  if (request.method === "OPTIONS") {
+    return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret" } });
+  }
+  const auth = await authorizeAdminBrowser(request, env);
+  if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
+  const db = env.DB;
+  if (request.method === "GET") {
+    const rows = await db.prepare(
+      "SELECT fabric, color, in_stock, updated_at FROM fabric_color_inventory ORDER BY fabric, color"
+    ).all();
+    const inventory = (rows.results || []).map((r) => ({
+      fabric: String(r.fabric || "").trim().toLowerCase(),
+      color: String(r.color || "").trim().toLowerCase(),
+      in_stock: Number(r.in_stock) === 1 ? 1 : 0,
+      updated_at: r.updated_at || null
+    }));
+    return new Response(JSON.stringify({ inventory }), { headers });
+  }
+  if (request.method === "PUT") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
+    }
+    if (!Array.isArray(body.updates) || body.updates.length === 0) {
+      return new Response(JSON.stringify({ error: "updates array required" }), { status: 400, headers });
+    }
+    for (const item of body.updates) {
+      const fabric = String(item.fabric || "").trim().toLowerCase();
+      const color = String(item.color || "").trim().toLowerCase();
+      const inStockRaw = item.in_stock;
+      const inStock = inStockRaw === 1 || inStockRaw === true || String(inStockRaw).trim() === "1" ? 1 : 0;
+      if (!fabric || !color) {
+        return new Response(JSON.stringify({ error: "fabric and color are required" }), { status: 400, headers });
+      }
+      await db.prepare(
+        `INSERT INTO fabric_color_inventory (fabric, color, in_stock, updated_at)
+         VALUES (?, ?, ?, datetime('now'))
+         ON CONFLICT(fabric, color) DO UPDATE SET in_stock = excluded.in_stock, updated_at = excluded.updated_at`
+      ).bind(fabric, color, inStock).run();
+    }
+    return new Response(JSON.stringify({ success: true, updated: body.updates.length }), { headers });
+  }
+  return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+}
+__name(handleAdminColorInventory, "handleAdminColorInventory");
+
 // ../workers/api/favorites.ts
 var favoritesSchemaReady = false;
 var favoritesSchemaPromise = null;
-function json9(body, status = 200) {
+function json12(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -7413,7 +16683,7 @@ function json9(body, status = 200) {
     }
   });
 }
-__name(json9, "json");
+__name(json12, "json");
 async function ensureFavoritesSchema(env) {
   if (favoritesSchemaReady) return;
   if (!favoritesSchemaPromise) {
@@ -7440,14 +16710,14 @@ async function ensureFavoritesSchema(env) {
   await favoritesSchemaPromise;
 }
 __name(ensureFavoritesSchema, "ensureFavoritesSchema");
-function isProductionHost14(hostname) {
+function isProductionHost17(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost14, "isProductionHost");
-function collectRoles12(raw) {
+__name(isProductionHost17, "isProductionHost");
+function collectRoles16(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -7472,28 +16742,28 @@ function collectRoles12(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles12, "collectRoles");
-function hasAdminRole15(rawClaims) {
-  const roles = collectRoles12(rawClaims);
+__name(collectRoles16, "collectRoles");
+function hasAdminRole20(rawClaims) {
+  const roles = collectRoles16(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole15, "hasAdminRole");
-function emailAllowed14(email, env) {
+__name(hasAdminRole20, "hasAdminRole");
+function emailAllowed19(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed14, "emailAllowed");
-async function authorizeAdmin13(request, env) {
+__name(emailAllowed19, "emailAllowed");
+async function authorizeAdmin17(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole15(raw) || emailAllowed14(verified.payload.email || "", env)) {
+      if (hasAdminRole20(raw) || emailAllowed19(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -7507,8 +16777,8 @@ async function authorizeAdmin13(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed14(email, env)) return { ok: true };
-            if (hasAdminRole15(metadata)) return { ok: true };
+            if (emailAllowed19(email, env)) return { ok: true };
+            if (hasAdminRole20(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -7521,7 +16791,7 @@ async function authorizeAdmin13(request, env) {
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost14(host);
+  const prodHost = isProductionHost17(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -7530,7 +16800,7 @@ async function authorizeAdmin13(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin13, "authorizeAdmin");
+__name(authorizeAdmin17, "authorizeAdmin");
 async function getUserContext(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -7565,10 +16835,10 @@ async function handleFavorites(request, env) {
       await ensureFavoritesSchema(env);
     } catch (e) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
-      return json9({ error: "Favorites storage unavailable" }, 500);
+      return json12({ error: "Favorites storage unavailable" }, 500);
     }
-    const auth = await authorizeAdmin13(request, env);
-    if (!auth.ok) return json9({ error: auth.error }, auth.status);
+    const auth = await authorizeAdmin17(request, env);
+    if (!auth.ok) return json12({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
       `SELECT 
@@ -7602,22 +16872,22 @@ async function handleFavorites(request, env) {
        ORDER BY favorite_count DESC, last_favorited_at DESC
        LIMIT ?1`
     ).bind(limit).all();
-    return json9({
+    return json12({
       totals: totals || { total_favorites: 0, total_users: 0, total_products: 0 },
       topProducts: topProducts.results || [],
       topUsers: topUsers.results || []
     });
   }
   if (path !== "/api/favorites") {
-    return json9({ error: "Not found" }, 404);
+    return json12({ error: "Not found" }, 404);
   }
   const user = await getUserContext(request, env);
-  if (!user.ok) return json9({ error: user.error }, user.status);
+  if (!user.ok) return json12({ error: user.error }, user.status);
   try {
     await ensureFavoritesSchema(env);
   } catch (e) {
     console.error("favorites schema init failed:", e?.message || e);
-    return json9({ error: "Favorites storage unavailable" }, 500);
+    return json12({ error: "Favorites storage unavailable" }, 500);
   }
   if (method === "GET") {
     const rows = await env.DB.prepare(
@@ -7640,31 +16910,31 @@ async function handleFavorites(request, env) {
        ORDER BY MAX(f.created_at) DESC
        LIMIT 100`
     ).bind(user.userId, user.email).all();
-    return json9({ favorites: rows.results || [] });
+    return json12({ favorites: rows.results || [] });
   }
   if (method === "POST") {
     let body = {};
     try {
       body = await request.json();
     } catch {
-      return json9({ error: "Invalid JSON body" }, 400);
+      return json12({ error: "Invalid JSON body" }, 400);
     }
     const productSlug = String(body.productSlug || body.slug || "").trim();
-    if (!productSlug) return json9({ error: "productSlug is required" }, 400);
+    if (!productSlug) return json12({ error: "productSlug is required" }, 400);
     const product = await env.DB.prepare(
       `SELECT id, slug, title_en, image_url, base_price_usd AS price_usd, base_price_thb AS price_thb
        FROM products
        WHERE slug = ?1
        LIMIT 1`
     ).bind(productSlug).first();
-    if (!product) return json9({ error: "Product not found" }, 404);
+    if (!product) return json12({ error: "Product not found" }, 404);
     const existing = await env.DB.prepare(
       `SELECT id FROM favorites
        WHERE product_id = ?1 AND (user_id = ?2 OR LOWER(email) = ?3)
        LIMIT 1`
     ).bind(product.id, user.userId, user.email).first();
     if (existing) {
-      return json9({
+      return json12({
         success: true,
         isFavorite: true,
         created: false,
@@ -7675,7 +16945,7 @@ async function handleFavorites(request, env) {
       `INSERT OR IGNORE INTO favorites (user_id, email, product_id, created_at)
        VALUES (?1, ?2, ?3, datetime('now'))`
     ).bind(user.userId, user.email, product.id).run();
-    return json9({
+    return json12({
       success: true,
       isFavorite: true,
       created: Number(result.meta?.changes || 0) > 0,
@@ -7691,27 +16961,168 @@ async function handleFavorites(request, env) {
       } catch {
       }
     }
-    if (!productSlug) return json9({ error: "productSlug is required" }, 400);
+    if (!productSlug) return json12({ error: "productSlug is required" }, 400);
     const product = await env.DB.prepare(
       `SELECT id FROM products WHERE slug = ?1 LIMIT 1`
     ).bind(productSlug).first();
-    if (!product) return json9({ success: true, isFavorite: false, removed: false });
+    if (!product) return json12({ success: true, isFavorite: false, removed: false });
     const result = await env.DB.prepare(
       `DELETE FROM favorites
        WHERE product_id = ?1
          AND (user_id = ?2 OR LOWER(email) = ?3)`
     ).bind(product.id, user.userId, user.email).run();
-    return json9({
+    return json12({
       success: true,
       isFavorite: false,
       removed: Number(result.meta?.changes || 0) > 0
     });
   }
-  return json9({ error: "Method not allowed" }, 405);
+  return json12({ error: "Method not allowed" }, 405);
 }
 __name(handleFavorites, "handleFavorites");
 
 // ../workers/api/checkout.ts
+async function getActiveCampaignDiscounts(env) {
+  const map = /* @__PURE__ */ new Map();
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT discount_pct, product_slugs FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now')"
+    ).all();
+    for (const row of results || []) {
+      const pct = Number(row.discount_pct || 0);
+      if (!(pct > 0)) continue;
+      let slugs = [];
+      try {
+        slugs = JSON.parse(row.product_slugs || "[]");
+      } catch {
+        slugs = [];
+      }
+      for (const slug of slugs) {
+        const key = String(slug || "").trim();
+        if (key && pct > (map.get(key) || 0)) map.set(key, pct);
+      }
+    }
+  } catch (e) {
+    console.warn("Campaign discount lookup failed:", e?.message || e);
+  }
+  return map;
+}
+__name(getActiveCampaignDiscounts, "getActiveCampaignDiscounts");
+function isProductionHost18(request) {
+  try {
+    const host = new URL(request.url).hostname.toLowerCase();
+    return host === "www.mildmate.com" || host === "mildmate.com";
+  } catch {
+    return false;
+  }
+}
+__name(isProductionHost18, "isProductionHost");
+function inferStripeSecretMode(secret) {
+  if (secret.startsWith("sk_live_")) return "live";
+  if (secret.startsWith("sk_test_")) return "test";
+  return "unknown";
+}
+__name(inferStripeSecretMode, "inferStripeSecretMode");
+function assertStripeRuntimeSafety(request, env, stripeKey) {
+  const prodHost = isProductionHost18(request);
+  const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
+  const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
+  const stripeMode = inferStripeSecretMode(stripeKey);
+  if (prodHost) {
+    if (stripeMode === "test") return "Production host cannot use Stripe test secret key";
+    if (runtimeEnv && runtimeEnv !== "prod" && runtimeEnv !== "production") {
+      return "Production host runtime environment mismatch";
+    }
+    return null;
+  }
+  if (env.NON_PROD_STRIPE_ALLOWED !== "true") {
+    return "Non-production checkout disabled until NON_PROD_STRIPE_ALLOWED=true";
+  }
+  if (!runtimeEnv || runtimeEnv === "prod" || runtimeEnv === "production") {
+    return "Non-production runtime requires explicit non-production RUNTIME_ENV";
+  }
+  if (stripeMode !== "test") {
+    return "Non-production checkout requires Stripe test secret key";
+  }
+  if (!d1Label || d1Label === "prod" || d1Label === "production") {
+    return "Non-production runtime requires non-production D1_ENV_LABEL";
+  }
+  return null;
+}
+__name(assertStripeRuntimeSafety, "assertStripeRuntimeSafety");
+function humanizeSlug(slug) {
+  return String(slug || "").split("-").filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+__name(humanizeSlug, "humanizeSlug");
+function getItemName(item) {
+  const raw = String(item.product_name || item.title || "").trim();
+  if (raw) return raw;
+  const fromSlug = humanizeSlug(item.product_slug || "");
+  return fromSlug || "Custom Product";
+}
+__name(getItemName, "getItemName");
+function normalizeFabricForSlug(slugRaw, fabricRaw) {
+  const slug = String(slugRaw || "").trim().toLowerCase();
+  if (slug === "pet-proof-mattress-protector") return "tpu";
+  if (slug === "custom-waterproof-cushion-protector") return "tpu";
+  const fabric = String(fabricRaw || "").trim().toLowerCase();
+  return fabric || null;
+}
+__name(normalizeFabricForSlug, "normalizeFabricForSlug");
+function sanitizeMarineValues(valuesRaw) {
+  if (!valuesRaw || typeof valuesRaw !== "object" || Array.isArray(valuesRaw)) return void 0;
+  const out = {};
+  Object.keys(valuesRaw).forEach((k) => {
+    const key = String(k || "").trim().toUpperCase();
+    if (!key) return;
+    const n = Number(valuesRaw[k]);
+    if (Number.isFinite(n) && n > 0) out[key] = n;
+  });
+  return Object.keys(out).length ? out : void 0;
+}
+__name(sanitizeMarineValues, "sanitizeMarineValues");
+var checkoutSnapshotSchemaReady = false;
+var checkoutSnapshotSchemaPromise = null;
+async function ensureCheckoutSnapshotSchema(env) {
+  if (checkoutSnapshotSchemaReady) return true;
+  if (!checkoutSnapshotSchemaPromise) {
+    checkoutSnapshotSchemaPromise = (async () => {
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS checkout_session_snapshots (
+             stripe_session_id TEXT PRIMARY KEY,
+             email TEXT,
+             currency TEXT,
+             items_json TEXT NOT NULL,
+             attribution_json TEXT,
+             quote_ids_json TEXT,
+             created_at DATETIME DEFAULT (datetime('now'))
+           )`
+        ).run();
+        try {
+          const tableInfo = await env.DB.prepare("PRAGMA table_info(checkout_session_snapshots)").all();
+          const existing = new Set(
+            (tableInfo.results || []).map((r) => String(r.name || "").toLowerCase())
+          );
+          const alters = [];
+          if (!existing.has("attribution_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN attribution_json TEXT");
+          if (!existing.has("quote_ids_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN quote_ids_json TEXT");
+          for (const sql of alters) await env.DB.prepare(sql).run();
+        } catch {
+        }
+        checkoutSnapshotSchemaReady = true;
+        return true;
+      } catch (e) {
+        console.error("checkout snapshot schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!checkoutSnapshotSchemaReady) checkoutSnapshotSchemaPromise = null;
+    });
+  }
+  return await checkoutSnapshotSchemaPromise;
+}
+__name(ensureCheckoutSnapshotSchema, "ensureCheckoutSnapshotSchema");
 async function handleCheckout(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -7726,6 +17137,13 @@ async function handleCheckout(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
+  const stripeSafetyError = assertStripeRuntimeSafety(request, env, stripeKey);
+  if (stripeSafetyError) {
+    return new Response(JSON.stringify({ error: stripeSafetyError }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
   let body;
   try {
     body = await request.json();
@@ -7736,6 +17154,7 @@ async function handleCheckout(request, env) {
     });
   }
   const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
+  const checkoutAttribution = sanitizeAttributionPayload(body.attribution, "checkout");
   const customerNoteTypeRaw = String(body.customer_note_type || "").trim().toLowerCase();
   const customerNoteRaw = String(body.customer_note || "").trim();
   const allowedNoteTypes = /* @__PURE__ */ new Set(["delivery", "measurement", "gift", "other"]);
@@ -7834,11 +17253,18 @@ async function handleCheckout(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
-  const quoteItems = items.filter((i) => i.type === "custom_quote" && i.quote_id);
+  const quoteIdsFromCart = extractUniqueQuoteIdsFromItems(items);
+  const quoteItems = items.filter((i) => !!i.quote_id && (i.type === "custom_quote" || !!i.is_quote));
+  const quoteAuthorizedPrices = /* @__PURE__ */ new Map();
   if (quoteItems.length > 0) {
+    const rateRow = await env.DB.prepare(
+      "SELECT param_value FROM pricing_params WHERE param_key = 'usd_rate'"
+    ).first().catch(() => null);
+    let usdRate = parseFloat(String(rateRow?.param_value || ""));
+    if (!Number.isFinite(usdRate) || usdRate <= 0) usdRate = 30;
     for (const qi of quoteItems) {
       const quote = await env.DB.prepare(
-        "SELECT status, quoted_price FROM custom_quotes WHERE quote_id = ?1"
+        "SELECT status, quoted_price, quoted_price_usd, free_shipping FROM custom_quotes WHERE quote_id = ?1"
       ).bind(qi.quote_id).first();
       if (!quote || quote.status !== "approved") {
         return new Response(JSON.stringify({
@@ -7848,6 +17274,15 @@ async function handleCheckout(request, env) {
           headers: { "Content-Type": "application/json" }
         });
       }
+      if (Number(quote.free_shipping || 0) === 1) {
+        freeShipping = true;
+      }
+      const quoteThb = Math.max(0, Number(quote.quoted_price || 0));
+      let quoteUsd = Math.max(0, Number(quote.quoted_price_usd || 0));
+      if (!quoteUsd && quoteThb > 0) {
+        quoteUsd = Math.round(quoteThb / usdRate);
+      }
+      quoteAuthorizedPrices.set(String(qi.quote_id), { thb: quoteThb, usd: quoteUsd });
     }
   }
   const origin = String(request.headers.get("CF-IPCountry") || "").toUpperCase();
@@ -7880,11 +17315,27 @@ async function handleCheckout(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
+  const campaignDiscounts = await getActiveCampaignDiscounts(env);
   const lineItems = items.map((item) => {
-    const unitAmount = currency === "thb" ? Math.round((item.price_thb || 0) * 100) : Math.round((item.price_usd || 0) * 100);
+    const itemName = getItemName(item);
+    const normalizedFabric = normalizeFabricForSlug(item.product_slug, item.fabric);
+    const isQuoteItem = item.type === "custom_quote" || !!item.is_quote;
+    const authorized = isQuoteItem && item.quote_id ? quoteAuthorizedPrices.get(String(item.quote_id)) || null : null;
+    const baseThb = authorized ? authorized.thb : Number(item.original_price_thb || item.price_thb || 0);
+    const baseUsd = authorized ? authorized.usd : Number(item.original_price_usd || item.price_usd || 0);
+    const unitAmount = currency === "thb" ? Math.round(baseThb * 100) : Math.round(baseUsd * 100);
+    const campaignPct = isQuoteItem ? 0 : campaignDiscounts.get(String(item.product_slug || "").trim()) || 0;
+    const promoPct = discountApplied ? discountPct : 0;
+    let finalUnitAmount = unitAmount;
+    if (campaignPct > promoPct) {
+      const baseMajor = currency === "thb" ? baseThb : baseUsd;
+      finalUnitAmount = Math.round(baseMajor * (100 - campaignPct) / 100) * 100;
+    } else if (promoPct > 0) {
+      finalUnitAmount = Math.round(unitAmount * (100 - promoPct) / 100);
+    }
     const desc = [
-      item.product_name,
-      item.fabric ? `Fabric: ${item.fabric}` : "",
+      itemName,
+      normalizedFabric ? `Fabric: ${normalizedFabric}` : "",
       item.color ? `Color: ${item.color}` : "",
       item.dimensions ? `${item.dimensions.w}\xD7${item.dimensions.l}${item.dimensions.d ? `\xD7${item.dimensions.d}` : ""} ${item.dimensions.unit}` : ""
     ].filter(Boolean).join(" | ");
@@ -7892,10 +17343,10 @@ async function handleCheckout(request, env) {
       price_data: {
         currency,
         product_data: {
-          name: item.product_name,
+          name: itemName,
           description: desc
         },
-        unit_amount: discountApplied ? Math.round(unitAmount * (100 - discountPct) / 100) : unitAmount
+        unit_amount: finalUnitAmount
       },
       quantity: item.qty || 1
     };
@@ -7929,10 +17380,11 @@ async function handleCheckout(request, env) {
     }
   } catch {
   }
-  function toNumber(v) {
+  function toNumber2(v) {
     const n = Number(v);
     return Number.isFinite(n) ? n : void 0;
   }
+  __name(toNumber2, "toNumber");
   function parseSizeText(sizeText) {
     const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
     const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
@@ -7940,24 +17392,64 @@ async function handleCheckout(request, env) {
     const unitRaw = String(m[4] || "").toLowerCase();
     const unit = unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm";
     return {
-      w: toNumber(m[1]),
-      l: toNumber(m[2]),
-      d: toNumber(m[3]),
+      w: toNumber2(m[1]),
+      l: toNumber2(m[2]),
+      d: toNumber2(m[3]),
       unit
     };
   }
+  __name(parseSizeText, "parseSizeText");
   function buildMetadataDims(item) {
     const src = item.dimensions || {};
     const sizeText = String(src.size_text || src.label || "").trim();
     const parsed = sizeText ? parseSizeText(sizeText) : {};
+    const shapeCode = String(src.shape_code || "").trim() || void 0;
+    const shapeName = String(src.shape_name || "").trim() || void 0;
+    const boatModelName = String(src.boat_model_name || "").trim() || void 0;
+    const boatModelKey = String(src.boat_model_key || "").trim() || void 0;
+    const areaCm2 = toNumber2(src.area_cm2);
+    const values = sanitizeMarineValues(src.values);
     return {
-      w: toNumber(src.w) ?? parsed.w,
-      l: toNumber(src.l) ?? parsed.l,
-      d: toNumber(src.d) ?? parsed.d,
+      w: toNumber2(src.w) ?? parsed.w,
+      l: toNumber2(src.l) ?? parsed.l,
+      d: toNumber2(src.d) ?? parsed.d,
       unit: String(src.unit || parsed.unit || "cm"),
-      size_text: sizeText || void 0
+      size_text: sizeText || void 0,
+      shape_code: shapeCode,
+      shape_name: shapeName,
+      boat_model_name: boatModelName,
+      boat_model_key: boatModelKey,
+      area_cm2: areaCm2,
+      values
     };
   }
+  __name(buildMetadataDims, "buildMetadataDims");
+  function buildCompactDimText(dims) {
+    const w = toNumber2(dims?.w);
+    const l = toNumber2(dims?.l);
+    const d = toNumber2(dims?.d);
+    const unit = String(dims?.unit || "cm");
+    if (w && l) return `${w}\xD7${l}${d ? `\xD7${d}` : ""} ${unit}`;
+    const boatModelName = String(dims?.boat_model_name || "").trim();
+    if (boatModelName) return `Model: ${boatModelName}`;
+    const shapeCode = String(dims?.shape_code || "").trim();
+    const values = sanitizeMarineValues(dims?.values);
+    if (shapeCode || values) {
+      const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+      const pairs = values ? Object.keys(values).sort((a, b) => {
+        const ai = order.indexOf(a);
+        const bi = order.indexOf(b);
+        if (ai === -1 && bi === -1) return a.localeCompare(b);
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      }).map((k) => `${k}:${values[k]}`) : [];
+      return `Shape ${shapeCode || "Custom"}${pairs.length ? ` (${pairs.join(", ")} ${unit})` : ""}`;
+    }
+    const sizeText = String(dims?.size_text || "").replace(/^dimensions:\s*/i, "").trim();
+    return sizeText;
+  }
+  __name(buildCompactDimText, "buildCompactDimText");
   const reqUrl = new URL(request.url);
   const siteUrl = reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1" ? "http://localhost:8788" : reqUrl.origin;
   try {
@@ -7988,10 +17480,14 @@ async function handleCheckout(request, env) {
       params.append("metadata[discount_code]", discountCode);
       params.append("metadata[discount_percent]", String(discountPct));
     }
+    const checkoutTouch = checkoutAttribution.checkout_session;
+    if (checkoutTouch?.source) params.append("metadata[acq_source]", String(checkoutTouch.source));
+    if (checkoutTouch?.medium) params.append("metadata[acq_medium]", String(checkoutTouch.medium));
     const metadataItems = items.map((i, idx) => ({
       slug: i.product_slug,
-      name: i.product_name,
-      fabric: i.fabric,
+      name: getItemName(i),
+      quote_id: i.quote_id || void 0,
+      fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
       color: i.color,
       dims: buildMetadataDims(i),
       qty: i.qty || 1,
@@ -8002,10 +17498,32 @@ async function handleCheckout(request, env) {
     if (metadataItemsStr.length > 500) {
       const compactItems = items.map((i, idx) => ({
         s: i.product_slug,
+        qi: i.quote_id || void 0,
+        f: normalizeFabricForSlug(i.product_slug, i.fabric),
+        c: i.color,
+        d: buildCompactDimText(buildMetadataDims(i)) || void 0,
         q: i.qty || 1,
         u: lineItems[idx]?.price_data?.unit_amount || 0
       }));
       metadataItemsStr = JSON.stringify(compactItems);
+      if (metadataItemsStr.length > 500) {
+        const slimmerItems = items.map((i, idx) => ({
+          s: i.product_slug,
+          qi: i.quote_id || void 0,
+          d: buildCompactDimText(buildMetadataDims(i)) || void 0,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0
+        }));
+        metadataItemsStr = JSON.stringify(slimmerItems);
+      }
+      if (metadataItemsStr.length > 500) {
+        const minimalItems = items.map((i, idx) => ({
+          s: i.product_slug,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0
+        }));
+        metadataItemsStr = JSON.stringify(minimalItems);
+      }
     }
     params.append("metadata[items]", metadataItemsStr);
     const appliedShippingCountry = String(shippingQuote?.applied_country || "").toUpperCase();
@@ -8043,6 +17561,48 @@ async function handleCheckout(request, env) {
         headers: { "Content-Type": "application/json" }
       });
     }
+    try {
+      const schemaOk = await ensureCheckoutSnapshotSchema(env);
+      if (schemaOk && stripeData?.id) {
+        const snapshotItems = items.map((i, idx) => ({
+          slug: i.product_slug,
+          name: getItemName(i),
+          quote_id: i.quote_id || void 0,
+          fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
+          color: i.color || null,
+          dims: buildMetadataDims(i),
+          qty: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0
+        }));
+        await env.DB.prepare(
+          `INSERT OR REPLACE INTO checkout_session_snapshots (
+             stripe_session_id, email, currency, items_json, attribution_json, quote_ids_json, created_at
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))`
+        ).bind(
+          String(stripeData.id),
+          normalizedEmail,
+          String(currency || "").toLowerCase(),
+          JSON.stringify(snapshotItems),
+          JSON.stringify(checkoutAttribution),
+          JSON.stringify(quoteIdsFromCart)
+        ).run();
+      }
+    } catch (e) {
+      console.error("checkout snapshot persist failed:", e?.message || e);
+    }
+    try {
+      if (stripeData?.id) {
+        await upsertQuoteAttributionFromCheckout(
+          env,
+          quoteIdsFromCart,
+          normalizedEmail,
+          checkoutAttribution,
+          String(stripeData.id)
+        );
+      }
+    } catch (e) {
+      console.error("checkout quote attribution persist failed:", e?.message || e);
+    }
     return new Response(JSON.stringify({
       url: stripeData.url,
       session_id: stripeData.id
@@ -8079,8 +17639,53 @@ function normalizeAddress2(raw) {
   return [(addr.street || addr.address || "").trim().toLowerCase(), (addr.city || "").trim().toLowerCase(), (addr.state || addr.province || "").trim().toLowerCase(), (addr.postal_code || addr.zip || addr.postal || "").trim().toLowerCase(), (addr.country || "").trim().toLowerCase()].join("|");
 }
 __name(normalizeAddress2, "normalizeAddress");
+function isProductionHost19(request) {
+  try {
+    const host = new URL(request.url).hostname.toLowerCase();
+    return host === "www.mildmate.com" || host === "mildmate.com";
+  } catch {
+    return false;
+  }
+}
+__name(isProductionHost19, "isProductionHost");
+function assertWebhookRuntimeSafety(request, env) {
+  const prodHost = isProductionHost19(request);
+  const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
+  const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
+  const stripeEnvMode = String(env.STRIPE_ENV_MODE || "").trim().toLowerCase();
+  if (prodHost) {
+    if (runtimeEnv && runtimeEnv !== "prod" && runtimeEnv !== "production") {
+      return "Production host runtime environment mismatch";
+    }
+    if (stripeEnvMode && stripeEnvMode !== "live") {
+      return "Production host requires STRIPE_ENV_MODE=live";
+    }
+    return null;
+  }
+  if (env.NON_PROD_STRIPE_ALLOWED !== "true") {
+    return "Non-production webhook disabled until NON_PROD_STRIPE_ALLOWED=true";
+  }
+  if (!runtimeEnv || runtimeEnv === "prod" || runtimeEnv === "production") {
+    return "Non-production runtime requires explicit non-production RUNTIME_ENV";
+  }
+  if (stripeEnvMode !== "test") {
+    return "Non-production webhook requires STRIPE_ENV_MODE=test";
+  }
+  if (!d1Label || d1Label === "prod" || d1Label === "production") {
+    return "Non-production runtime requires non-production D1_ENV_LABEL";
+  }
+  return null;
+}
+__name(assertWebhookRuntimeSafety, "assertWebhookRuntimeSafety");
 var orderCustomerNoteSchemaReady = false;
 var orderCustomerNoteSchemaPromise = null;
+var checkoutSnapshotSchemaReady2 = false;
+var checkoutSnapshotSchemaPromise2 = null;
+var stripeWebhookEventsSchemaReady = false;
+var stripeWebhookEventsSchemaPromise = null;
+var stripeFulfillmentSchemaReady = false;
+var stripeFulfillmentSchemaPromise = null;
+var PAID_OR_HISTORICAL_ORDER_STATUSES = ["confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"];
 async function ensureOrderCustomerNoteSchema(env) {
   if (orderCustomerNoteSchemaReady) return true;
   if (!orderCustomerNoteSchemaPromise) {
@@ -8091,6 +17696,7 @@ async function ensureOrderCustomerNoteSchema(env) {
           (tableInfo.results || []).map((r) => String(r.name || "").toLowerCase())
         );
         const alters = [];
+        if (!existing.has("quote_id")) alters.push("ALTER TABLE orders ADD COLUMN quote_id TEXT");
         if (!existing.has("customer_note_type")) alters.push("ALTER TABLE orders ADD COLUMN customer_note_type TEXT");
         if (!existing.has("customer_note")) alters.push("ALTER TABLE orders ADD COLUMN customer_note TEXT");
         for (const sql of alters) await env.DB.prepare(sql).run();
@@ -8107,6 +17713,261 @@ async function ensureOrderCustomerNoteSchema(env) {
   return await orderCustomerNoteSchemaPromise;
 }
 __name(ensureOrderCustomerNoteSchema, "ensureOrderCustomerNoteSchema");
+async function ensureCheckoutSnapshotSchema2(env) {
+  if (checkoutSnapshotSchemaReady2) return true;
+  if (!checkoutSnapshotSchemaPromise2) {
+    checkoutSnapshotSchemaPromise2 = (async () => {
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS checkout_session_snapshots (
+             stripe_session_id TEXT PRIMARY KEY,
+             email TEXT,
+             currency TEXT,
+             items_json TEXT NOT NULL,
+             attribution_json TEXT,
+             quote_ids_json TEXT,
+             created_at DATETIME DEFAULT (datetime('now'))
+           )`
+        ).run();
+        try {
+          const tableInfo = await env.DB.prepare("PRAGMA table_info(checkout_session_snapshots)").all();
+          const existing = new Set(
+            (tableInfo.results || []).map((r) => String(r.name || "").toLowerCase())
+          );
+          const alters = [];
+          if (!existing.has("attribution_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN attribution_json TEXT");
+          if (!existing.has("quote_ids_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN quote_ids_json TEXT");
+          for (const sql of alters) await env.DB.prepare(sql).run();
+        } catch {
+        }
+        checkoutSnapshotSchemaReady2 = true;
+        return true;
+      } catch (e) {
+        console.error("checkout snapshot schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!checkoutSnapshotSchemaReady2) checkoutSnapshotSchemaPromise2 = null;
+    });
+  }
+  return await checkoutSnapshotSchemaPromise2;
+}
+__name(ensureCheckoutSnapshotSchema2, "ensureCheckoutSnapshotSchema");
+async function ensureStripeWebhookEventsSchema(env) {
+  if (stripeWebhookEventsSchemaReady) return true;
+  if (!stripeWebhookEventsSchemaPromise) {
+    stripeWebhookEventsSchemaPromise = (async () => {
+      try {
+        const row = await env.DB.prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'stripe_webhook_events' LIMIT 1"
+        ).first();
+        const ok = !!row?.name;
+        if (!ok) {
+          console.error("Missing required table stripe_webhook_events; apply migration 057_stripe_payment_idempotency.sql");
+        }
+        stripeWebhookEventsSchemaReady = ok;
+        return ok;
+      } catch (e) {
+        console.error("stripe webhook events schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!stripeWebhookEventsSchemaReady) stripeWebhookEventsSchemaPromise = null;
+    });
+  }
+  return await stripeWebhookEventsSchemaPromise;
+}
+__name(ensureStripeWebhookEventsSchema, "ensureStripeWebhookEventsSchema");
+async function ensureStripeFulfillmentSchema(env) {
+  if (stripeFulfillmentSchemaReady) return true;
+  if (!stripeFulfillmentSchemaPromise) {
+    stripeFulfillmentSchemaPromise = (async () => {
+      try {
+        const row = await env.DB.prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'stripe_order_fulfillment_lines' LIMIT 1"
+        ).first();
+        const ok = !!row?.name;
+        if (!ok) {
+          console.error("Missing required table stripe_order_fulfillment_lines; apply migration 057_stripe_payment_idempotency.sql");
+        }
+        stripeFulfillmentSchemaReady = ok;
+        return ok;
+      } catch (e) {
+        console.error("stripe fulfillment schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!stripeFulfillmentSchemaReady) stripeFulfillmentSchemaPromise = null;
+    });
+  }
+  return await stripeFulfillmentSchemaPromise;
+}
+__name(ensureStripeFulfillmentSchema, "ensureStripeFulfillmentSchema");
+function isStripeSessionPaid(session) {
+  return String(session?.payment_status || "").toLowerCase() === "paid";
+}
+__name(isStripeSessionPaid, "isStripeSessionPaid");
+function toFiniteNumberOrNull(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toFiniteNumberOrNull, "toFiniteNumberOrNull");
+function normalizeDimsForKey(dimsRaw) {
+  const dims = dimsRaw && typeof dimsRaw === "object" ? dimsRaw : {};
+  const valuesRaw = dims.values && typeof dims.values === "object" ? dims.values : {};
+  const values = {};
+  Object.keys(valuesRaw).sort().forEach((k) => {
+    const n = toFiniteNumberOrNull(valuesRaw[k]);
+    if (n !== null) values[String(k).toUpperCase()] = n;
+  });
+  return {
+    w: toFiniteNumberOrNull(dims.w),
+    l: toFiniteNumberOrNull(dims.l),
+    d: toFiniteNumberOrNull(dims.d),
+    unit: String(dims.unit || "cm"),
+    size_text: String(dims.size_text || ""),
+    shape_code: String(dims.shape_code || ""),
+    shape_name: String(dims.shape_name || ""),
+    boat_model_name: String(dims.boat_model_name || ""),
+    boat_model_key: String(dims.boat_model_key || ""),
+    area_cm2: toFiniteNumberOrNull(dims.area_cm2),
+    values
+  };
+}
+__name(normalizeDimsForKey, "normalizeDimsForKey");
+function buildFulfillmentLineIdentity(item) {
+  return {
+    slug: String(item?.slug || ""),
+    name: String(item?.name || ""),
+    quote_id: String(item?.quote_id || ""),
+    fabric: String(item?.fabric || ""),
+    color: String(item?.color || ""),
+    qty: Number(item?.qty || 1) || 1,
+    unit_amount: Number(item?.unit_amount || 0) || 0,
+    dims: normalizeDimsForKey(item?.dims || {})
+  };
+}
+__name(buildFulfillmentLineIdentity, "buildFulfillmentLineIdentity");
+async function buildFulfillmentLineKey(sessionId, item, occurrence) {
+  const payload = JSON.stringify({
+    session_id: String(sessionId || ""),
+    occurrence: Number(occurrence || 1),
+    slug: String(item?.slug || ""),
+    name: String(item?.name || ""),
+    quote_id: String(item?.quote_id || ""),
+    fabric: String(item?.fabric || ""),
+    color: String(item?.color || ""),
+    qty: Number(item?.qty || 1) || 1,
+    unit_amount: Number(item?.unit_amount || 0) || 0,
+    dims: normalizeDimsForKey(item?.dims || {})
+  });
+  return sha2562(payload);
+}
+__name(buildFulfillmentLineKey, "buildFulfillmentLineKey");
+async function claimFulfillmentLine(env, sessionId, eventId, lineKey, lineIndex) {
+  const schemaOk = await ensureStripeFulfillmentSchema(env);
+  if (!schemaOk) throw new Error("Missing required fulfillment schema (migration 057)");
+  const res = await env.DB.prepare(
+    `INSERT OR IGNORE INTO stripe_order_fulfillment_lines
+      (line_key, stripe_session_id, stripe_event_id, line_index, created_at)
+     VALUES (?1, ?2, ?3, ?4, datetime('now'))`
+  ).bind(lineKey, sessionId, eventId || null, lineIndex).run();
+  return Number(res?.meta?.changes || 0) > 0;
+}
+__name(claimFulfillmentLine, "claimFulfillmentLine");
+async function countExistingConfirmedOrderLines(env, line) {
+  const paidStatusesSql = PAID_OR_HISTORICAL_ORDER_STATUSES.map((s) => `'${s}'`).join(",");
+  const row = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM orders
+     WHERE stripe_session_id = ?1
+       AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
+       AND COALESCE(product_slug, '') = COALESCE(?2, '')
+       AND COALESCE(product_title_en, '') = COALESCE(?3, '')
+       AND COALESCE(fabric, '') = COALESCE(?4, '')
+       AND COALESCE(color, '') = COALESCE(?5, '')
+       AND ((width_cm IS NULL AND ?6 IS NULL) OR width_cm = ?6)
+       AND ((length_cm IS NULL AND ?7 IS NULL) OR length_cm = ?7)
+       AND ((depth_cm IS NULL AND ?8 IS NULL) OR depth_cm = ?8)
+       AND ((price_usd IS NULL AND ?9 IS NULL) OR price_usd = ?9)
+       AND ((price_thb IS NULL AND ?10 IS NULL) OR price_thb = ?10)
+       AND COALESCE(currency, '') = COALESCE(?11, '')
+       AND quantity = ?12`
+  ).bind(
+    line.sessionId,
+    line.productSlug || "",
+    line.productTitle || "",
+    line.fabric || "",
+    line.color || "",
+    line.widthCm,
+    line.lengthCm,
+    line.depthCm,
+    line.priceUsd,
+    line.priceThb,
+    line.currency || "",
+    line.qty
+  ).first();
+  return Number(row?.c || 0);
+}
+__name(countExistingConfirmedOrderLines, "countExistingConfirmedOrderLines");
+async function releaseFulfillmentLine(env, lineKey) {
+  try {
+    await env.DB.prepare("DELETE FROM stripe_order_fulfillment_lines WHERE line_key = ?1").bind(lineKey).run();
+  } catch {
+  }
+}
+__name(releaseFulfillmentLine, "releaseFulfillmentLine");
+async function claimStripeWebhookEvent(env, event) {
+  const schemaOk = await ensureStripeWebhookEventsSchema(env);
+  if (!schemaOk) return { status: "error" };
+  const eventId = String(event?.id || "").trim();
+  const eventType = String(event?.type || "").trim();
+  const stripeSessionId = String(event?.data?.object?.id || "").trim() || null;
+  if (!eventId) return { status: "error" };
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO stripe_webhook_events
+      (event_id, event_type, stripe_session_id, processing_token, processed_at, process_result, last_error, created_at, updated_at)
+     VALUES (?1, ?2, ?3, NULL, NULL, NULL, NULL, datetime('now'), datetime('now'))`
+  ).bind(eventId, eventType, stripeSessionId).run();
+  const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const claimRes = await env.DB.prepare(
+    `UPDATE stripe_webhook_events
+     SET processing_token = ?2, updated_at = datetime('now')
+     WHERE event_id = ?1
+       AND processed_at IS NULL
+       AND (processing_token IS NULL OR updated_at < datetime('now', '-10 minutes'))`
+  ).bind(eventId, token).run();
+  if (Number(claimRes?.meta?.changes || 0) > 0) {
+    return { status: "claimed", token };
+  }
+  const row = await env.DB.prepare(
+    "SELECT processed_at FROM stripe_webhook_events WHERE event_id = ?1 LIMIT 1"
+  ).bind(eventId).first();
+  if (row?.processed_at) return { status: "already_processed" };
+  return { status: "in_progress" };
+}
+__name(claimStripeWebhookEvent, "claimStripeWebhookEvent");
+async function markStripeWebhookEventProcessed(env, eventId, token, processResult) {
+  await env.DB.prepare(
+    `UPDATE stripe_webhook_events
+     SET processed_at = datetime('now'),
+         process_result = ?3,
+         processing_token = NULL,
+         last_error = NULL,
+         updated_at = datetime('now')
+     WHERE event_id = ?1 AND processing_token = ?2`
+  ).bind(eventId, token, processResult).run();
+}
+__name(markStripeWebhookEventProcessed, "markStripeWebhookEventProcessed");
+async function markStripeWebhookEventFailed(env, eventId, token, err4) {
+  await env.DB.prepare(
+    `UPDATE stripe_webhook_events
+     SET last_error = ?3,
+         processing_token = NULL,
+         updated_at = datetime('now')
+     WHERE event_id = ?1 AND processing_token = ?2`
+  ).bind(eventId, token, String(err4?.message || err4 || "unknown")).run();
+}
+__name(markStripeWebhookEventFailed, "markStripeWebhookEventFailed");
 async function handleStripeWebhook(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -8117,6 +17978,13 @@ async function handleStripeWebhook(request, env) {
   const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
     return new Response(JSON.stringify({ error: "Webhook not configured" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  const webhookSafetyError = assertWebhookRuntimeSafety(request, env);
+  if (webhookSafetyError) {
+    return new Response(JSON.stringify({ error: webhookSafetyError }), {
       status: 503,
       headers: { "Content-Type": "application/json" }
     });
@@ -8176,11 +18044,34 @@ async function handleStripeWebhook(request, env) {
     const paymentMethod = String(charge.payment_method_details?.card?.brand || "") + " \u2022\u2022\u2022\u2022 " + String(charge.payment_method_details?.card?.last4 || "????");
     const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
     try {
-      const emailBody = ["REFUND ISSUED", "", "Charge: " + chargeId, "Amount: " + amount.toFixed(2) + " " + currency, "Reason: " + reason, "Payment: " + paymentMethod, "", billingName ? "Customer: " + billingName : "", billingEmail ? "Email: " + billingEmail : "", receiptUrl ? "Receipt: " + receiptUrl : "", "", "\u2014 MildMate Stripe Webhook"].filter(Boolean).join("\n");
-      const teamMail = await sendEmail(env, { to: teamEmail, subject: "\u26A0\uFE0F Refund \u2014 " + amount.toFixed(2) + " " + currency + " \u2014 MildMate", text: emailBody });
-      if (!teamMail.success) console.error("Refund alert email failed:", teamMail.error || "unknown error");
-    } catch (err) { console.error("Refund alert exception:", err?.message || err); }
-    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+      const emailBody = [
+        `REFUND ISSUED`,
+        ``,
+        `Charge: ${chargeId}`,
+        `Amount: ${amount.toFixed(2)} ${currency}`,
+        `Reason: ${reason}`,
+        `Payment: ${paymentMethod}`,
+        ``,
+        billingName ? `Customer: ${billingName}` : "",
+        billingEmail ? `Email: ${billingEmail}` : "",
+        receiptUrl ? `Receipt: ${receiptUrl}` : "",
+        ``,
+        `\u2014 MildMate Stripe Webhook`
+      ].filter(Boolean).join("\n");
+      const teamMail = await sendEmail(env, {
+        to: teamEmail,
+        subject: `\u26A0\uFE0F Refund \u2014 ${amount.toFixed(2)} ${currency} \u2014 MildMate`,
+        text: emailBody
+      });
+      if (!teamMail.success) {
+        console.error("Refund alert email failed:", teamMail.error || "unknown error");
+      }
+    } catch (err4) {
+      console.error("Refund alert exception:", err4?.message || err4);
+    }
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
   }
   if (event.type === "charge.dispute.created" || event.type === "customer.dispute.created") {
     const dispute = event.data.object;
@@ -8192,240 +18083,451 @@ async function handleStripeWebhook(request, env) {
     const evidenceDueBy = String(dispute.evidence_details?.due_by || "N/A");
     const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
     try {
-      const emailBody = ["DISPUTE / CHARGEBACK FILED", "", "Charge: " + chargeId, "Amount: " + amount.toFixed(2) + " " + currency, "Reason: " + reason, "Status: " + status, "Evidence Due By: " + evidenceDueBy, "", "Action required: respond in Stripe Dashboard before the evidence deadline.", "", "\u2014 MildMate Stripe Webhook"].join("\n");
-      const teamMail = await sendEmail(env, { to: teamEmail, subject: "\uD83D\uDEA8 Dispute \u2014 " + amount.toFixed(2) + " " + currency + " \u2014 MildMate", text: emailBody });
-      if (!teamMail.success) console.error("Dispute alert email failed:", teamMail.error || "unknown error");
-    } catch (err) { console.error("Dispute alert exception:", err?.message || err); }
-    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+      const emailBody = [
+        `DISPUTE / CHARGEBACK FILED`,
+        ``,
+        `Charge: ${chargeId}`,
+        `Amount: ${amount.toFixed(2)} ${currency}`,
+        `Reason: ${reason}`,
+        `Status: ${status}`,
+        `Evidence Due By: ${evidenceDueBy}`,
+        ``,
+        `Action required: respond in Stripe Dashboard before the evidence deadline.`,
+        ``,
+        `\u2014 MildMate Stripe Webhook`
+      ].join("\n");
+      const teamMail = await sendEmail(env, {
+        to: teamEmail,
+        subject: `\u{1F6A8} Dispute \u2014 ${amount.toFixed(2)} ${currency} \u2014 MildMate`,
+        text: emailBody
+      });
+      if (!teamMail.success) {
+        console.error("Dispute alert email failed:", teamMail.error || "unknown error");
+      }
+    } catch (err4) {
+      console.error("Dispute alert exception:", err4?.message || err4);
+    }
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
   }
-  if (event.type !== "checkout.session.completed") {
-    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+  const stripeOrderEventTypes = /* @__PURE__ */ new Set([
+    "checkout.session.completed",
+    "checkout.session.async_payment_succeeded",
+    "checkout.session.async_payment_failed"
+  ]);
+  if (!stripeOrderEventTypes.has(String(event?.type || ""))) {
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  const eventId = String(event?.id || "").trim();
+  const claim = await claimStripeWebhookEvent(env, event);
+  if (claim.status === "already_processed" || claim.status === "in_progress") {
+    return new Response(JSON.stringify({ received: true, duplicate: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  if (claim.status !== "claimed" || !claim.token) {
+    return new Response(JSON.stringify({ error: "Webhook idempotency unavailable" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
   const session = event.data.object;
-  const metadata = session.metadata || {};
-  const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;
-  const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;
-  const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();
-  const shippingServiceType = shippingServiceLevelRaw === "standard" ? "Standard" : shippingServiceLevelRaw === "express" ? "Express" : "N/A";
-  const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
-  let items = [];
-  try {
-    const rawItems = JSON.parse(metadata.items || "[]");
-    items = (Array.isArray(rawItems) ? rawItems : []).map((item) => ({
-      slug: item.slug || item.s || "",
-      name: item.name || item.n || item.slug || item.s || "",
-      fabric: item.fabric || item.f || null,
-      color: item.color || item.c || null,
-      dims: item.dims || item.d || {},
-      qty: item.qty || item.q || 1,
-      unit_amount: Number(item.u || item.unit_amount || 0)
-      // minor unit (cents/satang)
-    }));
-  } catch {
+  if (event.type === "checkout.session.async_payment_failed") {
+    await markStripeWebhookEventProcessed(env, eventId, claim.token, "ignored_async_payment_failed");
+    return new Response(JSON.stringify({ received: true, ignored: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
   }
-  const sessionCurrency = String(session.currency || "usd").toLowerCase();
-  const totalQty = items.reduce((sum, item) => sum + (item.qty || 1), 0);
-  const fallbackUnitAmount = totalQty > 0 && session.amount_total ? Math.round(session.amount_total / totalQty) : 0;
-  const toFiniteNumber = (v) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : void 0;
-  };
-  const parseDimsFromSizeText = (sizeText) => {
-    const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
-    const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
-    if (!m) return {};
-    const unitRaw = String(m[4] || "").toLowerCase();
-    return {
-      w: toFiniteNumber(m[1]),
-      l: toFiniteNumber(m[2]),
-      d: toFiniteNumber(m[3]),
-      unit: unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm"
-    };
-  };
-  const formatDimsForEmail = (dims) => {
-    const w = toFiniteNumber(dims?.w);
-    const l = toFiniteNumber(dims?.l);
-    const d = toFiniteNumber(dims?.d);
-    const unit = String(dims?.unit || "cm");
-    if (w && l) return `${w}\xD7${l}${d ? `\xD7${d}` : ""} ${unit}`;
-    const sizeText = String(dims?.size_text || "").trim();
-    if (sizeText) return sizeText.replace(/^dimensions:\s*/i, "").trim();
-    return `?\xD7? ${unit}`;
-  };
-  for (const item of items) {
-    const dims = item.dims || {};
-    const parsedDims = parseDimsFromSizeText(dims?.size_text);
-    const widthCm = toFiniteNumber(dims.w) ?? parsedDims.w ?? null;
-    const lengthCm = toFiniteNumber(dims.l) ?? parsedDims.l ?? null;
-    const depthCm = toFiniteNumber(dims.d) ?? parsedDims.d ?? null;
-    const unitAmount = item.unit_amount > 0 ? item.unit_amount : fallbackUnitAmount;
-    const unitPriceMajor = unitAmount > 0 ? unitAmount / 100 : null;
+  if (!isStripeSessionPaid(session)) {
+    await markStripeWebhookEventProcessed(env, eventId, claim.token, "ignored_unpaid");
+    return new Response(JSON.stringify({ received: true, ignored: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  try {
+    const metadata = session.metadata || {};
+    const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;
+    const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;
+    const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();
+    const shippingServiceType = shippingServiceLevelRaw === "standard" ? "Standard" : shippingServiceLevelRaw === "express" ? "Express" : "N/A";
+    const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
+    const mapItems = /* @__PURE__ */ __name((rawItems) => {
+      return (Array.isArray(rawItems) ? rawItems : []).map((item) => ({
+        slug: item.slug || item.s || "",
+        name: item.name || item.n || item.slug || item.s || "",
+        quote_id: item.quote_id || item.qi || null,
+        fabric: item.fabric || item.f || null,
+        color: item.color || item.c || null,
+        dims: typeof item.dims === "object" && item.dims || typeof item.d === "object" && item.d || (typeof item.d === "string" || typeof item.dt === "string" ? { size_text: typeof item.d === "string" ? item.d : item.dt } : {}),
+        qty: item.qty || item.q || 1,
+        unit_amount: Number(item.u || item.unit_amount || 0)
+        // minor unit (cents/satang)
+      }));
+    }, "mapItems");
+    let items = [];
+    let itemsSource = "metadata";
+    let checkoutAttribution = sanitizeAttributionPayload(null, "checkout");
+    let quoteIdsFromSnapshot = [];
     try {
-      if (hasOrderCustomerNoteColumns) {
-        await env.DB.prepare(
-          `INSERT INTO orders (
-            stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
-            shipping_address, product_slug, product_title_en, fabric, color,
-            width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-            custom_notes, price_usd, price_thb, currency, quantity, discount_code,
-            customer_note_type, customer_note, status
-          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, 'confirmed')`
-        ).bind(
-          session.id,
-          session.payment_intent || null,
-          (metadata.email || session.customer_email || "").toLowerCase(),
-          metadata.name || null,
-          metadata.phone || null,
-          metadata.address || null,
-          item.slug || "",
-          item.name || "",
-          item.fabric || null,
-          item.color || null,
-          widthCm,
-          lengthCm,
-          depthCm,
-          null,
-          null,
-          null,
-          null,
-          sessionCurrency === "usd" ? unitPriceMajor : null,
-          sessionCurrency === "thb" ? unitPriceMajor : null,
-          sessionCurrency,
-          item.qty || 1,
-          metadata.discount_code || null,
-          customerNoteType,
-          customerNote
-        ).run();
-      } else {
-        await env.DB.prepare(
-          `INSERT INTO orders (
-            stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
-            shipping_address, product_slug, product_title_en, fabric, color,
-            width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-            custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
-          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, 'confirmed')`
-        ).bind(
-          session.id,
-          session.payment_intent || null,
-          (metadata.email || session.customer_email || "").toLowerCase(),
-          metadata.name || null,
-          metadata.phone || null,
-          metadata.address || null,
-          item.slug || "",
-          item.name || "",
-          item.fabric || null,
-          item.color || null,
-          widthCm,
-          lengthCm,
-          depthCm,
-          null,
-          null,
-          null,
-          null,
-          sessionCurrency === "usd" ? unitPriceMajor : null,
-          sessionCurrency === "thb" ? unitPriceMajor : null,
-          sessionCurrency,
-          item.qty || 1,
-          metadata.discount_code || null
-        ).run();
-      }
-      if (metadata.discount_code) {
-        try {
-          var addrHash = metadata.address ? await sha2562(normalizeAddress2(metadata.address)) : null;
-          const normalizedEmail2 = (metadata.email || session.customer_email || "").toLowerCase();
-          const promoRow = await env.DB.prepare(
-            "SELECT id FROM promo_codes WHERE code = ? AND is_active = 1"
-          ).bind(metadata.discount_code).first();
-          if (promoRow) {
-            await env.DB.prepare(
-              "UPDATE promo_codes SET use_count = use_count + 1 WHERE id = ?"
-            ).bind(promoRow.id).run();
-            await env.DB.prepare(
-              "INSERT INTO promo_redemptions (promo_id, email, order_id) VALUES (?, ?, ?)"
-            ).bind(promoRow.id, normalizedEmail2, null).run();
-          } else {
-            await env.DB.prepare(
-              "UPDATE discount_claims SET status = 'used', address_hash = ?, order_id = last_insert_rowid(), claimed_at = datetime('now') WHERE code = ? AND status = 'issued'"
-            ).bind(addrHash, metadata.discount_code).run();
+      const schemaOk = await ensureCheckoutSnapshotSchema2(env);
+      if (schemaOk && session.id) {
+        const snapshot = await env.DB.prepare(
+          "SELECT items_json, attribution_json, quote_ids_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
+        ).bind(String(session.id)).first();
+        if (snapshot?.items_json) {
+          const rawSnapshotItems = JSON.parse(String(snapshot.items_json || "[]"));
+          const mapped = mapItems(rawSnapshotItems);
+          if (mapped.length > 0) {
+            items = mapped;
+            itemsSource = "d1_snapshot";
           }
-        } catch (err) {
-          console.error("Discount claim failed:", err?.message || err);
+        }
+        if (snapshot?.attribution_json) {
+          checkoutAttribution = sanitizeAttributionPayload(snapshot.attribution_json, "checkout");
+        }
+        if (snapshot?.quote_ids_json) {
+          try {
+            const parsedIds = JSON.parse(String(snapshot.quote_ids_json || "[]"));
+            quoteIdsFromSnapshot = Array.isArray(parsedIds) ? parsedIds : [];
+          } catch {
+          }
         }
       }
     } catch (e) {
-      console.error("Failed to save order:", e.message);
+      console.error("checkout snapshot read failed:", e?.message || e);
     }
-  }
-  const email = metadata.email || session.customer_email;
-  if (email) {
-    try {
-      await env.DB.prepare(
-        "UPDATE abandoned_carts SET recovered = 1 WHERE email = ?1 AND recovered = 0"
-      ).bind(email).run();
-    } catch {
-    }
-  }
-  if (email && metadata.address) {
-    try {
-      const existing = await env.DB.prepare(
-        "SELECT id FROM customer_addresses WHERE email = ?1 AND address = ?2 LIMIT 1"
-      ).bind(email, metadata.address).first();
-      if (!existing) {
-        const fullName = (metadata.name || "").trim();
-        const nameParts = fullName.split(/\s+/);
-        const firstName = nameParts[0] || "";
-        const lastName = nameParts.slice(1).join(" ") || "";
-        const addrParts = metadata.address.split(",").map((s) => s.trim());
-        const country = addrParts[addrParts.length - 1] || "";
-        const postal = addrParts.length >= 2 ? addrParts[addrParts.length - 2] : "";
-        const state = addrParts.length >= 3 ? addrParts[addrParts.length - 3] : "";
-        const city = addrParts.length >= 4 ? addrParts[addrParts.length - 4] : "";
-        await env.DB.prepare(
-          `INSERT INTO customer_addresses (email, label, first_name, last_name, phone, country, address, city, state, postal_code, is_default)
-           VALUES (?1, 'Home', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 0)`
-        ).bind(email, firstName, lastName, metadata.phone || "", country, metadata.address, city, state, postal).run();
+    if (items.length === 0) {
+      try {
+        const rawItems = JSON.parse(metadata.items || "[]");
+        items = mapItems(rawItems);
+        itemsSource = "metadata";
+      } catch {
       }
-    } catch {
     }
-  }
-  if (email && env.RESEND_API_KEY) {
-    const itemList = items.map((i) => {
-      const dims = i.dims || {};
-      return `- ${i.name} | ${i.fabric || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
-    }).join("\n");
-    const total = session.amount_total ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || "USD"}` : "N/A";
-    try {
-      const customerMail = await sendEmail(env, {
-        to: email,
-        subject: `Order Confirmed \u2014 MildMate #${session.id.slice(-8)}`,
-        text: `Thank you for your order!
+    console.log("order items source:", itemsSource, "session:", session.id, "count:", items.length);
+    const quoteIdsForAttribution = Array.from(/* @__PURE__ */ new Set([
+      ...extractUniqueQuoteIdsFromItems(items),
+      ...quoteIdsFromSnapshot.map((id) => String(id || "").trim()).filter(Boolean)
+    ]));
+    const sessionCurrency = String(session.currency || "usd").toLowerCase();
+    const totalQty = items.reduce((sum, item) => sum + (item.qty || 1), 0);
+    const fallbackUnitAmount = totalQty > 0 && session.amount_total ? Math.round(session.amount_total / totalQty) : 0;
+    const toFiniteNumber2 = /* @__PURE__ */ __name((v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : void 0;
+    }, "toFiniteNumber");
+    const parseDimsFromSizeText = /* @__PURE__ */ __name((sizeText) => {
+      const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
+      const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
+      if (!m) return {};
+      const unitRaw = String(m[4] || "").toLowerCase();
+      return {
+        w: toFiniteNumber2(m[1]),
+        l: toFiniteNumber2(m[2]),
+        d: toFiniteNumber2(m[3]),
+        unit: unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm"
+      };
+    }, "parseDimsFromSizeText");
+    const hasUsefulDims = /* @__PURE__ */ __name((dims) => {
+      if (!dims || typeof dims !== "object") return false;
+      if (toFiniteNumber2(dims.w) && toFiniteNumber2(dims.l)) return true;
+      if (String(dims.size_text || "").trim()) return true;
+      if (String(dims.boat_model_name || dims.boat_model_key || "").trim()) return true;
+      if (String(dims.shape_code || dims.shape_name || "").trim()) return true;
+      if (dims.values && typeof dims.values === "object" && Object.keys(dims.values).length > 0) return true;
+      return false;
+    }, "hasUsefulDims");
+    const formatDimsForEmail = /* @__PURE__ */ __name((dims) => {
+      const unit = String(dims?.unit || "cm");
+      const boatModelName = String(dims?.boat_model_name || "").trim();
+      if (boatModelName) {
+        const modelKey = String(dims?.boat_model_key || "").trim();
+        return modelKey ? `Model: ${boatModelName} (${modelKey})` : `Model: ${boatModelName}`;
+      }
+      const shapeCode = String(dims?.shape_code || "").trim();
+      const shapeName = String(dims?.shape_name || "").trim();
+      const valuesObj = dims?.values && typeof dims.values === "object" && !Array.isArray(dims.values) ? dims.values : null;
+      if (shapeCode || shapeName || valuesObj) {
+        const shapeLabel = [shapeCode ? `Shape ${shapeCode}` : "", shapeName].filter(Boolean).join(" \u2014 ");
+        const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+        const valuePairs = valuesObj ? Object.keys(valuesObj).sort((a, b) => {
+          const ai = order.indexOf(String(a).toUpperCase());
+          const bi = order.indexOf(String(b).toUpperCase());
+          if (ai === -1 && bi === -1) return String(a).localeCompare(String(b));
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        }).map((k) => {
+          const n = toFiniteNumber2(valuesObj[k]);
+          return n ? `${String(k).toUpperCase()}:${n}` : null;
+        }).filter(Boolean) : [];
+        const areaCm2 = toFiniteNumber2(dims?.area_cm2);
+        const extra = [
+          valuePairs.length ? `${valuePairs.join(", ")} ${unit}` : "",
+          areaCm2 ? `Area:${Math.round(areaCm2).toLocaleString()} cm\xB2` : ""
+        ].filter(Boolean).join(" | ");
+        return [shapeLabel, extra].filter(Boolean).join(" | ") || `?\xD7? ${unit}`;
+      }
+      const w = toFiniteNumber2(dims?.w);
+      const l = toFiniteNumber2(dims?.l);
+      const d = toFiniteNumber2(dims?.d);
+      if (w && l) return `${w}\xD7${l}${d ? `\xD7${d}` : ""} ${unit}`;
+      const sizeText = String(dims?.size_text || "").trim();
+      if (sizeText) return sizeText.replace(/^dimensions:\s*/i, "").trim();
+      return `?\xD7? ${unit}`;
+    }, "formatDimsForEmail");
+    let insertedOrderRows = 0;
+    const lineOccurrenceMap = /* @__PURE__ */ new Map();
+    for (let lineIndex = 0; lineIndex < items.length; lineIndex++) {
+      const item = items[lineIndex];
+      let dims = item.dims || {};
+      if (!hasUsefulDims(dims) && item.quote_id) {
+        try {
+          const quoteRow = await env.DB.prepare(
+            "SELECT dimensions FROM custom_quotes WHERE quote_id = ?1 LIMIT 1"
+          ).bind(String(item.quote_id)).first();
+          if (quoteRow?.dimensions) {
+            const fromQuote = typeof quoteRow.dimensions === "string" ? JSON.parse(quoteRow.dimensions) : quoteRow.dimensions;
+            if (fromQuote && typeof fromQuote === "object") {
+              dims = fromQuote;
+              item.dims = dims;
+            }
+          }
+        } catch (e) {
+          console.error("quote dims hydrate failed:", item.quote_id, e?.message || e);
+        }
+      }
+      const parsedDims = parseDimsFromSizeText(dims?.size_text);
+      const widthCm = toFiniteNumber2(dims.w) ?? parsedDims.w ?? null;
+      const lengthCm = toFiniteNumber2(dims.l) ?? parsedDims.l ?? null;
+      const depthCm = toFiniteNumber2(dims.d) ?? parsedDims.d ?? null;
+      const unitAmount = item.unit_amount > 0 ? item.unit_amount : fallbackUnitAmount;
+      const unitPriceMajor = unitAmount > 0 ? unitAmount / 100 : null;
+      const linePayload = {
+        slug: item.slug || "",
+        name: item.name || "",
+        quote_id: item.quote_id || "",
+        fabric: item.fabric || "",
+        color: item.color || "",
+        dims,
+        qty: item.qty || 1,
+        unit_amount: unitAmount
+      };
+      const lineIdentity = JSON.stringify(buildFulfillmentLineIdentity(linePayload));
+      const lineOccurrence = (lineOccurrenceMap.get(lineIdentity) || 0) + 1;
+      lineOccurrenceMap.set(lineIdentity, lineOccurrence);
+      const lineKey = await buildFulfillmentLineKey(session.id, linePayload, lineOccurrence);
+      const lineClaimed = await claimFulfillmentLine(env, String(session.id || ""), eventId, lineKey, lineIndex);
+      if (!lineClaimed) continue;
+      try {
+        const priceUsd = sessionCurrency === "usd" ? unitPriceMajor : null;
+        const priceThb = sessionCurrency === "thb" ? unitPriceMajor : null;
+        const existingCount = await countExistingConfirmedOrderLines(env, {
+          sessionId: session.id,
+          productSlug: String(item.slug || ""),
+          productTitle: String(item.name || ""),
+          fabric: item.fabric || null,
+          color: item.color || null,
+          widthCm,
+          lengthCm,
+          depthCm,
+          priceUsd,
+          priceThb,
+          currency: sessionCurrency,
+          qty: Number(item.qty || 1) || 1
+        });
+        if (existingCount >= lineOccurrence) continue;
+        if (hasOrderCustomerNoteColumns) {
+          await env.DB.prepare(
+            `INSERT INTO orders (
+              stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
+              shipping_address, product_slug, product_title_en, fabric, color,
+              width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
+              custom_notes, price_usd, price_thb, currency, quantity, discount_code, quote_id,
+              customer_note_type, customer_note, status
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, 'confirmed')`
+          ).bind(
+            session.id,
+            session.payment_intent || null,
+            (metadata.email || session.customer_email || "").toLowerCase(),
+            metadata.name || null,
+            metadata.phone || null,
+            metadata.address || null,
+            item.slug || "",
+            item.name || "",
+            item.fabric || null,
+            item.color || null,
+            widthCm,
+            lengthCm,
+            depthCm,
+            null,
+            null,
+            null,
+            null,
+            priceUsd,
+            priceThb,
+            sessionCurrency,
+            item.qty || 1,
+            metadata.discount_code || null,
+            item.quote_id || item.qi || null,
+            customerNoteType,
+            customerNote
+          ).run();
+        } else {
+          await env.DB.prepare(
+            `INSERT INTO orders (
+              stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
+              shipping_address, product_slug, product_title_en, fabric, color,
+              width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
+              custom_notes, price_usd, price_thb, currency, quantity, discount_code, quote_id, status
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, 'confirmed')`
+          ).bind(
+            session.id,
+            session.payment_intent || null,
+            (metadata.email || session.customer_email || "").toLowerCase(),
+            metadata.name || null,
+            metadata.phone || null,
+            metadata.address || null,
+            item.slug || "",
+            item.name || "",
+            item.fabric || null,
+            item.color || null,
+            widthCm,
+            lengthCm,
+            depthCm,
+            null,
+            null,
+            null,
+            null,
+            priceUsd,
+            priceThb,
+            sessionCurrency,
+            item.qty || 1,
+            metadata.discount_code || null,
+            item.quote_id || item.qi || null
+          ).run();
+        }
+        insertedOrderRows++;
+      } catch (e) {
+        await releaseFulfillmentLine(env, lineKey);
+        throw e;
+      }
+    }
+    if (insertedOrderRows > 0 && metadata.discount_code) {
+      try {
+        var addrHash = metadata.address ? await sha2562(normalizeAddress2(metadata.address)) : null;
+        const normalizedEmail2 = (metadata.email || session.customer_email || "").toLowerCase();
+        const promoRow = await env.DB.prepare(
+          "SELECT id FROM promo_codes WHERE code = ? AND is_active = 1"
+        ).bind(metadata.discount_code).first();
+        if (promoRow) {
+          await env.DB.prepare(
+            "UPDATE promo_codes SET use_count = use_count + 1 WHERE id = ?"
+          ).bind(promoRow.id).run();
+          await env.DB.prepare(
+            "INSERT INTO promo_redemptions (promo_id, email, order_id) VALUES (?, ?, ?)"
+          ).bind(promoRow.id, normalizedEmail2, null).run();
+        } else {
+          await env.DB.prepare(
+            "UPDATE discount_claims SET status = 'used', address_hash = ?, order_id = last_insert_rowid(), claimed_at = datetime('now') WHERE code = ? AND status = 'issued'"
+          ).bind(addrHash, metadata.discount_code).run();
+        }
+      } catch (err4) {
+        console.error("Discount claim failed:", err4?.message || err4);
+      }
+    }
+    const email = metadata.email || session.customer_email;
+    if (insertedOrderRows > 0 && quoteIdsForAttribution.length > 0) {
+      try {
+        await upsertQuoteAttributionFromCheckout(
+          env,
+          quoteIdsForAttribution,
+          (email || "").toLowerCase(),
+          checkoutAttribution,
+          String(session.id || "")
+        );
+      } catch (e) {
+        console.error("webhook quote attribution persist failed:", e?.message || e);
+      }
+    }
+    if (insertedOrderRows > 0 && email) {
+      try {
+        await env.DB.prepare(
+          "UPDATE abandoned_carts SET recovered = 1 WHERE email = ?1 AND recovered = 0"
+        ).bind(email).run();
+      } catch {
+      }
+      if (metadata.address) {
+        try {
+          const existing = await env.DB.prepare(
+            "SELECT id FROM customer_addresses WHERE email = ?1 AND address = ?2 LIMIT 1"
+          ).bind(email, metadata.address).first();
+          if (!existing) {
+            const fullName = (metadata.name || "").trim();
+            const nameParts = fullName.split(/\s+/);
+            const firstName = nameParts[0] || "";
+            const lastName = nameParts.slice(1).join(" ") || "";
+            const addrParts = metadata.address.split(",").map((s) => s.trim());
+            const country = addrParts[addrParts.length - 1] || "";
+            const postal = addrParts.length >= 2 ? addrParts[addrParts.length - 2] : "";
+            const state = addrParts.length >= 3 ? addrParts[addrParts.length - 3] : "";
+            const city = addrParts.length >= 4 ? addrParts[addrParts.length - 4] : "";
+            await env.DB.prepare(
+              `INSERT INTO customer_addresses (email, label, first_name, last_name, phone, country, address, city, state, postal_code, is_default)
+               VALUES (?1, 'Home', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 0)`
+            ).bind(email, firstName, lastName, metadata.phone || "", country, metadata.address, city, state, postal).run();
+          }
+        } catch {
+        }
+      }
+      if (env.RESEND_API_KEY) {
+        const itemList = items.map((i) => {
+          const dims = i.dims || {};
+          return `- ${i.name} | ${i.fabric || "N/A"} | ${i.color || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
+        }).join("\n");
+        const total = session.amount_total ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || "USD"}` : "N/A";
+        const shippingCountryCode = String(
+          metadata.shipping_country_applied || metadata.shipping_country_requested || ""
+        ).trim().toUpperCase();
+        const dutyTaxNotice = shippingCountryCode === "US" || shippingCountryCode === "CA" ? "Import duties and taxes are included (DDP) for this shipment." : shippingCountryCode === "TH" ? "" : "Import duties, VAT, and local taxes are not included and may be collected on delivery.";
+        const dutyTaxLine = dutyTaxNotice ? `
+
+Duty/Tax: ${dutyTaxNotice}` : "";
+        const dutyTaxTeamLine = dutyTaxNotice ? `
+Duty/Tax: ${dutyTaxNotice}` : "";
+        try {
+          const customerMail = await sendEmail(env, {
+            to: email,
+            subject: `Order Confirmed \u2014 MildMate #${session.id.slice(-8)}`,
+            text: `Thank you for your order!
 
 Order: #${session.id.slice(-8)}
 
 Items:
 ${itemList}
 
-Total: ${total}
+Total: ${total}${dutyTaxLine}
 
 We'll notify you when your order ships.
 
 \u2014 MildMate`
-      });
-      if (!customerMail.success) {
-        console.error("Customer email failed:", customerMail.error || "unknown error", "to:", email);
-      }
-    } catch (err) {
-      console.error("Customer email exception:", err?.message || err, "to:", email);
-    }
-    const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
-    try {
-      const customerNoteText = customerNote ? `
+          });
+          if (!customerMail.success) console.error("Customer email failed:", customerMail.error || "unknown error", "to:", email);
+        } catch (err4) {
+          console.error("Customer email exception:", err4?.message || err4, "to:", email);
+        }
+        const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
+        try {
+          const customerNoteText = customerNote ? `
 Message Type: ${customerNoteType || "other"}
 Customer Message: ${customerNote}` : "";
-      const teamMail = await sendEmail(env, {
-        to: teamEmail,
-        subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,
-        text: `New order received!
+          const teamMail = await sendEmail(env, {
+            to: teamEmail,
+            subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,
+            text: `New order received!
 
 Order: #${session.id.slice(-8)}
 Customer: ${metadata.name || "Guest"} (${email})
@@ -8436,57 +18538,66 @@ Shipping Type: ${shippingServiceType}${customerNoteText}
 Items:
 ${itemList}
 
-Total: ${total}`
-      });
-      if (!teamMail.success) {
-        console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
-      }
-    } catch (err) {
-      console.error("Team email exception:", err?.message || err, "to:", teamEmail);
-    }
-  }
-  if (email) {
-    try {
-      const { results: cfgRows } = await env.DB.prepare("SELECT key, value FROM recovery_config").all();
-      let discountPct = 20, sendAfterHours = 1;
-      if (cfgRows) {
-        const map = {};
-        for (const row of cfgRows) map[row.key] = row.value;
-        discountPct = Number(map.thankyou_discount) || 20;
-        sendAfterHours = Number(map.thankyou_send_after_hours) || 1;
-      }
-      const normalizedEmail = email.toLowerCase();
-      const existingForOrder = await env.DB.prepare(
-        "SELECT id FROM thankyou_queue WHERE order_id = ?1 LIMIT 1"
-      ).bind(session.id).first();
-      if (existingForOrder) {
-        console.log(`Webhook: thankyou skip (already queued for order ${session.id})`);
-      } else {
-        const activeClaim = await env.DB.prepare(
-          "SELECT code, expires_at FROM discount_claims WHERE email = ?1 AND source = 'thankyou' AND status = 'issued' AND expires_at > datetime('now') ORDER BY created_at DESC LIMIT 1"
-        ).bind(normalizedEmail).first();
-        if (activeClaim) {
-          console.log(`Webhook: thankyou skip (active code exists for ${normalizedEmail}: ${activeClaim.code})`);
-        } else {
-          const discountCode = "THANKS-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-          const expiresAt = new Date(Date.now() + 365 * 86400 * 1e3).toISOString().replace("T", " ").slice(0, 19);
-          const sendAfter = new Date(Date.now() + sendAfterHours * 3600 * 1e3).toISOString().replace("T", " ").slice(0, 19);
-          await env.DB.prepare(
-            "INSERT INTO discount_claims (code, email, status, discount_pct, expires_at, source, created_at) VALUES (?, ?, 'issued', ?, ?, 'thankyou', datetime('now'))"
-          ).bind(discountCode, normalizedEmail, discountPct, expiresAt).run();
-          await env.DB.prepare(
-            "INSERT INTO thankyou_queue (order_id, email, discount_code, discount_pct, send_after) VALUES (?, ?, ?, ?, ?)"
-          ).bind(session.id, normalizedEmail, discountCode, discountPct, sendAfter).run();
-          console.log(`Webhook: thankyou queued for ${email} (${discountPct}%, send after ${sendAfterHours}h)`);
+Total: ${total}${dutyTaxTeamLine}`
+          });
+          if (!teamMail.success) console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
+        } catch (err4) {
+          console.error("Team email exception:", err4?.message || err4, "to:", teamEmail);
         }
       }
-    } catch (e) {
-      console.error("Thankyou queue insert failed:", e.message);
+      try {
+        const { results: cfgRows } = await env.DB.prepare("SELECT key, value FROM recovery_config").all();
+        let discountPct = 20, sendAfterHours = 1;
+        if (cfgRows) {
+          const map = {};
+          for (const row of cfgRows) map[row.key] = row.value;
+          discountPct = Number(map.thankyou_discount) || 20;
+          sendAfterHours = Number(map.thankyou_send_after_hours) || 1;
+        }
+        const normalizedEmail = email.toLowerCase();
+        const existingForOrder = await env.DB.prepare(
+          "SELECT id FROM thankyou_queue WHERE order_id = ?1 LIMIT 1"
+        ).bind(session.id).first();
+        if (!existingForOrder) {
+          const activeClaim = await env.DB.prepare(
+            "SELECT code, expires_at FROM discount_claims WHERE email = ?1 AND source = 'thankyou' AND status = 'issued' AND expires_at > datetime('now') ORDER BY created_at DESC LIMIT 1"
+          ).bind(normalizedEmail).first();
+          if (!activeClaim) {
+            const discountCode = "THANKS-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+            const expiresAt = new Date(Date.now() + 365 * 86400 * 1e3).toISOString().replace("T", " ").slice(0, 19);
+            const sendAfter = new Date(Date.now() + sendAfterHours * 3600 * 1e3).toISOString().replace("T", " ").slice(0, 19);
+            await env.DB.prepare(
+              "INSERT INTO discount_claims (code, email, status, discount_pct, expires_at, source, created_at) VALUES (?, ?, 'issued', ?, ?, 'thankyou', datetime('now'))"
+            ).bind(discountCode, normalizedEmail, discountPct, expiresAt).run();
+            await env.DB.prepare(
+              "INSERT INTO thankyou_queue (order_id, email, discount_code, discount_pct, send_after) VALUES (?, ?, ?, ?, ?)"
+            ).bind(session.id, normalizedEmail, discountCode, discountPct, sendAfter).run();
+            console.log(`Webhook: thankyou queued for ${email} (${discountPct}%, send after ${sendAfterHours}h)`);
+          }
+        } else {
+          console.log(`Webhook: thankyou skip (already queued for order ${session.id})`);
+        }
+      } catch (e) {
+        console.error("Thankyou queue insert failed:", e.message);
+      }
     }
+    await markStripeWebhookEventProcessed(
+      env,
+      eventId,
+      claim.token,
+      insertedOrderRows > 0 ? "processed" : "deduped_no_new_rows"
+    );
+    return new Response(JSON.stringify({ received: true, inserted_order_rows: insertedOrderRows }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (e) {
+    await markStripeWebhookEventFailed(env, eventId, claim.token, e);
+    console.error("Stripe webhook order processing failed:", e?.message || e);
+    return new Response(JSON.stringify({ error: "Webhook processing failed" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
-  return new Response(JSON.stringify({ received: true }), {
-    headers: { "Content-Type": "application/json" }
-  });
 }
 __name(handleStripeWebhook, "handleStripeWebhook");
 function hexToArrayBuffer(hex) {
@@ -8935,23 +19046,251 @@ async function handleCustomers(request, env) {
 __name(handleCustomers, "handleCustomers");
 
 // ../workers/api/order-confirmed.ts
+async function sha2563(text) {
+  const d = new TextEncoder().encode(text);
+  const h = await crypto.subtle.digest("SHA-256", d);
+  return Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+__name(sha2563, "sha256");
+function isProductionHost20(request) {
+  try {
+    const host = new URL(request.url).hostname.toLowerCase();
+    return host === "www.mildmate.com" || host === "mildmate.com";
+  } catch {
+    return false;
+  }
+}
+__name(isProductionHost20, "isProductionHost");
+function inferStripeSecretMode2(secret) {
+  if (secret.startsWith("sk_live_")) return "live";
+  if (secret.startsWith("sk_test_")) return "test";
+  return "unknown";
+}
+__name(inferStripeSecretMode2, "inferStripeSecretMode");
+function assertReconcileRuntimeSafety(request, env) {
+  const stripeKey = String(env.STRIPE_SECRET_KEY || "");
+  if (!stripeKey) return null;
+  const prodHost = isProductionHost20(request);
+  const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
+  const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
+  const stripeMode = inferStripeSecretMode2(stripeKey);
+  if (prodHost) {
+    if (stripeMode === "test") return "Production host cannot use Stripe test secret key";
+    if (runtimeEnv && runtimeEnv !== "prod" && runtimeEnv !== "production") {
+      return "Production host runtime environment mismatch";
+    }
+    return null;
+  }
+  if (env.NON_PROD_STRIPE_ALLOWED !== "true") {
+    return "Non-production reconcile disabled until NON_PROD_STRIPE_ALLOWED=true";
+  }
+  if (!runtimeEnv || runtimeEnv === "prod" || runtimeEnv === "production") {
+    return "Non-production runtime requires explicit non-production RUNTIME_ENV";
+  }
+  if (stripeMode !== "test") {
+    return "Non-production reconcile requires Stripe test secret key";
+  }
+  if (!d1Label || d1Label === "prod" || d1Label === "production") {
+    return "Non-production runtime requires non-production D1_ENV_LABEL";
+  }
+  return null;
+}
+__name(assertReconcileRuntimeSafety, "assertReconcileRuntimeSafety");
+var fulfillmentSchemaReady = false;
+var fulfillmentSchemaPromise = null;
+var PAID_OR_HISTORICAL_ORDER_STATUSES2 = ["confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"];
+var PURCHASE_REPORTABLE_ORDER_STATUSES = ["confirmed", "processing", "shipped", "delivered"];
+async function ensureFulfillmentSchema(env) {
+  if (fulfillmentSchemaReady) return true;
+  if (!fulfillmentSchemaPromise) {
+    fulfillmentSchemaPromise = (async () => {
+      try {
+        const row = await env.DB.prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'stripe_order_fulfillment_lines' LIMIT 1"
+        ).first();
+        const ok = !!row?.name;
+        if (!ok) {
+          console.error("Missing required table stripe_order_fulfillment_lines; apply migration 057_stripe_payment_idempotency.sql");
+        }
+        fulfillmentSchemaReady = ok;
+        return ok;
+      } catch (e) {
+        console.error("fulfillment schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!fulfillmentSchemaReady) fulfillmentSchemaPromise = null;
+    });
+  }
+  return await fulfillmentSchemaPromise;
+}
+__name(ensureFulfillmentSchema, "ensureFulfillmentSchema");
+function toFiniteNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toFiniteNumber, "toFiniteNumber");
+function normalizeDimsForKey2(dimsRaw) {
+  const dims = dimsRaw && typeof dimsRaw === "object" ? dimsRaw : {};
+  const valuesRaw = dims.values && typeof dims.values === "object" ? dims.values : {};
+  const values = {};
+  Object.keys(valuesRaw).sort().forEach((k) => {
+    const n = toFiniteNumber(valuesRaw[k]);
+    if (n !== null) values[String(k).toUpperCase()] = n;
+  });
+  return {
+    w: toFiniteNumber(dims.w),
+    l: toFiniteNumber(dims.l),
+    d: toFiniteNumber(dims.d),
+    unit: String(dims.unit || "cm"),
+    size_text: String(dims.size_text || ""),
+    shape_code: String(dims.shape_code || ""),
+    shape_name: String(dims.shape_name || ""),
+    boat_model_name: String(dims.boat_model_name || ""),
+    boat_model_key: String(dims.boat_model_key || ""),
+    area_cm2: toFiniteNumber(dims.area_cm2),
+    values
+  };
+}
+__name(normalizeDimsForKey2, "normalizeDimsForKey");
+function buildFulfillmentLineIdentity2(item) {
+  return {
+    slug: String(item?.slug || item?.s || ""),
+    name: String(item?.name || item?.n || ""),
+    quote_id: String(item?.quote_id || item?.qi || ""),
+    fabric: String(item?.fabric || item?.f || ""),
+    color: String(item?.color || item?.c || ""),
+    qty: Number(item?.qty || item?.q || 1) || 1,
+    unit_amount: Number(item?.u || item?.unit_amount || 0) || 0,
+    dims: normalizeDimsForKey2(item?.dims || item?.d || {})
+  };
+}
+__name(buildFulfillmentLineIdentity2, "buildFulfillmentLineIdentity");
+async function buildFulfillmentLineKey2(sessionId, item, occurrence) {
+  const payload = JSON.stringify({
+    session_id: String(sessionId || ""),
+    occurrence: Number(occurrence || 1),
+    slug: String(item?.slug || item?.s || ""),
+    name: String(item?.name || item?.n || ""),
+    quote_id: String(item?.quote_id || item?.qi || ""),
+    fabric: String(item?.fabric || item?.f || ""),
+    color: String(item?.color || item?.c || ""),
+    qty: Number(item?.qty || item?.q || 1) || 1,
+    unit_amount: Number(item?.u || item?.unit_amount || 0) || 0,
+    dims: normalizeDimsForKey2(item?.dims || item?.d || {})
+  });
+  return sha2563(payload);
+}
+__name(buildFulfillmentLineKey2, "buildFulfillmentLineKey");
+async function claimFulfillmentLine2(env, sessionId, lineKey, lineIndex) {
+  const schemaOk = await ensureFulfillmentSchema(env);
+  if (!schemaOk) return false;
+  const res = await env.DB.prepare(
+    `INSERT OR IGNORE INTO stripe_order_fulfillment_lines
+      (line_key, stripe_session_id, stripe_event_id, line_index, created_at)
+     VALUES (?1, ?2, NULL, ?3, datetime('now'))`
+  ).bind(lineKey, sessionId, lineIndex).run();
+  const changes = Number(res?.meta?.changes || 0);
+  return changes > 0;
+}
+__name(claimFulfillmentLine2, "claimFulfillmentLine");
+async function countExistingConfirmedOrderLines2(env, line) {
+  const paidStatusesSql = PAID_OR_HISTORICAL_ORDER_STATUSES2.map((s) => `'${s}'`).join(",");
+  const row = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM orders
+     WHERE stripe_session_id = ?1
+       AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
+       AND COALESCE(product_slug, '') = COALESCE(?2, '')
+       AND COALESCE(product_title_en, '') = COALESCE(?3, '')
+       AND COALESCE(fabric, '') = COALESCE(?4, '')
+       AND COALESCE(color, '') = COALESCE(?5, '')
+       AND ((width_cm IS NULL AND ?6 IS NULL) OR width_cm = ?6)
+       AND ((length_cm IS NULL AND ?7 IS NULL) OR length_cm = ?7)
+       AND ((depth_cm IS NULL AND ?8 IS NULL) OR depth_cm = ?8)
+       AND ((price_usd IS NULL AND ?9 IS NULL) OR price_usd = ?9)
+       AND ((price_thb IS NULL AND ?10 IS NULL) OR price_thb = ?10)
+       AND COALESCE(currency, '') = COALESCE(?11, '')
+       AND quantity = ?12`
+  ).bind(
+    line.sessionId,
+    line.productSlug || "",
+    line.productTitle || "",
+    line.fabric || "",
+    line.color || "",
+    line.widthCm,
+    line.lengthCm,
+    line.depthCm,
+    line.priceUsd,
+    line.priceThb,
+    line.currency || "",
+    line.qty
+  ).first();
+  return Number(row?.c || 0);
+}
+__name(countExistingConfirmedOrderLines2, "countExistingConfirmedOrderLines");
 async function getOrdersBySession(env, sessionId) {
+  const paidStatusesSql = PAID_OR_HISTORICAL_ORDER_STATUSES2.map((s) => `'${s}'`).join(",");
   const { results } = await env.DB.prepare(
-    `SELECT id, stripe_session_id, email, shipping_address, product_title_en, fabric, color,
+    `SELECT id, stripe_session_id, stripe_payment_intent_id, email, shipping_address, product_title_en, fabric, color,
             width_cm, length_cm, depth_cm, price_usd, price_thb,
-            currency, quantity, status, created_at
+            currency, quantity, status, created_at, quote_id
      FROM orders
      WHERE stripe_session_id = ?1
+       AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
      ORDER BY created_at DESC`
   ).bind(sessionId).all();
   return results || [];
 }
 __name(getOrdersBySession, "getOrdersBySession");
+async function fetchStripeSessionForEvidence(sessionId, env) {
+  const stripeKey = String(env.STRIPE_SECRET_KEY || "");
+  if (!stripeKey) return { paid: false, amountTotalMinor: null };
+  try {
+    const resp = await fetch(
+      `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`,
+      { headers: { Authorization: `Bearer ${stripeKey}` } }
+    );
+    if (!resp.ok) return { paid: false, amountTotalMinor: null };
+    const session = await resp.json();
+    const paid = String(session?.payment_status || "").toLowerCase() === "paid";
+    const amountRaw = Number(session?.amount_total);
+    return { paid, amountTotalMinor: Number.isFinite(amountRaw) ? amountRaw : null };
+  } catch {
+    return { paid: false, amountTotalMinor: null };
+  }
+}
+__name(fetchStripeSessionForEvidence, "fetchStripeSessionForEvidence");
+async function hasWebhookPaidEvidence(sessionId, env) {
+  try {
+    const row = await env.DB.prepare(
+      `SELECT event_id
+       FROM stripe_webhook_events
+       WHERE stripe_session_id = ?1
+         AND processed_at IS NOT NULL
+         AND process_result IN ('processed', 'deduped_no_new_rows')
+         AND event_type IN ('checkout.session.completed', 'checkout.session.async_payment_succeeded')
+       LIMIT 1`
+    ).bind(sessionId).first();
+    return !!row;
+  } catch {
+    return false;
+  }
+}
+__name(hasWebhookPaidEvidence, "hasWebhookPaidEvidence");
+function isPurchaseReportableStatus(statusRaw) {
+  const status = String(statusRaw || "").trim().toLowerCase();
+  return PURCHASE_REPORTABLE_ORDER_STATUSES.includes(status);
+}
+__name(isPurchaseReportableStatus, "isPurchaseReportableStatus");
 async function reconcilePaidSessionToOrders(sessionId, env) {
   const stripeKey = env.STRIPE_SECRET_KEY;
   if (!stripeKey) return false;
+  const paidStatusesSql = PAID_OR_HISTORICAL_ORDER_STATUSES2.map((s) => `'${s}'`).join(",");
   const existing = await env.DB.prepare(
-    "SELECT id FROM orders WHERE stripe_session_id = ?1 LIMIT 1"
+    `SELECT id FROM orders
+     WHERE stripe_session_id = ?1
+       AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
+     LIMIT 1`
   ).bind(sessionId).first();
   if (existing) return true;
   const sessionResp = await fetch(
@@ -8960,7 +19299,7 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
   );
   if (!sessionResp.ok) return false;
   const session = await sessionResp.json();
-  const isPaid = String(session.payment_status || "").toLowerCase() === "paid" || String(session.status || "").toLowerCase() === "complete";
+  const isPaid = String(session.payment_status || "").toLowerCase() === "paid";
   if (!isPaid) return false;
   const email = String(
     session?.metadata?.email || session?.customer_email || session?.customer_details?.email || ""
@@ -8982,26 +19321,147 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
     const lineData = await lineResp.json();
     lineItems = Array.isArray(lineData?.data) ? lineData.data : [];
   }
-  if (lineItems.length === 0 && metaItems.length === 0) return false;
-  const sourceRows = lineItems.length > 0 ? lineItems : metaItems;
-  const sessionCurrency = String(session.currency || "usd").toLowerCase();
+  const mapItems = /* @__PURE__ */ __name((rawItems) => (Array.isArray(rawItems) ? rawItems : []).map((item) => ({
+    slug: item.slug || item.s || "",
+    name: item.name || item.n || item.slug || item.s || "",
+    quote_id: item.quote_id || item.qi || null,
+    fabric: item.fabric || item.f || null,
+    color: item.color || item.c || null,
+    dims: typeof item.dims === "object" && item.dims || typeof item.d === "object" && item.d || (typeof item.d === "string" || typeof item.dt === "string" ? { size_text: typeof item.d === "string" ? item.d : item.dt } : {}),
+    qty: item.qty || item.q || 1,
+    unit_amount: Number(item.u || item.unit_amount || 0)
+  })), "mapItems");
+  const hasUsefulDims = /* @__PURE__ */ __name((dims) => {
+    if (!dims || typeof dims !== "object") return false;
+    if (toFiniteNumber(dims.w) && toFiniteNumber(dims.l)) return true;
+    if (String(dims.size_text || "").trim()) return true;
+    if (String(dims.shape_code || dims.shape_name || "").trim()) return true;
+    if (String(dims.boat_model_name || dims.boat_model_key || "").trim()) return true;
+    if (dims.values && typeof dims.values === "object" && Object.keys(dims.values).length > 0) return true;
+    return false;
+  }, "hasUsefulDims");
+  let items = [];
+  let itemsSource = "none";
+  let snapshotCurrency = null;
+  let checkoutAttribution = sanitizeAttributionPayload(null, "checkout");
+  let quoteIdsFromSnapshot = [];
+  try {
+    const snap = await env.DB.prepare(
+      "SELECT items_json, currency, attribution_json, quote_ids_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
+    ).bind(String(session.id)).first();
+    if (snap?.items_json) {
+      const parsedSnap = JSON.parse(String(snap.items_json || "[]"));
+      if (Array.isArray(parsedSnap) && parsedSnap.length > 0) {
+        items = mapItems(parsedSnap);
+        itemsSource = "d1_snapshot";
+        snapshotCurrency = String(snap?.currency || "").toLowerCase() || null;
+      }
+    }
+    if (snap?.attribution_json) {
+      checkoutAttribution = sanitizeAttributionPayload(snap.attribution_json, "checkout");
+    }
+    if (snap?.quote_ids_json) {
+      try {
+        const parsedIds = JSON.parse(String(snap.quote_ids_json || "[]"));
+        quoteIdsFromSnapshot = Array.isArray(parsedIds) ? parsedIds : [];
+      } catch {
+      }
+    }
+  } catch (e) {
+    console.error("reconcile snapshot read failed:", e?.message || e);
+  }
+  if (items.length === 0 && metaItems.length > 0) {
+    items = mapItems(metaItems);
+    itemsSource = "metadata";
+  }
+  if (items.length === 0 && lineItems.length > 0) {
+    items = lineItems.filter((li) => {
+      const label = String(li?.description || li?.price?.product_data?.name || "");
+      return !/^shipping/i.test(label.trim());
+    }).map((li) => {
+      const liQty = Number(li?.quantity || 1) || 1;
+      const liUnitMinor = Number(li?.price?.unit_amount || 0) || (Number(li?.amount_total || 0) && liQty ? Math.round(Number(li.amount_total) / liQty) : 0);
+      return {
+        slug: "",
+        name: String(li?.description || li?.price?.product_data?.name || "Custom Order"),
+        quote_id: null,
+        fabric: null,
+        color: null,
+        dims: {},
+        qty: liQty,
+        unit_amount: liUnitMinor
+      };
+    });
+    itemsSource = "stripe_line_items";
+  }
+  if (items.length === 0) return false;
+  console.log("reconcile items source:", itemsSource, "session:", session.id, "count:", items.length);
+  const quoteIdsForAttribution = Array.from(/* @__PURE__ */ new Set([
+    ...extractUniqueQuoteIdsFromItems(items),
+    ...quoteIdsFromSnapshot.map((id) => String(id || "").trim()).filter(Boolean)
+  ]));
+  const sessionCurrency = String(snapshotCurrency || session.currency || "usd").toLowerCase();
   let inserted = 0;
-  for (let i = 0; i < sourceRows.length; i++) {
-    const li = sourceRows[i] || {};
-    const mi = metaItems[i] || {};
-    const dims = mi.dims || mi.d || {};
-    const qty = Number(li.quantity || mi.qty || mi.q || 1) || 1;
-    const unitMinor = Number(li?.price?.unit_amount || 0) || Number(mi.u || 0) || (Number(li.amount_total || 0) && qty ? Math.round(Number(li.amount_total || 0) / qty) : 0);
+  for (const item of items) {
+    if (item.quote_id && !hasUsefulDims(item.dims)) {
+      try {
+        const q = await env.DB.prepare(
+          "SELECT dimensions FROM custom_quotes WHERE quote_id = ?1 LIMIT 1"
+        ).bind(String(item.quote_id)).first();
+        if (q?.dimensions) {
+          const qd = JSON.parse(String(q.dimensions || "{}"));
+          if (qd && typeof qd === "object") item.dims = qd;
+        }
+      } catch {
+      }
+    }
+  }
+  const lineOccurrenceMap = /* @__PURE__ */ new Map();
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i] || {};
+    const dims = item.dims || {};
+    const qty = Number(item.qty || 1) || 1;
+    const unitMinor = Number(item.unit_amount || 0) || 0;
     const unitMajor = unitMinor > 0 ? unitMinor / 100 : null;
-    const productTitle = li.description || mi.name || mi.n || mi.slug || mi.s || "Custom Order";
-    const productSlug = mi.slug || mi.s || "";
+    const idempotencySource = {
+      slug: String(item.slug || ""),
+      name: String(item.name || ""),
+      quote_id: item.quote_id || null,
+      fabric: item.fabric || null,
+      color: item.color || null,
+      dims,
+      qty,
+      unit_amount: unitMinor
+    };
+    const lineIdentity = JSON.stringify(buildFulfillmentLineIdentity2(idempotencySource));
+    const lineOccurrence = (lineOccurrenceMap.get(lineIdentity) || 0) + 1;
+    lineOccurrenceMap.set(lineIdentity, lineOccurrence);
+    const lineKey = await buildFulfillmentLineKey2(session.id, idempotencySource, lineOccurrence);
+    const lineClaimed = await claimFulfillmentLine2(env, session.id, lineKey, i);
+    if (!lineClaimed) continue;
+    const existingCount = await countExistingConfirmedOrderLines2(env, {
+      sessionId: session.id,
+      productSlug: String(item.slug || ""),
+      productTitle: String(item.name || ""),
+      fabric: item.fabric || null,
+      color: item.color || null,
+      widthCm: dims.w || null,
+      lengthCm: dims.l || null,
+      depthCm: dims.d || null,
+      priceUsd: sessionCurrency === "usd" ? unitMajor : null,
+      priceThb: sessionCurrency === "thb" ? unitMajor : null,
+      currency: sessionCurrency,
+      qty
+    });
+    if (existingCount >= lineOccurrence) continue;
     await env.DB.prepare(
       `INSERT INTO orders (
         stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
         shipping_address, product_slug, product_title_en, fabric, color,
         width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-        custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, 'confirmed')`
+        custom_notes, price_usd, price_thb, currency, quantity, discount_code,
+        quote_id, status
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, 'confirmed')`
     ).bind(
       session.id,
       session.payment_intent || null,
@@ -9009,10 +19469,10 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
       session?.metadata?.name || session?.customer_details?.name || null,
       session?.metadata?.phone || session?.customer_details?.phone || null,
       session?.metadata?.address || null,
-      productSlug,
-      productTitle,
-      mi.fabric || mi.f || null,
-      mi.color || mi.c || null,
+      String(item.slug || ""),
+      String(item.name || ""),
+      item.fabric || null,
+      item.color || null,
       dims.w || null,
       dims.l || null,
       dims.d || null,
@@ -9024,14 +19484,35 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
       sessionCurrency === "thb" ? unitMajor : null,
       sessionCurrency,
       qty,
-      session?.metadata?.discount_code || null
+      session?.metadata?.discount_code || null,
+      item.quote_id || null
     ).run();
     inserted++;
+  }
+  if (inserted > 0 && quoteIdsForAttribution.length > 0) {
+    try {
+      await upsertQuoteAttributionFromCheckout(
+        env,
+        quoteIdsForAttribution,
+        email,
+        checkoutAttribution,
+        String(session.id || "")
+      );
+    } catch (e) {
+      console.error("reconcile quote attribution persist failed:", e?.message || e);
+    }
   }
   return inserted > 0;
 }
 __name(reconcilePaidSessionToOrders, "reconcilePaidSessionToOrders");
 async function handleOrderConfirmed(request, env) {
+  const reconcileSafetyError = assertReconcileRuntimeSafety(request, env);
+  if (reconcileSafetyError) {
+    return new Response(JSON.stringify({ error: reconcileSafetyError }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
   const url = new URL(request.url);
   const sessionId = url.searchParams.get("session_id");
   if (!sessionId) {
@@ -9053,14 +19534,33 @@ async function handleOrderConfirmed(request, env) {
       }
     }
     if (!results || results.length === 0) {
-      return new Response(JSON.stringify({ pending: true }), {
+      return new Response(JSON.stringify({ pending: true, payment_verified: false }), {
         headers: { "Content-Type": "application/json" }
       });
     }
+    const stripeSessionEvidence = await fetchStripeSessionForEvidence(sessionId, env);
+    const stripePaidEvidence = stripeSessionEvidence.paid || await hasWebhookPaidEvidence(sessionId, env);
+    const purchaseReportableOrders = results.filter((r) => isPurchaseReportableStatus(r?.status));
+    const purchaseReportableValue = purchaseReportableOrders.reduce((sum, row) => {
+      const qty = Number(row?.quantity || 1) || 1;
+      const currency = String(row?.currency || "usd").toLowerCase();
+      const unit = currency === "thb" ? Number(row?.price_thb || row?.price_usd || 0) : Number(row?.price_usd || 0);
+      return sum + (Number(unit || 0) || 0) * qty;
+    }, 0);
+    const responseOrders = results.map((row) => {
+      const copy = { ...row };
+      delete copy.stripe_payment_intent_id;
+      return copy;
+    });
     return new Response(JSON.stringify({
-      orders: results,
+      orders: responseOrders,
       session_id: sessionId,
-      count: results.length
+      count: responseOrders.length,
+      payment_verified: stripePaidEvidence,
+      purchase_reportable: stripePaidEvidence && purchaseReportableOrders.length > 0,
+      purchase_reportable_count: purchaseReportableOrders.length,
+      purchase_reportable_value: Math.round(purchaseReportableValue * 100) / 100,
+      session_amount_total: stripeSessionEvidence.amountTotalMinor
     }), {
       headers: { "Content-Type": "application/json" }
     });
@@ -9073,6 +19573,27 @@ async function handleOrderConfirmed(request, env) {
   }
 }
 __name(handleOrderConfirmed, "handleOrderConfirmed");
+
+// ../workers/api/color-inventory.ts
+async function handleColorInventory(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "public, max-age=60"
+  };
+  if (request.method === "OPTIONS") {
+    return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
+  }
+  try {
+    const rows = await env.DB.prepare(
+      "SELECT fabric, color, in_stock FROM fabric_color_inventory ORDER BY fabric, color"
+    ).all();
+    return new Response(JSON.stringify({ inventory: rows.results || [] }), { headers });
+  } catch (e) {
+    return new Response(JSON.stringify({ inventory: [] }), { headers });
+  }
+}
+__name(handleColorInventory, "handleColorInventory");
 
 // api/[[path]].ts
 var R2_PUBLIC_BASE7 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
@@ -9101,10 +19622,51 @@ function r2Product3(p) {
   return out;
 }
 __name(r2Product3, "r2Product");
-var onRequest3 = /* @__PURE__ */ __name(async (context) => {
+var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+  const normalizedPath = normalizeAdminApiPath(path);
+  const adminRouteMode = classifyAdminApiPath(normalizedPath);
+  if (adminRouteMode !== "not_admin") {
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+        }
+      });
+    }
+    const auth = await authorizeAdminForRoute(request, env, normalizedPath);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  }
+  if (path.startsWith("/api/v1/gsc")) {
+    const gscRes = await handleGscApi(request, env);
+    if (gscRes) return gscRes;
+  }
+  if (path.startsWith("/api/v1/ga4")) {
+    const ga4Res = await handleGa4Api(request, env);
+    if (ga4Res) return ga4Res;
+  }
+  if (path.startsWith("/api/v1/etsy")) {
+    const etsyRes = await handleEtsyApi(request, env);
+    if (etsyRes) return etsyRes;
+  }
+  if (path.startsWith("/api/v1/google-ads")) {
+    const googleAdsRes = await handleGoogleAdsApi(request, env);
+    if (googleAdsRes) return googleAdsRes;
+  }
+  if (path.startsWith("/api/v1/") || path === "/api/v1") {
+    const salesRes = await handleSalesApi(request, env);
+    if (salesRes) return salesRes;
+  }
   if (path === "/api/health") {
     return new Response(JSON.stringify({ status: "ok" }), {
       headers: { "Content-Type": "application/json" }
@@ -9114,10 +19676,10 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
     const res = await handleProducts(request, env);
     const body = await res.text();
     try {
-      const json10 = JSON.parse(body);
-      if (json10.product) json10.product = r2Product3(json10.product);
-      if (Array.isArray(json10.products)) json10.products = json10.products.map(r2Product3);
-      return new Response(JSON.stringify(json10), {
+      const json13 = JSON.parse(body);
+      if (json13.product) json13.product = r2Product3(json13.product);
+      if (Array.isArray(json13.products)) json13.products = json13.products.map(r2Product3);
+      return new Response(JSON.stringify(json13), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (_) {
@@ -9135,6 +19697,9 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
   }
   if (path === "/api/countries" || path === "/api/countries/") {
     return handleCountries(request, env);
+  }
+  if (path === "/api/color-inventory" || path === "/api/color-inventory/") {
+    return handleColorInventory(request, env);
   }
   if (path === "/api/subscribe" || path === "/api/subscribe/") {
     return handleSubscribe(request, env);
@@ -9163,6 +19728,12 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
   if (path === "/api/admin/stats" || path === "/api/admin/stats/") {
     return handleAdminStats(request, env);
   }
+  if (path.startsWith("/api/admin/analysis")) {
+    return handleAdminAnalysis(request, env);
+  }
+  if (path.startsWith("/api/admin/cost-model")) {
+    return handleAdminCostModel(request, env);
+  }
   if (path === "/api/admin/shipping-rates" || path === "/api/admin/shipping-rates/") {
     return handleAdminShippingRates(request, env);
   }
@@ -9178,11 +19749,11 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
   if (path === "/api/admin/promo" || path === "/api/admin/promo/") {
     return handleAdminPromo(request, env);
   }
-  if (path === "/api/color-inventory" || path === "/api/color-inventory/") {
-    return handleColorInventory(request, env);
+  if (path === "/api/boat-models" || path === "/api/boat-models/") {
+    return handleBoatModels(request, env);
   }
-  if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
-    return handleAdminColorInventory(request, env);
+  if (path === "/api/admin/boat-models" || path === "/api/admin/boat-models/") {
+    return handleAdminBoatModels(request, env);
   }
   if (path === "/api/admin/blog" || path === "/api/admin/blog/") {
     return handleAdminBlog(request, env);
@@ -9204,6 +19775,15 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
   }
   if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
     return handleAdminCampaigns(request, env);
+  }
+  if (path === "/api/campaigns" || path === "/api/campaigns/") {
+    return handleCampaigns(request, env);
+  }
+  if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
+    return handleAdminColorInventory(request, env);
+  }
+  if (path === "/api/admin/accounts" || path === "/api/admin/accounts/") {
+    return handleAdminAccounts(request, env);
   }
   if (path === "/api/admin/thankyou-dispatch" || path === "/api/admin/thankyou-dispatch/") {
     return handleAdminThankyouDispatch(request, env);
@@ -9233,10 +19813,6 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
     return handleAdminExchangeRates(request, env);
   }
   if (path === "/api/admin/subscribers" || path === "/api/admin/subscribers/") {
-    const secret = request.headers.get("X-Admin-Secret");
-    if (secret !== (env.ADMIN_SECRET || "admin")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
-    }
     if (request.method === "DELETE") {
       const id = url.searchParams.get("id");
       if (!id) {
@@ -9244,6 +19820,9 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
       }
       await env.DB.prepare("DELETE FROM subscribers WHERE id = ?").bind(Number(id)).run();
       return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
+    }
+    if (request.method !== "GET") {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { "Content-Type": "application/json" } });
     }
     const fmt = url.searchParams.get("format");
     const { results } = await env.DB.prepare("SELECT id, email, source, language, created_at FROM subscribers ORDER BY created_at DESC").all();
@@ -9290,7 +19869,7 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // blogs/[[path]].ts
-async function onRequest4(context) {
+async function onRequest6(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -9324,15 +19903,220 @@ async function onRequest4(context) {
         "X-Robots-Tag": "index, follow"
       }
     });
-  } catch (err) {
-    console.error("Blog post error:", err);
+  } catch (err4) {
+    console.error("Blog post error:", err4);
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest4, "onRequest");
+__name(onRequest6, "onRequest");
+
+// products/[[path]].ts
+var FIXED_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
+  "bedbridge-connector",
+  "mattress-lift-helper",
+  "duvet-insert"
+]);
+var TYPE_LABELS_EN = {
+  sheets: "SHEETS",
+  "duvet-covers": "DUVET COVERS",
+  pillowcases: "PILLOWCASES",
+  protection: "PROTECTION",
+  accessories: "ACCESSORIES"
+};
+var TYPE_LABELS_TH = {
+  sheets: "\u0E1C\u0E49\u0E32\u0E1B\u0E39\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19",
+  "duvet-covers": "\u0E1B\u0E25\u0E2D\u0E01\u0E1C\u0E49\u0E32\u0E19\u0E27\u0E21",
+  pillowcases: "\u0E1B\u0E25\u0E2D\u0E01\u0E2B\u0E21\u0E2D\u0E19",
+  protection: "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E1B\u0E49\u0E2D\u0E07\u0E01\u0E31\u0E19",
+  accessories: "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E2A\u0E23\u0E34\u0E21"
+};
+var NICHE_LABELS_EN = {
+  marine: "MARINE & YACHT",
+  family: "FAMILY & CO-SLEEP",
+  "deep-pocket": "DEEP POCKET",
+  pets: "PET FRIENDLY",
+  "boarding-dorm": "DORM & STUDENT",
+  "rv-truck": "RV & TRUCK"
+};
+var NICHE_LABELS_TH = {
+  marine: "\u0E40\u0E23\u0E37\u0E2D\u0E41\u0E25\u0E30\u0E22\u0E2D\u0E0A\u0E15\u0E4C",
+  family: "\u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27\u0E41\u0E25\u0E30\u0E19\u0E2D\u0E19\u0E23\u0E48\u0E27\u0E21",
+  "deep-pocket": "\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E2B\u0E19\u0E32\u0E1E\u0E34\u0E40\u0E28\u0E29",
+  pets: "\u0E40\u0E1B\u0E47\u0E19\u0E21\u0E34\u0E15\u0E23\u0E01\u0E31\u0E1A\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07",
+  "boarding-dorm": "\u0E2B\u0E2D\u0E1E\u0E31\u0E01\u0E41\u0E25\u0E30\u0E19\u0E31\u0E01\u0E40\u0E23\u0E35\u0E22\u0E19",
+  "rv-truck": "RV \u0E41\u0E25\u0E30\u0E23\u0E16\u0E1A\u0E23\u0E23\u0E17\u0E38\u0E01"
+};
+var NICHE_PATHS = {
+  marine: "/marine/",
+  family: "/family/",
+  "deep-pocket": "/deep-pocket/",
+  pets: "/pets/",
+  "boarding-dorm": "/boarding-dorm/",
+  "rv-truck": "/rv-truck/"
+};
+function escapeHtml2(value) {
+  return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+__name(escapeHtml2, "escapeHtml");
+function toTokens(value) {
+  return String(value || "").split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
+}
+__name(toTokens, "toTokens");
+function titleFromSlug(slug) {
+  return slug.split("-").filter(Boolean).map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(" ");
+}
+__name(titleFromSlug, "titleFromSlug");
+function normalizeImageUrl(url) {
+  if (!url) return "";
+  if (url.startsWith("/r2/")) {
+    return `https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev${url.slice(3)}`;
+  }
+  return url;
+}
+__name(normalizeImageUrl, "normalizeImageUrl");
+function firstSentence(text, maxLen = 110) {
+  const clean = String(text || "").replace(/\s+/g, " ").trim();
+  if (!clean) return "";
+  const sentence = clean.split(/[.!?]/)[0].trim();
+  if (sentence.length <= maxLen) return sentence;
+  return `${sentence.slice(0, maxLen - 1).trimEnd()}\u2026`;
+}
+__name(firstSentence, "firstSentence");
+function buildFabricInfo(fabricOptions, isFixed, isTh) {
+  if (isFixed) return isTh ? "\u0E2A\u0E40\u0E1B\u0E01\u0E15\u0E32\u0E22\u0E15\u0E31\u0E27" : "Fixed specification";
+  const fabrics = toTokens(fabricOptions);
+  if (fabrics.length <= 1) return isTh ? "\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14 \xB7 \u0E2B\u0E25\u0E32\u0E22\u0E2A\u0E35" : "Custom size \xB7 Multiple colors";
+  if (isTh) return `${fabrics.length} \u0E0A\u0E19\u0E34\u0E14\u0E1C\u0E49\u0E32 \xB7 \u0E2B\u0E25\u0E32\u0E22\u0E2A\u0E35`;
+  return `${fabrics.length} fabrics \xB7 Multiple colors`;
+}
+__name(buildFabricInfo, "buildFabricInfo");
+function buildButtonLabel(isFixed, isTh) {
+  if (isFixed) return isTh ? "\u0E14\u0E39\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14" : "View Details";
+  return isTh ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E41\u0E25\u0E30\u0E1C\u0E49\u0E32" : "Choose Size & Fabric";
+}
+__name(buildButtonLabel, "buildButtonLabel");
+function buildPrice(product, isTh) {
+  const usdRaw = Number(product.base_price_usd);
+  const thbRaw = Number(product.base_price_thb);
+  const usd = Number.isFinite(usdRaw) && usdRaw > 0 ? Math.round(usdRaw) : Number.isFinite(thbRaw) && thbRaw > 0 ? Math.round(thbRaw / 35) : 0;
+  const thb = Number.isFinite(thbRaw) && thbRaw > 0 ? Math.round(thbRaw) : usd * 35;
+  const display = isTh ? `\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 \u0E3F${thb}` : `From US$${usd}`;
+  return { display, usd, thb };
+}
+__name(buildPrice, "buildPrice");
+function getCategoryTokens(product) {
+  const merged = /* @__PURE__ */ new Set();
+  toTokens(product.product_type).forEach((t) => merged.add(t));
+  toTokens(product.niches).forEach((t) => merged.add(t));
+  toTokens(product.category).forEach((t) => merged.add(t));
+  return Array.from(merged);
+}
+__name(getCategoryTokens, "getCategoryTokens");
+function buildCard(product, isTh) {
+  const slug = String(product.slug || "").trim();
+  const title = escapeHtml2(String((isTh ? product.title_th : product.title_en) || product.title_en || slug && titleFromSlug(slug) || "Product"));
+  const description = String((isTh ? product.description_th : product.description_en) || product.description_en || "");
+  const cardBenefit = String((isTh ? product.card_benefit_th : product.card_benefit_en) || product.card_benefit_en || "");
+  const benefit = escapeHtml2(firstSentence(cardBenefit || description, 120) || (isTh ? "\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E2D\u0E2D\u0E01\u0E41\u0E1A\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23" : "Custom-made for your exact dimensions"));
+  const isFixed = FIXED_PRODUCT_SLUGS.has(slug) || Number(product.is_custom) === 0;
+  const categories = getCategoryTokens(product);
+  const productType = categories.find((c) => !!TYPE_LABELS_EN[c]) || "sheets";
+  const niche = categories.find((c) => !!NICHE_LABELS_EN[c]);
+  const dataCategories = escapeHtml2(categories.join(","));
+  const labels = isTh ? TYPE_LABELS_TH : TYPE_LABELS_EN;
+  const nicheLabels = isTh ? NICHE_LABELS_TH : NICHE_LABELS_EN;
+  const typeTagLabel = labels[productType] || "PRODUCT";
+  const nicheTagLabel = niche ? nicheLabels[niche] : "";
+  const nichePathBase = niche ? NICHE_PATHS[niche] || "/products/" : "/products/";
+  const nichePath = isTh ? `/th${nichePathBase}` : nichePathBase;
+  const image = escapeHtml2(normalizeImageUrl(String(product.image_url || "")) || `/images/products/${slug}/main.jpg`);
+  const price = buildPrice(product, isTh);
+  const buttonLabel = escapeHtml2(buildButtonLabel(isFixed, isTh));
+  const fabricInfo = escapeHtml2(buildFabricInfo(String(product.fabric_options || ""), isFixed, isTh));
+  const priceNote = isTh ? "\u0E44\u0E21\u0E48\u0E23\u0E27\u0E21\u0E04\u0E48\u0E32\u0E02\u0E19\u0E2A\u0E48\u0E07 \u0E20\u0E32\u0E29\u0E35 \u0E41\u0E25\u0E30\u0E04\u0E48\u0E32\u0E18\u0E23\u0E23\u0E21\u0E40\u0E19\u0E35\u0E22\u0E21" : "Excludes shipping, tax & tariff";
+  const titleLower = escapeHtml2(String(product.title_en || title).toLowerCase());
+  return `          <article class="product-card" data-categories="${dataCategories}" data-title="${titleLower}" data-price="${price.usd}">
+            <div class="product-image">
+              <img src="${image}" alt="${title}" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <div class="product-tags" aria-label="Categories"><a href="/${productType}/" class="card-tag" style="text-decoration:none;">${escapeHtml2(typeTagLabel)}</a>${nicheTagLabel ? `<a href="${escapeHtml2(nichePath)}" class="card-tag" style="text-decoration:none;">${escapeHtml2(nicheTagLabel)}</a>` : ""}</div>
+              <h3 class="product-title">${title}</h3>
+              <div class="product-price" data-usd="${price.usd}" data-thb="${price.thb}">${escapeHtml2(price.display)}</div>
+              <div class="product-price-note">${escapeHtml2(priceNote)}</div>
+              <p class="product-benefit">${benefit}</p>
+              <div class="product-fabrics-info">${fabricInfo}</div>
+              <a href="${isTh ? "/th" : ""}/product/${escapeHtml2(slug)}/" class="btn btn-primary" style="margin-top:auto;">${buttonLabel}</a>
+            </div>
+          </article>`;
+}
+__name(buildCard, "buildCard");
+async function onRequest7(context) {
+  const { request, env, next } = context;
+  const url = new URL(request.url);
+  const path = url.pathname;
+  const isEnProducts = path === "/products/" || path === "/products";
+  const isThProducts = path === "/th/products/" || path === "/th/products";
+  if (!isEnProducts && !isThProducts) {
+    return next();
+  }
+  try {
+    const staticUrl = `${url.origin}${isThProducts ? "/th/products/index.html" : "/products/index.html"}`;
+    const staticRes = await env.ASSETS.fetch(new Request(staticUrl));
+    if (!staticRes.ok) return next();
+    let html = await staticRes.text();
+    const query = env.DB.prepare(`
+      SELECT
+        slug,
+        title_en,
+        title_th,
+        description_en,
+        description_th,
+        card_benefit_en,
+        card_benefit_th,
+        category,
+        product_type,
+        niches,
+        fabric_options,
+        base_price_usd,
+        base_price_thb,
+        image_url,
+        is_custom,
+        is_active,
+        sort_order
+      FROM products
+      WHERE COALESCE(is_active, 1) = 1
+      ORDER BY COALESCE(sort_order, 9999), title_en
+    `);
+    const result = await query.all();
+    const products = Array.isArray(result?.results) ? result.results : [];
+    const cardsHtml = products.map((p) => buildCard(p, isThProducts)).join("\n");
+    html = html.replace(
+      /<!-- PRODUCTS_GRID_START -->[\s\S]*?<!-- PRODUCTS_GRID_END -->/m,
+      `<!-- PRODUCTS_GRID_START -->
+${cardsHtml}
+          <!-- PRODUCTS_GRID_END -->`
+    );
+    const countText = isThProducts ? `${products.length} \u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32` : `${products.length} products`;
+    html = html.replace(
+      /(<div class="results-count" id="results-count">)[\s\S]*?(<\/div>)/i,
+      `$1${countText}$2`
+    );
+    return new Response(html, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=300"
+      }
+    });
+  } catch (error) {
+    console.error("Products SSR error:", error);
+    return next();
+  }
+}
+__name(onRequest7, "onRequest");
 
 // quote/[[path]].ts
-var onRequest5 = /* @__PURE__ */ __name(async (context) => {
+var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const pathParts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
@@ -9344,7 +20128,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   try {
     quote = await env.DB.prepare(
       `SELECT quote_id, customer_name, product_slug, dimensions, fabric, color,
-              status, quoted_price, quoted_price_usd, expires_at, created_at
+              status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
@@ -9385,6 +20169,17 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   const priceUsd = isUsdQuoted ? explicitPriceUsd : priceThb ? Math.round(priceThb / usdRate) : null;
   const hasPrice = !!(priceThb && priceThb > 0 || priceUsd && priceUsd > 0);
   const isCheckoutReady = !isExpired && hasPrice;
+  const clerkOrigins = (function(requestUrl) {
+    try {
+      const h = new URL(requestUrl).hostname.toLowerCase();
+      if (h.endsWith(".pages.dev") || h === "localhost" || h === "127.0.0.1") {
+        return "https://kind-joey-29.clerk.accounts.dev";
+      }
+    } catch {
+    }
+    return "https://clerk.mildmate.com https://accounts.mildmate.com";
+  })(request.url);
+  const securityCsp2 = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://cdn.protect.clerk.com " + clerkOrigins + " https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.co.th data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.co.th https://cdn.protect.clerk.com " + clerkOrigins + " https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com " + clerkOrigins + " https://challenges.cloudflare.com; upgrade-insecure-requests;";
   function esc(s) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
@@ -9394,8 +20189,9 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   const colorLabel = quote?.color || "\u2014";
   const cartItem = quote ? {
     id: "quote-" + quoteId + "-" + Date.now(),
-    type: quote.product_slug,
+    type: "custom_quote",
     product_slug: quote.product_slug,
+    product_name: productTitle,
     title: productTitle,
     dimensions,
     fabric: quote.fabric,
@@ -9403,6 +20199,8 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     qty: 1,
     is_quote: true,
     quote_id: quoteId,
+    free_shipping: Number(quote.free_shipping || 0) === 1,
+    quote_currency: isUsdQuoted ? "USD" : "THB",
     price_thb: priceThb,
     price_usd: priceUsd
   } : null;
@@ -9419,6 +20217,29 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
+  <script src="/js/analytics-env.js"><\/script>
+  <script src="/js/cookie-consent.js"><\/script>
+  <script>
+    (function () {
+      // Sanitize the measured page URL before any analytics loads. The quote
+      // magic-link path segment is a bearer credential and must never reach
+      // measurement endpoints as page_location (GA4/GTM honor a dataLayer
+      // page_location override pushed before container init).
+      try {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ page_location: 'https://www.mildmate.com/quote/' });
+      } catch (e) {}
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
+      } else {
+        bootMildmateAnalytics();
+      }
+    })();
+  <\/script>
   <style>
     :root {
       --color-primary: #2c96f4;
@@ -9527,6 +20348,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   </style>
 </head>
 <body>
+  <noscript id="gtm-noscript"></noscript>
   <main>
     ${quote ? `
       <section class="card quote-hero">
@@ -9585,7 +20407,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
           ` : ""}
           <p class="fine-print">Product price only. Shipping and tax are calculated at checkout.</p>
           ${isCheckoutReady ? `
-          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return i.type===item.type&&i.fabric===item.fabric&&JSON.stringify(i.dimensions)===JSON.stringify(item.dimensions);});if(ex){ex.qty=(ex.qty||1)+1;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Review &amp; Pay';this.style.background='var(--color-success)';this.onclick=function(){window.location.href='/checkout/';};}catch(e){}}return false;">Add to Cart</button>
+          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return String(i.quote_id||'')===String(item.quote_id||'');});if(ex){ex.qty=(ex.qty||1)+1;ex.price_usd=item.price_usd;ex.price_thb=item.price_thb;ex.quote_currency=item.quote_currency;ex.free_shipping=item.free_shipping;ex.dimensions=item.dimensions;ex.fabric=item.fabric;ex.color=item.color;ex.product_slug=item.product_slug;ex.product_name=item.product_name||ex.product_name;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Redirecting...';this.style.background='var(--color-success)';this.disabled=true;window.location.href='/checkout/';}catch(e){}}return false;">Add to Cart</button>
           ` : `<div class="transaction-note">${isExpired ? "This quote has expired. Please request a new quote." : "This quote will become checkout-ready once pricing is added."}</div>`}
         </aside>
       </div>
@@ -9602,8 +20424,102 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   <script id="quote-cart-data" type="application/json">${cartItemJson}<\/script>
   <script src="/js/cart.js"><\/script>
   <script>
+    function ensureGa4Stub() {
+      window.dataLayer = window.dataLayer || [];
+      if (typeof window.gtag !== 'function') {
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+      }
+    }
+
+    function sendGa4Event(name, params) {
+      try {
+        var payload = params || {};
+        if (typeof window.__mildmateTrackEvent === 'function') {
+          window.__mildmateTrackEvent(name, payload);
+          return;
+        }
+        ensureGa4Stub();
+        window.gtag('event', name, payload);
+      } catch (e) {}
+    }
+
+    function sendGa4EventTokenized(name, params, tokenField, rawToken) {
+      var payload = params || {};
+      payload[tokenField] = '';
+      var attempted = false;
+      function emit(tokenHash) {
+        if (attempted) return;
+        attempted = true;
+        payload[tokenField] = tokenHash;
+        sendGa4Event(name, payload);
+      }
+      try {
+        if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+          crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(rawToken || ''))).then(function (buf) {
+            var hex = '';
+            var bytes = new Uint8Array(buf);
+            for (var i = 0; i < 8 && i < bytes.length; i++) {
+              hex += ('0' + bytes[i].toString(16)).slice(-2);
+            }
+            emit(hex || 'token-unavailable');
+          }).catch(function () { emit('token-unavailable'); });
+          setTimeout(function () { emit('token-unavailable'); }, 800);
+          return;
+        }
+      } catch (e) {}
+      emit('token-unavailable');
+    }
+
+    function trackViewQuote(meta) {
+      if (!meta || !meta.quote_id) return;
+      var dedupeKey = 'mildmate-view-quote-' + meta.quote_id;
+      try {
+        if (sessionStorage.getItem(dedupeKey) === '1') return;
+      } catch (e) {}
+      var payload = {
+        quote_id: '',
+        product_name: meta.product_name || 'Custom Product',
+        currency: meta.currency || 'USD',
+        value: Math.round((Number(meta.value || 0) || 0) * 100) / 100
+      };
+      sendGa4EventTokenized('view_quote', payload, 'quote_id', meta.quote_id);
+      try {
+        sessionStorage.setItem(dedupeKey, '1');
+      } catch (e2) {}
+    }
+
+    function trackQuoteAddToCart(item) {
+      if (!item || !item.quote_id) return;
+      var currency = item.quote_currency === 'THB' ? 'THB' : 'USD';
+      var unitPrice = currency === 'THB'
+        ? Number(item.price_thb || 0)
+        : Number(item.price_usd || 0);
+      var payload = {
+        quote_id: '',
+        currency: currency,
+        value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+        items: [{
+          item_id: item.product_slug || 'custom-quote',
+          item_name: item.product_name || item.title || 'Custom Quote',
+          price: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+          quantity: Number(item.qty || 1) || 1
+        }]
+      };
+      sendGa4EventTokenized('add_to_cart', payload, 'quote_id', item.quote_id);
+    }
+
     var _quoteCartItem = null;
     var _quoteIsAdded = false;
+    var _quoteEventMeta = ${JSON.stringify(
+    quote && isCheckoutReady ? {
+      quote_id: String(quoteId),
+      product_name: productTitle,
+      currency: isUsdQuoted ? "USD" : "THB",
+      value: isUsdQuoted ? Number(priceUsd || 0) : Number(priceThb || 0)
+    } : null
+  )};
     try {
       var _dataEl = document.getElementById('quote-cart-data');
       _quoteCartItem = _dataEl ? JSON.parse(_dataEl.textContent || 'null') : null;
@@ -9623,21 +20539,42 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
           var cart = JSON.parse(raw);
           cart.items = Array.isArray(cart.items) ? cart.items : [];
           var existing = cart.items.find(function(i) {
+            // Quote lines are identified by quote_id \u2014 never merge a different
+            // quote that happens to share dimensions/fabric/color.
+            if (_quoteCartItem.quote_id) {
+              return String(i.quote_id || '') === String(_quoteCartItem.quote_id);
+            }
             return i.type === _quoteCartItem.type && i.fabric === _quoteCartItem.fabric &&
               JSON.stringify(i.dimensions) === JSON.stringify(_quoteCartItem.dimensions);
           });
-          if (existing) existing.qty = (existing.qty || 1) + 1;
-          else cart.items.push(_quoteCartItem);
+          if (existing) {
+            existing.qty = (existing.qty || 1) + 1;
+            // Refresh the line with the latest approved quote render (admin may
+            // have re-priced since the line was first added).
+            existing.price_usd = _quoteCartItem.price_usd;
+            existing.price_thb = _quoteCartItem.price_thb;
+            existing.quote_currency = _quoteCartItem.quote_currency;
+            existing.free_shipping = _quoteCartItem.free_shipping;
+            existing.dimensions = _quoteCartItem.dimensions;
+            existing.fabric = _quoteCartItem.fabric;
+            existing.color = _quoteCartItem.color;
+            existing.product_slug = _quoteCartItem.product_slug;
+            existing.product_name = _quoteCartItem.product_name || existing.product_name;
+          } else {
+            cart.items.push(_quoteCartItem);
+          }
           localStorage.setItem(key, JSON.stringify(cart));
         }
+        trackQuoteAddToCart(_quoteCartItem);
         _quoteIsAdded = true;
-        showToast('Added to cart');
+        showToast('Added to cart. Redirecting...');
         var btn = document.getElementById('quote-cta');
         if (btn) {
-          btn.textContent = 'Review & Pay';
+          btn.textContent = 'Redirecting...';
           btn.style.background = 'var(--color-success)';
-          btn.onclick = function() { window.location.href = '/checkout/'; };
+          btn.disabled = true;
         }
+        window.location.href = '/checkout/';
       } catch (e) {
         showToast('Could not add to cart');
       }
@@ -9645,10 +20582,15 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
 
     window.switchLang = function switchLang(lang) {
       sessionStorage.setItem('lang', lang);
+      // The double backslash below is REQUIRED: this file is one big template
+      // literal, and a single backslash is cooked away by esbuild, which used
+      // to emit a broken regex into the served page \u2014 a syntax error that
+      // killed the ENTIRE inline script block (Add to Cart survived only via
+      // the onclick fallback, and view_quote tracking never ran).
       if (lang === 'th') {
-        window.location.href = '/th' + window.location.pathname.replace(/^/th/, '');
+        window.location.href = '/th' + window.location.pathname.replace(/^\\/th/, '');
       } else {
-        window.location.href = window.location.pathname.replace(/^/th/, '') || '/';
+        window.location.href = window.location.pathname.replace(/^\\/th/, '') || '/';
       }
     };
 
@@ -9662,6 +20604,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
 
     var _cta = document.getElementById('quote-cta');
     if (_cta) _cta.addEventListener('click', window.addQuoteToCart);
+    if (_quoteEventMeta && _quoteEventMeta.quote_id) trackViewQuote(_quoteEventMeta);
 
   <\/script>
 </body>
@@ -9669,13 +20612,14 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   return new Response(html, {
     headers: {
       "Content-Type": "text/html;charset=utf-8",
-      "Cache-Control": "no-cache"
+      "Cache-Control": "no-cache",
+      "Content-Security-Policy": securityCsp2
     }
   });
 }, "onRequest");
 
 // r2/[[path]].ts
-var onRequest6 = /* @__PURE__ */ __name(async (context) => {
+var onRequest9 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
@@ -9696,25 +20640,42 @@ var onRequest6 = /* @__PURE__ */ __name(async (context) => {
   return Response.redirect(publicUrl, 302);
 }, "onRequest");
 
+// v1/[[path]].ts
+var onRequest10 = /* @__PURE__ */ __name(async (context) => {
+  const res = await handleSalesApi(context.request, context.env);
+  if (res) return res;
+  return new Response(JSON.stringify({ error: "Not Found" }), {
+    status: 404,
+    headers: { "Content-Type": "application/json" }
+  });
+}, "onRequest");
+
 // account/_middleware.ts
-function getClerkSessionToken2(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  if (cookieMatch) return cookieMatch[1];
+var TOKEN_QUERY_NAME = /^__(?:session|clerk_db_jwt)(?:_[A-Za-z0-9_-]{1,64})?$/;
+function hasForbiddenTokenQuery(request) {
   const url = new URL(request.url);
-  const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
-  if (qp) return qp;
-  return null;
+  for (const key of Array.from(url.searchParams.keys())) {
+    if (TOKEN_QUERY_NAME.test(key)) return true;
+  }
+  return false;
 }
-__name(getClerkSessionToken2, "getClerkSessionToken");
-var onRequest7 = /* @__PURE__ */ __name(async (context) => {
-  const host = new URL(context.request.url).host;
-  if (host.includes("pages.dev") || host.includes("localhost")) {
+__name(hasForbiddenTokenQuery, "hasForbiddenTokenQuery");
+var onRequest11 = /* @__PURE__ */ __name(async (context) => {
+  if (isDevelopmentAuthHost(context.request.url)) {
     return context.next();
   }
-  const sessionToken = getClerkSessionToken2(context.request);
+  const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
+  if (handshakeResponse) return handshakeResponse;
+  if (hasForbiddenTokenQuery(context.request)) {
+    return redirectToSignIn2(context.request.url, context.env);
+  }
+  const session = extractClerkSessionToken(context.request);
+  if (session.ambiguous) {
+    return redirectToSignIn2(context.request.url, context.env);
+  }
+  const sessionToken = session.token;
   if (!sessionToken) {
-    return redirectToSignIn(context.request.url);
+    return redirectToSignIn2(context.request.url, context.env);
   }
   const modifiedRequest = new Request(context.request.url, {
     headers: new Headers({
@@ -9724,86 +20685,83 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   });
   const result = await verifyClerkJwt(modifiedRequest, context.env);
   if (!result.valid) {
-    return redirectToSignIn(context.request.url);
+    if (result.error === "Token expired") {
+      const handshake = redirectToHandshake(context.request.url, context.env);
+      if (handshake) return handshake;
+    }
+    return redirectToSignIn2(context.request.url, context.env);
   }
+  const cleaned = stripHandshakeMarker(context.request.url);
+  if (cleaned) return cleaned;
   return context.next();
 }, "onRequest");
-function redirectToSignIn(currentUrl) {
-  const parsed = new URL(currentUrl);
-  const isDev = parsed.host.includes("pages.dev") || parsed.host.includes("localhost");
-  const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : "accounts.mildmate.com";
-  const cleanReturnUrl = parsed.origin + parsed.pathname;
-  const signInUrl = new URL(`https://${accountsDomain}/sign-in`);
-  signInUrl.searchParams.set("redirect_url", cleanReturnUrl);
-  return Response.redirect(signInUrl.toString(), 302);
+var HANDSHAKE_MARKER = "__mm_hs";
+function redirectToHandshake(currentUrl, env) {
+  try {
+    const parsed = new URL(currentUrl);
+    if (parsed.searchParams.has(HANDSHAKE_MARKER)) return null;
+    const issuer = String(env?.CLERK_ISSUER || "").trim();
+    if (!issuer) return null;
+    const fapiHost = new URL(issuer).host;
+    const returnUrl = new URL(parsed.origin + parsed.pathname);
+    returnUrl.searchParams.set(HANDSHAKE_MARKER, "1");
+    const handshakeUrl = new URL(`https://${fapiHost}/v1/client/handshake`);
+    handshakeUrl.searchParams.set("redirect_url", returnUrl.toString());
+    return Response.redirect(handshakeUrl.toString(), 302);
+  } catch {
+    return null;
+  }
 }
-__name(redirectToSignIn, "redirectToSignIn");
+__name(redirectToHandshake, "redirectToHandshake");
+function stripHandshakeMarker(currentUrl) {
+  try {
+    const url = new URL(currentUrl);
+    if (!url.searchParams.has(HANDSHAKE_MARKER)) return null;
+    url.searchParams.delete(HANDSHAKE_MARKER);
+    return Response.redirect(url.toString(), 302);
+  } catch {
+    return null;
+  }
+}
+__name(stripHandshakeMarker, "stripHandshakeMarker");
+function redirectToSignIn2(currentUrl, env) {
+  const parsed = new URL(currentUrl);
+  const isDev = isDevelopmentAuthHost(currentUrl);
+  const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
+  const cleanReturnUrl = parsed.origin + parsed.pathname;
+  const signInUrl2 = new URL(`https://${accountsDomain}/sign-in`);
+  signInUrl2.searchParams.set("redirect_url", cleanReturnUrl);
+  return Response.redirect(signInUrl2.toString(), 302);
+}
+__name(redirectToSignIn2, "redirectToSignIn");
+function isDevelopmentAuthHost(url) {
+  const parsed = new URL(url);
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname.includes("pages.dev")) return true;
+  if (hostname === "localhost") return true;
+  if ((hostname === "127.0.0.1" || hostname === "::1") && parsed.protocol === "http:") return true;
+  return false;
+}
+__name(isDevelopmentAuthHost, "isDevelopmentAuthHost");
 
 // admin/_middleware.ts
-function getClerkSessionToken3(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  if (cookieMatch) return cookieMatch[1];
+var TOKEN_QUERY_NAME2 = /^__(?:session|clerk_db_jwt)(?:_[A-Za-z0-9_-]{1,64})?$/;
+function hasForbiddenTokenQuery2(request) {
   const url = new URL(request.url);
-  const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
-  if (qp) return qp;
-  return null;
+  for (const key of Array.from(url.searchParams.keys())) {
+    if (TOKEN_QUERY_NAME2.test(key)) return true;
+  }
+  return false;
 }
-__name(getClerkSessionToken3, "getClerkSessionToken");
-function collectRoles13(raw) {
-  if (!raw || typeof raw !== "object") return [];
-  const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
-    if (v !== void 0 && v !== null) values.push(v);
-  }, "add");
-  add(raw.role);
-  add(raw.roles);
-  add(raw.org_role);
-  add(raw.orgRole);
-  add(raw.public_metadata?.role);
-  add(raw.public_metadata?.roles);
-  add(raw.unsafe_metadata?.roles);
-  add(raw.metadata?.role);
-  add(raw.metadata?.roles);
-  add(raw["https://mildmate.com/role"]);
-  add(raw["https://mildmate.com/roles"]);
-  const out = [];
-  values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
-    else out.push(String(v).toLowerCase().trim());
-  });
-  return out.filter(Boolean);
-}
-__name(collectRoles13, "collectRoles");
-function hasAdminRole16(rawClaims) {
-  const roles = collectRoles13(rawClaims);
-  return roles.some(
-    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
-  );
-}
-__name(hasAdminRole16, "hasAdminRole");
-function emailAllowed15(email, env) {
-  if (!email) return false;
-  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
-__name(emailAllowed15, "emailAllowed");
-function emailBlocked(email) {
-  if (!email) return false;
-  const blocked = [
-    "mildmateshop@gmail.com"
-  ];
-  return blocked.includes(email.toLowerCase());
-}
-__name(emailBlocked, "emailBlocked");
-function getPrimaryClerkEmail2(user) {
+__name(hasForbiddenTokenQuery2, "hasForbiddenTokenQuery");
+function getPrimaryClerkEmail4(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
   const primaryId = user.primary_email_address_id;
   const primary = list.find((e) => e && e.id === primaryId);
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
-__name(getPrimaryClerkEmail2, "getPrimaryClerkEmail");
+__name(getPrimaryClerkEmail4, "getPrimaryClerkEmail");
 async function enrichAdminFromClerk(sub, env) {
   const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
   if (!sub || !clerkKey) return { email: "", hasAdmin: false };
@@ -9813,7 +20771,7 @@ async function enrichAdminFromClerk(sub, env) {
     });
     if (!resp.ok) return { email: "", hasAdmin: false };
     const user = await resp.json();
-    const email = getPrimaryClerkEmail2(user);
+    const email = getPrimaryClerkEmail4(user);
     const metadataRaw = {
       role: user?.public_metadata?.role,
       roles: user?.public_metadata?.roles,
@@ -9823,20 +20781,28 @@ async function enrichAdminFromClerk(sub, env) {
       unsafe_metadata: user?.unsafe_metadata || {},
       metadata: user?.private_metadata || {}
     };
-    return { email, hasAdmin: hasAdminRole16(metadataRaw) };
+    return { email, hasAdmin: hasAdminRole2(metadataRaw) };
   } catch {
     return { email: "", hasAdmin: false };
   }
 }
 __name(enrichAdminFromClerk, "enrichAdminFromClerk");
-var onRequest8 = /* @__PURE__ */ __name(async (context) => {
-  const host = new URL(context.request.url).host;
-  if (host.includes("pages.dev") || host.includes("localhost")) {
+var onRequest12 = /* @__PURE__ */ __name(async (context) => {
+  if (isDevelopmentAuthHost2(context.request.url)) {
     return context.next();
   }
-  const sessionToken = getClerkSessionToken3(context.request);
+  const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
+  if (handshakeResponse) return handshakeResponse;
+  if (hasForbiddenTokenQuery2(context.request)) {
+    return redirectToSignIn3(context.request.url, context.env);
+  }
+  const session = extractClerkSessionToken(context.request);
+  if (session.ambiguous) {
+    return redirectToSignIn3(context.request.url, context.env);
+  }
+  const sessionToken = session.token;
   if (!sessionToken) {
-    return redirectToSignIn2(context.request.url);
+    return redirectToSignIn3(context.request.url, context.env);
   }
   const modifiedRequest = new Request(context.request.url, {
     headers: new Headers({
@@ -9846,20 +20812,26 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   });
   const result = await verifyClerkJwt(modifiedRequest, context.env);
   if (!result.valid) {
-    return redirectToSignIn2(context.request.url);
+    if (result.error === "Token expired") {
+      const handshake = redirectToHandshake2(context.request.url, context.env);
+      if (handshake) return handshake;
+    }
+    return redirectToSignIn3(context.request.url, context.env);
   }
+  const cleaned = stripHandshakeMarker2(context.request.url);
+  if (cleaned) return cleaned;
   const raw = result.payload.raw || {};
   let email = String(result.payload.email || "").trim().toLowerCase();
-  let hasAdmin = hasAdminRole16(raw);
-  let allowed = emailAllowed15(email, context.env);
-  if (!hasAdmin && !allowed) {
+  let hasAdmin = hasAdminRole2(raw);
+  let allowed = emailAllowed2(email, context.env);
+  if (!hasAdmin || !allowed) {
     const sub = String(result.payload.sub || "").trim();
     const enriched = await enrichAdminFromClerk(sub, context.env);
     if (enriched.email) email = enriched.email;
     hasAdmin = hasAdmin || enriched.hasAdmin;
-    allowed = allowed || emailAllowed15(email, context.env);
+    allowed = allowed || emailAllowed2(email, context.env);
   }
-  if (emailBlocked(email)) {
+  if (emailBlocked(email, context.env)) {
     return new Response(
       `<!DOCTYPE html>
 <html lang="en">
@@ -9869,7 +20841,7 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
       { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } }
     );
   }
-  if (!hasAdmin && !allowed) {
+  if (!hasAdmin || !allowed) {
     return new Response(
       `<!DOCTYPE html>
 <html lang="en">
@@ -9881,20 +20853,70 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   }
   return context.next();
 }, "onRequest");
-function redirectToSignIn2(currentUrl) {
-  const parsed = new URL(currentUrl);
-  const isDev = parsed.host.includes("pages.dev") || parsed.host.includes("localhost");
-  const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : "accounts.mildmate.com";
-  const cleanReturnUrl = parsed.origin + parsed.pathname;
-  const signInUrl = new URL(`https://${accountsDomain}/sign-in`);
-  signInUrl.searchParams.set("redirect_url", cleanReturnUrl);
-  return Response.redirect(signInUrl.toString(), 302);
+var HANDSHAKE_MARKER2 = "__mm_hs";
+function redirectToHandshake2(currentUrl, env) {
+  try {
+    const parsed = new URL(currentUrl);
+    if (parsed.searchParams.has(HANDSHAKE_MARKER2)) return null;
+    const issuer = String(env?.CLERK_ISSUER || "").trim();
+    if (!issuer) return null;
+    const fapiHost = new URL(issuer).host;
+    const returnUrl = new URL(parsed.origin + parsed.pathname);
+    returnUrl.searchParams.set(HANDSHAKE_MARKER2, "1");
+    const handshakeUrl = new URL(`https://${fapiHost}/v1/client/handshake`);
+    handshakeUrl.searchParams.set("redirect_url", returnUrl.toString());
+    return Response.redirect(handshakeUrl.toString(), 302);
+  } catch {
+    return null;
+  }
 }
-__name(redirectToSignIn2, "redirectToSignIn");
+__name(redirectToHandshake2, "redirectToHandshake");
+function stripHandshakeMarker2(currentUrl) {
+  try {
+    const url = new URL(currentUrl);
+    if (!url.searchParams.has(HANDSHAKE_MARKER2)) return null;
+    url.searchParams.delete(HANDSHAKE_MARKER2);
+    return Response.redirect(url.toString(), 302);
+  } catch {
+    return null;
+  }
+}
+__name(stripHandshakeMarker2, "stripHandshakeMarker");
+function redirectToSignIn3(currentUrl, env) {
+  const parsed = new URL(currentUrl);
+  const isDev = isDevelopmentAuthHost2(currentUrl);
+  const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
+  const clean = new URL(parsed.origin + parsed.pathname + parsed.search);
+  for (const key of Array.from(clean.searchParams.keys())) {
+    if (key.indexOf("__clerk_") === 0 || key.indexOf("__session") === 0 || key === HANDSHAKE_MARKER2) {
+      clean.searchParams.delete(key);
+    }
+  }
+  const cleanReturnUrl = clean.origin + clean.pathname;
+  const isSuperAdminPath = clean.pathname.toLowerCase().startsWith("/super-admin");
+  const callbackReturnUrl = new URL("/auth/clerk-return/", clean.origin);
+  if (isSuperAdminPath) {
+    const nextPath = clean.pathname + clean.search;
+    callbackReturnUrl.searchParams.set("next", nextPath || "/super-admin/");
+  }
+  const signInUrl2 = new URL(`https://${accountsDomain}/sign-in`);
+  signInUrl2.searchParams.set("redirect_url", isSuperAdminPath ? callbackReturnUrl.toString() : cleanReturnUrl);
+  return Response.redirect(signInUrl2.toString(), 302);
+}
+__name(redirectToSignIn3, "redirectToSignIn");
 function escHtml3(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 __name(escHtml3, "escHtml");
+function isDevelopmentAuthHost2(url) {
+  const parsed = new URL(url);
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname.includes("pages.dev")) return true;
+  if (hostname === "localhost") return true;
+  if ((hostname === "127.0.0.1" || hostname === "::1") && parsed.protocol === "http:") return true;
+  return false;
+}
+__name(isDevelopmentAuthHost2, "isDevelopmentAuthHost");
 
 // _middleware.ts
 var CACHE_TTL = 5 * 60 * 1e3;
@@ -10261,6 +21283,143 @@ var SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
 var SHARED_FAVICON_LINKS = `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
 <link rel="apple-touch-icon" href="/images/logo.png">`;
 var LISTING_IMAGE_SYNC_SCRIPT = `<script src="/js/listing-images-sync.js"><\/script>`;
+var CATALOG_CAMPAIGN_INLINE_FALLBACK = `<script id="catalog-campaign-inline-fallback">
+(function(){
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (window.__MildMateCatalogCampaignUiLoaded) return;
+  window.__MildMateCatalogCampaignFallbackLoaded = true;
+
+  function isThaiPage() {
+    try {
+      var lang = (document.documentElement && document.documentElement.lang || '').toLowerCase();
+      var path = window.location.pathname || '';
+      return lang === 'th' || path.indexOf('/th/') === 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function toNumber(v) {
+    var n = Number(v);
+    return isFinite(n) ? n : 0;
+  }
+
+  function getProductSlug(card) {
+    var link = card.querySelector('a[href*="/product/"]');
+    if (!link) return '';
+    var href = link.getAttribute('href') || '';
+    var parts = href.split('/').filter(function (s) { return s; });
+    return parts.length ? parts[parts.length - 1] : '';
+  }
+
+  function formatBasePrice(usd, thb, isThai) {
+    return isThai ? ('\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 \u0E3F' + Math.round(thb).toLocaleString()) : ('From US$' + Math.round(usd));
+  }
+
+  function ensureStyles() {
+    if (document.getElementById('catalog-campaign-ui-style')) return;
+    var style = document.createElement('style');
+    style.id = 'catalog-campaign-ui-style';
+    style.textContent =
+      '.product-price .price-strike{color:#94a3b8;text-decoration:line-through;font-weight:600;margin-right:6px}' +
+      '.product-price .price-sale{color:#dc2626;font-weight:800}' +
+      '.catalog-sale-meta{display:flex;align-items:center;gap:8px;margin-top:6px;min-height:20px;flex-wrap:wrap}' +
+      '.catalog-sale-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;letter-spacing:.02em;line-height:1.2}' +
+      '.catalog-sale-countdown{font-size:12px;color:#64748b;font-weight:600;line-height:1.3}' +
+      '@media (max-width:768px){.catalog-sale-meta{gap:6px}.catalog-sale-badge{font-size:10px;padding:2px 7px}.catalog-sale-countdown{display:block;width:100%;font-size:11px}}';
+    document.head.appendChild(style);
+  }
+
+  function renderAll() {
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.product-card'));
+    if (!cards.length) return;
+    var isThai = isThaiPage();
+
+    cards.forEach(function(card) {
+      var priceEl = card.querySelector('.product-price');
+      if (!priceEl) return;
+      var usd = toNumber(priceEl.getAttribute('data-usd'));
+      var thb = toNumber(priceEl.getAttribute('data-thb'));
+      if (!usd && !thb) return;
+
+      var slug = getProductSlug(card);
+      var discountInfo = (typeof MildMateCampaigns !== 'undefined' && slug)
+        ? MildMateCampaigns.getDiscountForProduct(slug)
+        : { discount: 0 };
+      var discount = toNumber(discountInfo && discountInfo.discount);
+
+      var meta = card.querySelector('.catalog-sale-meta');
+      if (!meta) {
+        meta = document.createElement('div');
+        meta.className = 'catalog-sale-meta';
+        priceEl.insertAdjacentElement('afterend', meta);
+      }
+
+      if (discount > 0) {
+        var saleUsd = Math.max(1, Math.round(usd * (1 - discount / 100)));
+        var saleThb = Math.max(1, Math.round(thb * (1 - discount / 100)));
+        var baseLabel = formatBasePrice(usd, thb, isThai);
+        var saleLabel = formatBasePrice(saleUsd, saleThb, isThai);
+        priceEl.innerHTML = '<span class="price-strike">' + baseLabel + '</span><span class="price-sale">' + saleLabel + '</span>';
+
+        var countdown = (typeof MildMateCampaigns !== 'undefined' && slug)
+          ? MildMateCampaigns.getCampaignCountdown(slug)
+          : null;
+        var countdownText = '';
+        if (countdown) {
+          countdownText = isThai
+            ? ('\u0E2B\u0E21\u0E14\u0E40\u0E02\u0E15\u0E43\u0E19 ' + countdown.days + ' \u0E27\u0E31\u0E19 ' + countdown.hours + ' \u0E0A\u0E21. ' + countdown.mins + ' \u0E19\u0E32\u0E17\u0E35')
+            : ('Ends in ' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm');
+        }
+        meta.innerHTML = (isThai
+          ? ('<span class="catalog-sale-badge">\u0E25\u0E14 ' + discount + '%</span>')
+          : ('<span class="catalog-sale-badge">-' + discount + '% SALE</span>')) +
+          (countdownText ? '<span class="catalog-sale-countdown">' + countdownText + '</span>' : '');
+      } else {
+        priceEl.textContent = formatBasePrice(usd, thb, isThai);
+        meta.innerHTML = '';
+      }
+    });
+  }
+
+  function init() {
+    ensureStyles();
+    renderAll();
+    if (typeof MildMateCampaigns !== 'undefined' && typeof MildMateCampaigns.loadStorefrontCampaigns === 'function') {
+      MildMateCampaigns.loadStorefrontCampaigns(false).finally(renderAll);
+    }
+    window.addEventListener('mildmate:campaigns-updated', renderAll);
+    window.setInterval(renderAll, 60000);
+  }
+
+  init();
+})();
+<\/script>`;
+function isProductionHost21(hostname) {
+  const host = String(hostname || "").toLowerCase();
+  return host === "www.mildmate.com" || host === "mildmate.com";
+}
+__name(isProductionHost21, "isProductionHost");
+function buildAnalyticsRuntimeConfigScript(request, env) {
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost21(host);
+  const runtimeEnv = String(env?.ANALYTICS_ENV || (prodHost ? "production" : "staging")).trim().toLowerCase();
+  const nonProdEnabled = String(env?.ANALYTICS_NON_PROD_ENABLED || "").trim().toLowerCase() === "true";
+  const nonProdGtm = String(env?.ANALYTICS_NON_PROD_GTM_ID || "").trim();
+  const nonProdGa4 = String(env?.ANALYTICS_NON_PROD_GA4_ID || "").trim();
+  const cfg = { environment: runtimeEnv };
+  if (!prodHost) {
+    cfg.nonProductionApproved = nonProdEnabled;
+    if (nonProdEnabled) {
+      if (nonProdGtm) cfg.gtmId = nonProdGtm;
+      if (nonProdGa4) cfg.ga4Id = nonProdGa4;
+      cfg.enabled = true;
+    }
+  }
+  const json13 = JSON.stringify(cfg);
+  return `<script id="runtime-analytics-config">window.__MILDMATE_ANALYTICS_CONFIG = ${json13};<\/script>`;
+}
+__name(buildAnalyticsRuntimeConfigScript, "buildAnalyticsRuntimeConfigScript");
 async function ensureCache(db) {
   const now = Date.now();
   if (_cache.header && _cache.footer && now - _cache.fetchedAt < CACHE_TTL) return;
@@ -10291,21 +21450,20 @@ async function getChrome(db, key) {
   return html.replace(/<li class="nav-item">\s*<a href="\/blogs\/" class="nav-link">Blog<\/a>\s*<\/li>/g, "").replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, "");
 }
 __name(getChrome, "getChrome");
-var SKIP_PREFIXES = ["/admin/", "/super-admin/", "/api/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
+var SKIP_PREFIXES = ["/admin/", "/super-admin/", "/api/", "/v1/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
 var SKIP_EXTENSIONS = [".js", ".css", ".png", ".jpg", ".webp", ".svg", ".ico", ".woff2", ".json", ".xml", ".map"];
 var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
   "standard-fitted-sheet",
   "deep-pocket-fitted-sheet",
   "marine-fitted-sheet",
-  "marine-top-sheet",
   "dorm-fitted-sheet",
   "rv-truck-fitted-sheet",
   "family-fitted-sheet",
   "pet-owner-fitted-sheet",
   "flat-sheet-standard",
   "flat-sheet-extra-deep-pocket",
-  "co-sleeping-top-sheet",
   "3-sided-duvet",
+  "weighted-duvet-cover",
   "pet-owner-duvet-cover",
   "duvet-cover-marine",
   "duvet-cover-rv",
@@ -10319,6 +21477,7 @@ var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
   "mattress-protector-family",
   "mattress-protector-deep-pocket",
   "pet-proof-mattress-protector",
+  "custom-waterproof-cushion-protector",
   "mattress-encasement-general",
   "rv-truck-mattress-encasement",
   "pillow-protector-general",
@@ -10340,8 +21499,7 @@ function resolveLegacyProductPath(pathname) {
   const rawSlug = subpath.replace(/\/+$/, "").toLowerCase();
   if (rawSlug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
   if (rawSlug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
-  if (rawSlug.startsWith("product-boat-bedding")) return "/product/marine-fitted-sheet/";
-  if (rawSlug.startsWith("product-boat-top-sheet")) return "/product/marine-top-sheet/";
+  if (rawSlug.startsWith("product-boat-bedding") || rawSlug.startsWith("product-boat-top-sheet")) return "/product/marine-fitted-sheet/";
   if (rawSlug.includes("boat") && rawSlug.includes("pillow")) return "/product/pillowcase-envelope/";
   if (rawSlug.includes("dorm")) return rawSlug.includes("duvet") ? "/product/duvet-cover-dorm/" : "/product/dorm-fitted-sheet/";
   if (rawSlug.includes("rv-truck") || hasToken2(rawSlug, "rv") || rawSlug.includes("truck")) {
@@ -10356,8 +21514,7 @@ function resolveLegacyProductPath(pathname) {
     if (rawSlug.includes("pillow")) return "/product/pillowcase-zipper/";
     return "/product/pet-owner-fitted-sheet/";
   }
-  if (rawSlug.includes("co-sleeping")) return "/product/co-sleeping-top-sheet/";
-  if (rawSlug.includes("family")) return "/product/family-fitted-sheet/";
+  if (rawSlug.includes("co-sleeping") || rawSlug.includes("family")) return "/product/family-fitted-sheet/";
   if (rawSlug.includes("duvet")) return "/product/3-sided-duvet/";
   if (rawSlug.includes("encasement") || rawSlug.includes("zippered-tpu-mattress-cover")) return "/product/mattress-encasement-general/";
   if (rawSlug.includes("sheet-protectors") || rawSlug.includes("protector") || rawSlug === "pillow-case") return "/product/mattress-protector-standard/";
@@ -10412,7 +21569,7 @@ var PRODUCT_TYPE_LABELS_TH = {
   protection: "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E1B\u0E01\u0E1B\u0E49\u0E2D\u0E07",
   accessories: "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E2A\u0E23\u0E34\u0E21"
 };
-var NICHE_LABELS_EN = {
+var NICHE_LABELS_EN2 = {
   marine: "MARINE & YACHT",
   family: "FAMILY & CO-SLEEP",
   pets: "PET OWNER",
@@ -10420,7 +21577,7 @@ var NICHE_LABELS_EN = {
   "boarding-dorm": "BOARDING DORM",
   "rv-truck": "RV & TRUCK"
 };
-var NICHE_LABELS_TH = {
+var NICHE_LABELS_TH2 = {
   marine: "\u0E40\u0E23\u0E37\u0E2D\u0E41\u0E25\u0E30\u0E22\u0E2D\u0E0A\u0E15\u0E4C",
   family: "\u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27",
   pets: "\u0E1A\u0E49\u0E32\u0E19\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07",
@@ -10433,11 +21590,11 @@ function normalizeRoutePath(pathname) {
   return pathname.endsWith("/") ? pathname : `${pathname}/`;
 }
 __name(normalizeRoutePath, "normalizeRoutePath");
-function escapeHtml2(value) {
+function escapeHtml3(value) {
   const str = String(value ?? "");
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-__name(escapeHtml2, "escapeHtml");
+__name(escapeHtml3, "escapeHtml");
 function parseCsv(raw) {
   return String(raw || "").split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
 }
@@ -10462,14 +21619,14 @@ function getTagHref(slug, lang) {
 __name(getTagHref, "getTagHref");
 function buildTagHtml(productType, niches, lang) {
   const productTypeLabels = lang === "th" ? PRODUCT_TYPE_LABELS_TH : PRODUCT_TYPE_LABELS_EN;
-  const nicheLabels = lang === "th" ? NICHE_LABELS_TH : NICHE_LABELS_EN;
+  const nicheLabels = lang === "th" ? NICHE_LABELS_TH2 : NICHE_LABELS_EN2;
   const tags = [];
   if (productTypeLabels[productType]) {
-    tags.push(`<a href="${getTagHref(productType, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml2(productTypeLabels[productType])}</a>`);
+    tags.push(`<a href="${getTagHref(productType, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml3(productTypeLabels[productType])}</a>`);
   }
   if (niches.length > 0 && nicheLabels[niches[0]]) {
     const firstNiche = niches[0];
-    tags.push(`<a href="${getTagHref(firstNiche, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml2(nicheLabels[firstNiche])}</a>`);
+    tags.push(`<a href="${getTagHref(firstNiche, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml3(nicheLabels[firstNiche])}</a>`);
   }
   return tags.join("");
 }
@@ -10495,18 +21652,18 @@ function renderListingCards(rows, lang) {
     const href = lang === "th" ? `/th/product/${row.slug}/` : `/product/${row.slug}/`;
     const isFixed = fixedProductSlugs.has(String(row.slug || "").toLowerCase());
     const ctaLabel = isFixed ? ctaView : ctaStandard;
-    return `<article class="product-card" data-categories="${escapeHtml2(categories)}" data-title="${escapeHtml2(String(title).toLowerCase())}" data-price="${escapeHtml2(dataPrice)}">
+    return `<article class="product-card" data-categories="${escapeHtml3(categories)}" data-title="${escapeHtml3(String(title).toLowerCase())}" data-price="${escapeHtml3(dataPrice)}">
       <div class="product-image">
-        <img src="${escapeHtml2(image)}" alt="${escapeHtml2(title)}" width="800" height="600" loading="lazy" decoding="async">
+        <img src="${escapeHtml3(image)}" alt="${escapeHtml3(title)}" width="800" height="600" loading="lazy" decoding="async">
       </div>
       <div class="product-info">
         <div class="product-tags" aria-label="Categories">${buildTagHtml(productType, niches, lang)}</div>
-        <h3 class="product-title">${escapeHtml2(title)}</h3>
-        <div class="product-price" data-usd="${escapeHtml2(usd)}" data-thb="${escapeHtml2(thb)}">${escapeHtml2(priceLabel)}</div>
-        <div class="product-price-note">${escapeHtml2(priceNote)}</div>
-        <p class="product-benefit">${escapeHtml2(benefit)}</p>
-        <div class="product-fabrics-info">${escapeHtml2(row.is_custom ? fabricsCustom : fabricsFixed)}</div>
-        <a href="${escapeHtml2(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml2(ctaLabel)}</a>
+        <h3 class="product-title">${escapeHtml3(title)}</h3>
+        <div class="product-price" data-usd="${escapeHtml3(usd)}" data-thb="${escapeHtml3(thb)}">${escapeHtml3(priceLabel)}</div>
+        <div class="product-price-note">${escapeHtml3(priceNote)}</div>
+        <p class="product-benefit">${escapeHtml3(benefit)}</p>
+        <div class="product-fabrics-info">${escapeHtml3(row.is_custom ? fabricsCustom : fabricsFixed)}</div>
+        <a href="${escapeHtml3(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml3(ctaLabel)}</a>
       </div>
     </article>`;
   }).join("\n");
@@ -10557,11 +21714,12 @@ async function fetchListingProducts(db, config) {
   return result?.results || [];
 }
 __name(fetchListingProducts, "fetchListingProducts");
-async function onRequest9(context) {
+async function onRequest13(context) {
   const url = new URL(context.request.url);
   const path = url.pathname;
+  const prefixPath = path.endsWith("/") ? path : `${path}/`;
   for (const prefix of SKIP_PREFIXES) {
-    if (path.startsWith(prefix)) return context.next();
+    if (prefixPath.startsWith(prefix)) return context.next();
   }
   for (const ext of SKIP_EXTENSIONS) {
     if (path.endsWith(ext)) return context.next();
@@ -10570,10 +21728,10 @@ async function onRequest9(context) {
   if (legacyProductRedirect) {
     return Response.redirect(new URL(legacyProductRedirect, url.origin).toString(), 301);
   }
-  const response = await context.next();
-  const contentType = response.headers.get("Content-Type") || "";
-  if (!contentType.includes("text/html")) return response;
-  let html = await response.text();
+  const response6 = await context.next();
+  const contentType = response6.headers.get("Content-Type") || "";
+  if (!contentType.includes("text/html")) return response6;
+  let html = await response6.text();
   const normalizedPath = normalizeRoutePath(path);
   const listingConfig = LISTING_ROUTES[normalizedPath];
   if (listingConfig && context.env?.DB) {
@@ -10632,7 +21790,7 @@ ${header}`);
     </div>`
   );
   if (isThPage) {
-    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
+    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace(/id="price-top-sub">Starting from<\/span>/g, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/>Standard Sizes<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>").replace(/>Custom Size<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>").replace(/>Select Mattress Size<\/div>/g, ">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>").replace(/>Enter your exact mattress dimensions<\/strong>/g, ">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>").replace(/>Add to Cart<\/button>/g, ">\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32</button>").replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/data-info-tab="description">Description<\/button>/g, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">FAQs<\/button>/g, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>Premium Quality<\/span>/g, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>Custom Fit<\/div>/g, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>Human Safe<\/div>/g, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>Pet Resist<\/div>/g, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/wholesale\/?"/g, 'href="/th/wholesale/"').replace(/href="\/checkout\/?"/g, 'href="/th/checkout/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
   if (!html.includes('id="shared-footer-mobile-style"')) {
     html = html.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}
@@ -10649,6 +21807,11 @@ ${header}`);
     html = html.replace(/<\/body>/i, `${LISTING_IMAGE_SYNC_SCRIPT}
 </body>`);
   }
+  const hasCatalogCampaignScriptRef = html.includes("/js/catalog-campaign-ui.js");
+  if (hasProductCards && hasCatalogCampaignScriptRef && !html.includes('id="catalog-campaign-inline-fallback"')) {
+    html = html.replace(/<\/body>/i, `${CATALOG_CAMPAIGN_INLINE_FALLBACK}
+</body>`);
+  }
   if (!html.includes('id="json-ld-org"')) {
     html = html.replace(/<\/head>/i, `${JSON_LD_ORG}
 ${JSON_LD_WEBSITE}
@@ -10659,87 +21822,145 @@ ${JSON_LD_WEBSITE}
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html, { status: response.status, headers: response.headers });
+  if (!html.includes('id="runtime-analytics-config"')) {
+    const analyticsRuntimeScript = buildAnalyticsRuntimeConfigScript(context.request, context.env || {});
+    html = html.replace(/<\/head>/i, `${analyticsRuntimeScript}
+</head>`);
+  }
+  let finalHeaders = response6.headers;
+  if (isDevCspHost(context.request.url)) {
+    const csp = response6.headers.get("Content-Security-Policy");
+    if (csp) {
+      finalHeaders = new Headers(response6.headers);
+      finalHeaders.set("Content-Security-Policy", allowDevClerkOrigins(csp));
+    }
+  }
+  return new Response(html, { status: response6.status, headers: finalHeaders });
 }
-__name(onRequest9, "onRequest");
+__name(onRequest13, "onRequest");
+function isDevCspHost(requestUrl) {
+  try {
+    const h = new URL(requestUrl).hostname.toLowerCase();
+    if (h.endsWith(".pages.dev")) return true;
+    if (h === "localhost" || h === "127.0.0.1" || h === "::1") return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+__name(isDevCspHost, "isDevCspHost");
+function allowDevClerkOrigins(csp) {
+  const DEV_ORIGIN = "https://kind-joey-29.clerk.accounts.dev";
+  if (!csp || csp.includes(DEV_ORIGIN)) return csp;
+  return csp.replace("script-src ", `script-src ${DEV_ORIGIN} `).replace("connect-src ", `connect-src ${DEV_ORIGIN} `).replace("frame-src ", `frame-src ${DEV_ORIGIN} `);
+}
+__name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-bVry2r/functionsRoutes-0.13663496566643596.mjs
+// ../.wrangler/tmp/pages-D2T2OZ/functionsRoutes-0.22151941597984948.mjs
 var routes = [
+  {
+    routePath: "/api/v1/:path*",
+    mountPath: "/api/v1",
+    method: "",
+    middlewares: [],
+    modules: [onRequest]
+  },
+  {
+    routePath: "/auth/clerk-return/:path*",
+    mountPath: "/auth/clerk-return",
+    method: "",
+    middlewares: [],
+    modules: [onRequest2]
+  },
   {
     routePath: "/th/blogs/:path*",
     mountPath: "/th/blogs",
     method: "",
     middlewares: [],
-    modules: [onRequest]
+    modules: [onRequest3]
   },
   {
     routePath: "/th/product/:path*",
     mountPath: "/th/product",
     method: "",
     middlewares: [],
-    modules: [onRequest2]
+    modules: [onRequest4]
   },
   {
     routePath: "/api/:path*",
     mountPath: "/api",
     method: "",
     middlewares: [],
-    modules: [onRequest3]
+    modules: [onRequest5]
   },
   {
     routePath: "/blogs/:path*",
     mountPath: "/blogs",
     method: "",
     middlewares: [],
-    modules: [onRequest4]
+    modules: [onRequest6]
   },
   {
     routePath: "/product/:path*",
     mountPath: "/product",
     method: "",
     middlewares: [],
-    modules: [onRequest2]
+    modules: [onRequest4]
+  },
+  {
+    routePath: "/products/:path*",
+    mountPath: "/products",
+    method: "",
+    middlewares: [],
+    modules: [onRequest7]
   },
   {
     routePath: "/quote/:path*",
     mountPath: "/quote",
     method: "",
     middlewares: [],
-    modules: [onRequest5]
+    modules: [onRequest8]
   },
   {
     routePath: "/r2/:path*",
     mountPath: "/r2",
     method: "",
     middlewares: [],
-    modules: [onRequest6]
+    modules: [onRequest9]
+  },
+  {
+    routePath: "/v1/:path*",
+    mountPath: "/v1",
+    method: "",
+    middlewares: [],
+    modules: [onRequest10]
   },
   {
     routePath: "/account",
     mountPath: "/account",
     method: "",
-    middlewares: [onRequest7],
+    middlewares: [onRequest11],
     modules: []
   },
   {
     routePath: "/admin",
     mountPath: "/admin",
     method: "",
-    middlewares: [onRequest8],
+    middlewares: [onRequest12],
     modules: []
   },
   {
     routePath: "/super-admin",
     mountPath: "/super-admin",
     method: "",
-    middlewares: [onRequest8],
+    middlewares: [onRequest12],
     modules: []
   },
   {
     routePath: "/",
     mountPath: "/",
     method: "",
-    middlewares: [onRequest9],
+    middlewares: [onRequest13],
     modules: []
   }
 ];
@@ -11158,35 +22379,35 @@ var pages_template_worker_default = {
             isFailOpen = true;
           }, "passThroughOnException")
         };
-        const response = await handler(context);
-        if (!(response instanceof Response)) {
+        const response6 = await handler(context);
+        if (!(response6 instanceof Response)) {
           throw new Error("Your Pages function should return a Response");
         }
-        return cloneResponse(response);
+        return cloneResponse(response6);
       } else if ("ASSETS") {
-        const response = await env["ASSETS"].fetch(request);
-        return cloneResponse(response);
+        const response6 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response6);
       } else {
-        const response = await fetch(request);
-        return cloneResponse(response);
+        const response6 = await fetch(request);
+        return cloneResponse(response6);
       }
     }, "next");
     try {
       return await next();
     } catch (error) {
       if (isFailOpen) {
-        const response = await env["ASSETS"].fetch(request);
-        return cloneResponse(response);
+        const response6 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response6);
       }
       throw error;
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name((response) => (
+var cloneResponse = /* @__PURE__ */ __name((response6) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
-    [101, 204, 205, 304].includes(response.status) ? null : response.body,
-    response
+    [101, 204, 205, 304].includes(response6.status) ? null : response6.body,
+    response6
   )
 ), "cloneResponse");
 export {

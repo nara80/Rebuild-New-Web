@@ -1,4 +1,5 @@
 import { verifyClerkJwt } from "./clerk-verify";
+import { sendEmail } from "./email";
 
 function isProductionHost(hostname: string): boolean {
   const h = String(hostname || "").toLowerCase();
@@ -49,28 +50,16 @@ async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } 
 }
 
 async function sendThankyouEmail(env: any, to: string, discountCode: string, discountPct: number): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${env.RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
-        to: [to],
-        subject: `Thank you — here's ${discountPct}% off your next MildMate order`,
-        html: `<!doctype html><html><body style="font-family:Arial,sans-serif"><h2>Thank you for your order</h2><p>Here is your repeat-buyer discount code:</p><p style="font-size:22px;font-weight:700">${discountCode}</p><p>${discountPct}% off your next order (valid for 1 year).</p><p><a href="https://www.mildmate.com/">Shop MildMate</a></p></body></html>`,
-      }),
-    });
-    if (!resp.ok) {
-      const body = await resp.text().catch(() => "");
-      return { ok: false, error: body || `HTTP ${resp.status}` };
-    }
-    return { ok: true };
-  } catch (e: any) {
-    return { ok: false, error: e?.message || "send failed" };
-  }
+  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif"><h2>Thank you for your order</h2><p>Here is your repeat-buyer discount code:</p><p style="font-size:22px;font-weight:700">${discountCode}</p><p>${discountPct}% off your next order (valid for 1 year).</p><p><a href="https://www.mildmate.com/">Shop MildMate</a></p></body></html>`;
+  const text = `Thank you for your order.\n\nYour repeat-buyer discount code: ${discountCode}\nDiscount: ${discountPct}% off your next order (valid for 1 year).\nShop: https://www.mildmate.com/`;
+  const result = await sendEmail(env, {
+    to,
+    from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
+    subject: `Thank you — here's ${discountPct}% off your next MildMate order`,
+    text,
+    html,
+  });
+  return { ok: result.success, error: result.error };
 }
 
 async function ensureThankyouQueueSchema(env: any): Promise<void> {

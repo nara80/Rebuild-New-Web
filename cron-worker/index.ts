@@ -26,6 +26,11 @@ interface RecoveryConfig {
   stage3Discount: number;
   discountExpiryDays: number;
   cronHourUtc: number;
+  quoteFollowupEnabled: boolean;
+  quoteFollowupAgeHours: number;
+  quoteFollowupExpiryWindowDays: number;
+  quoteFollowupDailyCap: number;
+  quoteFollowupEmailCooldownHours: number;
 }
 
 function escHtml(s: string): string {
@@ -37,6 +42,15 @@ function formatPrice(thb?: number, usd?: number): string {
   if (thb) parts.push('\u0E3F' + Math.round(thb).toLocaleString());
   if (usd) parts.push('$' + Math.round(usd));
   return parts.join(' / ') || '\u2014';
+}
+
+function formatQuotePrice(quotedUsd?: number, quotedThb?: number): string {
+  const usd = Number(quotedUsd || 0);
+  const thb = Number(quotedThb || 0);
+  if (usd > 0 && thb > 0) return `$${Math.round(usd)} / ฿${Math.round(thb).toLocaleString()}`;
+  if (usd > 0) return `$${Math.round(usd)}`;
+  if (thb > 0) return `฿${Math.round(thb).toLocaleString()}`;
+  return '—';
 }
 
 function calcCartTotal(cartItems: CartItem[]): { usd: number; thb: number } {
@@ -78,7 +92,7 @@ function buildCartRows(items: CartItem[]): string {
 function buildStage1Email(items: CartItem[]): string {
   const rows = buildCartRows(items);
   const total = calcCartTotal(items);
-  const checkoutUrl = 'https://mildmate-new.pages.dev/checkout/';
+  const checkoutUrl = 'https://www.mildmate.com/checkout/';
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif">
@@ -102,7 +116,7 @@ function buildStage2Email(items: CartItem[], discountCode: string, discountPct: 
   const total = calcCartTotal(items);
   const discountUsd = Math.round(total.usd * discountPct / 100);
   const finalUsd = total.usd - discountUsd;
-  const checkoutUrl = 'https://mildmate-new.pages.dev/checkout/?code=' + discountCode;
+  const checkoutUrl = 'https://www.mildmate.com/checkout/?code=' + discountCode;
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif">
@@ -129,7 +143,7 @@ function buildStage3Email(items: CartItem[], discountCode: string, discountPct: 
   const total = calcCartTotal(items);
   const discountUsd = Math.round(total.usd * discountPct / 100);
   const finalUsd = total.usd - discountUsd;
-  const checkoutUrl = 'https://mildmate-new.pages.dev/checkout/?code=' + discountCode;
+  const checkoutUrl = 'https://www.mildmate.com/checkout/?code=' + discountCode;
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif">
@@ -160,6 +174,11 @@ async function loadRecoveryConfig(db: D1Database): Promise<RecoveryConfig> {
     stage3Discount: 10,
     discountExpiryDays: 60,
     cronHourUtc: 10,
+    quoteFollowupEnabled: false,
+    quoteFollowupAgeHours: 72,
+    quoteFollowupExpiryWindowDays: 7,
+    quoteFollowupDailyCap: 20,
+    quoteFollowupEmailCooldownHours: 24,
   };
   try {
     const { results } = await db.prepare('SELECT key, value FROM recovery_config').all();
@@ -174,6 +193,11 @@ async function loadRecoveryConfig(db: D1Database): Promise<RecoveryConfig> {
       stage3Discount: map.stage3_discount ? Number(map.stage3_discount) : defaults.stage3Discount,
       discountExpiryDays: map.discount_expiry_days ? Number(map.discount_expiry_days) : defaults.discountExpiryDays,
       cronHourUtc: map.cron_hour_utc ? Number(map.cron_hour_utc) : defaults.cronHourUtc,
+      quoteFollowupEnabled: map.quote_followup_enabled === 'true',
+      quoteFollowupAgeHours: map.quote_followup_age_hours ? Number(map.quote_followup_age_hours) : defaults.quoteFollowupAgeHours,
+      quoteFollowupExpiryWindowDays: map.quote_followup_expiry_window_days ? Number(map.quote_followup_expiry_window_days) : defaults.quoteFollowupExpiryWindowDays,
+      quoteFollowupDailyCap: map.quote_followup_daily_cap ? Number(map.quote_followup_daily_cap) : defaults.quoteFollowupDailyCap,
+      quoteFollowupEmailCooldownHours: map.quote_followup_email_cooldown_hours ? Number(map.quote_followup_email_cooldown_hours) : defaults.quoteFollowupEmailCooldownHours,
     };
   } catch (e: any) {
     console.log('CRON: recovery_config not found, using defaults —', e.message);
@@ -254,6 +278,185 @@ async function processStage(env: Env, config: RecoveryConfig, stage: number, car
   return false;
 }
 
+type QuoteFollowupRow = {
+  quote_id: string;
+  email: string;
+  customer_name?: string;
+  product_slug?: string;
+  quoted_price_usd?: number | null;
+  quoted_price?: number | null;
+  expires_at?: string | null;
+};
+
+async function ensureQuoteFollowupSchema(env: Env): Promise<void> {
+  // Self-heal in case migration 059 has not been applied yet (webhook also heals this).
+  try {
+    const orderInfo = await env.DB.prepare("PRAGMA table_info(orders)").all();
+    const orderCols = new Set(((orderInfo.results || []) as any[]).map((r: any) => String(r.name || '').toLowerCase()));
+    if (!orderCols.has('quote_id')) {
+      await env.DB.prepare("ALTER TABLE orders ADD COLUMN quote_id TEXT").run();
+    }
+  } catch (e: any) {
+    console.error('CRON-WORKER: orders.quote_id self-heal failed —', e?.message || e);
+  }
+
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS quote_followup_events (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       quote_id TEXT NOT NULL,
+       email TEXT NOT NULL,
+       stage TEXT NOT NULL,
+       status TEXT NOT NULL DEFAULT 'sent',
+       error TEXT,
+       sent_at DATETIME,
+       run_source TEXT DEFAULT 'cron-worker',
+       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+     )`
+  ).run();
+  await env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_quote_followup_unique_stage ON quote_followup_events(quote_id, stage)").run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_quote_followup_status_sent ON quote_followup_events(status, sent_at)").run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_quote_followup_email_created ON quote_followup_events(email, created_at)").run();
+}
+
+function buildQuoteFollowupEmail(q: QuoteFollowupRow): { subject: string; html: string } {
+  const quoteId = String(q.quote_id || '').trim();
+  const quoteLink = 'https://www.mildmate.com/quote/' + encodeURIComponent(quoteId) + '/';
+  const subject = `Your MildMate Quote ${quoteId} expires soon`;
+  const priceText = formatQuotePrice(Number(q.quoted_price_usd || 0), Number(q.quoted_price || 0));
+  const expiresText = q.expires_at ? String(q.expires_at).slice(0, 16).replace('T', ' ') : 'soon';
+  const name = String(q.customer_name || '').trim();
+  const hello = name ? `Hi ${escHtml(name)},` : 'Hi there,';
+  const product = escHtml(String(q.product_slug || 'custom item'));
+
+  const html = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+<tr><td style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:32px 24px;text-align:center">
+<h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px">Your quote is ready to order</h1>
+<p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0">Quote ${escHtml(quoteId)} expires ${escHtml(expiresText)}</p>
+</td></tr>
+<tr><td style="padding:24px">
+<p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 16px">${hello}</p>
+<p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 18px">Your approved custom quote is still active. If you would like to proceed, use your quote link below before expiry.</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:22px">
+<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.05em">Quote</td><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:#0F172A">${escHtml(quoteId)}</td></tr>
+<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.05em">Product</td><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;text-align:right;color:#0F172A">${product}</td></tr>
+<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.05em">Price</td><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:#0F172A">${escHtml(priceText)}</td></tr>
+<tr><td style="padding:12px 16px;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.05em">Expires</td><td style="padding:12px 16px;text-align:right;color:#0F172A">${escHtml(expiresText)}</td></tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<a href="${quoteLink}" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">View Quote &amp; Order</a>
+</td></tr></table>
+<p style="color:#64748b;font-size:13px;line-height:1.5;margin:24px 0 0;text-align:center">Questions? Reply to this email or contact <a href="mailto:contact@mildmate.com" style="color:#2c96f4">contact@mildmate.com</a></p>
+</td></tr>
+<tr><td style="background:#F8FAFC;padding:20px 24px;text-align:center;border-top:1px solid #e2e8f0">
+<p style="color:#94a3b8;font-size:12px;margin:0">MildMate &middot; Custom Bedding Made in Thailand<br><a href="https://www.mildmate.com" style="color:#2c96f4;text-decoration:none">www.mildmate.com</a></p>
+</td></tr></table></body></html>`;
+
+  return { subject, html };
+}
+
+async function processQuoteFollowups(env: Env, config: RecoveryConfig): Promise<void> {
+  if (!config.quoteFollowupEnabled) {
+    console.log('CRON-WORKER: quote follow-up disabled');
+    return;
+  }
+
+  await ensureQuoteFollowupSchema(env);
+  const stage = 'pre_expiry_1';
+  const cap = Math.max(1, Math.min(200, Number(config.quoteFollowupDailyCap || 20)));
+  const ageHours = Math.max(1, Math.min(720, Number(config.quoteFollowupAgeHours || 72)));
+  const windowDays = Math.max(1, Math.min(30, Number(config.quoteFollowupExpiryWindowDays || 7)));
+  const cooldownHours = Math.max(1, Math.min(720, Number(config.quoteFollowupEmailCooldownHours || 24)));
+
+  const due = await env.DB.prepare(
+    `SELECT
+       q.quote_id, q.email, q.customer_name, q.product_slug, q.quoted_price_usd, q.quoted_price, q.expires_at, q.created_at
+     FROM custom_quotes q
+     WHERE LOWER(COALESCE(q.status, 'pending')) = 'approved'
+       AND COALESCE(TRIM(q.email), '') != ''
+       AND q.expires_at IS NOT NULL
+       AND q.expires_at > datetime('now')
+       AND q.expires_at <= datetime('now', '+' || ?1 || ' days')
+       AND q.created_at <= datetime('now', '-' || ?2 || ' hours')
+       AND NOT EXISTS (
+         SELECT 1 FROM orders o
+         WHERE o.quote_id = q.quote_id
+       )
+       AND NOT EXISTS (
+         SELECT 1 FROM quote_followup_events e
+         WHERE e.quote_id = q.quote_id
+           AND e.stage = ?3
+           AND e.status = 'sent'
+       )
+     ORDER BY q.expires_at ASC, q.created_at ASC
+     LIMIT ?4`
+  ).bind(windowDays, ageHours, stage, cap * 4).all();
+
+  const rows = (due.results || []) as any[];
+  if (!rows.length) {
+    console.log('CRON-WORKER: quote follow-up none eligible');
+    return;
+  }
+
+  let sent = 0;
+  let failed = 0;
+  const batchEmails = new Set<string>();
+
+  for (const raw of rows) {
+    if (sent >= cap) break;
+
+    const q: QuoteFollowupRow = {
+      quote_id: String(raw.quote_id || ''),
+      email: String(raw.email || '').trim().toLowerCase(),
+      customer_name: String(raw.customer_name || ''),
+      product_slug: String(raw.product_slug || ''),
+      quoted_price_usd: raw.quoted_price_usd == null ? null : Number(raw.quoted_price_usd),
+      quoted_price: raw.quoted_price == null ? null : Number(raw.quoted_price),
+      expires_at: raw.expires_at || null,
+    };
+    if (!q.quote_id || !q.email) continue;
+
+    if (batchEmails.has(q.email)) continue;
+    const recent = await env.DB.prepare(
+      `SELECT id FROM quote_followup_events
+       WHERE LOWER(email) = ?1
+         AND status = 'sent'
+         AND sent_at >= datetime('now', '-' || ?2 || ' hours')
+       LIMIT 1`
+    ).bind(q.email, cooldownHours).first();
+    if (recent) continue;
+
+    const claim = await env.DB.prepare(
+      `INSERT OR IGNORE INTO quote_followup_events
+        (quote_id, email, stage, status, sent_at, run_source, created_at)
+       VALUES (?1, ?2, ?3, 'pending', datetime('now'), 'cron-worker', datetime('now'))`
+    ).bind(q.quote_id, q.email, stage).run() as any;
+    const claimed = Number(claim?.meta?.changes || 0) > 0;
+    if (!claimed) continue;
+
+    const mail = buildQuoteFollowupEmail(q);
+    const ok = await sendRecoveryEmail(env, q.email, mail.subject, mail.html);
+    if (ok) {
+      await env.DB.prepare(
+        "UPDATE quote_followup_events SET status = 'sent', error = NULL, sent_at = datetime('now') WHERE quote_id = ?1 AND stage = ?2"
+      ).bind(q.quote_id, stage).run();
+      batchEmails.add(q.email);
+      sent++;
+      console.log(`CRON-WORKER: quote follow-up sent ${q.quote_id} -> ${q.email}`);
+    } else {
+      await env.DB.prepare(
+        "UPDATE quote_followup_events SET status = 'failed', error = ?3, sent_at = datetime('now') WHERE quote_id = ?1 AND stage = ?2"
+      ).bind(q.quote_id, stage, 'resend_failed').run();
+      failed++;
+      console.log(`CRON-WORKER: quote follow-up failed ${q.quote_id} -> ${q.email}`);
+    }
+  }
+
+  console.log(`CRON-WORKER: quote follow-up done sent=${sent} failed=${failed} cap=${cap}`);
+}
+
 export default {
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     const config = await loadRecoveryConfig(env.DB);
@@ -315,7 +518,7 @@ export default {
 <p style="margin:8px 0 0;font-size:14px;color:#0F172A;font-weight:600">${t.discount_pct}% off — valid for 1 year</p>
 </div>
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
-<a href="https://mildmate-new.pages.dev/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Shop MildMate</a>
+<a href="https://www.mildmate.com/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Shop MildMate</a>
 </td></tr></table>
 <p style="color:#64748b;font-size:13px;line-height:1.5;margin:24px 0 0;text-align:center">Discount applies to your entire order. Not combinable with other offers.<br>Questions? Reply or contact <a href="mailto:contact@mildmate.com" style="color:#2c96f4">contact@mildmate.com</a></p>
 </td></tr>
@@ -335,5 +538,7 @@ export default {
         }
       }
     }
+
+    await processQuoteFollowups(env, config);
   }
 };

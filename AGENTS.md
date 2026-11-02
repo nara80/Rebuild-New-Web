@@ -4,13 +4,24 @@ This file is read by Droid at the start of every session. It contains all critic
 
 ---
 
+## Documentation Reconciliation Snapshot (2026-11-01)
+
+- Marketing Decision System phase documentation was systematically reconciled to built/verified reality.
+- A second reconciliation pass the same day recorded the GA4 Lead Acquisition production release (migration `061_ga4_lead_acquisition.sql` applied to prod, Pages deployment `c023f9fd-7617-475c-8534-76742ac5e738`, collector version `9a093445-2457-4849-9a3b-79454b260307`) — see "GA4 Lead Acquisition release" in the Operational Reconciliation Snapshot below and Pass 2 in the reconciliation handoff.
+- Canonical phase truth source: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`.
+- Superseded/duplicate marketing docs were moved to `01_MildMate_Marketing/Archive/2026-11-01/` (no deletion of historical evidence).
+- Active Phase 13 checklist is `16_Phases/13_MildMate_Marketing_Decision_System_Phase_13_Sales_Growth_Layer_Checklist.md`; duplicate Phase 13 profitability checklist is archived.
+- This reconciliation is documentation-only and does not change production runtime state.
+
+---
+
 ## Project Overview
 
 - **Business:** MildMate — custom bedding manufacturer in Thailand
 - **Current site:** WordPress on `www.mildmate.com` (Flatsome theme)
 - **Goal:** Rebuild to Vanilla HTML + Cloudflare Workers with e-commerce features
 - **Dev URL:** `mildmate-new.pages.dev` (production: `www.mildmate.com` at 100% completion)
-- **Phase 2 SEO URLs deployed:** Deployed 2026-06-14 via public/_redirects (271 rules: 258 WP URLs + 13 navigation) + unctions/product/ middleware redirect worker.
+- **Phase 2 SEO URLs deployed:** Deployed 2026-06-14 via `public/_redirects` (271 rules: 258 WP URLs + 13 navigation) + `functions/product/` middleware redirect worker.
 
 ---
 
@@ -40,7 +51,8 @@ This file is read by Droid at the start of every session. It contains all critic
 
 ## GitHub
 
-- **Account:** `nara80` (email: `- **Repo:** `Rebuild-New-Web` (private)
+- **Account:** `nara80`
+- **Repo:** `Rebuild-New-Web` (private)
 - **Repo URL:** `https://github.com/nara80/Rebuild-New-Web`
 - **Auth method:** HTTPS with Personal Access Token (credential helper cached 1 year)
 
@@ -83,15 +95,269 @@ This file is read by Droid at the start of every session. It contains all critic
 | Phase | Status | Notes |
 |---|---|---|
 | 0 — Mockup | ✅ Approved | Design reference in `mockup.html` — not in project root |
-| 1 — Foundation | ✅ Complete | Scaffold, D1 migrations established; repository now contains migrations through `038_*` (including product FAQ/card-benefit/pricing extensions, checkout customer-note fields, boat model registry, and marine top sheet seed), local server tested, placeholder index.html |
+| 1 — Foundation | ✅ Complete | Scaffold, D1 migrations established; repository now contains migrations through `061_*` (including product FAQ/card-benefit/pricing extensions, checkout customer-note fields, sales analytics tables, boat model registry + model-year/label fields, marine/co-sleeping top-sheet seed updates, profitability layer, opportunity engine foundations, GA4 multi-property + property-unique rebuild, Stripe payment idempotency, products SEO tagline/CTA fields, the Tier 1 quote pipeline — `orders.quote_id` + `quote_followup_events`, and the GA4 lead-acquisition layer — `ga4_lead_acquisition_daily` + `analysis_ga4_lead_freshness`), local server tested, placeholder index.html |
 | 2 — SEO URLs | ✅ Deployed | 271 rules via `public/_redirects` (258 WP URLs + 13 navigation) + `functions/product/` middleware redirect worker — deployed 2026-06-14 |
 | 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
-| 4 — Homepage + Products | ✅ Complete | **Everything built and deployed** — all static pages, 29 product pages in source (28 deployed baseline + marine top sheet built/verified locally), 12 category pages, **blog system** (D1-backed, admin CMS at `/admin/blog.html`, public listing at `/blogs/`, SSR post pages at `/blogs/{slug}/` via Pages Function), configurator, Workers API (products, pricing, geo, subscribe, unsubscribe, quote, contact, email, blog posts), cookie consent, Resend email, R2 uploader, admin dashboard (Phase 7 precursor), image compression, full 4-col footer, bilingual EN/TH. Language-driven currency (EN→USD, TH→THB). Shipping rates Option A (THB source, geo-country, OTHER fallback). D1-backed country master list (95 countries). **D1-backed dynamic product reviews** on all product pages (GET `/api/products/:slug/reviews` with 4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage taxonomy now aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards (Marine, Family, Deep Pocket, Pet Owner, Boarding Dorm, RV & Truck). **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH: dark-charcoal primary text, medium-grey supporting text, blue reserved for actions/highlights, with mobile legibility/tap-target improvements. Full details in Phase4.md completion summary. **Thai localization:** Homepage TH (`/th/`) built with full marketing audit copy; `/th/about/`, `/th/contact/` pages built with Thai marketing audits applied; Thai nav link routing fixed (middleware rewrite order + client-side nav.js safeguard for 12+ bilingual routes). **Material Intelligence copy audit**: desktop grid, mobile cards, and details accordion updated on both English (`/`) and Thai (`/th/`) homepages, and fabric collections pages updated on both English (`/fabric/`) and Thai (`/th/fabric/`) to resolve unverified fabric claims (removing "3-5°C cooler", "organic", "hypoallergenic" and sustainability absolute claims) in compliance with fabric page guidelines. **Latest reconciliation (2026-08-06):** marine top sheet (`/product/marine-top-sheet/`) added with EN/TH metadata, marine-shape configurator flow, D1 seed migration, and image set; rebuilt successfully and lint-verified locally. |
-| 5 — Checkout + Stripe + Auth | ✅ Complete | Stripe Checkout Sessions (redirect flow), PromptPay for TH, webhook saves orders to D1 + Resend emails, 3-step checkout UI, order-confirmed page. **Auth: Clerk multi-provider** (Google / Facebook / Email) hosted-page redirect, JWT verified in Workers via Web Crypto + JWKS. Cart→server sync via PUT/DELETE `/api/customers/cart`. Quote magic link at `/quote/QT-XXXXX/`. Default-address pre-fill on checkout. **Sequential add-to-cart validation:** Country/Region chip highlighted first, then Size, Fabric, Color — each required before proceeding; US/CA auto-selected on load. **Checkout message system (implemented):** optional `Message Type` + free-text customer message captured on Step 2, passed via checkout metadata, stored on orders (`customer_note_type`, `customer_note`), and included in team order emails. **Preview-origin reconciliation completed:** checkout success/cancel URLs now derive from request origin (no preview→production leak), and runtime bundles were synced with source (`workers/api/checkout.ts`, `public/index.js`, `public/_worker.js`). Cart duplicate fix: case-insensitive + trim on color when checking for existing cart items (`cart.js` add() and `workers/api/customers.ts` loadFromServer). **Account portal `/account/`**: 4-tab (Dashboard/Orders/Favorites/Addresses), 25/75 desktop layout, saved addresses CRUD (D1, migration 009), favorites wishlist (migration 013). **Workers `/api/customers/addresses`**: GET/POST/PUT/DELETE. **Option A order tracking**: carrier code + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel. Workers API defensive schema self-heal on all endpoints. Country-specific tariff/tax notes in Payment step (EU/UK/OTHER → note; TH/US/CA/AU → hidden). Order thumbnail dual-match resolution (slug normalization + title fallback). Centralized shipping-quote engine (`workers/api/shipping.ts`) with THB rates and exchange-rate conversion. D1 country master list (`workers/api/countries.ts`, 95 countries + OTHER) consumed by checkout, /account, and super-admin. **Thank-you discount emails:** webhook inserts into `thankyou_queue` (migrations 017–020), `functions/cron.ts` sends 1-year discount code post-purchase. **Complete:** Option 3 production-auth hardening (Clerk production instance migrated & verified). |
-| 6 — Abandoned Cart | ✅ Built | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). **`functions/cron.ts`**: multi-stage recovery (Stage 1: 24h gentle reminder; Stage 2: 72h discount offer for carts ≥$150; Stage 3: 7d last-chance) — configurable via D1 `recovery_config` table (migration 018), D1 `recovery_stages` table (migration 017). `buildThankyouEmail` sends 1-year discount code post-purchase via `thankyou_queue` (migration 020). **Manual operations added:** `/api/admin/thankyou-dispatch` sends due thank-you rows on-demand from Super Admin and returns sent/failed/skipped detail. |
-| 7 — Admin Dashboard | ✅ Built | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized to D1**: abandoned cart config (`recovery_config`), thank-you config, Send Offers config via `/api/admin/offers`, and Run-a-Sale campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes manual button **Send Due Thank-you Now** with per-email sent/failed/skipped output. **Promo Codes:** admin-created codes with optional `free_shipping` flag; Super Admin table shows Free Ship column. **Color Inventory:** Super Admin visual swatch grid per fabric, real-time OOS checkbox toggle with toast feedback (`/api/admin/color-inventory`). **Blog CMS:** dedicated `/admin/blog.html` with WYSIWYG editor, YouTube URL field, category dropdown (9 options), featured image preview, write/preview toggle. Public `/blogs/` SSR listing reads D1 directly (server-side), `/blogs/{slug}/` SSR individual post from D1 via Pages Function (YouTube embed hero, featured image fallback, gradient fallback). `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs use production Clerk + `ADMIN_EMAILS` fallback parity for robust admin auth. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. |
-| 8 — Launch | ✅ COMPLETE | ✅ Part A DONE: DNS cutover, sitemap (https://www.mildmate.com/sitemap.xml), robots.txt, OG tags, GTM+GA4 (GTM-KLJZZM9 + G-R2DDCBXXXX), mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. ✅ Part B DONE: Stripe live mode keys deployed. Site is fully live. |
+| 4 — Homepage + Products | ✅ Complete | **Everything built and deployed** — all static pages, 30-product core catalog in `data/products.json` (+ CMS/runtime extension slug `weighted-duvet-cover`), 12 category pages, **blog system** (D1-backed, admin CMS at `/admin/blog.html`, public listing at `/blogs/`, SSR post pages at `/blogs/{slug}/` via Pages Function), configurator, Workers API (products, pricing, geo, subscribe, unsubscribe, quote, contact, email, blog posts), cookie consent, Resend email, R2 uploader, admin dashboard (Phase 7 precursor), image compression, full 4-col footer, bilingual EN/TH. Language-driven currency (EN→USD, TH→THB). Shipping rates Option A (THB source, geo-country, OTHER fallback). D1-backed country master list (95 countries). **D1-backed dynamic product reviews** on all product pages (GET `/api/products/:slug/reviews` with 4-tier sort, LIMIT 10). **Taxonomy split reconciled (2026-08):** `product_type` remains on `products`, while specialization and merchandising visibility are separated into `product_niches` and `product_collections` (with legacy `products.niches` fallback compatibility). **Homepage taxonomy now aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards (Marine, Family, Deep Pocket, Pet Owner, Boarding Dorm, RV & Truck). **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH: dark-charcoal primary text, medium-grey supporting text, blue reserved for actions/highlights, with mobile legibility/tap-target improvements. Full details in Phase4.md completion summary. **Thai localization:** Homepage TH (`/th/`) built with full marketing audit copy; `/th/about/`, `/th/contact/` pages built with Thai marketing audits applied; Thai nav link routing fixed (middleware rewrite order + client-side nav.js safeguard for 12+ bilingual routes). **Material Intelligence copy audit**: desktop grid, mobile cards, and details accordion updated on both English (`/`) and Thai (`/th/`) homepages, and fabric collections pages updated on both English (`/fabric/`) and Thai (`/th/fabric/`) to resolve unverified fabric claims (removing "3-5°C cooler", "organic", "hypoallergenic" and sustainability absolute claims) in compliance with fabric page guidelines. **TH product pages (2026-09-12) — full bilingual parity**: `functions/product/[[path]].ts` now applies Thai localization server-side via TH_BREADCRUMB_CATEGORY_LABELS (Phase A), TH_MARINE_SHAPE_LABELS + JS-side `isThaiPage()/t()` helper for Add to Cart / Custom Quote / marine shape selector (Phase B), TH_STATIC_HTML_REPLACEMENTS + `applyThaiProductUiLocalization` for 26 customer-facing static strings (Phase C, including Loading reviews closing-tag fix). Hand-curated D1 fields (`description_th`, `faq_th`) preserved where present; generic/marine TH FAQ blocks serve as fallback. `weighted-duvet-cover` slug gets weighted-blanket-specific Thai copy. EN pages verified unchanged. **TH blog SSR (2026-09-12) — full bilingual parity**: 8 published blog posts in D1 with full Thai counterparts (3,000–5,800 Thai chars per post). `/blogs/` and `/th/blogs/` are SSR-rendered by `functions/blog-shared.ts` → `buildBlogListingHTML(env, page, lang)` from D1 `blog_posts` (no static HTML). Individual posts at `/blogs/{slug}/` and `/th/blogs/{slug}/` are SSR-rendered by `buildBlogPostHTML`. Both listing pages now ship full SEO tags (commit `8634a42`): self-referencing canonical including `?page=N` parameter + 2 hreflang tags (en → `/blogs/`, th → `/th/blogs/`). Hand-curated `body_th`, `title_th`, `meta_description_th`, `featured_image_alt_th` flow through unchanged. **Latest reconciliation (2026-08-21):** taxonomy split verified in D1 + API with refreshed marketing decision exports (Products/Niches/Collections). **Weighted blanket extension updates (2026-08):** `weighted-duvet-cover` added to canonical routing/runtime, Thai product UX copy specialized for weighted-blanket measurement language, and derived pricing markup support added via Pricing Params (`derived_markup_weighted-duvet-cover`). |
+| 5 — Checkout + Stripe + Auth | ✅ Complete | Stripe Checkout Sessions (redirect flow), PromptPay for TH, webhook saves orders to D1 + Resend emails, 3-step checkout UI, order-confirmed page. **Auth: Clerk multi-provider** (Google / Facebook / Email) hosted-page redirect, JWT verified in Workers via Web Crypto + JWKS. Cart→server sync via PUT/DELETE `/api/customers/cart`. Quote magic link at `/quote/QT-XXXXX/`. Default-address pre-fill on checkout. **Sequential add-to-cart validation:** Country/Region chip highlighted first, then Size, Fabric, Color — each required before proceeding; US/CA auto-selected on load. **Checkout message system (implemented):** optional `Message Type` + free-text customer message captured on Step 2, passed via checkout metadata, stored on orders (`customer_note_type`, `customer_note`), and included in team order emails. **Preview-origin reconciliation completed:** checkout success/cancel URLs now derive from request origin (no preview→production leak), and runtime bundles were synced with source (`workers/api/checkout.ts`, `public/index.js`, `public/_worker.js`). Cart duplicate fix: case-insensitive + trim on color when checking for existing cart items (`cart.js` add() and `workers/api/customers.ts` loadFromServer). **Account portal `/account/`**: 4-tab (Dashboard/Orders/Favorites/Addresses), 25/75 desktop layout, saved addresses CRUD (D1, migration 009), favorites wishlist (migration 013). **Workers `/api/customers/addresses`**: GET/POST/PUT/DELETE. **Option A order tracking**: carrier code + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel. Workers API defensive schema self-heal on all endpoints. Country-specific tariff/tax notes in Payment step (EU/UK/OTHER → note; TH/US/CA/AU → hidden). Order thumbnail dual-match resolution (slug normalization + title fallback). Centralized shipping-quote engine (`workers/api/shipping.ts`) with THB rates and exchange-rate conversion. D1 country master list (`workers/api/countries.ts`, 95 countries + OTHER) consumed by checkout, /account, and super-admin. **Thank-you discount emails:** webhook inserts into `thankyou_queue` (migrations 017–020), `functions/cron.ts` sends 1-year discount code post-purchase. **Status reconciliation (2026-10-22):** production now uses host-aware Clerk keys (`pk_live_*` on `www.mildmate.com`/`mildmate.com`; `pk_test_*` on preview/local), and account/admin middleware consume Clerk handshake return tokens to prevent post-idle loops. |
+| 6 — Abandoned Cart | ✅ Built | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). **Production recovery cron is the dedicated Worker `mildmate-cron`** (repo `cron-worker/`, hourly `0 * * * *`, gated on `cron_hour_utc` from D1; bound to `mildmate-db-prod` — rebound from preview D1 2026-10-27). `functions/cron.ts` contains the same multi-stage logic (Stage 1: 24h gentle reminder; Stage 2: 72h discount offer for carts ≥$150; Stage 3: 7d last-chance — configurable via D1 `recovery_config`, migration 018, D1 `recovery_stages`, migration 017) but is retained in-repo only as the offline fixture for the email-safety vitest suite — it is NOT deployed. `buildThankyouEmail` sends 1-year discount code post-purchase via `thankyou_queue` (migration 020). **Manual operations added:** `/api/admin/thankyou-dispatch` sends due thank-you rows on-demand from Super Admin and returns sent/failed/skipped detail. **Quote follow-up (Tier 1, deployed 2026-10-28):** `mildmate-cron` also runs the pre-expiry quote follow-up stage (disabled by default; see Tier Plan section). |
+| 7 — Admin Dashboard | ✅ Built | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized to D1**: abandoned cart config (`recovery_config`), thank-you config, Send Offers config via `/api/admin/offers` (including the 🧾 **Quote Follow-up** card added 2026-10-28 — enable toggle, min quote age, expiry window, daily cap, per-email cooldown), and Run-a-Sale campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes manual button **Send Due Thank-you Now** with per-email sent/failed/skipped output. **Promo Codes:** admin-created codes with optional `free_shipping` flag; Super Admin table shows Free Ship column. **Color Inventory:** Super Admin visual swatch grid per fabric, real-time OOS checkbox toggle with toast feedback (`/api/admin/color-inventory`). **Blog CMS:** dedicated `/admin/blog.html` with WYSIWYG editor, YouTube URL field, category dropdown (9 options), featured image preview, write/preview toggle. Public `/blogs/` SSR listing reads D1 directly (server-side), `/blogs/{slug}/` SSR individual post from D1 via Pages Function (YouTube embed hero, featured image fallback, gradient fallback). `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs use Clerk auth + `ADMIN_EMAILS` fallback parity for robust admin auth. **Sales sync API implemented:** `/v1/*` and `/api/v1/*` routes (health + sales order upsert/read) backed by `workers/api/sales.ts` with Bearer token auth (`SALES_SYNC_API_TOKEN`). **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com + norrawich.rat@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` updated in both Production and Preview ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Cloudflare Access status:** Zero Trust challenge is active on `/super-admin/*`; `/admin/*` currently remains Clerk-gated. |
+| 8 — Launch | ✅ COMPLETE | ✅ Part A DONE: DNS cutover, sitemap (https://www.mildmate.com/sitemap.xml), robots.txt, OG tags, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. Analytics reconciliation: GTM retained for non-GA tags, GA4 moved to Cloudflare Zaraz server-side (`G-0GWVSPJLVJ`) to avoid duplicate counting. ✅ Part B DONE: Stripe live mode keys deployed. Site is fully live. |
 | 9 — Testing (Vitest) | ❌ Out of Scope | Removed from active roadmap |
+
+---
+
+## Operational Reconciliation Snapshot (updated 2026-11-01)
+
+- **Data Quality sync-runs grouping release (deployed 2026-11-01):** Pages production deployment `f93e5301-251e-45e6-b636-aeeb0c940411` — Data Quality tab now renders recent sync runs grouped per collector (`recent_run_groups`) with inferred-group / incomplete-window badges; grouping logic in `workers/api/admin-analysis.ts` + dashboard renderer; regression coverage in `scripts/data-quality-sync-runs-regression.mjs` + `workers/api/__tests__/data-quality-sync-runs-grouping.test.ts`; preview validated via `dq-sync-runs-preview` (`a9608683`).
+- **GA4 Lead Acquisition release (deployed 2026-11-01):** migration `061_ga4_lead_acquisition.sql` applied to prod D1 (7 queries; `ga4_lead_acquisition_daily` + 4 indexes + `analysis_ga4_lead_freshness` view verified; freshness empty-state confirmed). Pages deployment `c023f9fd-7617-475c-8534-76742ac5e738` (rollback target `f93e5301`); collector `mildmate-marketing-sync` version `9a093445-2457-4849-9a3b-79454b260307` (prior version `91421d42-3903-4a07-895b-2d663d7f3b5b`). New endpoints: `POST /api/v1/ga4/leads/upsert` (bearer, event-validated, idempotent upsert) + `GET /api/admin/analysis/ga4-leads` (admin-authorized, canonical-property-only reporting with explicit Unavailable states). Dashboard: "GA4 Lead Acquisition" card in the SEO & Website tab. Lead events `generate_lead` + `quote_request`; canonical property `308922589` only (legacy `366290587` never merged). Cron schedule `0 1 * * *` and weekday routing unchanged; no sync triggered at release (post-check: 0 `ga4-lead-worker-cron:website` rows in `sync_runs`). First lead data arrives with the next scheduled Monday GA4 collection; release closure requires owner's authenticated browser acceptance test. Release-readiness evidence: `00_Issue/ga4-lead-acquisition-20261101/`.
+
+- **Order dimension durability fix is implemented and deployed:** checkout writes full line-item snapshots to D1 `checkout_session_snapshots`, and webhook now reads snapshots first (metadata fallback second).
+- **Missing dimensions/fabric root cause addressed:** compact Stripe metadata fallback now preserves dimension text tiers instead of dropping critical fields near metadata size limits.
+- **Super Admin guardrail is live:** `/api/admin/orders` returns `missing_configurable_rows` + `affected_orders`, and `/super-admin/` orders view shows warning banner + per-row **Missing Dims** badge.
+- **Production backfill completed for `#LuQpJi23`:** configurable rows were restored from Stripe evidence; fixed-size accessory rows remain intentionally without W/L/D.
+- **Mattress protector reconciliation completed:** 5 target SKUs now use explicit 3-layer copy, and Pet-Proof follows the same TPU-class lock as the other 3-layer protectors (no BreezePlus assignment).
+- **Clerk auth status reconciliation (2026-10-22):** live `https://www.mildmate.com/js/clerk.js` now uses host-aware key split (`pk_live_*` on `www.mildmate.com`/`mildmate.com`; `pk_test_*` on preview/local).
+- **Clerk handshake reconciliation (2026-10-22):** `/account/*` and `/admin/*` middleware consume `__clerk_handshake` return tokens server-side with strict `typ` + `cat` checks, preventing post-idle loops.
+- **Admin access reconciliation (2026-10-22):** Cloudflare Zero Trust challenge is active on `/super-admin/*` (www + pages.dev), while `/admin/*` currently remains Clerk middleware gated.
+- **Stripe payment health audit (2026-10-22):** production checkout and webhook/order-confirm flows validated as healthy via read-only probes + D1 metadata checks (recent confirmed/shipped paid orders present; sampled webhook failure rows in the last 30 days = 0). Purchase analytics remained UNVERIFIED in that audit.
+- **Stripe regression status (2026-10-22):** `workers/api/__tests__/stripe-purchase-hardening.test.ts` currently passes 23/24 tests; the single failure is a stale delayed-GTM string assertion (`pointerdown`/`touchstart`/`setTimeout(startOnce, 6000)`), not a checkout-processing defect.
+- **Custom quote team-email fix (deployed 2026-10-26):** `workers/api/quote.ts` + `public/js/product-configurator.js` — TPU/protector fabric locks (`FIXED_WHITE_PROTECTOR_SLUGS`), unit-first dimension formatting (customer's entered inch values preserved via `entered` payload; FP noise removed via `round1`), human product title via D1 lookup (raw slug no longer emailed). Commit `0df7ce0`, Pages deployment `68e3d23f`.
+- **Send Offers / recovery cron remediation (deployed 2026-10-27):** cron Worker `mildmate-cron` rebound from preview D1 to `mildmate-db-prod` (prod D1 is now the only database it touches); zero-valued config no longer silently replaced (`numOr` in `admin-offers.ts`); recovery test buttons honor the stage param, use non-redeemable `TEST-` codes, and no longer mutate data (`admin-recovery-test.ts` full rewrite with `authorizeAdminBrowser` + centralized `sendEmail`); UI timing copy drift fixed (48h Stage 2 / 4 days after Stage 2); email URLs moved to `www.mildmate.com`. Commit `36f3b53`, Pages deployment `d705e705`, cron Worker version `004d64c1`. Prod cleanup same day: 24 stale (>30d) abandoned carts marked terminal, all 8 due thank-you emails sent. `functions/cron.ts` is intentionally retained in-repo as the offline email-safety vitest fixture — it is NOT the production cron.
+- **Tier 1 quote pipeline (deployed 2026-10-28):** commit `9e8e87f`, Pages deployment `4aa4a327`, cron Worker version `5baf2a7e`. Migration `059_quote_tier1_pipeline.sql` applied to prod D1 and verified (`orders.quote_id` + index, `quote_followup_events` with `UNIQUE(quote_id, stage)`, 5 `recovery_config` seeds with `quote_followup_enabled=false`). New `GET /api/admin/analysis/quotes` + Data Analyst "Custom Quote Funnel (Tier 1)" card; Super Admin 🧾 Quote Follow-up config card in Send Offers; pre-expiry quote follow-up stage in `mildmate-cron` (disabled by default; daily cap 20, per-email cooldown 24h, idempotent claim). See "Custom Quote Conversion Pipeline — Tier Plan (2026-10-28)" section below.
+- **Stripe regression status (2026-10-28):** full offline suite now 71/72 (`stripe-purchase-hardening` 23/24); the sole failure remains the stale delayed-GTM assertion — root cause: `public/order-confirmed/index.html` lacks the `startOnce` pointerdown/touchstart/6s guardrails entirely (GA/GTM workstream, not checkout).
+- **Google Ads / GA4 attribution (2026-10-21 audits):** Google Ads campaign `24321425466` is live; prod D1 has click/cost rows through 2026-10-19 (collector recovered after the 2026-10-08 scheduler failure) — **Phase 12 remains OPEN** (no genuine purchase conversion validated yet; GA4↔Ads attribution on HOLD per `09_Handoffs/MildMate_Ads_GA4_Attribution_Verification_2026-10-21.md`). GA4 purchase attribution remains UNVERIFIED: Oct 18–20 dark window (5 Ads clicks permanently lost; `ga4_funnel_daily` stops at 2026-10-17), 6 product pages missing ecommerce producers, blank source/medium rows including one purchase on 2026-10-17, and admin pages contaminating analytics via legacy property `G-ESL161CNBV`. Remediations (RG-1 GTM trigger, RA-1 owner UI, RC-1 producers + CSP) are planned, none executed.
+- **Collector scheduling (supersession, per 2026-10-08 handoff):** `marketing-sync-worker` now runs a single daily cron (`0 1 * * *` UTC, verified in `marketing-sync-worker/wrangler.toml`) with weekday dispatch (Mon GA4 / Tue Etsy / Wed Google Ads / Thu GSC) — this supersedes earlier per-source "weekly Monday" schedule wording found in older handoffs and phase notes.
+
+---
+
+## Marketing Decision System Reconciliation Snapshot (2026-09-07)
+
+Reconciled from:
+- `00_Issue/00_MildMate_Marketing_Decision_System_Roadmap_D1_v5_2026-09-07.md`
+- `00_Issue/02_MildMate_Marketing_Decision_System_v5_Reconciliation_2026-09-07.md`
+
+Verified state to preserve in future sessions:
+- **Canonical D1 product identity for Marketing Decision System:** 32 active products (`1–29, 32, 33, 34`; gaps `30, 31` remain intentional and must not be renumbered).
+- **Google Product Master:** 32 rows; remains a human/admin mirror, not canonical product source.
+- **Etsy mapping:** 16 listing IDs are manually confirmed in Product Master (partial); canonical D1 channel-listing persistence + automatic Etsy listing sync are still pending.
+- **Unified sales analytics backend:** production-verified (`sales_orders`, `sales_order_items`, `sync_runs`) via `039_unified_sales_analytics.sql`.
+- **Sales sync API:** production-verified at `/api/v1/health`, `/api/v1/sales/orders/upsert`, `/api/v1/sales/orders/{source_system}/{source_order_id}` with Bearer token `SALES_SYNC_API_TOKEN`.
+- **Make.com flow `MildMate - Notion OrderList to D1 Sales Sync`:** built + end-to-end verified in Sep 2026, then **permanently retired without activation** — superseded by the Phase 17 Worker, which reads Notion directly (final decision 2026-09-19; see Update below).
+- **Historical product mapping:** partial; resolver automation workflow is design/handoff only and not production-verified.
+- **D1 → Google Product Master auto-sync:** pending; `Last_Synced_At` is not yet a trusted production signal.
+- **External collectors (status at 2026-10-28):** all run as Cloudflare Worker crons in `marketing-sync-worker` — GSC, GA4 (production-verified 2026-10-01; sessions-dedupe fix + 90-day rebuild, 900 rows), Etsy (production-verified 2026-10-01, rotating encrypted OAuth, 10/10 receipt reconciliation), Google Ads (campaign `24321425466` live since ~2026-10-13; click/cost rows through 2026-10-19). **Scheduling note (supersedes older per-source wording):** since the 2026-10-08 handoff the worker runs a single daily cron (`0 1 * * *` UTC) with weekday dispatch (Mon GA4 / Tue Etsy / Wed Google Ads / Thu GSC); earlier "GSC Mon 03:00 / GA4+Etsy+Ads Mon 04:00" schedule wording is historical. Meta Ads: deferred permanently by owner decision (2026-09-29).
+- **Commercial reporting guardrail:** exclude known smoke-test order (`TEST-MAKE-001`) from business KPIs.
+
+Status taxonomy for this workstream:
+- ✅ Built + production/end-to-end verified: unified sales tables/API, OrderList→D1 sales sync scenario logic
+- 🟡 Partial/in progress: historical mapping coverage, manual Etsy mapping
+- ⬜ Pending/not production verified: mapping resolver automation, Product Master auto-sync, external performance collectors, opportunity engine
+
+### Update — Systematic Phase Reconciliation (2026-09-19)
+
+Full evidence-based reconciliation of all 17 phase checklists: `01_MildMate_Marketing/09_Handoffs/Phase_01-17_Systematic_Reconciliation_2026-09-19.md`.
+- **Phases 01–07: ✅ complete and production-verified** (audit report, metric dictionary, 10 analysis views in migration 042 — earlier "11 views" claims were a miscount — 6 analysis API routes, Data Analyst dashboard at `/super-admin/marketing/data-analyst/`, data-quality/sync monitor, direct Notion mapper). Phase 07's v1 Make.com auto-mapper design was superseded by the v2 direct mapper (syncs only human-confirmed `Mapped` records; never maps or guesses).
+- **Phase 08: ✅ complete (final item closed 2026-09-20)** — historical backfill done: 493 orders / 737 items / ฿1,552,277.63 in prod `sales_orders`; all 18 held records resolved; Data Analyst dashboard "Historical Coverage" card built (`coverage` block on `/api/admin/analysis/data-quality`: span 2023-07-19 → 2026-09-10, 483 commercial orders, 7 channels, per-year thin/partial flags, per-channel first/last order dates; mirrored in `public/index.js` + `public/_worker.js`).
+- **Phase 17: ✅ deployed and OPERATIONAL (go-live 2026-09-19)** — Worker `mildmate-marketing-sync` at `https://mildmate-marketing-sync.nara19080.workers.dev`, all 4 secrets set; migration 045 applied to prod (initially missed after deploy, fixed same day); controlled test passed (`sync_runs` id 503, success, 5/5 `skipped_unchanged`). Schedule: main run 1st/15th 02:00 UTC + hourly drain. Note: `wrangler d1 execute --remote --file` previously failed with auth code 10000 on this account (file-import endpoint); migrations were run via `--command` instead. *(Superseded 2026-11-01: `--file` succeeded applying migration 061 to prod — the endpoint now works; keep the `--command` fallback in mind if it regresses.)*
+- **Phase 09 (GSC): ✅ deployed + operational (collector live; status at 2026-10-01, scheduling superseded 2026-10-08)** — migration `046_gsc_analytics.sql` + 047 freshness-source update applied on prod D1; ingestion API `/api/v1/gsc/*`, analysis endpoint `/api/admin/analysis/gsc`, and Data Analyst GSC section live in deployed runtime. At the 2026-10-01 reconciliation the then-weekly collector (`gsc-worker-cron`, Mon 03:00 UTC) had 52 successful prod runs, latest 2026-09-27, OAuth secrets set (schedule since superseded by the daily dispatcher above). A formal sampled clicks/impressions reconciliation vs GSC reports has not been recorded.
+- **Phases 10–16 (status at 2026-10-28):** Phase 10 (GA4) ✅ deployed + production-verified (live reconciliation 2026-10-01; sessions-dedupe fix + 90-day rebuild, 900 rows; migrations 055/056 multi-property + property-unique rebuild; **GA4 Lead Acquisition deployed 2026-11-01** — migration 061, `GET /api/admin/analysis/ga4-leads`, collector lead sync for `generate_lead`/`quote_request` on canonical property 308922589, SEO-tab card; 2026-10-21 audits found GA4 purchase attribution UNVERIFIED — see Operational Reconciliation Snapshot); Phase 11 (Etsy) ✅ deployed + production-verified (first live ingest 2026-10-01, rotating encrypted OAuth, 10/10 receipt reconciliation; unified-sales Etsy lag depends on manual Notion entry cadence); Phase 12 (Google Ads) 🟡 campaign live + collector recovered (rows through 2026-10-19) but phase OPEN — closure criteria unmet (no genuine purchase conversion validated; GA4↔Ads attribution HOLD per 2026-10-21 audit; Meta Ads deferred permanently by owner decision 2026-09-29); **Phase 13** ✅ implemented (profitability/growth-signal layer in runtime + production D1 cost-model tables/views; growth-signals UI remediation deployed 2026-10-12 per `09_Handoffs/Phase13_Growth_Signals_UI_Remediation_2026-10-12.md`); **Phase 14** ✅ implemented (opportunity model registry + score snapshots in production D1, protected `/api/admin/analysis/opportunity` route live, weekly Monday 05:00 UTC recompute cron + dashboard "Recompute scores" button); **Phases 15–16** ⬜ not started. **Quote funnel (Tier 1, deployed 2026-10-28):** quote-demand KPIs live at `GET /api/admin/analysis/quotes` + "Custom Quote Funnel (Tier 1)" Data Analyst card; exact quote→order attribution via `orders.quote_id` (legacy email-match fallback); pre-expiry follow-up automation deployed disabled — see Tier Plan section.
+- **Final pipeline architecture (user decision 2026-09-19, revised 2026-10-01):** Make.com is **not** used for Notion→D1 sync — the Worker reads Notion directly. Division of labor *(as revised — see Update below)*: (1) **Human = channel→Notion** order entry (manual; Make.com import scenarios retired); (2) **Human = mapping confirmation** in Notion (`Product_Mapping_Status = Mapped`; the system never maps or guesses); (3) **Worker = Notion→D1** (direct, scheduled, replaces the Make.com sales-sync scenario entirely).
+
+### Update — Make.com Fully Retired (2026-10-01)
+
+Owner decision: **Make.com is fully retired across MildMate** — including the channel→Notion order-import scenarios that the 2026-09-19 decision kept active. All automation now runs on Cloudflare Worker crons; channel orders are entered into Notion OrderList **manually by humans**. Reconciliation doc: `01_MildMate_Marketing/09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`.
+
+- Production evidence (prod `sync_runs`, 2026-10-01): active sources are all Worker crons — `notion-mapping-sync` (Phase 17), `gsc-worker-cron`, `ga4-worker-cron`, `etsy-worker-cron`; the Make.com-era `notion-orderlist` source has been dead since 2026-09-07.
+- **Phase 17 subrequest fix (2026-10-01):** the 10-01 main pass died with "Too many subrequests" (sync_runs 565). `scripts/notion-mapper-core.mjs` now counts outbound calls and `runSync` takes `maxSubrequests` (Worker var `SYNC_MAX_SUBREQUESTS="20"`), bounded-stopping with cursor carry-over instead of crashing; hard failures no longer overwrite the mid-run cursor. Verified live: 5 manual passes drained 35 backlogged orders (`sales_orders` 515 → 549), final status success/exhausted. Manual override: `POST /run?max-subrequests=N`.
+- Known gap (owner-accepted): unified-sales freshness depends on manual Notion entry cadence (latest order 2026-09-11 at reconciliation time) plus the Worker's `rolling-prev-month` settle cutoff.
+
+---
+
+## Custom Quote Conversion Pipeline — Tier Plan (2026-10-28)
+
+Origin: sustained growth in custom-quote demand with weak conversion. Read-only prod D1 analysis (2026-10-27): 94 quotes from 64 unique emails since June 2026 (26 in October alone); top quoted product `custom-waterproof-cushion-protector` (28 quotes — not in the web catalog); only ~8 of 64 quote emails converted to orders (~12%); status taxonomy is effectively approved (48) vs archived (46) with few explicit rejects.
+
+### Tier 0 — Manual Follow-up Ritual (✅ Complete, 2026-10-27)
+- Worklist generated from prod D1: 38 approved-unconverted quotes (5 still active, 33 expired) → `00_Issue/Quote_Followup_Worklist_2026-10-27.md` (generator: `scripts/build-quote-worklist.mjs`).
+- Manual outreach email templates A + B; recommended twice-weekly follow-up ritual. No automation; human-operated only.
+
+### Tier 1 — Funnel KPIs + Exact Attribution + One Pre-Expiry Reminder (✅ Deployed 2026-10-28)
+Commit `9e8e87f`; Pages production deployment `4aa4a327`; cron Worker `mildmate-cron` version `5baf2a7e`. Migration `059` applied to prod D1 (verified).
+- **1A — Funnel KPIs:** `GET /api/admin/analysis/quotes` (summary, exact quote_id conversion + legacy email-match conversion, top quoted products, at-risk approved quotes expiring ≤7d — no PII in at-risk output) + "Custom Quote Funnel (Tier 1)" card on the Data Analyst dashboard, wired into `loadAll()` + `applyFilters()`.
+- **1B — Pre-expiry follow-up automation:** new stage in `mildmate-cron`. Ships DISABLED (`quote_followup_enabled=false` in prod `recovery_config`). Guardrails: exact quote_id conversion check (skips quotes that already have an order), per-quote idempotency (`INSERT OR IGNORE` claim on `UNIQUE(quote_id, stage)` in `quote_followup_events`), per-email cooldown (default 24h), daily cap (default 20). Configurable via Super Admin → Send Offers → 🧾 Quote Follow-up card. Follow-up email is a single gentle reminder pointing to the quote magic link — no discount, no pressure copy.
+- **1C — Exact attribution:** `orders.quote_id` (+ index); webhook binds `item.quote_id || item.qi` on every order row (snapshot + metadata paths) with schema self-heal in both `workers/api/webhook.ts` and `mildmate-cron`. Historical orders fall back to email matching (reported separately as "legacy email-matched").
+- **Rollout plan:** verify the funnel card for ~24h → enable follow-up at cap 10/day → raise to 20/day once first sends look clean in `quote_followup_events`.
+
+### Tier 2 — Opportunity Engine Input (⬜ Pending)
+- Feed quote-demand metrics (quote volume by product, exact conversion rate, at-risk expiring value) into the Phase 14 opportunity model as a demand/momentum signal. Blocked until Tier 1 data has matured (need quote_id-attributed order rows to accumulate).
+
+**Operational rules:**
+- `wrangler d1 execute mildmate-db-prod --remote --file` previously failed (auth code 10000, confirmed applying 059 via `--command`); on 2026-11-01 `--file` succeeded applying migration 061 to prod — the endpoint now works, but keep the `--command` fallback in mind if it regresses.
+- The quote follow-up stage must never be enabled without the daily cap; over-emailing customers is the explicit no-go (owner constraint: one order with N items = one email, never N).
+- Schema self-heal in `mildmate-cron` (`ensureQuoteFollowupSchema`) is try/catch-wrapped — a heal failure logs and skips, never crashes the cron run.
+
+---
+
+## Custom Quote Email Revision (2026-09-11)
+
+Reconciled from:
+- `00_Issue/MildMate_Magic_Link_Email_Developer_Revision.md`
+
+Verified/built state (commit `1b508ba`, deployed to `master`):
+- **Customer mailer rebuilt as multipart (text + HTML):** `workers/api/admin-quotes.ts` → `sendMagicLinkEmail()` now ships both a plain-text version (for plain-text clients + spam scoring content) and an HTML version (table-based, inline CSS, no remote assets). Source mirrors in `public/index.js` + `public/_worker.js` (runtime parity).
+- **Shared helper upgraded:** `workers/api/email.ts` → `sendEmail()` now accepts an optional `html` parameter. Resend payload only includes `html` when the string is non-empty (preserves plain-text-only behavior for all other callers).
+- **New subject:** `View Quote & Order — your MildMate Quote QT-XXXXX-XXX` (replaces the prior generic "Your MildMate Quote — … Ready for Review").
+- **Plain-text structure:** greeting → "Your custom quote is ready" → order summary → confirmed price + shipping note + lead time → `━━━ Ready to Order? ━━━` heading → `View Quote & Order: <magic-link>` line with URL fallback → "How to Order" 3-step list (Open → Add to Cart → Checkout) → validity date → reply-to footer.
+- **HTML structure:** hidden preheader → eyebrow + heading + greeting + quote ID → order summary card with confirmed price → primary `View Quote & Order` button (brand `#2c96f4`) + URL fallback → numbered "How to Order" 3-step list → validity badge (when expiry set) → reply-to footer. Inline CSS only, Arial/Helvetica fallback fonts (no Google Fonts), Outlook-compatible table layout.
+- **Spam-safety guardrails:** HTML body always paired with non-empty text body so plain-text clients + spam filters see full content; CTA appears as both button and plain URL fallback in both formats; subject and body use neutral transactional phrasing (no clickbait or salesy wording).
+- **Wire-up:** `Admin Quotes` API already accepted `send_email: true` on POST (newly created approved quote) and PUT (existing quote update); behavior unchanged — only the email payload was upgraded. Quote magic-link URL pattern `/quote/<id>/` continues to honor `expires_at`, free-shipping flag, product/dimensions/fabric/color from the `custom_quotes` row.
+- **Acceptance criteria:** `00_Issue/MildMate_Magic_Link_Email_Developer_Revision.md` "Open Quote → Add to Cart → Checkout → Pay" can now be completed by the customer from the email alone without replying for clarification.
+
+Files updated (commit `1b508ba`):
+- `workers/api/email.ts`
+- `workers/api/admin-quotes.ts`
+- `public/index.js`
+- `public/_worker.js`
+
+---
+
+## Super Admin — Sales Sync Health Banner (2026-09-07)
+
+Reconciled from the unified sales analytics workstream:
+- **Endpoint upgrade:** `GET /api/admin/orders` now also returns `sales_sync` — the latest row from D1 `sync_runs` (latest 1 by `COALESCE(finished_at, created_at) DESC`). Worker: `workers/api/admin-orders.ts` → `getLatestSalesSyncRun()`. Runtime mirrored in `public/index.js` + `public/_worker.js`.
+- **UI banner:** `/super-admin/` → Orders page now renders a `renderSalesSyncBanner()` block at the top:
+  - HEALTHY: last success within 30 minutes
+  - DELAYED: last success > 30 minutes old (or unparseable timestamp)
+  - FAILED: latest status is `failed` / `partial` / `error`
+  - Banner surfaces run ID, source, last sync timestamp + relative age (e.g. `2.3 d ago`), and counters (received / created / updated / unchanged / rejected).
+- **Empty-state banner:** if `sync_runs` has no rows yet, banner renders an amber warning telling the operator to check ingestion logging.
+- **Stays clean:** new banner code is additive — existing dimension guardrail (`missing_configurable_rows` / `affected_orders`) and Orders table behavior remain unchanged.
+
+Files updated (commit `d8504d7`):
+- `workers/api/admin-orders.ts`
+- `public/super-admin/index.html`
+- `public/index.js`
+- `public/_worker.js`
+
+---
+
+## TH Product Pages Localization (2026-09-12)
+
+Reconciled from: Phase 4 TH FAQ + Phase A (breadcrumb chrome) + Phase B (JS-injected strings + marine shape) + Phase C (customer-facing static HTML strings). All work landed on `master` (commits `60dcfbc`, `96a558e`, `5d96d0f`, `8642bdf`, `42fc1eb`, `2ba5c5e`) and verified live at `https://<preview>.mildmate-new.pages.dev/th/product/*`.
+
+### Architectural rule (critical, preserves future work)
+- **TH static files at `/th/product/*/index.html` are dead code.** The Pages Function at `functions/product/[[path]].ts` always loads `/product/{slug}/index.html` (EN) via the assets binding and patches fields. All TH product-page localization must happen server-side in the Pages Function OR client-side in `public/js/product-configurator.js`.
+- **Do not** add TH static HTML to product pages and rely on `_redirects` to serve them — the function intercepts every `/th/product/{slug}/` request and serves the EN template.
+- The `TH_CHROME_REPLACEMENTS` table in `scripts/build-products.js` does rebuild `/th/product/*/index.html`, but those files are never served. Treat them as dead code unless the routing model changes.
+
+### Phase A — Breadcrumb chrome (commit `96a558e`)
+- `TH_BREADCRUMB_CATEGORY_LABELS: Record<string, string>` map in `functions/product/[[path]].ts` indexed by category URL: `/sheets/` → `ผ้าปูที่นอน`, `/duvet-covers/` → `ปลอกผ้าห่ม`, `/pillowcases/` → `ปลอกหมอน`, `/protection/` → `ผลิตภัณฑ์ปกป้อง`, `/accessories/` → `อุปกรณ์เสริม`.
+- Patch block rewrites the `<nav class="product-breadcrumb">` for TH: swaps each category link's text + replaces `Home` with `หน้าแรก`.
+- Live breadcrumb example: `หน้าแรก › ผ้าปูที่นอน › ผ้าปูที่นอนรัดมุมขนาดมาตรฐาน`.
+
+### Phase B — JS-injected strings + marine shape (commit `5d96d0f`)
+- **`isThaiPage()` / `t(en, th)` helper** added at IIFE start of `public/js/product-configurator.js`:
+  ```js
+  function isThaiPage() {
+    var html = document.documentElement;
+    var lang = (html && html.lang) ? html.lang.toLowerCase() : 'en';
+    var path = (window.location && window.location.pathname) || '';
+    return lang === 'th' || path.indexOf('/th/') === 0;
+  }
+  function t(en, th) { return isThaiPage() ? th : en; }
+  ```
+- **Wrapped strings** in `public/js/product-configurator.js`: Add to Cart (3 sites in switchToStandard/switchToCustom/standardConfigurator + main configurator), Custom Size tab textContent, Custom Quote (priceDisplay + popup title), Request Custom Quote, Head Width (HW), Foot Width (FW), "— Choose size —" placeholder, Standard Sizes + Custom Size tab labels at startup.
+- **`TH_MARINE_SHAPE_LABELS: Array<[RegExp, string]>`** table in `functions/product/[[path]].ts` for `templates/product-marine.html` static strings: `Choose Your Boat Mattress Shape` → `เลือกรูปทรงที่นอนเรือของคุณ`; `— Select a shape —` → `— เลือกรูปทรง —`; `Select a shape above to see the measurement diagram` → `เลือกรูปทรงด้านบนเพื่อดูแผนภาพการวัด`.
+
+### Phase C — Customer-facing static HTML strings (commits `8642bdf`, `42fc1eb`, `2ba5c5e`)
+- **`TH_STATIC_HTML_REPLACEMENTS: Array<[RegExp, string]>`** table in `functions/product/[[path]].ts` (26 entries) covering: dimension labels (Width/Length/Depth → ความกว้าง/ความยาว/ความลึก), Estimated price (ราคาประมาณการ), Price (ราคา), Starting from (ราคาเริ่มต้น), Color — X (สี — X, preserves fabric name per brand rule), Secure checkout (ชำระเงินอย่างปลอดภัย), trust badges (Custom Fit/Human Safe/Pet Resist/Premium Quality ×3 / Top-Rated Etsy Boutique/Ships from Thailand), Customer Reviews (รีวิวจากลูกค้า), Loading reviews... (กำลังโหลดรีวิว...), You might also like (สินค้าที่คุณอาจสนใจ), Tags: (หมวดหมู่:), marine Fabric spec label, boat model prompt (ทราบรุ่นเรือของคุณ? เลือกตัวเลือกราคาคงที่), unit warning (Default: cm → หน่วยเริ่มต้น: ซม. ..., preserves `<strong>` markup).
+- Each pattern is anchored to specific HTML context (`<label for="dim-X">`, `class="panel-label"`, `</svg>` boundary, `<strong>` markup in unit warning) to avoid false matches elsewhere in the document.
+- **`applyThaiProductUiLocalization(html, tagline, slug)`** function handles template-level replacements that regex tables can't anchor reliably: config tabs (Standard Sizes/ขนาดมาตรฐาน + Custom Size/ขนามาดสั่งทำ), Starting from sub-label, size-panel labels (`Select Mattress Size`/`Select Duvet Size` → `เลือกขนาดที่นอน`), dimension prompts (`Enter your exact mattress dimensions` → `กรอกขนาดที่นอนจริงของคุณ`), size-hint link (rewrites `/sizeguide/` to `/th/sizeguide/`), diagram caption, Add to Cart (×2 sites: `#add-to-cart` + `#mobile-add-to-cart`), info tabs (Description → รายละเอียด, FAQ → คำถามที่พบบ่อย), trust-badge variants (`>Premium Quality</span>`, `>Custom Fit</div>`, etc.), and product tagline.
+- **`weighted-duvet-cover` slug specialization** — `applyThaiProductUiLocalization` detects this slug and substitutes weighted-blanket-specific copy: size label = `เลือกขนาดผ้าห่มถ่วงน้ำหนัก`, dimension prompt = `กรอกขนาดผ้าห่มถ่วงน้ำหนักจริงของคุณ`, hint text = `ดูวิธีวัดขนาดผ้าห่ม`, diagram caption = `วัดจากผ้าห่มถ่วงน้ำหนักจริง (กว้าง × ยาว) ไม่ใช่ขนาดที่นอน`. Keep this branch in sync with any future weighted-blanket UI copy changes.
+
+### Round 3 — Loading reviews closing-tag fix (commit `2ba5c5e`)
+- **Root cause:** The earlier regex `/id="product-review-count">Loading reviews\.\.\.</g` was eating the `<` of the immediately following `</div>`, producing `/div>` instead of `</div>` on TH pages only (EN unaffected). Isolated reproduction confirmed the substitution ran correctly against the marked HTML — the issue was an interaction with adjacent esbuild output.
+- **Fix:** Expanded the regex to include `</div>` atomically: `/id="product-review-count">Loading reviews\.\.\.<\/div>/g` → `id="product-review-count">กำลังโหลดรีวิว...</div>`. Live verified at `https://<preview>.mildmate-new.pages.dev/th/product/standard-fitted-sheet/`.
+- **Workflow rule (general):** When a Pages Function regex substitution could consume a `<` immediately followed by the next tag, always anchor the trailing boundary into the match expression to make the substitution atomic.
+
+### DOM-verified final state (TH `/product/standard-fitted-sheet/`)
+| Element | Thai text | Source |
+|---|---|---|
+| Breadcrumb | `หน้าแรก › ผ้าปูที่นอน › ผ้าปูที่นอนรัดมุมขนาดมาตรฐาน` | Pages Function (Phase A) |
+| H1 | `ผ้าปูที่นอนรัดมุมขนาดมาตรฐาน` | D1 `title_th` |
+| Configurator tabs | `ขนาดมาตรฐาน`, `ขนาดสั่งทำ` | `applyThaiProductUiLocalization` |
+| Fabric label | `เนื้อผ้า` | TH_STATIC_HTML_REPLACEMENTS |
+| Color labels | `สี — BreezePlus`, `สี — CloudSoft`, `สี — PremaCotton`, `สี — EcoLuxe` | TH_STATIC_HTML_REPLACEMENTS (fabric names preserved EN) |
+| Size label | `เลือกขนาดที่นอน` | `applyThaiProductUiLocalization` |
+| Size selector placeholder | `— เลือกขนาด —` | `t('Choose size', 'เลือกขนาด')` |
+| Dimension labels | `ความกว้าง (W)`, `ความยาว (L)`, `ความลึก (D)` | TH_STATIC_HTML_REPLACEMENTS |
+| Prices | `ราคา`, `ราคาประมาณการ`, `ราคาเริ่มต้น` | TH_STATIC_HTML_REPLACEMENTS |
+| Add to Cart | `เพิ่มลงตะกร้า` | `applyThaiProductUiLocalization` (×2) + JS `t()` (×1) |
+| Trust badges | `คุณภาพระดับพรีเมียม`, `ตัดเย็บตามขนาด`, `ปลอดภัยต่อการใช้งาน`, `เหมาะกับบ้านที่มีสัตว์เลี้ยง`, `ร้าน Etsy ที่ได้รับคะแนนสูง`, `จัดส่งจากประเทศไทย` | TH_STATIC_HTML_REPLACEMENTS |
+| Customer Reviews | `รีวิวจากลูกค้า` | TH_STATIC_HTML_REPLACEMENTS |
+| Loading reviews… | `กำลังโหลดรีวิว...</div>` | TH_STATIC_HTML_REPLACEMENTS (atomic) |
+| You might also like | `สินค้าที่คุณอาจสนใจ` | TH_STATIC_HTML_REPLACEMENTS |
+| Tags | `หมวดหมู่:` | TH_STATIC_HTML_REPLACEMENTS |
+| Unit warning | `หน่วยเริ่มต้น: ซม. ต้องการใช้หน่วยนิ้ว? เปลี่ยนเป็น นิ้ว ก่อน` | TH_STATIC_HTML_REPLACEMENTS |
+| FAQ | D1 `faq_th` (hand-curated) or generic/marine TH fallback block | Pages Function |
+| Description | D1 `description_th` (hand-curated) or `card_benefit_th`/`title_th` fallback | Pages Function |
+| Secure checkout | `ชำระเงินอย่างปลอดภัย` | TH_STATIC_HTML_REPLACEMENTS |
+| Marine shape selector | `เลือกรูปทรงที่นอนเรือของคุณ`, `— เลือกรูปทรง —`, `เลือกรูปทรงด้านบนเพื่อดูแผนภาพการวัด` | TH_MARINE_SHAPE_LABELS |
+
+### Intentionally preserved EN content (per "no brand names" / "no user-entered content" rules)
+- Fabric names: `CloudSoft`, `BreezePlus`, `PremaCotton`, `EcoLuxe` (kept inside Color labels too: `สี — BreezePlus`)
+- Numeric dimensions (W/L/D, HW/FW), currency (USD/THB), star ratings, phone numbers
+- `Visa / MC` payment badge (brand)
+- D1 hand-curated English content of fields not yet translated
+- Three uncommitted marine TH product files (`/th/product/marine-fitted-sheet/`, `marine-top-sheet/`, `marine-mattress-protector/`) — Droid-Shield false positive on Turnstile site key (same key ships in 3 EN marine pages for months); manual push needed.
+
+### EN pages verified unchanged
+Browser read of `/en/product/standard-fitted-sheet/` showed full EN chrome intact: nav (Shop/Fabrics/Size Guide/Sign In), `Language: EN`, breadcrumb with EN copy, "Custom-Fit Bedding for Any Size, Shape, or Space" hero, "Top-Rated Etsy Boutique" badge, EN Add to Cart + tabs. EN routing and templates are unaffected by the TH-only regex patches.
+
+### Wrangler Pages bundle workflow (critical, governs deploy)
+Editing `functions/**/*.ts` requires a manual bundle rebuild because Pages Functions are normally compiled at deploy time by wrangler — but the project's deploy uses `--no-bundle`, so the locally built bundle becomes the runtime artifact.
+
+1. Edit `functions/product/[[path]].ts` (or any function file). Workers API (`workers/api/*.ts`) changes must ALSO be hand-mirrored into `public/index.js` + `public/_worker.js` (runtime-parity convention; verified 2026-09-20 that the pipeline build output is byte-equivalent to a careful hand-mirror).
+2. Run `powershell -File .\extract-worker.ps1` — the script runs the wrangler build itself and is ATOMIC (fixed 2026-09-20 after a failure loop):
+   - It builds to a TEMP file first (never writes raw formdata into `public/_worker.js`), deletes any leftover `------formdata-undici-` junk from `public/_worker.js` before building (junk in that file makes every later build fail — wrangler parses it as an entry point: `Expected ";" but found ":"` at the `Content-Disposition` line), then extracts the valid JS from the formdata-multipart output (jumps past the `Content-Type: application/javascript+module` marker line, skips the empty line, stops at the next `------formdata-undici-` boundary) and writes it back.
+   - **Never deploy a `public/_worker.js` that starts with `------formdata-undici-`** — with `--no-bundle` that junk ships as the Worker and breaks the entire site API.
+3. Deploy: `npx wrangler pages deploy ./public --project-name=mildmate-new --commit-dirty=true --branch=master --no-bundle`
+   - **Without `--no-bundle`, wrangler re-runs the build and overwrites the extracted `_worker.js` with formdata again.** Always pass `--no-bundle` on the deploy step.
+
+### Files added/modified in this thread
+- `functions/product/[[path]].ts` — added TH_GENERIC_FAQ_INNER, TH_MARINE_FAQ_INNER, MARINE_FAQ_SLUGS, TH_BREADCRUMB_CATEGORY_LABELS, TH_MARINE_SHAPE_LABELS, TH_STATIC_HTML_REPLACEMENTS, applyThaiProductUiLocalization, weighted-duvet-cover specialization
+- `public/js/product-configurator.js` — added isThaiPage()/t() helper, wrapped 9 EN strings, added startup tab-translation block
+- `public/_worker.js` — bundle rebuilt after each function edit
+- `scripts/build-products.js` — added 5 breadcrumb category entries to TH_CHROME_REPLACEMENTS (effectively dead code per architectural rule above; kept for parity with /th/product/*/index.html rebuild output)
+- `extract-worker.ps1` — new PowerShell extraction helper for formdata → valid JS
+- `scripts/audit-th-content.js`, `scripts/audit-th-strings.js`, `scripts/audit-static-strings.js`, `scripts/audit-marine-strings.js`, `scripts/audit-fixed-strings.js`, `scripts/audit-scripts-loaded.js`, `scripts/audit-breadcrumb-cats.js`, `scripts/dump-tabs.js`, `scripts/inspect-*` and `scripts/verify-*` (≈ 20 audit/debug/verify helpers) — diagnostic tools for this work; safe to delete after reconciliation
+
+---
+
+## TH Blog SSR (2026-09-12)
+
+Reconciled from: Phase 4 TH FAQ + blog SSR audit. All work landed on `master` (commit `8634a42`) and verified live at `https://www.mildmate.com/th/blogs/` and `https://www.mildmate.com/blogs/`.
+
+### Architectural rule (critical, preserves future work)
+- **Blog pages are 100% SSR.** `/blogs/`, `/th/blogs/`, `/blogs/{slug}/`, `/th/blogs/{slug}/` are all rendered by `functions/blog-shared.ts` → `buildBlogListingHTML()` / `buildBlogPostHTML()` from D1 `blog_posts` (no static HTML files in `public/blogs/` or `public/th/blogs/`). `functions/blogs/[[path]].ts` and `functions/th/blogs/[[path]].ts` are thin route handlers that call the shared builder with `lang="en"` or `lang="th"`.
+- The single source of truth is `functions/blog-shared.ts`. When editing blog UI, edit `buildBlogListingHTML` and `buildBlogPostHTML` in lock-step (or share templating helpers) — never edit one without the other.
+- Hand-curated Thai fields (`title_th`, `body_th`, `meta_description_th`, `featured_image_alt_th`, `read_time_th`) flow through to TH pages when present, falling back to EN. Editors can localize posts in `/admin/blog.html` without code changes.
+
+### SEO i18n parity (commit `8634a42`)
+- **Listing pages** (`/blogs/`, `/th/blogs/`): self-referencing canonical including `?page=N` parameter + 2 hreflang tags (en → `/blogs/[?page=N]`, th → `/th/blogs/[?page=N]`).
+- **Individual post pages** (`/blogs/{slug}/`, `/th/blogs/{slug}/`): canonical + 2 hreflang tags in `buildBlogPostHTML` (long-standing, kept in sync).
+- All canonical + hreflang URLs use the absolute `https://www.mildmate.com` prefix.
+- Live verified: `/blogs/` and `/th/blogs/` both render the SEO tags correctly; post pages unchanged.
+
+### Content scope
+- 8 published blog posts in D1, all 8 with hand-curated Thai content (3,000–5,800 Thai chars per post).
+- Featured image, YouTube hero, category filter, author + read time, pagination (8 per page), newsletter CTA, and 4-col footer all localized for TH.
+
+### Files added/modified in this thread
+- `functions/blog-shared.ts` — added canonical + hreflang to `buildBlogListingHTML`
+- `public/_worker.js` — bundle rebuilt (657,022 chars) with the new SEO tags
+- (No client-side JS changes; SSR-only changes are sufficient.)
 
 ---
 
@@ -139,13 +405,12 @@ This file is read by Droid at the start of every session. It contains all critic
 2. Optional login: user clicks Sign in → Clerk hosted-page redirect → returns to `/checkout/` with `__session` cookie → `/api/auth/me` returns profile → form pre-fills, cart syncs
 3. Protected pages: `/account/` and `/api/customers/*` are behind Clerk → Clerk session token sent as `Authorization: Bearer` header → Worker verifies Clerk JWT via Web Crypto + JWKS
 
-**Long-term Option 3 (Completed & Hardened):**
-- ✅ Migrated auth from Clerk Development instance to Clerk Production instance before DNS cutover.
-- ✅ Custom Clerk domain (accounts.mildmate.com) and explicit allowlist configured for production redirect URLs.
+**Long-term Option 3 (Reconciled 2026-10-22):**
 - ✅ Centralized bearer-token auth for `/api/auth/me` and `/api/customers/*` enforced on all frontend calls.
 - ✅ Explicit sign-out CTA visible on checkout/account flows (no reliance on hidden menus).
 - ✅ Added `functions/account/_middleware.ts` for server-side protection (verifies Clerk `__session` cookie, redirects to sign-in).
-- **Production domain configured:** `functions/account/_middleware.ts` and `functions/admin/_middleware.ts` both reference `accounts.mildmate.com` as the production Clerk domain. Dev mode uses `kind-joey-29.accounts.dev`.
+- ✅ Host-aware Clerk key split is live: production hosts use `pk_live_*`; preview/local keep `pk_test_*`.
+- ✅ Clerk handshake return-token consumption is live in account/admin middleware (`__clerk_handshake` with strict `typ` + `cat` checks), preventing post-idle redirect loops.
 
 
 | Search | Overlay triggered by magnifying glass icon |
@@ -195,7 +460,7 @@ This file is read by Droid at the start of every session. It contains all critic
 |------|----------|
 | C1 | Checkout shows cart summary (product, size, fabric, color, qty, total) |
 | C2 | Enter shipping address → validated |
-| C3 | Click "Pay with Card" → Stripe Payment Element loads |
+| C3 | Click "Pay with Card" → redirect to Stripe Checkout hosted payment page |
 | C4 | Test card `4242 4242 4242 4242` → success → order confirmed page |
 | C5 | Order confirmation shows order number, items, total |
 
@@ -253,7 +518,7 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 | Pet Owner Bedding | `/pets/` | Pet Owner Fitted Sheet, Pet Owner Duvet Cover, Pet-Proof Mattress Protector, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 | RV & Truck Cab | `/rv-truck/` | RV & Truck Fitted Sheet, Duvet Cover — RV, 6-Sided Mattress Encasement, RV & Truck Mattress Encasement, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 
-### Complete Product Catalog (29 products)
+### Complete Product Catalog (Web storefront template scope: 30 core products + 1 runtime extension)
 
 | # | Product | URL | Product Type | Niche / Use-Case |
 |---|---|---|---|---|
@@ -267,31 +532,33 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 | 8 | Pet Owner Fitted Sheet | `/product/pet-owner-fitted-sheet/` | Sheets | Pet Owner |
 | 9 | Flat Sheet — Standard | `/product/flat-sheet-standard/` | Sheets | — |
 | 10 | Flat Sheet — Extra Deep Pocket | `/product/flat-sheet-extra-deep-pocket/` | Sheets | Deep Pocket |
-| 11 | 3-Sided Zipper Duvet Cover | `/product/3-sided-duvet/` | Duvet Covers | Family & Co-Sleep |
-| 12 | Pet Owner Duvet Cover | `/product/pet-owner-duvet-cover/` | Duvet Covers | Pet Owner |
-| 13 | Duvet Cover — Marine | `/product/duvet-cover-marine/` | Duvet Covers | Marine & Yacht |
-| 14 | Duvet Cover — RV | `/product/duvet-cover-rv/` | Duvet Covers | RV & Truck Cab |
-| 15 | Duvet Cover — Dorm | `/product/duvet-cover-dorm/` | Duvet Covers | Boarding Dorm |
-| 16 | Duvet Insert | `/product/duvet-insert/` | Duvet Covers | — |
-| 17 | Envelope Pillowcase | `/product/pillowcase-envelope/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
-| 18 | Zipper Pillowcase | `/product/pillowcase-zipper/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
-| 19 | Sham Pillowcase | `/product/pillowcase-sham/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
-| 20 | Mattress Protector — Standard | `/product/mattress-protector-standard/` | Protection | — |
-| 21 | Mattress Protector — Family | `/product/mattress-protector-family/` | Protection | Family & Co-Sleep |
-| 22 | Mattress Protector — Deep Pocket | `/product/mattress-protector-deep-pocket/` | Protection | Deep Pocket |
-| 23 | Pet-Proof Mattress Protector | `/product/pet-proof-mattress-protector/` | Protection | Pet Owner |
-| 24 | 6-Sided Mattress Encasement | `/product/mattress-encasement-general/` | Protection | Marine & Yacht, RV & Truck Cab |
-| 25 | RV & Truck Mattress Encasement | `/product/rv-truck-mattress-encasement/` | Protection | RV & Truck Cab |
-| 26 | Pillow Protector | `/product/pillow-protector-general/` | Protection | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
-| 27 | BedBridge Connector | `/product/bedbridge-connector/` | Accessories | Family & Co-Sleep |
-| 28 | Easy Bed Maker & Mattress Lifter | `/product/mattress-lift-helper/` | Accessories | — |
-| 29 | Marine Mattress Protector | `/product/marine-mattress-protector/` | Protection | Marine & Yacht |
+| 11 | Co-Sleeping Top Sheet | `/product/co-sleeping-top-sheet/` | Sheets | Family & Co-Sleep |
+| 12 | 3-Sided Zipper Duvet Cover | `/product/3-sided-duvet/` | Duvet Covers | Family & Co-Sleep |
+| 13 | Pet Owner Duvet Cover | `/product/pet-owner-duvet-cover/` | Duvet Covers | Pet Owner |
+| 14 | Duvet Cover — Marine | `/product/duvet-cover-marine/` | Duvet Covers | Marine & Yacht |
+| 15 | Duvet Cover — RV | `/product/duvet-cover-rv/` | Duvet Covers | RV & Truck Cab |
+| 16 | Duvet Cover — Dorm | `/product/duvet-cover-dorm/` | Duvet Covers | Boarding Dorm |
+| 17 | Duvet Insert | `/product/duvet-insert/` | Duvet Covers | — |
+| 18 | Envelope Pillowcase | `/product/pillowcase-envelope/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
+| 19 | Zipper Pillowcase | `/product/pillowcase-zipper/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
+| 20 | Sham Pillowcase | `/product/pillowcase-sham/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
+| 21 | Marine Mattress Protector | `/product/marine-mattress-protector/` | Protection | Marine & Yacht |
+| 22 | Mattress Protector — Standard | `/product/mattress-protector-standard/` | Protection | — |
+| 23 | Mattress Protector — Family | `/product/mattress-protector-family/` | Protection | Family & Co-Sleep |
+| 24 | Mattress Protector — Deep Pocket | `/product/mattress-protector-deep-pocket/` | Protection | Deep Pocket |
+| 25 | Pet-Proof Mattress Protector | `/product/pet-proof-mattress-protector/` | Protection | Pet Owner |
+| 26 | 6-Sided Mattress Encasement | `/product/mattress-encasement-general/` | Protection | Marine & Yacht, RV & Truck Cab |
+| 27 | RV & Truck Mattress Encasement | `/product/rv-truck-mattress-encasement/` | Protection | RV & Truck Cab |
+| 28 | Pillow Protector | `/product/pillow-protector-general/` | Protection | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
+| 29 | BedBridge Connector | `/product/bedbridge-connector/` | Accessories | Family & Co-Sleep |
+| 30 | Easy Bed Maker & Mattress Lifter | `/product/mattress-lift-helper/` | Accessories | — |
+| 31 | Weighted Blanket Cover | `/product/weighted-duvet-cover/` | Duvet Covers | — |
 
 ---
 
-## Configurator Pricing Status
+## Configurator Pricing Status (Web storefront template scope)
 
-**26 of 29 products** have live pricing formulas (all requiring a configurator). **3 products** are fixed-price and need no configurator (see section below).
+**27 of 30 core products** have live pricing formulas (all requiring a configurator). **3 core products** are fixed-price and need no configurator (see section below). Runtime extension `weighted-duvet-cover` is formula-driven via duvet logic + derived markup parameter.
 
 All product detail pages use the shared `public/js/product-configurator.js` which auto-detects the product type from the URL path and applies the correct pricing formula. The full workflow is: [Custom Size] → enter dimensions → live price → [Custom Quote] → popup form (Name/Email) → POST `/api/quote` → Resend email to contact@mildmate.com.
 
@@ -299,7 +566,9 @@ Size dropdowns on all product pages are auto-populated from `public/js/product-s
 
 USD prices displayed as whole dollars (no decimals).
 
-### Products with Live Pricing Formula (26 of 29)
+**Important:** Effective markups/cost constants are runtime-configurable via D1 `pricing_params` (Super Admin Pricing Params). Do not assume static defaults in this section as live production values.
+
+### Products with Live Pricing Formula (27 of 30)
 
 | Product | Formula | Server Function | Markup |
 |---|---|---|---|
@@ -314,6 +583,7 @@ USD prices displayed as whole dollars (no decimals).
 | Marine Mattress Protector | Marine V-Berth formula path | `calcVBerthFitted()` | 680% margin |
 | Flat Sheet — Standard | Flat sheet | `calculateFlatSheetPrice()` | 15/20/30% |
 | Flat Sheet — Extra Deep Pocket | Flat sheet | `calculateFlatSheetPrice()` | 15/20/30% |
+| Co-Sleeping Top Sheet | Flat/top-sheet formula | `calculateFlatSheetPrice()` | 15/20/30% |
 | 6-Sided Mattress Encasement | Encasement (TPU) | `calculateEncasementPrice()` | 15/25/50% |
 | RV & Truck Mattress Encasement | Encasement (TPU) | `calculateEncasementPrice()` | 15/25/50% |
 | 3-Sided Zipper Duvet Cover | Duvet cover | `calculateDuvetPrice()` | 15/20/30% |
@@ -321,6 +591,7 @@ USD prices displayed as whole dollars (no decimals).
 | Duvet Cover — RV | Duvet cover | `calculateDuvetPrice()` | 15/20/30% |
 | Duvet Cover — Marine | Duvet cover | `calculateDuvetPrice()` | 15/20/30% |
 | Pet Owner Duvet Cover | Duvet cover | `calculateDuvetPrice()` | 15/20/30% |
+| Weighted Blanket Cover (`weighted-duvet-cover`) | Derived duvet formula | `calculateDuvetPrice()` + `derived_markup_weighted-duvet-cover` | configurable uplift (default 10%) |
 | Envelope Pillowcase | Pillowcase | `calculatePillowcasePrice()` | 15/25/15% |
 | Zipper Pillowcase | Pillowcase | `calculatePillowcasePrice()` | 15/25/15% |
 | Sham Pillowcase | Pillowcase | `calculatePillowcasePrice()` | 15/25/15% |
@@ -364,15 +635,20 @@ Marine Fitted Sheet uses a **V-Berth-specific configurator** with hybrid pricing
 - Shape prices discounted 30% from original: A=$94, B=$111, C=$125, D=$125, E=$138, F=$110, G=$108, H=$132
 - Responsive: desktop 4-col, tablet 2×2, mobile 1-col stack
 
-All 29 products now have live pricing formulas or don't require configurators.
+All 30 core catalog products now have live pricing formulas or don't require configurators.
+
+> Note: Marketing Decision System reconciliation tracks canonical D1 identity separately at 32 active products (including IDs 33 and 34).
 
 ---
 
-## Database Schema (24 tables, 23 active)
+## Database Schema (current runtime model)
 
-- `products` — product catalog (slug, title_en/th, description_en/th, faq_en/th, card_benefit_en/th, category, product_type, niches, fabric_options, base_price_usd/thb, image_url, images JSON, youtube_url, tags, is_custom, is_active, sort_order)
-- `orders` — customer orders (stripe_session/payment IDs, email, dimensions W/L/D in cm+inch, fabric, color, price, discount_code, shipping tracking fields, status, customer_note_type/customer_note)
-- `custom_quotes` — quote requests (quote_id, name, email, address, telephone, dimensions JSON, fabric, color, status, quoted_price, expires_at)
+- `products` — product catalog (slug, title_en/th, description_en/th, faq_en/th, card_benefit_en/th, category, product_type, niches [legacy compatibility], fabric_options, base_price_usd/thb, image_url, images JSON, youtube_url, tags, is_custom, is_active, sort_order)
+- `product_niches` — true specialization mapping (product_id ↔ niche_type)
+- `product_collections` — merchandising visibility mapping for niche landing pages (product_id ↔ collection_type)
+- `orders` — customer orders (stripe_session/payment IDs, email, dimensions W/L/D in cm+inch, fabric, color, price, discount_code, shipping tracking fields, status, customer_note_type/customer_note, quote_id [Tier 1 exact quote→order attribution, migration 059])
+- `checkout_session_snapshots` — Stripe checkout session snapshot store (session_id keyed), used as source-of-truth for webhook line-item reconstruction and dimension durability
+- `custom_quotes` — quote requests (quote_id, name, email, address, telephone, dimensions JSON, fabric, color, free_shipping, status, quoted_price, expires_at)
 - `abandoned_carts` — email + cart JSON for recovery (recovered flag, recovery_stage, recovery_sent_at, discount_code)
 - `subscribers` — email signup list (dedup: quote form also inserts here, language field)
 - `rate_limits` — IP-based rate limiting for anti-spam (quote: 3/hr, subscribe: 5/hr)
@@ -380,7 +656,8 @@ All 29 products now have live pricing formulas or don't require configurators.
 - `discount_claims` — discount code usage tracking (migration 002_discount_claims)
 - `favorites` — authenticated user wishlist (user_id, product_id, created_at)
 - `recovery_stages` — abandoned cart stage timestamps per cart (migration 017)
-- `recovery_config` — email config: Stage 2 discount pct/enabled, Stage 3 discount pct/enabled, basket threshold USD, expiry days (migration 018)
+- `recovery_config` — email config: Stage 2 discount pct/enabled, Stage 3 discount pct/enabled, basket threshold USD, expiry days, thankyou discount/hours, quote follow-up keys (enabled/age_hours/expiry_window_days/daily_cap/email_cooldown_hours) (migrations 018, 059)
+- `quote_followup_events` — quote follow-up send audit trail (quote_id, email, stage, status sent/failed/skipped, sent_at, run_source; UNIQUE(quote_id, stage) for idempotency) (migration 059)
 - `thankyou_queue` — post-purchase discount emails pending delivery (base from migration 020: id, order_id, email, discount_code, discount_pct, send_after, sent; operational columns `sent_at` and `last_error` are auto-added by dispatch handler if missing)
 - `marketing_campaigns` — Super Admin campaign records for Marketing "Run a Sale" module (created/ensured by API handler)
 - `promo_codes` — admin-created custom promo codes with optional `free_shipping` flag (migration 021, 035)
@@ -391,10 +668,16 @@ All 29 products now have live pricing formulas or don't require configurators.
 - `countries_master` — country lookup list (migration 016)
 - `reviews` — dynamic product reviews (migration 024, 025)
 - `site_templates` — centralized templates for header/footer (migration 024)
-- `shipping_product_tiers` — tier mapping for all 29 products (migration 027, 030, 038 update)
+- `shipping_product_tiers` — tier mapping for canonical sellable product slugs (migration 027, 030, 038 + runtime/D1 extension for `weighted-duvet-cover`)
 - `shipping_add_rates` — global additional shipping costs per tier (migration 028, 029, 030)
+- `sales_orders` — normalized source order header table for external sales sync (migration 039_unified_sales_analytics)
+- `sales_order_items` — line-level source item table with revenue status and mapping fields (migration 039_unified_sales_analytics)
+- `sync_runs` — ingestion run telemetry for sync observability (migration 039_unified_sales_analytics)
+- `quote_acquisition_attribution` — quote acquisition-attribution facts used by the GA4 lead-acquisition feasibility audit (migration 060)
+- `ga4_lead_acquisition_daily` — GA4 lead-event facts (`generate_lead`/`quote_request`) at daily session-acquisition grain for the canonical website property 308922589, with per-row `users_available` semantics (migration 061)
+- `analysis_ga4_lead_freshness` — lead-sync freshness view over `ga4_lead_acquisition_daily` + `sync_runs` source `ga4-lead-worker-cron:website` (migration 061)
 
-Active migrations (in order): 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet
+Active migrations (in order): 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet, 039_co_sleeping_top_sheet, 039_unified_sales_analytics, 040_boat_model_year_price, 041_boat_model_label, 042_marketing_analysis_layer, 043_product_mapping_aliases, 044_product_mapping_events, 045_marketing_sync_state, 046_gsc_analytics, 047_gsc_freshness_sources, 048_ga4_analytics, 049_etsy_analytics, 050_google_ads_analytics, 053_profitability_layer, 054_opportunity_engine, 055_ga4_multi_property, 056_ga4_property_unique_rebuild, 057_stripe_payment_idempotency, 058_products_seo_tagline_cta_fields, 059_quote_tier1_pipeline, 060_quote_acquisition_attribution, 061_ga4_lead_acquisition
 
 ---
 
@@ -439,7 +722,7 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── images/                        ← Products, categories, fabrics, hero, router
 │   ├── _redirects                    ← 301 redirects (WordPress era + Phase 2 SEO URLs)
 │   ├── _headers                      ← Security headers (CSP, HSTS)
-│   ├── product/                      ← 29 EN product detail pages (static HTML)
+│   ├── product/                      ← 31 EN product detail pages (static HTML, including `weighted-duvet-cover`)
 │   ├── th/product/                    ← 27 TH product detail pages (≨️ Pending — not yet generated from templates)
 │   ├── sheets/duvet-covers/pillowcases/protection/accessories/  ← EN+TH category listings
 │   ├── marine/family/deep-pocket/boarding-dorm/pets/rv-truck/  ← EN+TH SEO landing pages
@@ -469,7 +752,7 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── r2/
 │   │   └── [[path]].ts               ← R2 file serving (CDN URLs)
 │   ├── blog-shared.ts               ← Shared blog SSR renderer (used by blogs/ + th/blogs/)
-│   └── cron.ts                        ← Abandoned cart + thankyou_queue cron job
+│   └── cron.ts                        ← Abandoned cart + thankyou_queue cron logic — OFFLINE TEST FIXTURE ONLY (email-safety vitest suite); production cron is the separate Worker `mildmate-cron` in `cron-worker/`
 ├── workers/api/
 │   ├── index.ts                       ← Main Worker entry (routes all /api/*)
 │   ├── products.ts                   ← Public products catalog API
@@ -503,6 +786,7 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── admin-shipping.ts            ← Admin: shipping rates CRUD (THB-only, OTHER protected)
 │   ├── admin-stats.ts                ← Admin: dashboard statistics
 │   ├── admin-orders.ts              ← Admin: GET/PUT orders (status + Option A shipping tracking)
+│   ├── admin-analysis.ts            ← Marketing analysis read API (summary/sales/products/channels/data-quality/gsc/ga4/etsy/google-ads/growth-signals/profitability/opportunity/quotes — includes Tier 1 GET /api/admin/analysis/quotes)
 │   ├── admin-customers.ts           ← Admin: customers grouped by email from D1
 │   ├── admin-diy.ts                  ← Admin: GET/PUT DIY prices
 │   ├── admin-exchange.ts             ← Admin: GET/PUT exchange rates
@@ -510,7 +794,10 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── admin-contacts.ts             ← Admin: contacts management
 │   ├── admin-offers.ts               ← Admin: GET/POST marketing offers config in D1 `recovery_config`
 │   ├── admin-campaigns.ts            ← Admin: GET/POST/DELETE marketing campaigns in D1 `marketing_campaigns`
+│   ├── admin-accounts.ts             ← Admin: account management
+│   ├── boat-models.ts                ← Public boat-model registry API
 │   ├── admin-templates.ts           ← Admin: header/footer template management (D1 site_templates)
+│   ├── sales.ts                      ← Sales sync API (`/v1/*` + `/api/v1/*`, token-protected)
 │   ├── color-inventory.ts           ← Public: GET `/api/color-inventory` (in_stock map, 60s cache)
 │   └── admin-color-inventory.ts     ← Admin: GET/PUT `/api/admin/color-inventory` (JWT validity check, X-Admin-Secret fallback)
 ├── templates/
@@ -519,13 +806,13 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── product-marine.html          ← Dedicated V-Berth Marine Fitted Sheet template (hybrid shape selector + custom dims)
 │   └── blog-post.html               ← Template for blog posts (has global header + footer)
 ├── scripts/
-│   ├── build-products.js            ← Generates all 29 product pages from templates
+│   ├── build-products.js            ← Generates all 30 product pages from templates
 │   └── build-blogs.js               ← Generates blog posts from templates
 ├── data/
 │   ├── products.json                ← Source of truth for product catalog
 │   ├── product-content.json         ← Tab content, reviews, tags per product
 │   └── blog-posts.json              ← Blog post content
-├── migrations/                       ← 42 migration files currently in repo (001–038 range, including split 024/031 numbering families)
+├── migrations/                       ← 60 migration files currently in repo (001–059 range, including split 024/031/039 numbering families)
 │   ├── 001_initial.sql             ← products/orders/abandoned_carts/subscribers/rate_limits
 │   ├── 002_add_tags.sql             ← tags column on products
 │   ├── 002_discount_claims.sql       ← discount_claims table
@@ -561,7 +848,27 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── 035_promo_free_shipping.sql  ← adds `free_shipping` boolean column to promo_codes
 │   ├── 036_fabric_color_inventory.sql ← `fabric_color_inventory` table + seed 24 colors (Sky + Baby Pink pre-seeded OOS)
 │   ├── 037_boat_models.sql           ← `boat_models` registry for marine auto-fill lookup
-│   └── 038_marine_top_sheet.sql      ← seeds `marine-top-sheet` product + shipping tier mapping
+│   ├── 038_marine_top_sheet.sql      ← seeds `marine-top-sheet` product + shipping tier mapping
+│   ├── 039_co_sleeping_top_sheet.sql ← seeds `co-sleeping-top-sheet` product + shipping tier mapping
+│   ├── 039_unified_sales_analytics.sql ← sales sync tables (`sales_orders`, `sales_order_items`, `sync_runs`)
+│   ├── 040_boat_model_year_price.sql ← boat-model year pricing support
+│   ├── 041_boat_model_label.sql      ← boat-model label support
+│   ├── 042_marketing_analysis_layer.sql ← analysis views (10 views) for Data Analyst
+│   ├── 043_product_mapping_aliases.sql / 044_product_mapping_events.sql ← mapping memory (043 applied to prod)
+│   ├── 045_marketing_sync_state.sql ← Phase 17 Notion→D1 sync state
+│   ├── 046_gsc_analytics.sql / 047_gsc_freshness_sources.sql ← GSC analytics (Phase 09)
+│   ├── 048_ga4_analytics.sql / 055_ga4_multi_property.sql / 056_ga4_property_unique_rebuild.sql ← GA4 (Phase 10)
+│   ├── 049_etsy_analytics.sql        ← Etsy performance (Phase 11)
+│   ├── 050_google_ads_analytics.sql  ← Google Ads (Phase 12)
+│   ├── 053_profitability_layer.sql   ← cost-model tables/views (Phase 13)
+│   ├── 054_opportunity_engine.sql    ← opportunity models + scores (Phase 14)
+│   ├── 057_stripe_payment_idempotency.sql ← Stripe payment idempotency
+│   ├── 058_products_seo_tagline_cta_fields.sql ← products SEO tagline/CTA fields
+│   ├── 059_quote_tier1_pipeline.sql ← Tier 1 quote pipeline (orders.quote_id, quote_followup_events, config seeds)
+│   ├── 060_quote_acquisition_attribution.sql ← quote acquisition-attribution facts
+│   └── 061_ga4_lead_acquisition.sql ← GA4 lead-acquisition layer (ga4_lead_acquisition_daily, indexes, freshness view)
+├── cron-worker/                      ← Production recovery + quote follow-up cron Worker `mildmate-cron` (bound to mildmate-db-prod; hourly 0 * * * *)
+├── marketing-sync-worker/            ← Phase 09–12 collectors + Phase 17 Notion→D1 sync Worker `mildmate-marketing-sync` (daily cron 0 1 * * *, weekday dispatch)
 └── MildMateDataBase/ExistingWeb/    ← WordPress URL source data
 ```
 
@@ -575,12 +882,28 @@ D:\00_MildMate\Re-Build_Web\
 
 ---
 
-## Notes for Future Droid Sessions
+## Clerk Production Cutover — Deployed Reconciliation (2026-10-22)
+
+Work originated on branch `clerk/production-cutover` and is now deployed (production deployment `64558b3a`, commit `daa83ec` verified in prior deployment checks). Reconciled state:
+
+- **`workers/api/clerk-verify.ts`** — env-driven Clerk config: `CLERK_ISSUER` + `CLERK_JWKS_URL` secrets with Development-instance fallback (`kind-joey-29`). Per-URL JWKS cache (dev/prod keys never collide). Strict issuer matching in production mode (dev JWTs can never validate on prod); permissive dev-instance fallback only when no env vars set. **Fail-closed guard added (2026-10-19 release audit):** requests arriving on `www.mildmate.com` / `mildmate.com` with Clerk Production config MISSING are rejected 503 (`Auth service unavailable`) — production never falls back to Development-instance JWT verification.
+- **CSP host split (2026-10-19 release audit):** `public/_headers` ships PRODUCTION-ONLY Clerk origins (`clerk.mildmate.com https://accounts.mildmate.com`) — Development domain removed from the static CSP so it is fail-closed on prod for all asset-served pages. `functions/product/[[path]].ts` + `functions/quote/[[path]].ts` now build CSP host-aware (`clerkCspOrigins(request.url)` / inline IIFE): prod hosts get Production domains only, `.pages.dev`/localhost get the Development instance. `functions/_middleware.ts` re-injects the Development Clerk origins into responses for dev/preview hosts only (`isDevCspHost` + `allowDevClerkOrigins`), so preview rehearsals keep working without weakening the production CSP.
+- **`workers/api/admin-auth.ts`** (NEW) — shared admin authorization: AND logic (admin/super-admin role claim AND email in `ADMIN_EMAILS`), `BLOCKED_EMAILS` denylist, Clerk Backend API enrichment, `X-Admin-Secret` fallback blocked on production unless `ADMIN_SECRET_ALLOW_PROD=true`.
+- **`functions/admin/_middleware.ts` + `functions/account/_middleware.ts`** — AND-logic admin gate, `CLERK_ACCOUNTS_DOMAIN` env var (default `accounts.mildmate.com`), shared `isDevelopmentAuthHost()` helper (pages.dev / localhost / http-loopback). `functions/super-admin/_middleware.ts` re-exports admin middleware (inherits all of it).
+- **`public/js/clerk.js`** — host-aware publishable-key selection: `pk_live` (production, `clerk.mildmate.com`) only on `www.mildmate.com`/`mildmate.com`; dev key everywhere else, so local/preview tests never touch the Production Clerk instance. Prod accounts-domain derivation `clerk.mildmate.com` → `accounts.mildmate.com`.
+- **CSP updated** (all three copies: `public/_headers`, `functions/product/[[path]].ts`, `functions/quote/[[path]].ts` + runtime bundles): `https://clerk.mildmate.com https://accounts.mildmate.com` added to script-src / connect-src / frame-src alongside the dev instance.
+- **`public/js/nav.js`** — sign-in fallback URL now host-aware (`accounts.mildmate.com` on prod, dev instance otherwise).
+- **Runtime parity:** `public/index.js` hand-mirrored; `public/_worker.js` rebuilt via `extract-worker.ps1` (917,354 chars, valid JS, new markers verified).
+- **Tests:** new offline suite `workers/api/__tests__/clerk-verify-issuer.test.ts` (7 tests, all pass, stubbed JWKS fetch — no live services touched). Full suite: 46/47 pass; the 1 failure (`keeps mobile delayed GTM initialization guardrails` in `stripe-purchase-hardening.test.ts`) is PRE-EXISTING and unrelated — `public/order-confirmed/index.html` is missing the `startOnce` GTM guardrails entirely (GA/GTM workstream, not Clerk).
+- **Deployment reconciliation:** no additional Clerk cutover deploy steps remain in this document. Continue using the existing production secrets and deploy workflow for future edits. `BLOCKED_EMAILS` policy should still be owner-reviewed before any denylist changes.
+
+
 
 - **ALWAYS read `Framework.md` at the start of every session** — it contains the full site blueprint, page layouts, design system, database schema, and build phases. AGENTS.md is summary memory; Framework.md is the complete specification.
-- **Centralized Product Template System:** All 29 product pages are generated from three templates (`templates/product-customizable.html`, `templates/product-fixed.html`, `templates/product-marine.html`) via `scripts/build-products.js`. Data sources: `data/products.json` + `data/product-content.json`. To update product page UI: edit the template and rerun `node scripts/build-products.js`. To update product content (tab text, reviews, tags): edit `data/product-content.json` and rebuild. Never edit individual product pages directly — always use the template system.
+- **Centralized Product Template System:** The 30-product core catalog is generated from three templates (`templates/product-customizable.html`, `templates/product-fixed.html`, `templates/product-marine.html`) via `scripts/build-products.js`. Data sources: `data/products.json` + `data/product-content.json`. To update product page UI: edit the template and rerun `node scripts/build-products.js`. To update product content (tab text, reviews, tags): edit `data/product-content.json` and rebuild. Never edit individual product pages directly — always use the template system.
 - **Rule of thumb (new product pages):** Always set a **feature-image placeholder** at creation time (`/images/placeholder.jpg`) in both data/migration paths. Replace with final product image later from Super Admin upload/editor.
 - **Fabric Specs Grids (replacing dropdowns):** Products with locked/exclusive fabrics show a material specs grid instead of a fabric dropdown. TPU products (encasements, pillow protector): TPU Waterproof Membrane + Water Spills & Accidents. 3-layer protectors: Cotton Quilted + Polyester Filling + TPU Waterproof. BreezePlus-only (pet products): Pet Hair Resistant + Cool-to-the-Touch + 50/50 Blend. CloudSoft-only (marine/RV): Quick-Dry + Moisture-Wicking + 100% Polyester Microfiber.
+- **Pet-Proof protector lock (reconciled 2026-09):** `pet-proof-mattress-protector` must stay in the 3-layer TPU class in D1 product config and checkout runtime normalization (no BreezePlus assignment).
 - **Fabric Color Selector:** Products with fabric choices show per-fabric color swatches in a 6-column CSS grid. Each fabric has its own color set matching `/fabric/` data (BreezePlus: 9, CloudSoft: 12, PremaCotton: 1, EcoLuxe: 1). Label updates and swatches swap when fabric selection changes. White/light colors are visible via border + inset shadow.
 - **Centralized Blog Template System:** Blog posts are generated from `templates/blog-post.html` via `scripts/build-blogs.js`. Data source: `data/blog-posts.json`. To add a new blog post: add a JSON entry + run `node scripts/build-blogs.js`. To update blog UI: edit the template and rebuild. The blog post template uses the same 4-col footer as product pages.
 - Always check `wrangler.toml` before running `npx wrangler` commands
@@ -593,24 +916,32 @@ D:\00_MildMate\Re-Build_Web\
 - **Global Middleware (`functions/_middleware.ts`):** Injects centralized header/footer from D1 `site_templates` table (falls back to embedded chrome). Dynamically rewrites nav links and footer for Thai pages (`<html lang="th">`). Rewrites `lang-toggle` EN/TH links for both desktop and mobile drawer. Legacy product slug redirects (Phase 2). Skips `/admin/`, `/super-admin/`, `/api/`, `/r2/`, static assets.
 - **JSON-LD (deployed):** `functions/_middleware.ts` injects Organization + WebSite globally and FAQPage on `/faq/`; `functions/product/[[path]].ts` injects Product schema on product pages; `functions/blog-shared.ts` injects Article schema for blog post SSR (`/blogs/{slug}/`, `/th/blogs/{slug}/`).
 - **Thai Blog SSR (`functions/th/blogs/[[path]].ts`):** SSR listing and post pages for `/th/blogs/` via D1 — not static HTML files. Uses same `buildBlogListingHTML` / `buildBlogPostHTML` from `functions/blog-shared.ts` with `"th"` language flag.
+- **TH blog SSR architecture (2026-09-12):** All blog pages are SSR (no static files in `public/blogs/` or `public/th/blogs/` for listing/posts). `functions/blog-shared.ts` is the single source-of-truth renderer; both `/blogs/` and `/th/blogs/` call it with `lang="en"` or `lang="th"`. Pages Function loads D1 `blog_posts WHERE status='published'` and renders inline. Hand-curated Thai fields (`title_th`, `body_th`, `meta_description_th`, `featured_image_alt_th`, `read_time_th`) flow through when present, falling back to EN. EN+TH cross-linking is bidirectional on listing pages (each card links to `/blogs/{slug}/` from TH listing and `/th/blogs/{slug}/` from EN listing).
+- **Blog SEO tags rule (2026-09-12):** Every blog page (listing + post) must ship `<link rel="canonical">` + `<link rel="alternate" hreflang="en">` + `<link rel="alternate" hreflang="th">` in `<head>`. Listing canonicals are self-referencing with `?page=N` parameter; post canonicals are absolute URLs to `/blogs/{slug}/` (EN) or `/th/blogs/{slug}/` (TH). Hreflang en/th cross-reference between listing pages and between individual post pages. All canonical + hreflang URLs use the absolute `https://www.mildmate.com` prefix.
 - **Product SSR (`functions/product/[[path]].ts`):** Fetches static HTML and applies D1 image overrides (main image + up to 6 thumbnails from `image_url` + `images` JSON column). Also handles legacy product slug redirects.
 - **Checkout origin rule (critical):** Stripe checkout success/cancel URLs must use `new URL(request.url).origin` (localhost exception only). This prevents preview checkout from redirecting users to production.
 - **Runtime parity rule (critical):** After checkout/webhook changes, ensure deployed worker artifacts stay in sync (`workers/api/*` ↔ `public/index.js` ↔ `public/_worker.js`) to avoid stale runtime behavior.
+- **Checkout snapshot rule (critical, 2026-09):** Keep order-dimension durability path intact, `workers/api/checkout.ts` must continue writing full `checkout_session_snapshots`, and `workers/api/webhook.ts` must keep snapshot-first read with metadata fallback only.
+- **Admin orders guardrail rule (critical, 2026-09):** Preserve `missing_configurable_rows` / `affected_orders` output in `workers/api/admin-orders.ts` and corresponding warning + **Missing Dims** badges in `public/super-admin/index.html`.
 - **Contact API parity rule (critical):** `/contact/` submits `{name,email,inquiry_type,message}` (no `subject`). Keep `workers/api/contact.ts`, `public/index.js`, and `public/_worker.js` aligned so backend accepts `inquiry_type` and derives fallback subject (`subject || inquiry_type || "General Inquiry"`); otherwise contact form fails with old "All fields are required..." validation.
 - **Turnstile protection rule (critical):** Contact + quote flows now require Cloudflare Turnstile token verification. Keep these paths in sync: `public/contact/index.html`, `public/th/contact/index.html`, `public/js/product-configurator.js` ↔ `workers/api/contact.ts`, `workers/api/quote.ts` ↔ runtime bundles (`public/index.js`, `public/_worker.js`). Requests must include `turnstile_token` (or `cf-turnstile-response`) and Worker must verify using `TURNSTILE_SECRET_KEY`.
 - **Fabric Color Inventory system (implemented 2026-07-12):** `fabric_color_inventory` table (migration 036) stores `in_stock` per fabric+color. Public GET `/api/color-inventory` (60s cache) is fetched by `product-configurator.js` on page load; OOS swatches get `.out-of-stock` class (opacity 0.3 + diagonal strikethrough), clicks blocked. On fabric switch the inventory is re-applied. Super Admin Color Inventory page (`rColorInventory()`) shows visual swatch grid per fabric with real-time checkbox toggles and toast feedback. Admin API at `/api/admin/color-inventory` (GET/PUT) uses JWT validity check only — no email allowlist (matches existing auth pattern).
 - **Free shipping promo codes (implemented, migration 035):** `promo_codes` table has a `free_shipping` BOOLEAN column. When a promo code with `free_shipping = 1` is applied at checkout, shipping is zeroed. Super Admin Promo Codes table shows a "Free Ship" column. Keep `workers/api/checkout.ts`, `workers/api/discount.ts`, `public/checkout/index.html`, and runtime bundles in sync when editing promo code logic.
+- **Quote free-shipping flow (updated 2026-08):** `custom_quotes.free_shipping` is set at quote creation in Super Admin; the quote manager no longer has a post-creation free-shipping toggle. Quote magic-link add-to-cart redirects directly to `/checkout/`, and checkout must evaluate quote-based free shipping (not promo-only). Keep parity across `workers/api/*`, `functions/quote/[[path]].ts`, `public/checkout/index.html`, `public/index.js`, and `public/_worker.js`.
 - **Product H1 / breadcrumb title fix (deployed 2026-07):** `functions/product/[[path]].ts`, `public/_worker.js`, `public/index.js` now always replace H1 and breadcrumb from D1 `title_en` / `title_th` (unconditionally, no `if (isTh)` guard). This fixed mismatches where static HTML title differed from D1 title. Verified 28/28 slugs EN + 28/28 TH. Any future H1/breadcrumb edits must be applied to all three files.
 - **Family / Co-Sleep size presets (implemented 2026-07):** `product-configurator.js` `populateSizeSelect()` uses `PRODUCT_SIZES['family']` when `isFamily || isProtectorFamily` (i.e., `family-fitted-sheet` and `mattress-protector-family`). Family size entries lack a depth field so a safe default `d = s.d ?? 30` is used. Standard-size tab on those pages now shows Family/Co-Sleep combined sizes.
 - **Shipping Tier 3 additional rate (changed 2026-07):** `shipping_add_rates.add_thb` for `tier = 3` (pillowcase-type products) was reduced from ฿150 → ฿50 (~$1.50/item). Applied to both `mildmate-db-prod` and `mildmate-db` (preview). No code change needed — checkout reads rate dynamically from D1.
 - **Marketing is D1-backed (no localStorage source of truth):** Super Admin Send Offers reads/writes via `/api/admin/offers` (`recovery_config`), and Run-a-Sale campaigns use `/api/admin/campaigns` (`marketing_campaigns` ensured in D1).
 - **Thank-you dispatch operations:** `/api/admin/thankyou-dispatch` manually sends due thank-you emails and returns per-item sent/failed/skipped diagnostics (including email lists) for operations visibility.
 - **Thank-you dedupe policy (implemented):** `workers/api/webhook.ts` avoids queue duplicates for the same `order_id` and suppresses new thank-you issuance when an active issued thank-you code already exists for the email; reissue is allowed after used/expired.
-- **D1-backed Product Reviews:** GET `/api/products/:slug/reviews` returns up to 10 reviews sorted by: Tier 0 (niche match w/photo), Tier 1 (product match w/photo), Tier 2 (marketplace), Tier 3 (other) — newest first within each tier. Product templates (`templates/product-customizable.html`, `templates/product-fixed.html`, `templates/product-marine.html`) include a dynamic reviews carousel container (`#product-reviews-track` + arrows + dots). `public/js/reviews-carousel.js` contains `loadProductPageReviews(slug)` which auto-detects `/product/{slug}/` from URL, fetches reviews, renders cards with conditional photo (1:1 square) and "Show more" toggle (only shown if text > 280 chars), updates summary text ("1,000+ verified buyers"), and initializes carousel. Rebuild all 29 product pages via `node scripts/build-products.js` after template changes.
-- **product_type + niches columns:** Added to the `products` D1 table. `product_type` is a single value (sheets, duvet-covers, pillowcases, protection, accessories). `niches` is a comma-separated list of niche slugs (marine, family, pets, deep-pocket, boarding-dorm, rv-truck). Auto-populated from existing `category` CSV column (first value = product_type, rest = niches). The API lists products at `/api/products` now supports `?product_type=` and `?niche=` query params alongside the legacy `?category=` filter.
+- **D1-backed Product Reviews:** GET `/api/products/:slug/reviews` returns up to 10 reviews sorted by: Tier 0 (niche match w/photo), Tier 1 (product match w/photo), Tier 2 (marketplace), Tier 3 (other) — newest first within each tier. Product templates (`templates/product-customizable.html`, `templates/product-fixed.html`, `templates/product-marine.html`) include a dynamic reviews carousel container (`#product-reviews-track` + arrows + dots). `public/js/reviews-carousel.js` contains `loadProductPageReviews(slug)` which auto-detects `/product/{slug}/` from URL, fetches reviews, renders cards with conditional photo (1:1 square) and "Show more" toggle (only shown if text > 280 chars), updates summary text ("1,000+ verified buyers"), and initializes carousel. Rebuild all 30 product pages via `node scripts/build-products.js` after template changes.
+- **Taxonomy model (reconciled 2026-08):** `product_type` remains on `products`; true specialization now lives in `product_niches`; merchandising visibility for niche pages lives in `product_collections`; legacy `products.niches` remains as compatibility fallback. `/api/products?niche=...` now checks `product_collections` first, then legacy fallback.
 - **Homepage card parity (current):**  
   - **Shop by Product:** 6 cards (Sheets, Duvet Covers, Pillowcases, Protection, Accessories, All Products `/products/`)  
   - **Choose Your Application:** 6 niche cards (Marine & Yacht, Family & Co-Sleep, Deep Pocket, Pet Owner, Boarding Dorm, RV & Truck)
 - **Homepage readability pass (current):** Option A / Alternative 2 applied on EN+TH with consistent color hierarchy (dark-charcoal primary text, medium-grey supporting text, blue for actions/highlights) plus mobile readability/tap-target improvements.
 - **Homepage color hierarchy pass (current):** Applied on EN+TH homepage sections — primary copy uses dark charcoal, supporting copy uses medium grey, and CI blue is reserved for actions/highlights only.
 - **CSS variable note:** `public/css/main.min.css` is the minified stylesheet (not `main.css`). TH static pages (`th/about/`, `th/contact/`, `th/fabric/`, `th/sizeguide/`, `th/policy/`, `th/shipping/`, `th/reviews/`, `th/faq/`, `th/custom-measurement/`, `th/how-to-measure-mattress-size/`) use inline `<style>` blocks — some with older CSS variable values (e.g., `--color-text: #333333` vs current `#1E293B`). TH homepage (`th/index.html`) uses the updated brand tokens.
+- **Wrangler Pages Functions bundle workflow (critical, 2026-09-12):** Editing `functions/**/*.ts` requires a manual bundle rebuild because the project deploys with `--no-bundle`. Steps: (1) `npx wrangler pages functions build --outfile 'public\_worker.js'`; (2) run `extract-worker.ps1` to extract the actual JS from wrangler's formdata-multipart output (skip `Content-Type: application/javascript+module` marker + empty line, cut at next `------formdata-undici-` boundary, write back via `Out-File -Encoding UTF8 -NoNewline`); (3) `npx wrangler pages deploy ./public --project-name=mildmate-new --commit-dirty=true --branch=master --no-bundle`. **Without `--no-bundle`, wrangler re-runs the build and overwrites the extracted `_worker.js` with formdata again.** This applies to every Pages Function edit — re-running steps 1–3 after each `functions/**/*.ts` change is mandatory.
+- **TH product page localization architecture (2026-09-12):** The Pages Function at `functions/product/[[path]].ts` always loads the EN static HTML (`/product/{slug}/index.html`) and patches fields for `/th/product/{slug}/` requests. TH static files at `/th/product/*/index.html` are dead code — never served. All TH product-page localization happens server-side in the Pages Function (TH_BREADCRUMB_CATEGORY_LABELS, TH_MARINE_SHAPE_LABELS, TH_STATIC_HTML_REPLACEMENTS, `applyThaiProductUiLocalization`) or client-side via `isThaiPage()/t()` in `public/js/product-configurator.js`. See "TH Product Pages Localization (2026-09-12)" section above for the full data model.
+- **Pages Function regex boundary rule (2026-09-12):** When a Pages Function regex substitution could consume a `<` immediately followed by the next tag, always anchor the trailing boundary into the match expression to make the substitution atomic. The Loading reviews closing-tag fix (Phase C Round 3) ate `<` of `</div>` and produced `/div>` until the regex was expanded to include `</div>` in the match: `/id="product-review-count">Loading reviews\.\.\.<\/div>/g` → `id="product-review-count">กำลังโหลดรีวิว...</div>`.

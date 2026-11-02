@@ -62,7 +62,7 @@
     .favorite-btn.active { border-color: #dc2626; background: #fef2f2; }
     .favorite-toast { font-size: 0.75rem; color: var(--color-muted); margin-top: 4px; min-height: 1.2em; }
     .sale-badge { display: inline; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; }
-    .sale-countdown { display: inline; font-size: 0.75rem; color: #dc2626; font-weight: 600; }
+    .sale-countdown { display: inline; margin-left: 8px; font-size: 0.75rem; color: #dc2626; font-weight: 600; }
     .price-strike { text-decoration: line-through; color: var(--color-muted); font-size: 1rem; margin-right: 8px; }
     .price-sale { font-size: 2rem; font-weight: 700; color: #16a34a; }
     .product-tagline { font-size: 1rem; color: #64748b; margin-bottom: 16px; line-height: 1.5; }
@@ -165,8 +165,8 @@
 
     .custom-dimensions { display: none; }
 
-    .dim-diagram { background: #fff; border-radius: var(--radius); padding: 12px; margin-top: 12px; margin-bottom: 16px; text-align: center; border: 1px solid #e2e8f0; }
-    .dim-diagram img { width: 100%; height: auto; display: block; margin: 0 auto; }
+    .dim-diagram { background: #fff; border-radius: var(--radius); padding: 16px; margin-top: 12px; margin-bottom: 16px; text-align: center; border: 1px solid #e2e8f0; overflow: hidden; }
+    .dim-diagram img { width: 100%; max-width: 100%; height: auto; display: block; margin: 0 auto; object-fit: contain; }
     .dim-diagram-caption { font-size: 0.75rem; color: #64748b; margin-top: 6px; }
 
     .dim-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
@@ -331,7 +331,6 @@
     <script>
     (function () {
       var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
 
       function loadScript(src, async) {
         var s = document.createElement('script');
@@ -344,11 +343,7 @@
         if (window.__mildmateAnalyticsLoaded) return;
         window.__mildmateAnalyticsLoaded = true;
         window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
         window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
       }
 
@@ -460,8 +455,8 @@
             </div>
             <div class="unit-warning" id="unit-warning-note">Default: <strong>cm</strong>. Using inches? Switch to <strong>inch</strong> first.</div>
             <div class="dim-diagram">
-              <img src="{{DIM_DIAGRAM_IMG}}" alt="Mattress dimension diagram: Width (W), Length (L), Depth (D)">
-              <p class="dim-diagram-caption">Measure your mattress at its widest, longest, and deepest points</p>
+              <img src="{{DIM_DIAGRAM_IMG}}" alt="{{DIM_DIAGRAM_ALT}}">
+              <p class="dim-diagram-caption">{{DIM_DIAGRAM_CAPTION}}</p>
             </div>
             <div class="dim-inputs{{DIM_INPUTS_CLASS}}">
               <div class="dim-field"><label for="dim-width">Width (W)</label><input type="number" id="dim-width" placeholder="e.g. 153" min="30" max="{{MAX_WIDTH}}"></div>
@@ -697,28 +692,7 @@
       };
 
       // ── Sale Price + Countdown ──
-      function updateSaleDisplay() {
-        var el = document.getElementById('sale-info');
-        var priceEl = document.getElementById('price-display');
-        if (!el || !priceEl) return;
-        var discount = MildMateCampaigns.getDiscountForProduct(productSlug);
-        if (!discount || !discount.discount || !discount.campaign) {
-          el.innerHTML = '';
-          return;
-        }
-        var countdown = MildMateCampaigns.getCampaignCountdown(productSlug);
-        var cdStr = countdown ? ('\u00A0\u00A0(' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)') : '';
-        var html = '<span class="sale-badge">-' + discount.discount + '% SALE</span>' + cdStr;
-        el.innerHTML = html;
-
-        if (!window._saleTimer) {
-          window._saleTimer = setInterval(function() {
-            var cd = MildMateCampaigns.getCampaignCountdown(productSlug);
-            if (!cd) { clearInterval(window._saleTimer); window._saleTimer = null; el.innerHTML = ''; return; }
-            el.innerHTML = '<span class="sale-badge">-' + discount.discount + '% SALE</span>\u00A0\u00A0(' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left)';
-          }, 60000);
-        }
-      }
+      function updateSaleDisplay() { /* retired: sale badge/countdown render next to the price via product-configurator.js (#sale-info-top) */ }
 
       async function hydrateFavorites() {
         if (window.MildMateCampaigns && typeof MildMateCampaigns.syncFavoritesFromServer === 'function') {
@@ -920,9 +894,14 @@
           Array.from(fabSelect.options).forEach(function(o) {
             o.hidden = fabList.indexOf(o.value.toLowerCase()) < 0;
           });
-          // Select first visible option
+          // Select first visible option — dispatch change so the configurator
+          // syncs state.fabric (programmatic .value does not fire the event)
           var first = fabSelect.querySelector('option:not([hidden])');
-          if (first) { fabSelect.value = first.value; }
+          if (first) {
+            var fabChanged = fabSelect.value !== first.value;
+            fabSelect.value = first.value;
+            if (fabChanged) fabSelect.dispatchEvent(new Event('change'));
+          }
 
           // Update pills UI (already generated by configurator before this fetch)
           var pillsWrap = document.querySelector('.selection-pills[data-select-id="fabric-select"]');
