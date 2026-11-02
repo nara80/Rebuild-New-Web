@@ -9,6 +9,7 @@
 // GET /api/admin/analysis/data-quality
 // GET /api/admin/analysis/gsc           ?start&end&product_id
 // GET /api/admin/analysis/ga4           ?start&end&product_id
+// GET /api/admin/analysis/ga4-leads     ?start&end
 // GET /api/admin/analysis/etsy          ?start&end&product_id
 // GET /api/admin/analysis/google-ads    ?start&end&product_id
 // GET /api/admin/analysis/quotes        ?start&end
@@ -159,6 +160,7 @@ const REVENUE_STATUSES = new Set(["EXACT", "UNALLOCATED"]);
 const MAPPING_STATUSES = new Set(["Mapped", "Partial", "Unmapped", "Itemless"]);
 const MAX_LIMIT = 200;
 const DEFAULT_LIMIT = 50;
+const GA4_LEAD_CANONICAL_PROPERTY_ID = "308922589";
 
 type Filters = {
   start: string | null;
@@ -171,6 +173,294 @@ type Filters = {
   limit: number;
   offset: number;
 };
+
+type SyncRunRow = {
+  id: number | null;
+  source: string;
+  scenario: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string | null;
+  status: string | null;
+  records_received: number;
+  records_created: number;
+  records_updated: number;
+  records_unchanged: number;
+  records_rejected: number;
+  error_message: string | null;
+};
+
+type SyncRunGroupChunk = SyncRunRow;
+
+type SyncRunGroup = {
+  group_id: string;
+  source: string;
+  scenario: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  status: string;
+  chunk_count: number;
+  records_received: number;
+  records_created: number;
+  records_updated: number;
+  records_unchanged: number;
+  records_rejected: number;
+  error_message: string | null;
+  inferred_grouping: boolean;
+  grouping_rule: string;
+  incomplete_window: boolean;
+  chunks: SyncRunGroupChunk[];
+};
+
+type SyncRunGroupingMeta = {
+  rows_fetched: number;
+  rows_scanned_limit: number;
+  window_truncated: boolean;
+  groups_total: number;
+  groups_returned: number;
+  inferred_groups: number;
+  notes: string[];
+};
+
+type SyncRunGroupingResult = {
+  groups: SyncRunGroup[];
+  meta: SyncRunGroupingMeta;
+};
+
+const SYNC_RUN_GROUP_WINDOW_MAX_ROWS = 250;
+const SYNC_RUN_GROUP_MAX_GROUPS = 40;
+const SYNC_RUN_GROUP_GAP_MS = 90 * 1000; // conservative: contiguous chunks should be near-immediate
+const SYNC_RUN_GROUP_MAX_SPAN_MS = 20 * 60 * 1000; // hard cap to avoid merging unrelated passes
+
+function parseIsoishMs(raw: any): number | null {
+  const s = String(raw || "").trim();
+  if (!s) return null;
+  const direct = new Date(s);
+  if (!isNaN(direct.getTime())) return direct.getTime();
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(s)) {
+    const d = new Date(s.replace(" ", "T") + "Z");
+    if (!isNaN(d.getTime())) return d.getTime();
+  }
+  return null;
+}
+
+function toSyncRunRow(raw: any): SyncRunRow {
+  return {
+    id: raw?.id === null || raw?.id === undefined ? null : Number(raw.id),
+    source: String(raw?.source || "").trim(),
+    scenario: raw?.scenario === null || raw?.scenario === undefined || String(raw.scenario).trim() === ""
+      ? null
+      : String(raw.scenario).trim(),
+    started_at: raw?.started_at ? String(raw.started_at) : null,
+    finished_at: raw?.finished_at ? String(raw.finished_at) : null,
+    created_at: raw?.created_at ? String(raw.created_at) : null,
+    status: raw?.status ? String(raw.status) : null,
+    records_received: Number(raw?.records_received || 0),
+    records_created: Number(raw?.records_created || 0),
+    records_updated: Number(raw?.records_updated || 0),
+    records_unchanged: Number(raw?.records_unchanged || 0),
+    records_rejected: Number(raw?.records_rejected || 0),
+    error_message: raw?.error_message ? String(raw.error_message) : null,
+  };
+}
+
+function shouldInferChunkGrouping(run: SyncRunRow): boolean {
+  if (run.source !== "gsc-worker-cron") return false;
+  return /^phase09-weekly-gsc-sync:/.test(String(run.scenario || ""));
+}
+
+function summarizeGroupStatus(chunks: SyncRunGroupChunk[]): string {
+  const statuses = chunks.map((c) => String(c.status || "").toLowerCase());
+  if (statuses.some((s) => s === "failed" || s === "error")) return "failed";
+  if (statuses.some((s) => s === "partial")) return "partial";
+  if (statuses.every((s) => s === "success")) return "success";
+  if (statuses.every((s) => s === statuses[0])) return statuses[0] || "unknown";
+  return "mixed";
+}
+
+function finalizeRunGroup(
+  chunksDescByTime: Array<SyncRunGroupChunk & { __started_ms: number | null; __finished_ms: number | null; __sort_ms: number | null }>,
+  inferred: boolean,
+  oldestWindowSortMs: number | null,
+  windowTruncated: boolean,
+): SyncRunGroup {
+  const chunksAscByStart = chunksDescByTime
+    .slice()
+    .sort((a, b) => {
+      const am = a.__started_ms ?? a.__sort_ms ?? 0;
+      const bm = b.__started_ms ?? b.__sort_ms ?? 0;
+      return am - bm;
+    })
+    .map((c) => ({
+      id: c.id,
+      source: c.source,
+      scenario: c.scenario,
+      started_at: c.started_at,
+      finished_at: c.finished_at,
+      created_at: c.created_at,
+      status: c.status,
+      records_received: c.records_received,
+      records_created: c.records_created,
+      records_updated: c.records_updated,
+      records_unchanged: c.records_unchanged,
+      records_rejected: c.records_rejected,
+      error_message: c.error_message,
+    }));
+
+  const startedMs = chunksDescByTime
+    .map((c) => c.__started_ms)
+    .filter((v): v is number => v !== null);
+  const finishedMs = chunksDescByTime
+    .map((c) => c.__finished_ms)
+    .filter((v): v is number => v !== null);
+  const sortMs = chunksDescByTime
+    .map((c) => c.__sort_ms)
+    .filter((v): v is number => v !== null);
+
+  const startAt = startedMs.length
+    ? new Date(Math.min(...startedMs)).toISOString()
+    : (chunksAscByStart[0]?.started_at || null);
+  const endAt = finishedMs.length
+    ? new Date(Math.max(...finishedMs)).toISOString()
+    : (chunksAscByStart[chunksAscByStart.length - 1]?.finished_at || null);
+
+  const totals = chunksAscByStart.reduce(
+    (acc, c) => {
+      acc.received += Number(c.records_received || 0);
+      acc.created += Number(c.records_created || 0);
+      acc.updated += Number(c.records_updated || 0);
+      acc.unchanged += Number(c.records_unchanged || 0);
+      acc.rejected += Number(c.records_rejected || 0);
+      if (c.error_message) acc.errors.push(c.error_message);
+      return acc;
+    },
+    { received: 0, created: 0, updated: 0, unchanged: 0, rejected: 0, errors: [] as string[] },
+  );
+
+  const groupSortOldest = sortMs.length ? Math.min(...sortMs) : null;
+  const touchesOldestWindowRow = oldestWindowSortMs !== null && groupSortOldest !== null && groupSortOldest === oldestWindowSortMs;
+  const incompleteWindow = Boolean(inferred && windowTruncated && touchesOldestWindowRow);
+
+  const firstId = chunksAscByStart[0]?.id ?? "x";
+  const lastId = chunksAscByStart[chunksAscByStart.length - 1]?.id ?? "x";
+
+  return {
+    group_id: `syncgrp-${String(chunksAscByStart[0]?.source || "unknown")}-${String(firstId)}-${String(lastId)}`,
+    source: chunksAscByStart[0]?.source || "",
+    scenario: chunksAscByStart[0]?.scenario || null,
+    started_at: startAt,
+    finished_at: endAt,
+    status: summarizeGroupStatus(chunksAscByStart),
+    chunk_count: chunksAscByStart.length,
+    records_received: totals.received,
+    records_created: totals.created,
+    records_updated: totals.updated,
+    records_unchanged: totals.unchanged,
+    records_rejected: totals.rejected,
+    error_message: totals.errors.length ? totals.errors.slice(0, 3).join(" | ") : null,
+    inferred_grouping: inferred,
+    grouping_rule: inferred ? "inferred_contiguous_chunks_v1" : "single_row",
+    incomplete_window: incompleteWindow,
+    chunks: chunksAscByStart,
+  };
+}
+
+export function groupRecentSyncRunsForDashboard(rows: any[], opts?: { maxRows?: number; maxGroups?: number }): SyncRunGroupingResult {
+  const maxRows = Math.max(10, Number(opts?.maxRows || SYNC_RUN_GROUP_WINDOW_MAX_ROWS));
+  const maxGroups = Math.max(5, Number(opts?.maxGroups || SYNC_RUN_GROUP_MAX_GROUPS));
+
+  const normalized = (Array.isArray(rows) ? rows : [])
+    .map(toSyncRunRow)
+    .map((r) => {
+      const startedMs = parseIsoishMs(r.started_at);
+      const finishedMs = parseIsoishMs(r.finished_at);
+      const createdMs = parseIsoishMs(r.created_at);
+      const sortMs = finishedMs ?? startedMs ?? createdMs;
+      return { ...r, __started_ms: startedMs, __finished_ms: finishedMs, __sort_ms: sortMs };
+    })
+    .sort((a, b) => {
+      const am = a.__sort_ms ?? 0;
+      const bm = b.__sort_ms ?? 0;
+      if (bm !== am) return bm - am;
+      return Number(b.id || 0) - Number(a.id || 0);
+    });
+
+  const windowTruncated = normalized.length >= maxRows;
+  const oldestWindowSortMs = normalized.length ? (normalized[normalized.length - 1].__sort_ms ?? null) : null;
+
+  const groupsRaw: SyncRunGroup[] = [];
+  let currentChunks: Array<SyncRunGroupChunk & { __started_ms: number | null; __finished_ms: number | null; __sort_ms: number | null }> = [];
+  let currentInfer = false;
+
+  const flush = () => {
+    if (!currentChunks.length) return;
+    groupsRaw.push(finalizeRunGroup(currentChunks, currentInfer, oldestWindowSortMs, windowTruncated));
+    currentChunks = [];
+    currentInfer = false;
+  };
+
+  normalized.forEach((run) => {
+    const infer = shouldInferChunkGrouping(run);
+    if (!currentChunks.length) {
+      currentChunks.push(run);
+      currentInfer = infer;
+      return;
+    }
+
+    const prev = currentChunks[currentChunks.length - 1];
+    if (!currentInfer || !infer) {
+      flush();
+      currentChunks.push(run);
+      currentInfer = infer;
+      return;
+    }
+
+    const sameSourceScenario = run.source === prev.source && (run.scenario || null) === (prev.scenario || null);
+    const prevStart = prev.__started_ms;
+    const runStart = run.__started_ms;
+    const gapMs = prevStart !== null && runStart !== null ? prevStart - runStart : Number.POSITIVE_INFINITY;
+    const groupNewestStart = currentChunks[0].__started_ms;
+    const spanMs =
+      groupNewestStart !== null && runStart !== null ? groupNewestStart - runStart : Number.POSITIVE_INFINITY;
+
+    const contiguous = sameSourceScenario && gapMs >= 0 && gapMs <= SYNC_RUN_GROUP_GAP_MS && spanMs <= SYNC_RUN_GROUP_MAX_SPAN_MS;
+    if (contiguous) {
+      currentChunks.push(run);
+      return;
+    }
+
+    flush();
+    currentChunks.push(run);
+    currentInfer = infer;
+  });
+  flush();
+
+  const groups = groupsRaw.slice(0, maxGroups);
+  const inferredGroups = groups.filter((g) => g.inferred_grouping).length;
+  const notes: string[] = [];
+  if (inferredGroups > 0) {
+    notes.push("GSC collector groups are inferred from contiguous source/scenario timestamps (no parent run_id in sync_runs).");
+  }
+  if (groups.some((g) => g.incomplete_window)) {
+    notes.push("Oldest inferred group may be incomplete because the sync-runs fetch window is capped.");
+  }
+  if (groupsRaw.length > maxGroups) {
+    notes.push("Grouped output is truncated to keep the dashboard responsive.");
+  }
+
+  return {
+    groups,
+    meta: {
+      rows_fetched: normalized.length,
+      rows_scanned_limit: maxRows,
+      window_truncated: windowTruncated,
+      groups_total: groupsRaw.length,
+      groups_returned: groups.length,
+      inferred_groups: inferredGroups,
+      notes,
+    },
+  };
+}
 
 function parseFilters(url: URL): { ok: true; f: Filters } | { ok: false; res: Response } {
   const bad = (code: string, msg: string) => ({ ok: false as const, res: err(code, msg) });
@@ -244,6 +534,17 @@ function shiftIsoDate(isoDay: string, deltaDays: number): string | null {
   if (isNaN(d.getTime())) return null;
   d.setUTCDate(d.getUTCDate() + deltaDays);
   return d.toISOString().slice(0, 10);
+}
+
+function ga4LeadLabel(v: any): string {
+  const s = String(v || "").trim();
+  if (!s) return "(unavailable)";
+  if (s.toLowerCase() === "(not set)") return "(unavailable)";
+  return s;
+}
+
+function ga4LeadSourceMediumLabel(source: any, medium: any): string {
+  return ga4LeadLabel(source).toLowerCase() + " / " + ga4LeadLabel(medium).toLowerCase();
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
@@ -1429,6 +1730,275 @@ async function getGa4(env: any, f: Filters): Promise<Response> {
   }
 }
 
+async function getGa4Leads(env: any, f: Filters): Promise<Response> {
+  const range = dayRangeWhere(f, "g.report_date");
+  const binds: any[] = [...range.binds];
+
+  try {
+    const summary: any = await env.DB.prepare(
+      `SELECT
+         COALESCE(SUM(CASE WHEN g.event_name = 'generate_lead' THEN g.event_count ELSE 0 END), 0) AS generate_lead_events,
+         COALESCE(SUM(CASE WHEN g.event_name = 'quote_request' THEN g.event_count ELSE 0 END), 0) AS quote_request_events,
+         COALESCE(SUM(CASE WHEN g.event_name = 'generate_lead' AND g.users_available = 1 THEN COALESCE(g.event_users, 0) ELSE 0 END), 0) AS generate_lead_users_sum,
+         COALESCE(SUM(CASE WHEN g.event_name = 'quote_request' AND g.users_available = 1 THEN COALESCE(g.event_users, 0) ELSE 0 END), 0) AS quote_request_users_sum,
+         COALESCE(MIN(CASE WHEN g.event_name = 'generate_lead' THEN g.users_available ELSE 1 END), 1) AS generate_lead_users_available,
+         COALESCE(MIN(CASE WHEN g.event_name = 'quote_request' THEN g.users_available ELSE 1 END), 1) AS quote_request_users_available,
+         COUNT(*) AS rows_count
+       FROM ga4_lead_acquisition_daily g
+      WHERE g.property_id = ?${range.sql}`
+    ).bind(GA4_LEAD_CANONICAL_PROPERTY_ID, ...binds).first();
+
+    const trendRows = await env.DB.prepare(
+      `SELECT
+         g.report_date,
+         g.event_name,
+         SUM(g.event_count) AS event_count,
+         SUM(CASE WHEN g.users_available = 1 THEN COALESCE(g.event_users, 0) ELSE 0 END) AS event_users_sum,
+         MIN(g.users_available) AS users_available
+       FROM ga4_lead_acquisition_daily g
+      WHERE g.property_id = ?${range.sql}
+      GROUP BY g.report_date, g.event_name
+      ORDER BY g.report_date DESC, g.event_name ASC
+      LIMIT 120`
+    ).bind(GA4_LEAD_CANONICAL_PROPERTY_ID, ...binds).all();
+
+    const sourceRows = await env.DB.prepare(
+      `SELECT
+         g.session_source,
+         g.session_medium,
+         g.event_name,
+         SUM(g.event_count) AS event_count,
+         SUM(CASE WHEN g.users_available = 1 THEN COALESCE(g.event_users, 0) ELSE 0 END) AS event_users_sum,
+         MIN(g.users_available) AS users_available
+       FROM ga4_lead_acquisition_daily g
+      WHERE g.property_id = ?${range.sql}
+      GROUP BY g.session_source, g.session_medium, g.event_name
+      ORDER BY SUM(g.event_count) DESC, g.session_source ASC, g.session_medium ASC
+      LIMIT 120`
+    ).bind(GA4_LEAD_CANONICAL_PROPERTY_ID, ...binds).all();
+
+    const campaignRows = await env.DB.prepare(
+      `SELECT
+         g.session_campaign,
+         g.event_name,
+         SUM(g.event_count) AS event_count,
+         SUM(CASE WHEN g.users_available = 1 THEN COALESCE(g.event_users, 0) ELSE 0 END) AS event_users_sum,
+         MIN(g.users_available) AS users_available
+       FROM ga4_lead_acquisition_daily g
+      WHERE g.property_id = ?${range.sql}
+      GROUP BY g.session_campaign, g.event_name
+      ORDER BY SUM(g.event_count) DESC, g.session_campaign ASC
+      LIMIT 120`
+    ).bind(GA4_LEAD_CANONICAL_PROPERTY_ID, ...binds).all();
+
+    let freshness: any = null;
+    try {
+      freshness = await env.DB.prepare(`SELECT * FROM analysis_ga4_lead_freshness`).first();
+    } catch {
+      freshness = null;
+    }
+
+    const overlapRow: any = await env.DB.prepare(
+      `SELECT
+         COUNT(*) AS overlap_days,
+         MIN(report_date) AS overlap_start,
+         MAX(report_date) AS overlap_end
+       FROM (
+         SELECT report_date
+           FROM ga4_funnel_daily
+          WHERE property_scope = 'website'
+          GROUP BY report_date
+         HAVING COUNT(DISTINCT property_id) > 1
+       ) t`
+    ).first();
+    const websitePropertyRow: any = await env.DB.prepare(
+      `SELECT GROUP_CONCAT(DISTINCT property_id) AS property_ids
+         FROM ga4_funnel_daily
+        WHERE property_scope = 'website'`
+    ).first();
+    const coverage: any = await env.DB.prepare(
+      `SELECT MIN(report_date) AS min_report_date, MAX(report_date) AS max_report_date, COUNT(*) AS rows_n
+         FROM ga4_lead_acquisition_daily
+        WHERE property_id = ?`
+    ).bind(GA4_LEAD_CANONICAL_PROPERTY_ID).first();
+
+    const trendMap = new Map<string, any>();
+    for (const r of trendRows.results || []) {
+      const day = String(r.report_date || "");
+      if (!day) continue;
+      if (!trendMap.has(day)) {
+        trendMap.set(day, {
+          report_date: day,
+          generate_lead_events: 0,
+          generate_lead_users: null,
+          generate_lead_users_available: false,
+          quote_request_events: 0,
+          quote_request_users: null,
+          quote_request_users_available: false,
+        });
+      }
+      const t = trendMap.get(day);
+      const usersAvailable = Number(r.users_available || 0) === 1;
+      if (String(r.event_name || "") === "generate_lead") {
+        t.generate_lead_events = Number(r.event_count || 0);
+        t.generate_lead_users_available = usersAvailable;
+        t.generate_lead_users = usersAvailable ? Number(r.event_users_sum || 0) : null;
+      } else if (String(r.event_name || "") === "quote_request") {
+        t.quote_request_events = Number(r.event_count || 0);
+        t.quote_request_users_available = usersAvailable;
+        t.quote_request_users = usersAvailable ? Number(r.event_users_sum || 0) : null;
+      }
+    }
+    const trend = [...trendMap.values()].sort((a, b) => String(b.report_date).localeCompare(String(a.report_date)));
+
+    const sourceMap = new Map<string, any>();
+    for (const r of sourceRows.results || []) {
+      const key = ga4LeadSourceMediumLabel(r.session_source, r.session_medium);
+      if (!sourceMap.has(key)) {
+        sourceMap.set(key, {
+          source_medium: key,
+          generate_lead_events: 0,
+          generate_lead_users: null,
+          generate_lead_users_available: false,
+          quote_request_events: 0,
+          quote_request_users: null,
+          quote_request_users_available: false,
+        });
+      }
+      const s = sourceMap.get(key);
+      const usersAvailable = Number(r.users_available || 0) === 1;
+      if (String(r.event_name || "") === "generate_lead") {
+        s.generate_lead_events = Number(r.event_count || 0);
+        s.generate_lead_users_available = usersAvailable;
+        s.generate_lead_users = usersAvailable ? Number(r.event_users_sum || 0) : null;
+      } else if (String(r.event_name || "") === "quote_request") {
+        s.quote_request_events = Number(r.event_count || 0);
+        s.quote_request_users_available = usersAvailable;
+        s.quote_request_users = usersAvailable ? Number(r.event_users_sum || 0) : null;
+      }
+    }
+    const sources = [...sourceMap.values()]
+      .sort((a, b) => (b.generate_lead_events + b.quote_request_events) - (a.generate_lead_events + a.quote_request_events))
+      .slice(0, 20);
+
+    const campaignMap = new Map<string, any>();
+    for (const r of campaignRows.results || []) {
+      const key = ga4LeadLabel(r.session_campaign);
+      if (!campaignMap.has(key)) {
+        campaignMap.set(key, {
+          campaign: key,
+          generate_lead_events: 0,
+          generate_lead_users: null,
+          generate_lead_users_available: false,
+          quote_request_events: 0,
+          quote_request_users: null,
+          quote_request_users_available: false,
+        });
+      }
+      const c = campaignMap.get(key);
+      const usersAvailable = Number(r.users_available || 0) === 1;
+      if (String(r.event_name || "") === "generate_lead") {
+        c.generate_lead_events = Number(r.event_count || 0);
+        c.generate_lead_users_available = usersAvailable;
+        c.generate_lead_users = usersAvailable ? Number(r.event_users_sum || 0) : null;
+      } else if (String(r.event_name || "") === "quote_request") {
+        c.quote_request_events = Number(r.event_count || 0);
+        c.quote_request_users_available = usersAvailable;
+        c.quote_request_users = usersAvailable ? Number(r.event_users_sum || 0) : null;
+      }
+    }
+    const campaigns = [...campaignMap.values()]
+      .sort((a, b) => (b.generate_lead_events + b.quote_request_events) - (a.generate_lead_events + a.quote_request_events))
+      .slice(0, 20);
+
+    const rowsTotal = Number(summary?.rows_count || 0);
+    const freshDays =
+      freshness?.days_since_latest_report === null || freshness?.days_since_latest_report === undefined
+        ? null
+        : Number(freshness.days_since_latest_report);
+    const latestSyncStatus = String(freshness?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus: "ok" | "warning" | "empty" = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (freshDays !== null && freshDays > 10) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+
+    const overlapDays = Number(overlapRow?.overlap_days || 0);
+    const limitations: string[] = [
+      "Canonical property only: GA4 Lead Acquisition uses property 308922589 and does not merge legacy website property 366290587.",
+      "Events are reported separately (`generate_lead`, `quote_request`) and are never merged into a fabricated unique-lead total.",
+      "GA4 channel attribution is directional analytics context and does not imply paid-click proof for Google Ads.",
+    ];
+    if (overlapDays > 0) {
+      limitations.push(
+        `Historical website GA4 overlap detected in ga4_funnel_daily across multiple property IDs for ${overlapDays} day(s) (${overlapRow?.overlap_start || "?"} → ${overlapRow?.overlap_end || "?"}); this lead section avoids blending by using canonical property 308922589 only.`
+      );
+    }
+    if (!coverage?.min_report_date) {
+      limitations.push("No lead-acquisition rows are currently stored for the canonical property in this environment.");
+    } else {
+      limitations.push(
+        `Stored lead-acquisition coverage in this environment is ${coverage.min_report_date} → ${coverage.max_report_date}; dates outside this window require future sync/backfill approval.`
+      );
+    }
+
+    return json({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end },
+      property: {
+        canonical_property_id: GA4_LEAD_CANONICAL_PROPERTY_ID,
+        website_property_ids_seen: String(websitePropertyRow?.property_ids || "").split(",").filter(Boolean),
+        overlap_days: overlapDays,
+        overlap_start: overlapRow?.overlap_start || null,
+        overlap_end: overlapRow?.overlap_end || null,
+      },
+      summary: {
+        generate_lead_events: Number(summary?.generate_lead_events || 0),
+        generate_lead_users: Number(summary?.generate_lead_users_available || 0) === 1 ? Number(summary?.generate_lead_users_sum || 0) : null,
+        generate_lead_users_available: Number(summary?.generate_lead_users_available || 0) === 1,
+        quote_request_events: Number(summary?.quote_request_events || 0),
+        quote_request_users: Number(summary?.quote_request_users_available || 0) === 1 ? Number(summary?.quote_request_users_sum || 0) : null,
+        quote_request_users_available: Number(summary?.quote_request_users_available || 0) === 1,
+      },
+      trend_daily: trend,
+      top_sources: sources,
+      top_campaigns: campaigns,
+      freshness: {
+        total_rows: Number(freshness?.total_rows || rowsTotal),
+        latest_report_date: freshness?.latest_report_date || coverage?.max_report_date || null,
+        days_since_latest_report: freshDays,
+        last_success_sync_at: freshness?.last_success_sync_at || null,
+        last_sync_at: freshness?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(freshness?.sync_errors_7d || 0),
+        status: freshnessStatus,
+      },
+      coverage: {
+        min_report_date: coverage?.min_report_date || null,
+        max_report_date: coverage?.max_report_date || null,
+        rows_n: Number(coverage?.rows_n || 0),
+      },
+      limitations,
+    });
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    if (
+      msg.includes("no such table: ga4_lead_acquisition_daily") ||
+      msg.includes("no such table: analysis_ga4_lead_freshness")
+    ) {
+      return json({
+        success: true,
+        available: false,
+        message: "GA4 lead-acquisition schema is not available in this environment yet. Apply migration 061_ga4_lead_acquisition.sql.",
+        filters: { start: f.start, end: f.end },
+      });
+    }
+    return err("GA4_LEADS_QUERY_FAILED", msg, 500);
+  }
+}
+
 async function getEtsy(env: any, f: Filters): Promise<Response> {
   const range = dayRangeWhere(f, "e.report_date");
   const binds: any[] = [...range.binds];
@@ -2509,14 +3079,24 @@ async function getDataQuality(env: any): Promise<Response> {
   ).first();
   const zeroTotalOrders = Number(zeroRow?.n || 0);
 
-  const runs = await env.DB.prepare(
+  const runsWindow = await env.DB.prepare(
     `SELECT id, source, scenario, started_at, finished_at, status,
             records_received, records_created, records_updated, records_unchanged, records_rejected,
+            created_at,
             substr(COALESCE(error_message, ''), 1, 300) AS error_message
      FROM sync_runs
-     ORDER BY COALESCE(finished_at, created_at) DESC
-     LIMIT 10`
-  ).all();
+     ORDER BY COALESCE(finished_at, started_at, created_at) DESC
+     LIMIT ?`
+  ).bind(SYNC_RUN_GROUP_WINDOW_MAX_ROWS).all();
+
+  const groupedRuns = groupRecentSyncRunsForDashboard(runsWindow.results || [], {
+    maxRows: SYNC_RUN_GROUP_WINDOW_MAX_ROWS,
+    maxGroups: SYNC_RUN_GROUP_MAX_GROUPS,
+  });
+
+  // Backward-compatible raw slice for existing consumers expecting the old
+  // "last 10 rows" behavior.
+  const recentRunsLegacy = (runsWindow.results || []).slice(0, 10);
 
   const freshness = await env.DB.prepare(
     `SELECT channel_norm,
@@ -2693,7 +3273,9 @@ async function getDataQuality(env: any): Promise<Response> {
       freshness_warning_minutes: 30,
       note: "warning: sync older than 30 min (expected Make.com cadence 15 min); critical: no successful sync, failed last run, or invalid product refs",
     },
-    recent_runs: runs.results || [],
+    recent_runs: recentRunsLegacy,
+    recent_run_groups: groupedRuns.groups,
+    recent_runs_window: groupedRuns.meta,
     channel_freshness: freshness.results || [],
     gsc_freshness: {
       available: !!gscFreshness,
@@ -3040,6 +3622,7 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
 
   if (sub === "/gsc") return getGsc(env, f);
   if (sub === "/ga4") return getGa4(env, f);
+  if (sub === "/ga4-leads") return getGa4Leads(env, f);
   if (sub === "/etsy") return getEtsy(env, f);
   if (sub === "/google-ads") return getGoogleAds(env, f);
   if (sub === "/quotes") return getQuotes(env, f);

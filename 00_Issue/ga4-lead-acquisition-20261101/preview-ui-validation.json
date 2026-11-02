@@ -1,0 +1,356 @@
+{
+  "base": "https://ga4-lead-gate-preview.mildmate-new.pages.dev",
+  "generated_at": "2026-11-01T07:36:02.009Z",
+  "results": [
+    {
+      "name": "desktop-unavailable",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "useMock": false,
+      "screenshot": "D:\\00_mildmate\\re-build_web\\00_Issue\\ga4-lead-acquisition-20261101\\preview-desktop-unavailable.png",
+      "metrics": {
+        "tabs": [
+          "overview",
+          "sales",
+          "seo",
+          "etsy",
+          "google-ads",
+          "growth",
+          "data-quality"
+        ],
+        "tabVisibility": {
+          "overview": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "sales": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "seo": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "etsy": {
+            "cards_total": 1,
+            "cards_visible_after_click": 1
+          },
+          "google-ads": {
+            "cards_total": 1,
+            "cards_visible_after_click": 1
+          },
+          "growth": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "data-quality": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          }
+        },
+        "docOverflowX": 0,
+        "docHasHorizontalOverflow": false,
+        "ga4LeadSummaryText": "GA4 Lead Acquisition unavailable",
+        "ga4LeadNotesText": "Error: HTTP 401",
+        "ga4LeadBadgeCount": 1,
+        "ga4LeadCardFitsViewport": true,
+        "trendWrap": {
+          "clientWidth": 1316,
+          "scrollWidth": 1316,
+          "horizontalScrollNeeded": false
+        },
+        "sourceWrap": {
+          "clientWidth": 1316,
+          "scrollWidth": 1316,
+          "horizontalScrollNeeded": false
+        },
+        "campaignWrap": {
+          "clientWidth": 1316,
+          "scrollWidth": 1316,
+          "horizontalScrollNeeded": false
+        }
+      },
+      "console": [
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()"
+      ]
+    },
+    {
+      "name": "mobile-unavailable",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "useMock": false,
+      "screenshot": "D:\\00_mildmate\\re-build_web\\00_Issue\\ga4-lead-acquisition-20261101\\preview-mobile-unavailable.png",
+      "metrics": {
+        "tabs": [
+          "overview",
+          "sales",
+          "seo",
+          "etsy",
+          "google-ads",
+          "growth",
+          "data-quality"
+        ],
+        "tabVisibility": {
+          "overview": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "sales": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "seo": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "etsy": {
+            "cards_total": 1,
+            "cards_visible_after_click": 1
+          },
+          "google-ads": {
+            "cards_total": 1,
+            "cards_visible_after_click": 1
+          },
+          "growth": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "data-quality": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          }
+        },
+        "docOverflowX": 0,
+        "docHasHorizontalOverflow": false,
+        "ga4LeadSummaryText": "GA4 Lead Acquisition unavailable",
+        "ga4LeadNotesText": "Error: HTTP 401",
+        "ga4LeadBadgeCount": 1,
+        "ga4LeadCardFitsViewport": true,
+        "trendWrap": {
+          "clientWidth": 360,
+          "scrollWidth": 360,
+          "horizontalScrollNeeded": false
+        },
+        "sourceWrap": {
+          "clientWidth": 360,
+          "scrollWidth": 360,
+          "horizontalScrollNeeded": false
+        },
+        "campaignWrap": {
+          "clientWidth": 360,
+          "scrollWidth": 360,
+          "horizontalScrollNeeded": false
+        }
+      },
+      "console": [
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()"
+      ]
+    },
+    {
+      "name": "desktop-mock",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "useMock": true,
+      "screenshot": "D:\\00_mildmate\\re-build_web\\00_Issue\\ga4-lead-acquisition-20261101\\preview-desktop-mock.png",
+      "metrics": {
+        "tabs": [
+          "overview",
+          "sales",
+          "seo",
+          "etsy",
+          "google-ads",
+          "growth",
+          "data-quality"
+        ],
+        "tabVisibility": {
+          "overview": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "sales": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "seo": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "etsy": {
+            "cards_total": 1,
+            "cards_visible_after_click": 1
+          },
+          "google-ads": {
+            "cards_total": 1,
+            "cards_visible_after_click": 1
+          },
+          "growth": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "data-quality": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          }
+        },
+        "docOverflowX": 0,
+        "docHasHorizontalOverflow": false,
+        "ga4LeadSummaryText": "generate_lead events: 12generate_lead users: 8quote_request events: 6quote_request users: 5Property: 308922589Freshness: 2026-10-31 (1 d ago)",
+        "ga4LeadNotesText": "Coverage: 2026-10-01 → 2026-10-31 (3 rows)Representative mocked payload for preview layout validation.Canonical property only semantics preserved.",
+        "ga4LeadBadgeCount": 6,
+        "ga4LeadCardFitsViewport": true,
+        "trendWrap": {
+          "clientWidth": 1316,
+          "scrollWidth": 1316,
+          "horizontalScrollNeeded": false
+        },
+        "sourceWrap": {
+          "clientWidth": 1316,
+          "scrollWidth": 1316,
+          "horizontalScrollNeeded": false
+        },
+        "campaignWrap": {
+          "clientWidth": 1316,
+          "scrollWidth": 1316,
+          "horizontalScrollNeeded": false
+        }
+      },
+      "console": [
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()"
+      ]
+    },
+    {
+      "name": "mobile-mock",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "useMock": true,
+      "screenshot": "D:\\00_mildmate\\re-build_web\\00_Issue\\ga4-lead-acquisition-20261101\\preview-mobile-mock.png",
+      "metrics": {
+        "tabs": [
+          "overview",
+          "sales",
+          "seo",
+          "etsy",
+          "google-ads",
+          "growth",
+          "data-quality"
+        ],
+        "tabVisibility": {
+          "overview": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "sales": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "seo": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "etsy": {
+            "cards_total": 1,
+            "cards_visible_after_click": 1
+          },
+          "google-ads": {
+            "cards_total": 1,
+            "cards_visible_after_click": 1
+          },
+          "growth": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          },
+          "data-quality": {
+            "cards_total": 3,
+            "cards_visible_after_click": 3
+          }
+        },
+        "docOverflowX": 0,
+        "docHasHorizontalOverflow": false,
+        "ga4LeadSummaryText": "generate_lead events: 12generate_lead users: 8quote_request events: 6quote_request users: 5Property: 308922589Freshness: 2026-10-31 (1 d ago)",
+        "ga4LeadNotesText": "Coverage: 2026-10-01 → 2026-10-31 (3 rows)Representative mocked payload for preview layout validation.Canonical property only semantics preserved.",
+        "ga4LeadBadgeCount": 6,
+        "ga4LeadCardFitsViewport": true,
+        "trendWrap": {
+          "clientWidth": 360,
+          "scrollWidth": 721,
+          "horizontalScrollNeeded": true
+        },
+        "sourceWrap": {
+          "clientWidth": 360,
+          "scrollWidth": 758,
+          "horizontalScrollNeeded": true
+        },
+        "campaignWrap": {
+          "clientWidth": 360,
+          "scrollWidth": 730,
+          "horizontalScrollNeeded": true
+        }
+      },
+      "console": [
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()",
+        "[error] Failed to load resource: the server responded with a status of 401 ()"
+      ]
+    }
+  ]
+}

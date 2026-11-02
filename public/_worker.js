@@ -2808,7 +2808,8 @@ async function verifyClerkJwt(request, env) {
   const host = request.headers.get("Host") || "";
   const allowedOrigins = [
     "https://mildmate-new.pages.dev",
-    "https://www.mildmate.com"
+    "https://www.mildmate.com",
+    "https://mildmate.com"
   ];
   if (origin && !allowedOrigins.includes(origin) && host !== "localhost" && !host.startsWith("127.0.0.1")) {
     return { valid: false, error: "Invalid origin", status: 403 };
@@ -2919,6 +2920,9 @@ var MAX_DIRECTIVE_LENGTH = 8192;
 var JWT_CATEGORY_SESSION_TOKEN = "cl_B7d4PD111AAA";
 var JWT_CATEGORY_IGNORE = "cl_I7d4PD111III";
 var ALLOWED_COOKIE_NAME = /^(__session|__client_uat|__clerk_handshake)(_[A-Za-z0-9_-]{1,64})?$/;
+var HANDSHAKE_COOKIE_NAME = /^__clerk_handshake(?:_[A-Za-z0-9_-]{1,64})?$/;
+var SESSION_QUERY_NAME = /^__session(?:_[A-Za-z0-9_-]{1,64})?$/;
+var DBJWT_QUERY_NAME = /^__clerk_db_jwt(?:_[A-Za-z0-9_-]{1,64})?$/;
 var ALLOWED_COOKIE_VALUE = /^[A-Za-z0-9._~%+/=-]*$/;
 var ALLOWED_SAMESITE = /* @__PURE__ */ new Set(["lax", "strict", "none"]);
 var handshakeJwksCache = /* @__PURE__ */ new Map();
@@ -2931,15 +2935,39 @@ function b64urlToBytes(str) {
   return bytes;
 }
 __name(b64urlToBytes, "b64urlToBytes");
+function parseCookieHeader(cookieHeader) {
+  if (!cookieHeader) return [];
+  return cookieHeader.split(";").map((part) => part.trim()).filter(Boolean).map((part) => {
+    const idx = part.indexOf("=");
+    if (idx <= 0) return { name: "", value: "" };
+    return {
+      name: part.slice(0, idx).trim(),
+      value: part.slice(idx + 1).trim()
+    };
+  }).filter((entry) => entry.name && entry.value);
+}
+__name(parseCookieHeader, "parseCookieHeader");
 function getHandshakeToken(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
-  const m = cookieHeader.match(/(?:^|;\s*)__clerk_handshake=([^;]+)/);
-  if (m && m[1]) return m[1].trim();
+  const cookieTokens = parseCookieHeader(cookieHeader).filter((entry) => HANDSHAKE_COOKIE_NAME.test(entry.name)).map((entry) => entry.value.trim()).filter(Boolean);
+  const uniqueCookieTokens = Array.from(new Set(cookieTokens));
+  if (uniqueCookieTokens.length > 1) return null;
+  const queryTokens = [];
   try {
-    const qp = new URL(request.url).searchParams.get("__clerk_handshake");
-    if (qp) return qp.trim();
+    for (const [name, value] of new URL(request.url).searchParams.entries()) {
+      if (!value) continue;
+      if (!HANDSHAKE_COOKIE_NAME.test(name)) continue;
+      queryTokens.push(value.trim());
+    }
   } catch {
   }
+  const uniqueQueryTokens = Array.from(new Set(queryTokens.filter(Boolean)));
+  if (uniqueQueryTokens.length > 1) return null;
+  if (uniqueCookieTokens.length === 1 && uniqueQueryTokens.length === 1) {
+    return uniqueCookieTokens[0] === uniqueQueryTokens[0] ? uniqueCookieTokens[0] : null;
+  }
+  if (uniqueCookieTokens.length === 1) return uniqueCookieTokens[0];
+  if (uniqueQueryTokens.length === 1) return uniqueQueryTokens[0];
   return null;
 }
 __name(getHandshakeToken, "getHandshakeToken");
@@ -3057,8 +3085,10 @@ function parseDirective(directive, requestHost) {
 __name(parseDirective, "parseDirective");
 function stripAuthParams(url) {
   const clean = new URL(url.toString());
-  for (const p of ["__clerk_handshake", "__clerk_help", "__clerk_db_jwt", "__mm_hs"]) {
-    clean.searchParams.delete(p);
+  for (const key of Array.from(clean.searchParams.keys())) {
+    if (key === "__clerk_help" || key === "__mm_hs" || HANDSHAKE_COOKIE_NAME.test(key) || DBJWT_QUERY_NAME.test(key) || SESSION_QUERY_NAME.test(key)) {
+      clean.searchParams.delete(key);
+    }
   }
   return clean.toString();
 }
@@ -3116,6 +3146,59 @@ async function consumeClerkHandshake(request, env) {
 }
 __name(consumeClerkHandshake, "consumeClerkHandshake");
 
+// ../workers/api/clerk-session-token.ts
+var SESSION_COOKIE_RE = /^__session(?:_[A-Za-z0-9_-]{1,64})?$/;
+var DEV_SESSION_COOKIE_RE = /^__clerk_db_jwt(?:_[A-Za-z0-9_-]{1,64})?$/;
+function isSessionTokenName(name) {
+  return SESSION_COOKIE_RE.test(name) || DEV_SESSION_COOKIE_RE.test(name);
+}
+__name(isSessionTokenName, "isSessionTokenName");
+function parseCookieHeader2(cookieHeader) {
+  if (!cookieHeader) return [];
+  return cookieHeader.split(";").map((part) => part.trim()).filter(Boolean).map((part) => {
+    const idx = part.indexOf("=");
+    if (idx <= 0) return { name: "", value: "" };
+    return {
+      name: part.slice(0, idx).trim(),
+      value: part.slice(idx + 1).trim()
+    };
+  }).filter((entry) => entry.name && entry.value);
+}
+__name(parseCookieHeader2, "parseCookieHeader");
+function collectCookieCandidates(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const parsed = parseCookieHeader2(cookieHeader);
+  return parsed.filter((entry) => isSessionTokenName(entry.name)).map((entry) => ({ name: entry.name, value: entry.value, source: "cookie" }));
+}
+__name(collectCookieCandidates, "collectCookieCandidates");
+function collectQueryCandidates(request) {
+  const url = new URL(request.url);
+  const out = [];
+  for (const [name, value] of url.searchParams.entries()) {
+    if (!value) continue;
+    if (!isSessionTokenName(name)) continue;
+    out.push({ name, value: value.trim(), source: "query" });
+  }
+  return out;
+}
+__name(collectQueryCandidates, "collectQueryCandidates");
+function extractClerkSessionToken(request, options = {}) {
+  const cookieCandidates = collectCookieCandidates(request);
+  const queryCandidates = options.allowQueryToken ? collectQueryCandidates(request) : [];
+  const all = [...cookieCandidates, ...queryCandidates];
+  if (!all.length) {
+    return { token: null, source: null, ambiguous: false };
+  }
+  const uniqueValues = Array.from(new Set(all.map((candidate) => candidate.value)));
+  if (uniqueValues.length !== 1) {
+    return { token: null, source: null, ambiguous: true };
+  }
+  const token = uniqueValues[0];
+  const source = all.some((candidate) => candidate.source === "cookie") ? "cookie" : "query";
+  return { token, source, ambiguous: false };
+}
+__name(extractClerkSessionToken, "extractClerkSessionToken");
+
 // auth/clerk-return/[[path]].ts
 var DEFAULT_NEXT_PATH = "/super-admin/";
 function normalizeNextPath(raw) {
@@ -3131,13 +3214,6 @@ function normalizeNextPath(raw) {
   }
 }
 __name(normalizeNextPath, "normalizeNextPath");
-function getSessionToken(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  if (cookieMatch && cookieMatch[1]) return cookieMatch[1].trim();
-  return "";
-}
-__name(getSessionToken, "getSessionToken");
 function buildCallbackUrl(url, nextPath) {
   const callback = new URL("/auth/clerk-return/", url.origin);
   callback.searchParams.set("next", nextPath);
@@ -3156,14 +3232,17 @@ var onRequest2 = /* @__PURE__ */ __name(async (context) => {
   const nextPath = normalizeNextPath(url.searchParams.get("next"));
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
-  const sessionToken = getSessionToken(context.request);
-  if (!sessionToken) {
+  const session = extractClerkSessionToken(context.request, { allowQueryToken: true });
+  if (session.ambiguous) {
+    return redirectToSignIn(url, context.env, nextPath);
+  }
+  if (!session.token) {
     return redirectToSignIn(url, context.env, nextPath);
   }
   const verifyRequest = new Request(context.request.url, {
     headers: new Headers({
       ...Object.fromEntries(context.request.headers.entries()),
-      Authorization: `Bearer ${sessionToken}`
+      Authorization: `Bearer ${session.token}`
     })
   });
   const verified = await verifyClerkJwt(verifyRequest, context.env);
@@ -20572,23 +20651,29 @@ var onRequest10 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // account/_middleware.ts
-function getClerkSessionToken2(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  if (cookieMatch) return cookieMatch[1];
+var TOKEN_QUERY_NAME = /^__(?:session|clerk_db_jwt)(?:_[A-Za-z0-9_-]{1,64})?$/;
+function hasForbiddenTokenQuery(request) {
   const url = new URL(request.url);
-  const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
-  if (qp) return qp;
-  return null;
+  for (const key of Array.from(url.searchParams.keys())) {
+    if (TOKEN_QUERY_NAME.test(key)) return true;
+  }
+  return false;
 }
-__name(getClerkSessionToken2, "getClerkSessionToken");
+__name(hasForbiddenTokenQuery, "hasForbiddenTokenQuery");
 var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   if (isDevelopmentAuthHost(context.request.url)) {
     return context.next();
   }
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
-  const sessionToken = getClerkSessionToken2(context.request);
+  if (hasForbiddenTokenQuery(context.request)) {
+    return redirectToSignIn2(context.request.url, context.env);
+  }
+  const session = extractClerkSessionToken(context.request);
+  if (session.ambiguous) {
+    return redirectToSignIn2(context.request.url, context.env);
+  }
+  const sessionToken = session.token;
   if (!sessionToken) {
     return redirectToSignIn2(context.request.url, context.env);
   }
@@ -20660,16 +20745,15 @@ function isDevelopmentAuthHost(url) {
 __name(isDevelopmentAuthHost, "isDevelopmentAuthHost");
 
 // admin/_middleware.ts
-function getClerkSessionToken3(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  if (cookieMatch) return cookieMatch[1];
+var TOKEN_QUERY_NAME2 = /^__(?:session|clerk_db_jwt)(?:_[A-Za-z0-9_-]{1,64})?$/;
+function hasForbiddenTokenQuery2(request) {
   const url = new URL(request.url);
-  const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
-  if (qp) return qp;
-  return null;
+  for (const key of Array.from(url.searchParams.keys())) {
+    if (TOKEN_QUERY_NAME2.test(key)) return true;
+  }
+  return false;
 }
-__name(getClerkSessionToken3, "getClerkSessionToken");
+__name(hasForbiddenTokenQuery2, "hasForbiddenTokenQuery");
 function getPrimaryClerkEmail4(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -20709,7 +20793,14 @@ var onRequest12 = /* @__PURE__ */ __name(async (context) => {
   }
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
-  const sessionToken = getClerkSessionToken3(context.request);
+  if (hasForbiddenTokenQuery2(context.request)) {
+    return redirectToSignIn3(context.request.url, context.env);
+  }
+  const session = extractClerkSessionToken(context.request);
+  if (session.ambiguous) {
+    return redirectToSignIn3(context.request.url, context.env);
+  }
+  const sessionToken = session.token;
   if (!sessionToken) {
     return redirectToSignIn3(context.request.url, context.env);
   }
@@ -20797,7 +20888,7 @@ function redirectToSignIn3(currentUrl, env) {
   const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
   const clean = new URL(parsed.origin + parsed.pathname + parsed.search);
   for (const key of Array.from(clean.searchParams.keys())) {
-    if (key.indexOf("__clerk_") === 0 || key === HANDSHAKE_MARKER2) {
+    if (key.indexOf("__clerk_") === 0 || key.indexOf("__session") === 0 || key === HANDSHAKE_MARKER2) {
       clean.searchParams.delete(key);
     }
   }
@@ -21765,7 +21856,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-UhiMup/functionsRoutes-0.4725330653154183.mjs
+// ../.wrangler/tmp/pages-D2T2OZ/functionsRoutes-0.22151941597984948.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

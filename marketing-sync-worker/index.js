@@ -78,6 +78,12 @@ const GA4_SYNC_SOURCE = "ga4-worker-cron";
 const GA4_SCENARIO = "phase10-weekly-ga4-sync";
 const GA4_WEEKLY_LABEL = "Monday weekly run";
 const GA4_UPSERT_ROUTE = "/api/v1/ga4/rows/upsert";
+const GA4_LEAD_STREAM = "ga4-lead-weekly-sync";
+const GA4_LEAD_SYNC_SOURCE = "ga4-lead-worker-cron:website";
+const GA4_LEAD_SCENARIO = "phase10-weekly-ga4-lead-acquisition-sync";
+const GA4_LEAD_UPSERT_ROUTE = "/api/v1/ga4/leads/upsert";
+const GA4_LEAD_WEBSITE_PROPERTY_ID_DEFAULT = "308922589";
+const GA4_LEAD_DEFAULT_EVENTS = ["generate_lead", "quote_request"];
 const GA4_LOCK_TTL_MS = 20 * 60 * 1000;
 const GA4_DEFAULT_OVERLAP_DAYS = 14;
 const GA4_DEFAULT_LAG_DAYS = 2;
@@ -130,6 +136,23 @@ function resolveGa4Properties(env) {
     });
   }
   if (!out.length) throw new Error("no GA4 properties configured");
+  return out;
+}
+
+function resolveGa4LeadPropertyId(env) {
+  const propertyId = String(env.GA4_LEAD_WEBSITE_PROPERTY_ID || GA4_LEAD_WEBSITE_PROPERTY_ID_DEFAULT).trim();
+  if (!/^\d{4,20}$/.test(propertyId)) {
+    throw new Error(`invalid GA4 lead property id: '${truncate(propertyId, 40)}'`);
+  }
+  return propertyId;
+}
+
+function resolveGa4LeadEventNames(env) {
+  const events = parseEventNameList(env.GA4_LEAD_EVENT_NAMES, GA4_LEAD_DEFAULT_EVENTS)
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+  const out = Array.from(new Set(events));
+  if (!out.length) throw new Error("GA4 lead event list is empty");
   return out;
 }
 const GA4_DIMENSIONS = [
@@ -888,6 +911,12 @@ function normalizeGa4Path(raw) {
   return path.slice(0, 1000);
 }
 
+function normalizeGa4LeadDim(raw, lower = false) {
+  const v = String(raw || "").trim();
+  if (!v || v === "(not set)") return "";
+  return lower ? v.toLowerCase() : v;
+}
+
 function parseGa4Row(base, metricNames, metricValues) {
   const out = { ...base };
   metricNames.forEach((name, idx) => {
@@ -1018,6 +1047,95 @@ async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimen
   }
 
   return rows;
+}
+
+async function runGa4LeadAcquisitionReport(env, accessToken, startDate, endDate, propertyId, eventNames) {
+  const propId = String(propertyId || "").trim();
+  if (!propId) throw new Error("GA4 lead property id is not configured");
+  const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propId)}:runReport`;
+  const pageSize = clampInt(toInt(env.GA4_ROW_PAGE_SIZE, GA4_DEFAULT_PAGE_SIZE), 1000, 250000);
+  const dims = ["date", "eventName", "sessionSource", "sessionMedium", "sessionCampaignName"];
+  const dimIndex = {};
+  dims.forEach((name, i) => {
+    dimIndex[name] = i;
+  });
+  const dimValue = (dv, name) => {
+    const i = dimIndex[name];
+    return i === undefined ? "" : String(dv?.[i]?.value || "");
+  };
+
+  const run = async (metrics, usersAvailable) => {
+    const rows = [];
+    let offset = 0;
+    let pages = 0;
+    while (true) {
+      pages += 1;
+      if (pages > GA4_MAX_PAGES_PER_REPORT) throw new Error(`GA4 lead paging exceeded ${GA4_MAX_PAGES_PER_REPORT} pages`);
+
+      const payload = {
+        dateRanges: [{ startDate, endDate }],
+        dimensions: dims.map((name) => ({ name })),
+        metrics: metrics.map((name) => ({ name })),
+        limit: String(pageSize),
+        offset: String(offset),
+        keepEmptyRows: false,
+        dimensionFilter: {
+          filter: {
+            fieldName: "eventName",
+            inListFilter: {
+              values: eventNames,
+              caseSensitive: false,
+            },
+          },
+        },
+      };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = body?.error?.message || body?.message || "unknown error";
+        throw new Error(`GA4 lead runReport failed (${res.status}): ${truncate(msg, 240)}`);
+      }
+
+      const batch = Array.isArray(body.rows) ? body.rows : [];
+      for (const row of batch) {
+        const dv = Array.isArray(row?.dimensionValues) ? row.dimensionValues : [];
+        const date = ga4DateToIso(dimValue(dv, "date"));
+        if (!date) continue;
+        const metricHeaders = Array.isArray(body.metricHeaders) ? body.metricHeaders.map((m) => String(m?.name || "")) : metrics;
+        const parsed = parseGa4Row({}, metricHeaders, row?.metricValues || []);
+        rows.push({
+          date,
+          event_name: normalizeGa4LeadDim(dimValue(dv, "eventName"), true),
+          session_source: normalizeGa4LeadDim(dimValue(dv, "sessionSource"), true),
+          session_medium: normalizeGa4LeadDim(dimValue(dv, "sessionMedium"), true),
+          session_campaign: normalizeGa4LeadDim(dimValue(dv, "sessionCampaignName")),
+          event_count: Number(parsed.event_count || 0),
+          event_users: usersAvailable ? Number(parsed.users || 0) : null,
+          users_available: usersAvailable,
+        });
+      }
+
+      if (batch.length < pageSize) break;
+      offset += batch.length;
+    }
+    return rows;
+  };
+
+  try {
+    return await run(["eventCount", "totalUsers"], true);
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (!/metric|incompatible|invalid/i.test(msg)) throw e;
+    return await run(["eventCount"], false);
+  }
 }
 
 async function runGa4EventNameSummary(env, accessToken, startDate, endDate, limit = 25, propertyId = null) {
@@ -1368,6 +1486,30 @@ async function postGa4RowsChunk(env, prop, rows, triggerTag) {
   const body = await res.json().catch(() => ({}));
   if (!res.ok || body?.success !== true) {
     throw new Error(`GA4 upsert failed (${res.status}) ${truncate(body?.message || body?.error_code || "unknown", 220)}`);
+  }
+  return body;
+}
+
+async function postGa4LeadRowsChunk(env, rows, triggerTag, propertyId) {
+  const apiBase = String(env.GA4_API_BASE || env.MAPPER_API_BASE || "").trim();
+  if (!apiBase) throw new Error("GA4_API_BASE (or MAPPER_API_BASE) is not configured");
+  const payload = {
+    sync_source: GA4_LEAD_SYNC_SOURCE,
+    scenario: `${GA4_LEAD_SCENARIO}:${triggerTag}`,
+    property_id: propertyId,
+    rows,
+  };
+  const res = await fetch(apiBase + GA4_LEAD_UPSERT_ROUTE, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${env.SALES_SYNC_API_TOKEN}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || body?.success !== true) {
+    throw new Error(`GA4 lead upsert failed (${res.status}) ${truncate(body?.message || body?.error_code || "unknown", 220)}`);
   }
   return body;
 }
@@ -2164,7 +2306,13 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
   for (const prop of selected) {
     results.push(await executeGa4SyncProperty(env, prop, trigger, overrides, dry));
   }
-  const allOk = results.every((r) => r.ok);
+  let leadResult = null;
+  if (!scopeFilter || scopeFilter === "website") {
+    leadResult = await executeGa4LeadSync(env, trigger, overrides, dry);
+  } else {
+    leadResult = { ok: true, skipped: "scope_not_website" };
+  }
+  const allOk = results.every((r) => r.ok) && (!leadResult || leadResult.ok);
   const website = results.find((r) => r.scope === "website") || results[0] || {};
   return {
     ok: allOk,
@@ -2173,8 +2321,88 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
     trigger,
     properties_synced: results.length,
     property_results: results,
+    lead_result: leadResult,
     ...website,
   };
+}
+
+async function executeGa4LeadSync(env, trigger, overrides = {}, dry = false) {
+  for (const required of ["SALES_SYNC_API_TOKEN", "GA4_CLIENT_ID", "GA4_CLIENT_SECRET", "GA4_REFRESH_TOKEN"]) {
+    if (!env[required]) return { ok: false, reason: `${required} is not configured` };
+  }
+  const db = env.DB;
+  const runId = `${GA4_LEAD_STREAM}-${trigger}-${Date.now()}`;
+  if (!(await acquireGa4Lock(db, runId, GA4_LEAD_STREAM))) {
+    console.log("GA4-LEAD-SYNC: previous run still active, skipping");
+    return { ok: true, skipped: "locked" };
+  }
+  try {
+    const window = resolveGa4Window(env, overrides);
+    const accessToken = await getGa4AccessToken(env);
+    const propertyId = resolveGa4LeadPropertyId(env);
+    const eventNames = resolveGa4LeadEventNames(env);
+    const chunkSize = clampInt(toInt(env.GA4_UPSERT_CHUNK_SIZE, GA4_DEFAULT_CHUNK_SIZE), 200, 5000);
+    const merged = await runGa4LeadAcquisitionReport(env, accessToken, window.start, window.end, propertyId, eventNames);
+    const totals = {
+      days_in_window: window.days.length,
+      fetched_rows: merged.length,
+      sent_rows: 0,
+      created: 0,
+      updated: 0,
+      unchanged: 0,
+      rejected: 0,
+      upsert_calls: 0,
+      users_available: merged.some((r) => r.users_available === true),
+    };
+
+    if (dry) {
+      console.log(
+        `GA4-LEAD-SYNC: ${trigger} dry — property ${propertyId} rows ${merged.length}, users_available=${totals.users_available}`
+      );
+      return {
+        ok: true,
+        dry: true,
+        source: GA4_LEAD_SYNC_SOURCE,
+        scenario: GA4_LEAD_SCENARIO,
+        trigger,
+        property_id: propertyId,
+        event_names: eventNames,
+        window: { start: window.start, end: window.end, days: window.days.length, lag_days: window.lagDays, overlap_days: window.overlapDays },
+        totals,
+      };
+    }
+
+    const chunks = chunkRows(merged, chunkSize);
+    for (const chunk of chunks) {
+      const out = await postGa4LeadRowsChunk(env, chunk, trigger, propertyId);
+      totals.upsert_calls += 1;
+      totals.sent_rows += Number(out?.totals?.received || 0);
+      totals.created += Number(out?.totals?.created || 0);
+      totals.updated += Number(out?.totals?.updated || 0);
+      totals.unchanged += Number(out?.totals?.unchanged || 0);
+      totals.rejected += Number(out?.totals?.rejected || 0);
+    }
+
+    console.log(
+      `GA4-LEAD-SYNC: ${trigger} property=${propertyId} rows=${totals.fetched_rows}, sent=${totals.sent_rows}, created=${totals.created}, updated=${totals.updated}, unchanged=${totals.unchanged}, rejected=${totals.rejected}`
+    );
+    return {
+      ok: true,
+      source: GA4_LEAD_SYNC_SOURCE,
+      scenario: GA4_LEAD_SCENARIO,
+      trigger,
+      property_id: propertyId,
+      event_names: eventNames,
+      window: { start: window.start, end: window.end, days: window.days.length, lag_days: window.lagDays, overlap_days: window.overlapDays },
+      totals,
+    };
+  } catch (e) {
+    const msg = truncate(e?.message || String(e), 280);
+    console.log(`GA4-LEAD-SYNC: ${trigger} failed — ${msg}`);
+    return { ok: false, reason: msg, source: GA4_LEAD_SYNC_SOURCE, scenario: GA4_LEAD_SCENARIO };
+  } finally {
+    await releaseGa4Lock(db, runId, GA4_LEAD_STREAM);
+  }
 }
 
 async function executeGa4SyncProperty(env, prop, trigger, overrides = {}, dry = false) {
@@ -3061,6 +3289,12 @@ export default {
       } catch {
         freshnessEtsy = null;
       }
+      let freshnessLeads = null;
+      try {
+        freshnessLeads = await env.DB.prepare(`SELECT * FROM analysis_ga4_lead_freshness`).first();
+      } catch {
+        freshnessLeads = null;
+      }
       const runs = await env.DB.prepare(
         `SELECT id, source, scenario, started_at, finished_at, status,
                 records_received, records_created, records_updated, records_unchanged, records_rejected, error_message
@@ -3099,10 +3333,13 @@ export default {
         scheduler_day_thailand: "Monday",
         scheduler_note: GA4_WEEKLY_LABEL,
         event_filters: resolveGa4EventFilters(env),
+        lead_property_id: resolveGa4LeadPropertyId(env),
+        lead_event_names: resolveGa4LeadEventNames(env),
         properties,
         locks,
         freshness_website: freshnessWebsite,
         freshness_etsy: freshnessEtsy,
+        freshness_leads: freshnessLeads,
         default_window: window ? { start: window.start, end: window.end, days: window.days.length } : null,
         recent_runs: runs.results || [],
       });
@@ -3392,6 +3629,11 @@ export const __googleAdsDiagTest = {
   getGoogleAdsAccessibleCustomersDiagnostic,
   splitGoogleAdsRunRows,
   executeGoogleAdsSync,
+};
+
+export const __ga4LeadTest = {
+  resolveGa4LeadPropertyId,
+  resolveGa4LeadEventNames,
 };
 
 

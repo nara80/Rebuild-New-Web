@@ -1,0 +1,1299 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#1E293B;--color-heading:#0F172A;--color-bg:#ffffff;--color-surface:#F8FAFC;--color-border:#e2e8f0;--color-muted:#64748b;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06);--shadow-md:0 4px 12px rgba(0,0,0,0.06);--shadow-lg:0 8px 24px rgba(0,0,0,0.08);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-text);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.15;color:var(--color-heading)}h2{font-size:1.75rem;font-weight:700;line-height:1.25;color:var(--color-heading)}h3{font-size:1.25rem;font-weight:600;line-height:1.35;color:var(--color-heading)}p{font-size:1rem;font-weight:400;margin-bottom:1rem;color:var(--color-text)}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow-md)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}.hero{position:relative;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;padding:80px 24px 100px;overflow:hidden}.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(255,255,255,0.85) 0%,rgba(255,255,255,0.30) 100%);z-index:1}.hero-content{position:relative;z-index:2;max-width:720px}.hero h1,.hero h1 span{text-align:center;width:100%;color:var(--color-heading)}.hero h1{font-size:2.75rem;font-weight:800;margin-bottom:5px;line-height:1.1}.hero h1 span{color:var(--color-primary)}.hero-sub{text-align:center;font-size:1.125rem;font-weight:500;color:var(--color-text);margin-bottom:32px;max-width:640px;margin-left:auto;margin-right:auto}.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}.hero-actions .btn-primary{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.hero-actions .btn-primary:hover{background:var(--color-primary-dark);color:#fff}.hero-actions .btn-outline{background:transparent;border:2px solid var(--color-border);color:var(--color-text)}.hero-actions .btn-outline:hover{background:var(--color-surface);border-color:var(--color-primary);color:var(--color-primary)}.hero-actions .btn{padding:14px 32px;font-size:1rem}@media (max-width:768px){.hero{min-height:auto;padding:0;align-items:stretch;justify-content:flex-start}.hero-bg{position:relative;aspect-ratio:1/1}.hero-overlay{background:linear-gradient(to top,rgba(255,255,255,0.85) 0%,rgba(255,255,255,0.30) 100%)}.hero-content{padding:30px 24px 48px}.hero h1{font-size:2rem;margin-bottom:10px}.hero h1 span{font-size:0.85em !important;display:inline;margin-top:0;color:var(--color-primary)}.hero-sub{display:block}.hero-actions{flex-direction:row;margin-top:0}}.trust-bar{background:var(--color-surface);padding:32px 0;border-bottom:1px solid var(--color-border)}.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}.trust-item{display:flex;flex-direction:column;align-items:center;gap:8px}.trust-item svg{width:32px;height:32px;color:var(--color-primary)}.trust-item span{font-size:0.875rem;font-weight:600;color:var(--color-text)}.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.niche-grid{grid-template-columns:repeat(3,1fr)}@media (max-width:768px){.niche-grid{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;padding:4px 0}.niche-grid::-webkit-scrollbar{display:none}.niche-grid .category-card{min-width:220px;flex-shrink:0;scroll-snap-align:start}}.category-card{display:block;border-radius:8px;overflow:hidden;box-shadow:var(--shadow);transition:transform var(--transition),box-shadow var(--transition);background:var(--color-bg);text-decoration:none;border:2px solid var(--color-border)}.category-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--color-primary)}.category-image{width:100%;aspect-ratio:4 / 3;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.category-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:1px}.category-image .placeholder.marine{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af}.category-image .placeholder.family{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d}.category-image .placeholder.duvet{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534}.category-image .placeholder.protection{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#6b21a8}.product-image img{width:100%;height:100%;object-fit:cover;display:block}.category-image img{width:100%;height:100%;object-fit:cover;display:block}.category-label{padding:16px;text-align:center;font-weight:600;color:var(--color-text)}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.product-carousel-wrapper{position:relative;display:flex;align-items:center}
+.reviews-carousel-wrapper{position:relative;padding:0 44px}.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.85);border:none;color:#333;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:all var(--transition);z-index:3}.carousel-arrow:hover{background:#fff;color:var(--color-primary);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.carousel-arrow svg{width:20px;height:20px;stroke-width:2.5}.carousel-prev{left:12px}.carousel-next{right:12px}.product-grid.scroll-row{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;flex:1;padding:4px 0}.product-grid.scroll-row::-webkit-scrollbar{display:none}.product-grid.scroll-row .product-card{min-width:260px;flex-shrink:0;scroll-snap-align:start}@media(max-width:640px){.product-grid.scroll-row .product-card{min-width:240px;max-width:calc(100vw - 60px)}}.carousel-dots{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}.carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--color-border);cursor:pointer;padding:0;transition:all var(--transition)}.carousel-dot.active{background:var(--color-primary);width:24px;border-radius:4px}.product-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);display:flex;flex-direction:column}.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}.product-image{width:100%;aspect-ratio:1 / 1;max-height:350px;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.product-image img{width:100%;height:100%;object-fit:cover}.product-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:var(--color-muted);text-align:center;padding:12px}.product-info{padding:16px;flex:1;display:flex;flex-direction:column}.product-title{font-size:1rem;font-weight:600;color:var(--color-text);margin-bottom:8px;line-height:1.4}.product-price{font-size:1.125rem;font-weight:700;color:var(--color-primary);margin-bottom:12px}.product-card .btn{width:100%;margin-top:auto}.configurator-section{background:var(--color-surface)}.configurator-box{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;max-width:900px;margin:0 auto}.configurator-header{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid var(--color-border);padding-bottom:16px}.configurator-tabs{display:flex;gap:8px}.configurator-tab{padding:10px 20px;border-radius:var(--radius);font-weight:600;font-size:0.9375rem;background:var(--color-surface);color:var(--color-muted);border:1px solid var(--color-border);cursor:pointer;transition:all var(--transition)}.configurator-tab.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.unit-toggle{display:flex;align-items:center;gap:8px;font-size:0.875rem;font-weight:600}.unit-toggle button{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-muted);font-weight:600;font-size:0.8125rem;cursor:pointer}.unit-toggle button.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.configurator-body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}.configurator-inputs{display:flex;flex-direction:column;gap:16px}.input-group{display:flex;flex-direction:column;gap:6px}.input-group label{font-size:0.875rem;font-weight:600;color:var(--color-text)}.input-group input{padding:12px 16px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:1rem;width:100%;transition:border-color var(--transition)}.input-group input:focus{outline:none;border-color:var(--color-primary)}.configurator-diagram{display:flex;align-items:center;justify-content:center;background:var(--color-surface);border-radius:var(--radius);padding:24px;min-height:220px}.configurator-diagram svg{max-width:100%;height:auto}.fabric-selector{margin-top:24px;padding-top:24px;border-top:1px solid var(--color-border)}.fabric-selector h4{font-size:0.875rem;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}.fabric-options{display:flex;flex-wrap:wrap;gap:10px}.fabric-chip{padding:10px 18px;border-radius:999px;border:2px solid var(--color-border);background:var(--color-bg);font-size:0.875rem;font-weight:600;cursor:pointer;transition:all var(--transition)}.fabric-chip:hover{border-color:var(--color-primary);color:var(--color-primary)}.fabric-chip.active{border-color:var(--color-primary);background:var(--color-primary);color:#fff}.configurator-price{margin-top:24px;padding:20px;background:var(--color-surface);border-radius:var(--radius);text-align:center}.configurator-price .price-label{font-size:0.875rem;color:var(--color-muted);margin-bottom:4px}.configurator-price .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}.configurator-price .price-note{font-size:0.75rem;color:var(--color-muted);margin-top:4px}.configurator-actions{margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.router-section{background:var(--color-surface)}.router-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:40px}.router-card{display:flex;flex-direction:column;background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;text-decoration:none;transition:transform var(--transition),box-shadow var(--transition)}.router-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.router-visual{width:100%;aspect-ratio:4 / 3;overflow:hidden;position:relative}.router-visual img{width:100%;height:100%;object-fit:cover;display:block}.router-info{padding:20px;display:flex;flex-direction:column;flex:1}.router-info h3{font-size:1.125rem;font-weight:700;color:var(--color-text);margin-bottom:8px}.router-desc{font-size:0.875rem;color:var(--color-muted);margin-bottom:16px;line-height:1.5;flex:1}.router-info .btn{width:100%;margin-top:auto}.blueprint-block{display:flex;align-items:flex-start;gap:16px;background:var(--color-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);max-width:720px;margin:0 auto;border-left:4px solid var(--color-primary)}.blueprint-block svg{width:32px;height:32px;flex-shrink:0;color:var(--color-primary);margin-top:2px}.blueprint-block p{margin:0;font-size:1rem;color:var(--color-text);line-height:1.6}.blueprint-block strong{color:var(--color-primary)}.fabric-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}.fabric-tab{padding:12px 24px;border-radius:0;font-weight:600;font-size:0.9375rem;background:transparent;color:var(--color-muted);border:none;border-bottom:2px solid var(--color-border);cursor:pointer;transition:all var(--transition);white-space:nowrap}.fabric-tab:hover{color:var(--color-primary);border-bottom-color:var(--color-primary)}.fabric-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:transparent}.fabric-panel{display:none;animation:fadeIn 0.3s ease}.fabric-panel.active{display:block}.fabric-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.fabric-panel-visual{background:var(--color-surface);border-radius:var(--radius);aspect-ratio:4 / 3;display:flex;align-items:center;justify-content:center;font-size:0.875rem;color:var(--color-muted);overflow:hidden}.fabric-panel-visual img{width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--radius)}.fabric-panel-info h3{font-size:1.5rem;margin-bottom:8px}.fabric-panel-info .tagline{font-size:1rem;color:var(--color-primary);font-weight:600;margin-bottom:16px}.fabric-panel-info p{color:var(--color-muted);margin-bottom:16px}.fabric-panel-info ul{list-style:disc;padding-left:20px;margin-bottom:16px}.fabric-panel-info ul li{margin-bottom:6px;color:var(--color-text)}.fabric-colors{display:grid;grid-template-columns:repeat(6,32px);gap:8px;margin-top:12px}.color-swatch{width:32px;height:32px;border-radius:50%;border:2px solid var(--color-border);cursor:pointer;transition:transform var(--transition)}.color-swatch:hover{transform:scale(1.15)}.reviews-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:800px;margin:0 auto}.review-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;border:1px solid var(--color-border);border-left:4px solid var(--color-primary)}.review-stars{color:#f59e0b;font-size:1rem;margin-bottom:12px}.review-text{font-size:1rem;color:var(--color-text);margin-bottom:16px;line-height:1.6;font-style:italic}.review-author{font-size:0.875rem;font-weight:600;color:var(--color-muted)}.review-badge{text-align:center;margin-top:48px;clear:both}.review-badge .badge-box{display:inline-flex;align-items:center;gap:12px;background:var(--color-surface);padding:16px 24px;border-radius:var(--radius);border:1px solid var(--color-border)}.review-badge .badge-box svg{width:40px;height:40px;color:#f59e0b}.email-signup{background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-dark) 100%);color:#fff;text-align:center;padding:60px 24px}.email-signup h2{color:#fff;margin-bottom:8px}.email-signup p{opacity:0.9;margin-bottom:24px}.email-form{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:520px;margin:0 auto}.email-form input{flex:1;min-width:240px;padding:14px 20px;border:none;border-radius:var(--radius);font-family:var(--font-main);font-size:1rem}.email-form input::placeholder{color:var(--color-muted)}.email-form button{padding:14px 28px;background:#fff;color:var(--color-primary);font-weight:700;border-radius:var(--radius);border:none;font-family:var(--font-main);font-size:1rem;cursor:pointer;transition:background var(--transition)}.email-form button:hover{background:#f0f7ff}.email-form-msg{margin-top:12px;font-size:0.95rem;min-height:1.4em}.section-header{text-align:center;margin-bottom:40px}.section-header h2{margin-bottom:8px}.section-header p{color:var(--color-muted);max-width:560px;margin:0 auto}.page-hero{background:var(--color-surface);padding:60px 0 40px;text-align:center}.page-hero h1{margin-bottom:8px}.page-hero p{color:var(--color-muted);max-width:640px;margin:0 auto}.brand-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:72px 24px 56px;position:relative;overflow:hidden;color:#fff}.brand-hero::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}.brand-hero .container{position:relative;z-index:1;text-align:center}.brand-hero h1{font-size:2.5rem;font-weight:700;line-height:1.15;margin-bottom:16px;color:#fff}.brand-hero .hero-sub{font-size:1.0625rem;color:rgba(255,255,255,0.92);max-width:600px;margin:0 auto;line-height:1.6}.filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--color-surface);border-radius:var(--radius)}.filter-bar select,.filter-bar input{padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.875rem;background:var(--color-bg)}.size-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:0.9375rem}.size-table th,.size-table td{padding:12px 16px;border:1px solid var(--color-border);text-align:left}.size-table th{background:var(--color-surface);font-weight:600}.size-table tr:nth-child(even){background:var(--color-surface)}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.category-card:hover{box-shadow:0 6px 20px rgba(44,150,244,0.12)}.product-card:hover{box-shadow:0 6px 20px rgba(44,150,244,0.12)}</style>
+  <meta name="description" content="Custom bedding for any size or shape, including boats, RVs, joined family beds and unique mattresses. Sheets and protection made to order worldwide.">
+  <title>Custom Bedding for Any Size & Shape | MildMate</title>
+
+  <!-- Preconnect to external origins for faster connection setup -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+  <!-- Preload hero image (LCP element) so browser discovers it immediately -->
+  <link rel="preload" as="image" href="/images/Hero01-960.webp" imagesrcset="/images/Hero01-640.webp 640w, /images/Hero01-960.webp 960w, /images/Hero01-1280.webp 1280w, /images/Hero01.webp 1500w" imagesizes="100vw" fetchpriority="high" type="image/webp">
+
+  <!-- Google Fonts: Quicksand -->
+  <link href="/css/fonts.css" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/main.min.css">
+  <style>
+    .home-page .btn-primary {
+      background: var(--color-primary);
+      border: 2px solid var(--color-primary);
+      color: #fff;
+      font-weight: 700;
+    }
+    .home-page .btn-primary:hover {
+      background: var(--color-primary-dark);
+      border-color: var(--color-primary-dark);
+      color: #fff;
+    }
+    .home-page .nav-link--current,
+    .home-page .main-nav .nav-link:hover {
+      color: var(--color-primary);
+      border-bottom: 2px solid var(--color-primary);
+    }
+    .home-page .nav-link {
+      border-bottom: 2px solid transparent;
+      padding-bottom: 4px;
+      transition: color var(--transition), border-color var(--transition);
+    }
+    .home-page .sign-in-pill {
+      background: var(--color-primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background var(--transition);
+    }
+    .home-page .sign-in-pill:hover {
+      background: var(--color-primary-dark);
+      color: #fff;
+    }
+    .home-page .mobile-nav-signin a {
+      display: inline-block;
+      background: var(--color-primary);
+      color: #fff;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-top: 8px;
+    }
+    .home-page .mobile-nav-signin a:hover {
+      background: var(--color-primary-dark);
+      color: #fff;
+    }
+    .home-page .carousel-arrow {
+      color: var(--color-text);
+    }
+    .home-page .section-row-white {
+      background: #fff;
+    }
+    .home-page .section-row-surface {
+      background: var(--color-surface);
+    }
+    .home-page .mobile-sticky-cta {
+      display: none;
+    }
+    .home-page .shop-product-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .home-page .shop-product-grid .category-card,
+    .home-page .niche-grid-compact .category-card {
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      background: #fff;
+      box-shadow: var(--shadow);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .home-page .shop-product-grid .category-image,
+    .home-page .niche-grid-compact .category-image {
+      aspect-ratio: 4 / 3;
+    }
+    .home-page .shop-product-grid .category-label,
+    .home-page .niche-grid-compact .category-label {
+      position: relative;
+      padding: 12px 16px 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.3;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 44px;
+    }
+    .home-page .shop-product-grid .category-label::after,
+    .home-page .niche-grid-compact .category-label::after {
+      content: "\2192";
+      color: var(--color-primary);
+      font-weight: 700;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+    .home-page .niche-grid-compact {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .home-page .niche-grid-compact .category-copy {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      padding: 0 16px 14px;
+      text-align: left;
+      font-size: 0.875rem;
+      line-height: 1.45;
+      color: var(--color-muted);
+      min-height: 2.9em;
+    }
+    .home-page .material-accordion {
+      display: none;
+      margin-top: 8px;
+    }
+    .home-page .material-item {
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: #fff;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .home-page .material-item summary {
+      list-style: none;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--color-text);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.9375rem;
+    }
+    .home-page .material-item summary::-webkit-details-marker {
+      display: none;
+    }
+    .home-page .material-item summary::after {
+      content: "+";
+      color: var(--color-primary);
+      font-size: 1.125rem;
+      line-height: 1;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .home-page .material-item[open] summary::after {
+      content: "-";
+    }
+    .home-page .material-body {
+      padding: 0 16px 14px;
+      color: var(--color-muted);
+      line-height: 1.6;
+      font-size: 0.875rem;
+    }
+    .home-page .trade-teaser {
+      background: var(--color-surface);
+      padding: 24px;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .home-page .trade-teaser-title {
+      margin: 0 0 6px;
+      font-size: 1.25rem;
+      line-height: 1.3;
+      color: var(--color-heading);
+    }
+    .home-page .trade-teaser-copy {
+      margin: 0;
+      color: var(--color-muted);
+    }
+    @media (max-width: 1024px) {
+      .home-page .shop-product-grid,
+      .home-page .niche-grid-compact {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .home-page .shop-product-grid .category-card,
+      .home-page .niche-grid-compact .category-card {
+        min-width: 0;
+      }
+      .home-page .trade-teaser {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+    .home-page .hero h1 {
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+      margin-bottom: 12px;
+    }
+    .home-page .hero h1 span {
+      color: #ffffff;
+    }
+    .home-page .hero .hero-sub {
+      color: rgba(255, 255, 255, 0.95);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      margin-bottom: 32px;
+    }
+    .home-page .hero-overlay {
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.45) 50%, rgba(0, 0, 0, 0.7) 100%) !important;
+    }
+    .home-page .mobile-break {
+      display: none;
+    }
+    .home-page .hero-title-mobile {
+      display: none;
+    }
+    .home-page .hero-sub-desktop {
+      white-space: nowrap;
+    }
+    /* Chat buttons styling (base/desktop) */
+    .home-page .footer-chat-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .home-page .footer-chat-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s ease, background 0.25s ease;
+      text-decoration: none;
+    }
+    .home-page .footer-chat-btn:hover {
+      transform: scale(1.12);
+      background: var(--color-primary);
+    }
+    .home-page .footer-chat-btn img {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+    }
+    .home-page .footer-chat-btn span {
+      display: none;
+    }
+
+    /* Marketplace base/desktop labels hidden */
+    .home-page .marketplace-col {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .home-page .marketplace-label {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .home-page .header-actions .lang-toggle {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+      }
+      .home-page .header-actions {
+        gap: 10px;
+      }
+      .home-page .mobile-break {
+        display: block;
+      }
+      .home-page .hero-title-desktop {
+        display: none;
+      }
+      .home-page .hero-title-mobile {
+        display: block;
+      }
+      .home-page .hero-sub-desktop {
+        display: none;
+      }
+      .home-page .hero {
+        position: relative;
+        min-height: 420px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .home-page .hero-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        aspect-ratio: auto;
+      }
+      .home-page .hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.45) 50%, rgba(0, 0, 0, 0.7) 100%) !important;
+        z-index: 1;
+      }
+      .home-page .hero-content {
+        position: relative;
+        z-index: 2;
+        padding: 0;
+        width: 100%;
+        max-width: 340px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .home-page .hero h1 {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.25;
+        margin-bottom: 10px;
+        color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      .home-page .hero .hero-sub {
+        display: block !important;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 20px;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      }
+      .home-page .hero .hero-actions {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin-top: 0;
+      }
+      .home-page .hero .hero-actions .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 78%;
+        max-width: 280px;
+        height: 50px;
+        padding: 0 24px;
+        font-size: 0.9375rem;
+        font-weight: 700;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(44, 150, 244, 0.3);
+      }
+      .home-page .trust-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .home-page .trust-item span {
+        font-size: 0.75rem;
+      }
+      .home-page .shop-product-grid .category-image,
+      .home-page .niche-grid-compact .category-image {
+        aspect-ratio: 4 / 3;
+      }
+      .home-page .shop-product-grid .category-label,
+      .home-page .niche-grid-compact .category-label {
+        padding: 10px 12px 12px;
+        font-size: 0.875rem;
+      }
+      .home-page .niche-grid-compact .category-copy {
+        display: none !important;
+      }
+      .home-page .fabric-compare-grid,
+      .home-page .fabric-cards {
+        display: none !important;
+      }
+      .home-page .material-accordion {
+        display: block;
+      }
+      body.home-page {
+        padding-bottom: 84px;
+      }
+      .home-page .mobile-sticky-cta {
+        display: block;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #fff;
+        border-top: 1px solid var(--color-border);
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+        z-index: 900;
+      }
+      .home-page .mobile-sticky-cta .btn {
+        width: 100%;
+        display: block;
+        text-align: center;
+        padding: 12px 16px;
+      }
+      /* Footer responsive layout */
+      .home-page .site-footer {
+        padding: 40px 0 28px !important;
+      }
+      .home-page .site-footer .footer-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 32px 20px !important;
+        margin-bottom: 28px !important;
+      }
+      .home-page .site-footer .footer-col:nth-child(1),
+      .home-page .site-footer .footer-col:nth-child(2) {
+        grid-column: span 1 !important;
+      }
+      .home-page .site-footer .footer-col:nth-child(3),
+      .home-page .site-footer .footer-col:nth-child(4) {
+        grid-column: span 2 !important;
+      }
+      
+      /* Section headers spacing & typography */
+      .home-page .site-footer .footer-col h3 {
+        font-size: 15px !important;
+        margin-bottom: 16px !important;
+        letter-spacing: 0.5px !important;
+      }
+      
+      /* Section links vertical spacing */
+      .home-page .site-footer .footer-col ul li {
+        margin-bottom: 12px !important;
+      }
+      .home-page .site-footer .footer-col ul li a {
+        font-size: 15px !important;
+        line-height: 1.5 !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+      .home-page .site-footer .footer-col ul li a:hover {
+        color: var(--color-primary) !important;
+      }
+      
+      /* Marketplace labels on mobile */
+      .home-page .marketplace-col {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 6px !important;
+      }
+      .home-page .marketplace-label {
+        display: block !important;
+        font-size: 11px !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-weight: 500 !important;
+      }
+      
+      /* Marketplace & Social icon sizing & tap targets */
+      .home-page .footer-icon-circle,
+      .home-page .footer-social-icon {
+        width: 36px !important;
+        height: 36px !important;
+        position: relative !important;
+      }
+      .home-page .footer-icon-circle::after,
+      .home-page .footer-social-icon::after {
+        content: '' !important;
+        position: absolute !important;
+        top: -4px !important;
+        bottom: -4px !important;
+        left: -4px !important;
+        right: -4px !important;
+      }
+      .home-page .footer-icon-circle img,
+      .home-page .footer-social-icon img {
+        width: 20px !important;
+        height: 20px !important;
+      }
+      
+      /* Social Media centered row */
+      .home-page .footer-social-center {
+        margin: 24px 0 20px !important;
+        gap: 12px !important;
+        justify-content: center !important;
+      }
+      
+      /* Chat buttons on mobile */
+      .home-page .footer-chat-buttons {
+        display: flex !important;
+        gap: 12px !important;
+        margin-top: 16px !important;
+        width: 100% !important;
+        max-width: 320px !important;
+      }
+      .home-page .footer-chat-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        flex: 1 !important;
+        width: auto !important;
+        height: 40px !important;
+        border-radius: 6px !important;
+        background: rgba(255, 255, 255, 0.12) !important;
+        color: #ffffff !important;
+        transition: background 0.25s ease !important;
+        transform: none !important;
+      }
+      .home-page .footer-chat-btn:hover {
+        background: var(--color-primary) !important;
+        transform: none !important;
+      }
+      .home-page .footer-chat-btn img {
+        width: 18px !important;
+        height: 18px !important;
+      }
+      .home-page .footer-chat-btn span {
+        display: inline !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+      }
+      
+      /* Legal footer bottom layout */
+      .home-page .footer-bottom {
+        margin-top: 20px !important;
+        gap: 10px !important;
+      }
+      .home-page .footer-bottom-links {
+        margin-bottom: 4px !important;
+      }
+    }
+    @media (min-width: 1025px) {
+      .home-page .configurator-body {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: start;
+      }
+      .home-page .configurator-diagram {
+        grid-column: 1;
+      }
+      .home-page .configurator-inputs {
+        grid-column: 2;
+      }
+      .home-page .fabric-panel-grid {
+        align-items: start;
+      }
+    }
+    @media (max-width: 768px) {
+      .home-page .container {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+      }
+      .home-page .configurator-body,
+      .home-page .fabric-panel-grid,
+      .home-page .router-grid,
+      .home-page .reviews-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+      }
+      .home-page .blueprint-block {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .home-page .section-header p,
+      .home-page .category-copy,
+      .home-page .router-desc,
+      .home-page .fabric-panel-info p,
+      .home-page .review-text,
+      .home-page .material-body,
+      .home-page .product-info p {
+        max-width: 100% !important;
+        line-height: 1.7 !important;
+      }
+      .home-page .hero .hero-actions,
+      .home-page .configurator-tabs,
+      .home-page .fabric-options,
+      .home-page .configurator-actions,
+      .home-page .email-form {
+        gap: 12px !important;
+      }
+      .home-page input:not([type="checkbox"]):not([type="radio"]),
+      .home-page select,
+      .home-page textarea {
+        font-size: 16px !important;
+        min-height: 48px !important;
+      }
+      .home-page .btn,
+      .home-page .fabric-chip,
+      .home-page .configurator-tab,
+      .home-page .unit-toggle button,
+      .home-page .filter-chip,
+      .home-page .category-card {
+        min-height: 44px;
+      }
+    }
+    .home-page .shop-product-grid .category-image,
+    .home-page .niche-grid-compact .category-image,
+    .home-page .fabric-panel-visual {
+      width: 100%;
+      overflow: hidden;
+    }
+    .home-page .shop-product-grid .category-image picture,
+    .home-page .niche-grid-compact .category-image picture,
+    .home-page .fabric-panel-visual picture {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .home-page .shop-product-grid .category-image img,
+    .home-page .niche-grid-compact .category-image img,
+    .home-page .fabric-panel-visual img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  </style>
+  <style>
+    @media (max-width: 640px) {
+      .product-carousel-wrapper .carousel-arrow { display: none !important; }
+      .product-grid.scroll-row { padding-inline: 0; }
+      .product-grid.scroll-row .product-card {
+        min-width: calc(100vw - 48px) !important;
+        max-width: calc(100vw - 48px) !important;
+      }
+    }
+  </style>
+  <style>
+    .home-page{
+      --hm-primary-text:#0F172A;
+      --hm-support-text:#64748b;
+      --hm-footer-text:#e2e8f0;
+      --hm-footer-muted:#cbd5e1;
+    }
+    .home-page .section-header h2,
+    .home-page .category-label,
+    .home-page .product-title,
+    .home-page .product-price,
+    .home-page .review-text,
+    .home-page .review-author,
+    .home-page .fabric-panel-info h3,
+    .home-page .fabric-panel-info .tagline,
+    .home-page .router-info h3,
+    .home-page .material-item summary,
+    .home-page .blueprint-block p{
+      color:var(--hm-primary-text) !important;
+    }
+    .home-page .section-header p,
+    .home-page .category-copy,
+    .home-page .router-desc,
+    .home-page .fabric-panel-info p,
+    .home-page .fabric-panel-info ul li,
+    .home-page .material-body,
+    .home-page .small,
+    .home-page .review-badge,
+    .home-page .email-form-msg{
+      color:var(--hm-support-text) !important;
+    }
+    .home-page .product-price,
+    .home-page .configurator-price .price-value{
+      font-weight:700;
+      letter-spacing:0.01em;
+    }
+    .home-page a:not(.btn):not(.review-text):not(.review-author){
+      color:var(--color-primary);
+    }
+    .home-page .btn-primary{
+      color:#fff !important;
+    }
+    .home-page .hero .hero-actions .btn-primary{
+      color:#fff !important;
+      text-shadow:0 1px 2px rgba(0,0,0,0.25);
+    }
+    .home-page input,
+    .home-page select,
+    .home-page textarea{
+      color:var(--hm-primary-text);
+    }
+    .home-page input::placeholder,
+    .home-page textarea::placeholder{
+      color:var(--hm-support-text);
+      opacity:1;
+    }
+    .home-page .site-footer .footer-col h3{
+      color:#fff !important;
+    }
+    .home-page .site-footer .footer-col ul li a,
+    .home-page .site-footer .footer-bottom,
+    .home-page .site-footer .footer-bottom-links a,
+    .home-page .site-footer .footer-contact p{
+      color:var(--hm-footer-text) !important;
+    }
+    .home-page .site-footer .footer-contact p,
+    .home-page .site-footer .footer-bottom{
+      color:var(--hm-footer-muted) !important;
+    }
+    .home-page .site-footer .footer-col ul li a:hover,
+    .home-page .site-footer .footer-bottom-links a:hover{
+      color:var(--color-primary) !important;
+    }
+  </style>
+
+  <!-- Phase 8: Tracking + OG -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MildMate">
+  <meta property="og:title" content="Custom Bedding & Made-to-Measure Sheets | MildMate Thailand">
+  <meta property="og:description" content="Shop made-to-measure fitted sheets, duvet covers, and mattress protectors for standard, marine, RV, and family beds. Custom sizes shipped worldwide.">
+  <meta property="og:image" content="/images/MildMate_OG.png">
+  <meta property="og:image:secure_url" content="/images/MildMate_OG.png">
+  <meta property="og:image:alt" content="MildMate custom bedding">
+  <meta property="og:url" content="https://www.mildmate.com/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Custom Bedding & Made-to-Measure Sheets | MildMate Thailand">
+  <meta name="twitter:description" content="Shop made-to-measure fitted sheets, duvet covers, and mattress protectors for standard, marine, RV, and family beds. Custom sizes shipped worldwide.">
+  <meta name="twitter:image" content="/images/MildMate_OG.png">
+      <script src="/js/analytics-env.js"></script>
+  <script>
+    (function () {
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
+      } else {
+        bootMildmateAnalytics();
+      }
+    })();
+  </script>
+</head>
+<body class="home-page">
+  <!-- Phase 8: GTM (noscript) -->
+  <noscript id="gtm-noscript"></noscript>
+
+  <!-- ===== HEADER ===== -->
+  <!-- __HEADER__ -->
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main>
+
+    <!-- 1. HERO -->
+    <section class="hero">
+      <picture><source srcset="/images/Hero01-640.webp 640w, /images/Hero01-960.webp 960w, /images/Hero01-1280.webp 1280w, /images/Hero01.webp 1500w" sizes="100vw" type="image/webp"><img src="/images/Hero01.jpg" alt="Custom Bedding, Made Simple" class="hero-bg" fetchpriority="high" decoding="async" width="1500" height="930"></picture>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>
+          <span class="hero-title-desktop">Custom-Fit Bedding for<br class="mobile-break">Any Size, Shape, or Space</span>
+          <span class="hero-title-mobile">Custom-Fit Bedding for Any Size</span>
+        </h1>
+        <p class="hero-sub">
+          <span class="hero-sub-desktop">Made-to-measure sheets, duvet covers, and mattress protection for hard-to-fit beds.</span>
+        </p>
+        <div class="hero-actions" style="margin-top:5px;">
+          <a href="/products/" class="btn btn-primary">Shop Custom Bedding</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TRUST BAR -->
+    <section class="trust-bar" style="background:var(--color-surface);">
+      <div class="container">
+        <div class="trust-grid">
+          <div class="trust-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20"/><path d="M2 7v10"/><path d="M22 7v10"/><path d="M2 17h20"/><path d="M6 7v3"/><path d="M10 7v3"/><path d="M14 7v3"/><path d="M18 7v3"/></svg>
+            <span>Precision Fit Guarantee</span>
+          </div>
+          <div class="trust-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            <span>Global Express Delivery</span>
+          </div>
+          <div class="trust-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+            <span>Top-Rated Etsy Boutique</span>
+          </div>
+          <div class="trust-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M20 22c0-6.6-5.4-12-12-12S2 12 2 12"/><path d="M7 18c3-2 8-2 11 0"/></svg>
+            <span>Sensitive Skin Friendly</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SHOP BY PRODUCT -->
+    <section class="section section-row section-row-white">
+      <div class="container">
+        <div class="section-header">
+          <h2>Shop by Product</h2>
+          <p>Find made-to-measure bedding for every bed, mattress and sleep setup.</p>
+        </div>
+        <div class="category-grid shop-product-grid">
+          <a href="/sheets/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-sheets-240.webp 240w, /images/Categories/category-sheets-400.webp 400w, /images/Categories/category-sheets.webp 800w" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 20vw" type="image/webp"><img src="/images/Categories/category-sheets.jpg" alt="Sheets  -  Fitted & Flat" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Sheets</div>
+          </a>
+          <a href="/duvet-covers/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-duvet-covers-240.webp 240w, /images/Categories/category-duvet-covers-400.webp 400w, /images/Categories/category-duvet-covers.webp 800w" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 20vw" type="image/webp"><img src="/images/Categories/category-duvet-covers.jpg" alt="Duvet Covers" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Duvet Covers</div>
+          </a>
+          <a href="/pillowcases/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-pillowcases-240.webp 240w, /images/Categories/category-pillowcases-400.webp 400w, /images/Categories/category-pillowcases.webp 800w" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 20vw" type="image/webp"><img src="/images/Categories/category-pillowcases.jpg" alt="Pillowcases" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Pillowcases</div>
+          </a>
+          <a href="/protection/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-protection-240.webp 240w, /images/Categories/category-protection-400.webp 400w, /images/Categories/category-protection.webp 800w" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 20vw" type="image/webp"><img src="/images/Categories/category-protection.jpg" alt="Mattress Protection  -  Mattress & Pillow Protectors" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Mattress Protection</div>
+          </a>
+          <a href="/accessories/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-accessories-240.webp 240w, /images/Categories/category-accessories-400.webp 400w, /images/Categories/category-accessories.webp 800w" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 20vw" type="image/webp"><img src="/images/Categories/category-accessories.jpg" alt="Bedding Accessories  -  BedBridge & More" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Bedding Accessories</div>
+          </a>
+          <a href="/products/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-all.webp" type="image/webp"><img src="/images/Categories/category-all.jpg" alt="All Products" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">All Products</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. SHOP BY NICHE -->
+    <section class="section section-row section-row-surface">
+      <div class="container">
+        <div class="section-header">
+          <h2>Comfort &amp; Protection by Sleep Situation</h2>
+          <p>Shop by sleep situation with custom-fit comfort and reliable protection for each setup.</p>
+        </div>
+        <div class="category-grid niche-grid-compact">
+          <a href="/marine/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-marine-240.webp 240w, /images/Categories/category-marine-400.webp 400w, /images/Categories/category-marine.webp 800w" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 25vw" type="image/webp"><img src="/images/Categories/category-marine.jpg" alt="Marine & Yacht bedding on boat" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Marine & Yacht</div>
+            <span class="category-copy">Custom-fit bedding for boat cabins and V-berths.</span>
+          </a>
+          <a href="/family/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-family-240.webp 240w, /images/Categories/category-family-400.webp 400w, /images/Categories/category-family.webp 800w" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 25vw" type="image/webp"><img src="/images/Categories/category-family.jpg" alt="Family co-sleep bedding" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Family & Co-Sleep</div>
+            <span class="category-copy">Seamless comfort for oversized and joined beds.</span>
+          </a>
+          <a href="/deep-pocket/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-deep-pocket-240.webp 240w, /images/Categories/category-deep-pocket-400.webp 400w, /images/Categories/category-deep-pocket.webp 800w" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 25vw" type="image/webp"><img src="/images/Categories/category-deep-pocket.jpg" alt="Deep Pocket bedding" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Deep Pocket</div>
+            <span class="category-copy">Secure fit for tall mattresses up to 50 cm.</span>
+          </a>
+          <a href="/pets/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-pets-240.webp 240w, /images/Categories/category-pets-400.webp 400w, /images/Categories/category-pets.webp 800w" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 25vw" type="image/webp"><img src="/images/Categories/category-pets.jpg" alt="Pet Owner bedding" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Pet Owners</div>
+            <span class="category-copy">Easy-care bedding designed for homes with pets.</span>
+          </a>
+          <a href="/boarding-dorm/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-boarding-dorm.webp" type="image/webp"><img src="/images/Categories/category-boarding-dorm.jpg" alt="Dorm & Student bedding" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">Dorm & Student</div>
+            <span class="category-copy">Practical, durable bedding for dorms and shared rooms.</span>
+          </a>
+          <a href="/rv-truck/" class="category-card">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-rv-truck.webp" type="image/webp"><img src="/images/Categories/category-rv-truck.jpg" alt="RV & Truck bedding" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">RV & Truck</div>
+            <span class="category-copy">Custom-fit solutions for RV bunks and truck sleeper cabs.</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. FABRIC INTELLIGENCE SHOWCASE -->
+    <section class="section section-row section-row-white">
+      <div class="container">
+        <div class="section-header">
+          <h2>Material Intelligence</h2>
+          <p>Compare our four fabric families side-by-side to find your perfect match.</p>
+        </div>
+        <style>
+          .fabric-compare{position:relative}
+          .fabric-compare-grid{display:grid;grid-template-columns:140px repeat(4,1fr);gap:0;min-width:700px;border:1px solid var(--color-border);border-radius:var(--radius);overflow:hidden}
+          .fabric-compare-grid>*{padding:16px 14px;font-size:0.875rem;border-bottom:1px solid var(--color-border);display:flex;align-items:center}
+          .fabric-compare-grid .fc-head{background:var(--color-heading);color:#fff;font-weight:700;justify-content:center;text-align:center;border-bottom:2px solid var(--color-heading)}
+          .fabric-compare-grid .fc-label{background:var(--color-surface);font-weight:600;color:var(--color-text);border-right:1px solid var(--color-border)}
+          .fabric-compare-grid .fc-cell{justify-content:center;text-align:center;color:var(--color-muted)}
+          .fabric-compare-grid .fc-cell:last-child,.fabric-compare-grid .fc-label:last-child{border-bottom:none}
+          .fc-colors{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+          .fc-swatch{width:14px;height:14px;border-radius:50%}
+          .fc-badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:0.75rem;font-weight:600;background:#dcfce7;color:#166534}
+          .fc-link{color:var(--color-primary);font-weight:600}
+          .fabric-compare-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -24px;padding:0 24px}
+          .fabric-cards{display:none;flex-direction:column;gap:16px}
+          .fabric-card{background:#fff;border:1px solid var(--color-border);border-radius:var(--radius);overflow:hidden}
+          .fabric-card-head{background:var(--color-heading);color:#fff;font-weight:700;font-size:0.9375rem;padding:14px 16px;text-align:center}
+          .fabric-card-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--color-border);font-size:0.8125rem}
+          .fabric-card-row:last-child{border-bottom:none}
+          .fabric-card-row>span:first-child{font-weight:600;color:var(--color-text);min-width:70px}
+          .fabric-card-row>span:last-child{color:var(--color-muted);text-align:right}
+          .fabric-card-row .fc-swatch{display:inline-block;vertical-align:middle;width:14px;height:14px;border-radius:50%;margin:1px}
+          @media (max-width:768px){.fabric-compare-grid{display:none}.fabric-cards{display:flex}}
+        </style>
+        <div class="fabric-compare">          <div class="fabric-compare-grid">
+            <div class="fc-head">Feature</div>
+            <div class="fc-head">BreezePlus</div>
+            <div class="fc-head">CloudSoft</div>
+            <div class="fc-head">PremaCotton</div>
+            <div class="fc-head">EcoLuxe</div>
+            <div class="fc-label">Material</div>
+            <div class="fc-cell">50/50 Cotton-Microfiber</div>
+            <div class="fc-cell">Premium Microfiber</div>
+            <div class="fc-cell">100% Cotton</div>
+            <div class="fc-cell">Unbleached Calico-Style Cotton</div>
+            <div class="fc-label">Cooling</div>
+            <div class="fc-cell">Breathable comfort</div>
+            <div class="fc-cell">Quick-Dry</div>
+            <div class="fc-cell">Breathable</div>
+            <div class="fc-cell">Natural airflow</div>
+            <div class="fc-label">Best For</div>
+            <div class="fc-cell">Hot sleepers &amp; pets</div>
+            <div class="fc-cell">Marine, RV, yachts</div>
+            <div class="fc-cell">Sensitive skin</div>
+            <div class="fc-cell">Neutral, natural tones</div>
+            <div class="fc-label">Colors</div>
+            <div class="fc-cell"><div class="fc-colors"><span class="fc-swatch" style="background:#4D545B"></span><span class="fc-swatch" style="background:#B7BEC8"></span><span class="fc-swatch" style="background:#D9D1C1"></span><span class="fc-swatch" style="background:#9CCAE1"></span><span class="fc-swatch" style="background:#618283"></span><span class="fc-swatch" style="background:#5A7DA2"></span><span class="fc-swatch" style="background:#FFFFFF;border:1px solid #ccc"></span><span class="fc-swatch" style="background:#E9B7BF"></span><span class="fc-swatch" style="background:#F1EFE1"></span></div></div>
+            <div class="fc-cell"><div class="fc-colors"><span class="fc-swatch" style="background:#67E4D3"></span><span class="fc-swatch" style="background:#5E5E5E"></span><span class="fc-swatch" style="background:#A5A9B4"></span><span class="fc-swatch" style="background:#385E9D"></span><span class="fc-swatch" style="background:#486C6A"></span><span class="fc-swatch" style="background:#1E4477"></span><span class="fc-swatch" style="background:#D48C98"></span><span class="fc-swatch" style="background:#E1D1B1"></span><span class="fc-swatch" style="background:#B99F87"></span><span class="fc-swatch" style="background:#FFFFFF"></span><span class="fc-swatch" style="background:#9581B1"></span><span class="fc-swatch" style="background:#93B09D"></span></div></div>
+            <div class="fc-cell"><div class="fc-colors"><span class="fc-swatch" style="background:#ffffff;border:1px solid #ccc"></span></div></div>
+            <div class="fc-cell"><div class="fc-colors"><span class="fc-swatch" style="background:#f3e5ab"></span></div></div>
+          </div>
+          <div class="fabric-cards">
+            <div class="fabric-card">
+              <div class="fabric-card-head">BreezePlus</div>
+              <div class="fabric-card-row"><span>Material</span><span>50/50 Cotton-Microfiber</span></div>
+              <div class="fabric-card-row"><span>Cooling</span><span>Breathable comfort</span></div>
+              <div class="fabric-card-row"><span>Best For</span><span>Hot sleepers &amp; pets</span></div>
+              <div class="fabric-card-row"><span>Colors</span><span><span class="fc-swatch" style="background:#4D545B"></span><span class="fc-swatch" style="background:#B7BEC8"></span><span class="fc-swatch" style="background:#D9D1C1"></span><span class="fc-swatch" style="background:#9CCAE1"></span><span class="fc-swatch" style="background:#618283"></span><span class="fc-swatch" style="background:#5A7DA2"></span><span class="fc-swatch" style="background:#FFFFFF;border:1px solid #ccc"></span><span class="fc-swatch" style="background:#E9B7BF"></span><span class="fc-swatch" style="background:#F1EFE1"></span></span></div>
+            </div>
+            <div class="fabric-card">
+              <div class="fabric-card-head">CloudSoft</div>
+              <div class="fabric-card-row"><span>Material</span><span>Premium Microfiber</span></div>
+              <div class="fabric-card-row"><span>Cooling</span><span>Quick-Dry</span></div>
+              <div class="fabric-card-row"><span>Best For</span><span>Marine, RV, yachts</span></div>
+              <div class="fabric-card-row"><span>Colors</span><span><span class="fc-swatch" style="background:#67E4D3"></span><span class="fc-swatch" style="background:#5E5E5E"></span><span class="fc-swatch" style="background:#A5A9B4"></span><span class="fc-swatch" style="background:#385E9D"></span><span class="fc-swatch" style="background:#486C6A"></span><span class="fc-swatch" style="background:#1E4477"></span><span class="fc-swatch" style="background:#D48C98"></span><span class="fc-swatch" style="background:#E1D1B1"></span><span class="fc-swatch" style="background:#B99F87"></span><span class="fc-swatch" style="background:#FFFFFF"></span><span class="fc-swatch" style="background:#9581B1"></span><span class="fc-swatch" style="background:#93B09D"></span></span></div>
+            </div>
+            <div class="fabric-card">
+              <div class="fabric-card-head">PremaCotton</div>
+              <div class="fabric-card-row"><span>Material</span><span>100% Cotton</span></div>
+              <div class="fabric-card-row"><span>Cooling</span><span>Breathable</span></div>
+              <div class="fabric-card-row"><span>Best For</span><span>Sensitive skin</span></div>
+              <div class="fabric-card-row"><span>Colors</span><span><span class="fc-swatch" style="background:#ffffff;border:1px solid #ccc"></span></span></div>
+            </div>
+            <div class="fabric-card">
+              <div class="fabric-card-head">EcoLuxe</div>
+              <div class="fabric-card-row"><span>Material</span><span>Unbleached Calico-Style Cotton</span></div>
+              <div class="fabric-card-row"><span>Cooling</span><span>Natural airflow</span></div>
+              <div class="fabric-card-row"><span>Best For</span><span>Neutral, natural tones</span></div>
+              <div class="fabric-card-row"><span>Colors</span><span><span class="fc-swatch" style="background:#f3e5ab"></span></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="material-accordion" aria-label="Material intelligence accordion">
+          <details class="material-item">
+            <summary>BreezePlus Breathable Cotton-Blend Collection</summary>
+            <div class="material-body">A breathable 50/50 cotton-microfiber blend designed for warm climates, offering easy-care comfort.</div>
+          </details>
+          <details class="material-item">
+            <summary>CloudSoft Easy-Care Premium Microfiber</summary>
+            <div class="material-body">Quick-drying and wrinkle-resistant premium microfiber, ideal for easy maintenance.</div>
+          </details>
+          <details class="material-item">
+            <summary>PremaCotton Natural 100% Cotton</summary>
+            <div class="material-body">Breathable 100% cotton with a natural feel, using fabric certified to OEKO-TEX&reg; Standard 100.</div>
+          </details>
+          <details class="material-item">
+            <summary>EcoLuxe Unbleached Calico Cotton</summary>
+            <div class="material-body">An unbleached cotton plain-weave with natural tones, offering a relaxed character.</div>
+          </details>
+        </div>
+        <div style="text-align:center; margin-top:28px;">
+          <a href="/fabric/" class="btn btn-outline" style="padding:12px 32px;">Explore Full Fabric Details</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. MOST POPULAR -->
+    <section class="section section-row section-row-surface">
+      <div class="container">
+        <div class="section-header">
+          <h2>Most Popular</h2>
+          <p>These are the styles our customers love most  -  custom-made for real homes, boats, and RVs.</p>
+        </div>
+        <div class="product-carousel-wrapper">
+          <button class="carousel-arrow carousel-prev" aria-label="Scroll left">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div class="product-grid scroll-row">
+            <article class="product-card">
+              <div class="product-image">
+                <picture><source srcset="/images/products/3-sided-duvet/main-400.webp 400w, /images/products/3-sided-duvet/main.webp 800w" sizes="(max-width: 640px) calc(100vw - 48px), 260px" type="image/webp"><img src="/images/products/3-sided-duvet/main.jpg" alt="3-Sided Zipper Duvet Cover" width="800" height="800" loading="lazy" decoding="async"></picture>
+              </div>
+              <div class="product-info">
+                <h3 class="product-title">3-Sided Zipper Duvet Cover</h3>
+                <div class="product-price" data-usd="65" data-thb="2295">USD 65.00</div>
+                <a href="/product/3-sided-duvet/" class="btn btn-primary">View Options</a>
+              </div>
+            </article>
+            <article class="product-card">
+              <div class="product-image">
+                <picture><source srcset="/images/products/family-fitted-sheet/main-th-400.webp 400w, /images/products/family-fitted-sheet/main-th.webp 800w" sizes="(max-width: 640px) calc(100vw - 48px), 260px" type="image/webp"><img src="/images/products/family-fitted-sheet/main-th.jpg" alt="Custom Family Fitted Sheet" width="800" height="800" loading="lazy" decoding="async"></picture>
+              </div>
+              <div class="product-info">
+                <h3 class="product-title">Custom Family Fitted Sheet</h3>
+                <div class="product-price" data-usd="45" data-thb="1590">USD 45.00</div>
+                <a href="/product/family-fitted-sheet/" class="btn btn-primary">View Options</a>
+              </div>
+            </article>
+            <article class="product-card">
+              <div class="product-image">
+                <picture><source srcset="/images/products/marine-fitted-sheet/main-400.webp 400w, /images/products/marine-fitted-sheet/main.webp 800w" sizes="(max-width: 640px) calc(100vw - 48px), 260px" type="image/webp"><img src="/images/products/marine-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" width="800" height="800" loading="lazy" decoding="async"></picture>
+              </div>
+              <div class="product-info">
+                <h3 class="product-title">Marine Fitted Sheet</h3>
+                <div class="product-price" data-usd="55" data-thb="1945">From USD 55.00</div>
+                <a href="/product/marine-fitted-sheet/" class="btn btn-primary">View Options</a>
+              </div>
+            </article>
+            <article class="product-card">
+              <div class="product-image">
+                <picture><source srcset="/images/products/mattress-encasement-general/main-400.webp 400w, /images/products/mattress-encasement-general/main.webp 800w" sizes="(max-width: 640px) calc(100vw - 48px), 260px" type="image/webp"><img src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="800" height="800" loading="lazy" decoding="async"></picture>
+              </div>
+              <div class="product-info">
+                <h3 class="product-title">6-Sided Mattress Encasement</h3>
+                <div class="product-price" data-usd="55" data-thb="1945">From USD 55.00</div>
+                <a href="/product/mattress-encasement-general/" class="btn btn-primary">View Options</a>
+              </div>
+            </article>
+            <article class="product-card">
+              <div class="product-image">
+                <picture><source srcset="/images/products/bedbridge-connector/main-400.webp 400w, /images/products/bedbridge-connector/main.webp 800w" sizes="(max-width: 640px) calc(100vw - 48px), 260px" type="image/webp"><img src="/images/products/bedbridge-connector/main.jpg" alt="MildMate BedBridge Connector" width="800" height="800" loading="lazy" decoding="async"></picture>
+              </div>
+              <div class="product-info">
+                <h3 class="product-title">BedBridge Connector</h3>
+                <div class="product-price" data-usd="35" data-thb="1235">USD 35.00</div>
+                <a href="/product/bedbridge-connector/" class="btn btn-primary">View Options</a>
+              </div>
+            </article>
+          </div>
+          <button class="carousel-arrow carousel-next" aria-label="Scroll right">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="carousel-dots" aria-label="Product carousel pagination">
+          <button class="carousel-dot active" aria-label="Product 1" data-index="0"></button>
+          <button class="carousel-dot" aria-label="Product 2" data-index="1"></button>
+          <button class="carousel-dot" aria-label="Product 3" data-index="2"></button>
+          <button class="carousel-dot" aria-label="Product 4" data-index="3"></button>
+          <button class="carousel-dot" aria-label="Product 5" data-index="4"></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. SOCIAL PROOF -->
+    <section class="section section-row section-row-white">
+      <div class="container">
+        <div class="section-header">
+          <h2>What Customers Say</h2>
+          <p>Real reviews from customers around the world.</p>
+        </div>
+        <div class="reviews-carousel-wrapper">
+          <button class="carousel-arrow carousel-prev reviews-prev" aria-label="Previous review">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div class="reviews-carousel">
+            <div class="reviews-track scroll-row">
+              <!-- REVIEWS-START -->
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;I had a custom 160ï¿½50 cm dakimakura waterproof encasement made, and the experience was excellent from start to finish. The seller was very responsive and handled detailed technical requirements without any issues. We went over specifications like zipper length and placement, fabric behavior, and overall construction, and they even created a prototype with measurements before final production to ensure the fit was correct. The final product is a 2-layer system (TPU liner + outer cover), and the fit is exactly as intended  -  snug, smooth, and well-balanced with no bunching. The zipper is properly concealed, and the overall construction feels durable and well thought out. What stood out most was their understanding of materials and willingness to explain design decisions clearly, especially regarding fit and long-term durability.&rdquo;</p>
+            <div class="review-author">&mdash; William, United States</div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;I bought this easy duvet cover for my son at college. The customer service at MildMate is amazing! The staff went out of their way to make sure I got the product I wanted. If you have any special questions or requests, do not hesitate to reach out to them. It is not easy to find 3-Sided Zip Duvet Covers, so I am glad to have found MildMate.&rdquo;</p>
+            <div class="review-author">&mdash; amymccreedy</div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;My parents have a larger mattress cover and Iï¿½m so grateful to have found this 100% human safe option that fits their bed! Thank you so much! Itï¿½s a joy to know they are sleeping in a chemically safe environment ??&rdquo;</p>
+            <div class="review-author">&mdash; Clayton, United States</div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;I was very happy to receive my mattress protector! Everything was as described; custom size worked great, the material is high quality, and I love that it has all around protection. The seller was very responsive to my questions and helped me through a minor shipping fiasco. Highly recommended!&rdquo;</p>
+            <div class="review-author">&mdash; Tariq, Canada</div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;I have always battled with duvets. This was exactly what I was looking for. When they arrived, I was pleasantly surprised with the quality of the cotton. I am in love with these duvet covers.&rdquo;</p>
+            <div class="review-author">&mdash; John Van, South Africa</div>
+          </div>
+<!-- REVIEWS-END -->
+          </div>
+          <div class="review-badge">
+            <div class="badge-box">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <div>
+                <strong>5.0 out of 5 stars</strong><br>
+                <span class="small">Based on 1,000+ verified customer reviews</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="carousel-arrow carousel-next reviews-next" aria-label="Next review">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+      </div>
+    </section>
+
+    <!-- 8. FOR BUSINESS / TRADE -->
+    <section class="section section-row section-row-white">
+      <div class="container">
+        <div class="trade-teaser">
+          <div>
+            <h2 class="trade-teaser-title">Custom Bedding for Business</h2>
+            <p class="trade-teaser-copy">Custom sizing, pattern development, and mattress protection for hospitality, transport, care, and specialist projects. From one custom design to repeat commercial orders, our team can help.</p>
+          </div>
+          <a href="/wholesale/" class="btn btn-primary">Request a Business Quote</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. EMAIL SIGNUP -->
+    <section class="email-signup">
+      <div class="container">
+        <h2>Get 15% Off Your First Order</h2>
+        <p>Join our newsletter for exclusive offers, new product alerts, and bedding tips.</p>
+        <form class="email-form" id="email-signup-form" action="/api/subscribe" method="post">
+          <input type="email" name="email" placeholder="Enter your email" required aria-label="Email address" id="email-signup-input">
+          <!-- honeypot -->
+          <div style="position:absolute;left:-9999px" aria-hidden="true">
+            <label>Leave this empty <input type="text" name="_website" tabindex="-1" autocomplete="off" id="_hp-website"></label>
+          </div>
+          <button type="submit" id="email-signup-btn">Subscribe</button>
+        </form>
+        <p class="email-form-msg" id="email-signup-msg" aria-live="polite"></p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <!-- __FOOTER__ -->
+
+  <!-- Scripts -->
+  <script defer src="/js/nav.js"></script>
+  <script defer src="/js/clerk.js"></script>
+  <script defer src="/js/cart.js"></script>
+  <script defer src="/js/configurator.js"></script>
+  <script defer src="/js/geo.js"></script>
+
+  <!-- Email Signup AJAX Handler -->
+  <script>
+    (function() {
+      const form = document.getElementById('email-signup-form');
+      const input = document.getElementById('email-signup-input');
+      const btn = document.getElementById('email-signup-btn');
+      const msg = document.getElementById('email-signup-msg');
+      if (!form || !input || !btn || !msg) return;
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        btn.disabled = true;
+        btn.textContent = 'Subscribingï¿½';
+        msg.textContent = '';
+        msg.style.color = '';
+
+        const email = input.value.trim();
+        const lang = document.documentElement.lang || 'en';
+
+        try {
+          const res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, source: 'homepage', language: lang, _website: (document.getElementById('_hp-website') || {}).value || '' }),
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            msg.textContent = data.message;
+            msg.style.color = '#ffffff'; // white on blue gradient
+            input.value = '';
+          } else {
+            msg.textContent = data.error || 'Something went wrong. Please try again.';
+            msg.style.color = '#ef4444'; // error red
+          }
+        } catch (err) {
+          msg.textContent = 'Network error. Please try again.';
+          msg.style.color = '#ef4444';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Subscribe';
+        }
+      });
+    })();
+  </script>
+  <script>
+    (function() {
+      var wrapper = document.querySelector('.product-carousel-wrapper');
+      if (!wrapper) return;
+      var row = wrapper.querySelector('.product-grid.scroll-row');
+      var prev = wrapper.querySelector('.carousel-prev');
+      var next = wrapper.querySelector('.carousel-next');
+      var dots = document.querySelectorAll('.carousel-dot');
+      var cards = row ? row.querySelectorAll('.product-card') : [];
+      if (!row || cards.length <= 1) return;
+
+      function getCardWidth() {
+        var style = getComputedStyle(row);
+        var gap = parseFloat(style.columnGap) || parseFloat(style.gap) || 16;
+        return cards[0].offsetWidth + gap;
+      }
+
+      function getActiveIndex() {
+        var w = getCardWidth();
+        return Math.round(row.scrollLeft / w);
+      }
+
+      function updateDots(idx) {
+        dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+      }
+
+      function scrollToCard(idx) {
+        var w = getCardWidth();
+        row.scrollTo({ left: idx * w, behavior: 'smooth' });
+        updateDots(idx);
+      }
+
+      if (prev) prev.addEventListener('click', function() {
+        var idx = Math.max(0, getActiveIndex() - 1);
+        scrollToCard(idx);
+      });
+
+      if (next) next.addEventListener('click', function() {
+        var idx = Math.min(cards.length - 1, getActiveIndex() + 1);
+        scrollToCard(idx);
+      });
+
+      row.addEventListener('scroll', function() {
+        updateDots(getActiveIndex());
+      }, { passive: true });
+
+      dots.forEach(function(dot) {
+        dot.addEventListener('click', function() {
+          scrollToCard(parseInt(this.getAttribute('data-index'), 10));
+        });
+      });
+    })();
+  </script>
+  <script defer src="/js/reviews-carousel.js"></script>
+  <script defer src="/js/cookie-consent.js"></script>
+  <div class="mobile-sticky-cta">
+    <a href="/products/" class="btn btn-primary">Shop All Products</a>
+  </div>
+</body>
+</html>
+

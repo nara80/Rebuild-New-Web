@@ -1,0 +1,35 @@
+{
+  "wrappers": [
+    {
+      "id": "ga4-lead-trend-table",
+      "exists": true,
+      "clientWidth": 360,
+      "scrollWidth": 721,
+      "before": 0,
+      "after": 120,
+      "scrollable": true,
+      "scrolled": true
+    },
+    {
+      "id": "ga4-lead-sources-table",
+      "exists": true,
+      "clientWidth": 360,
+      "scrollWidth": 758,
+      "before": 0,
+      "after": 120,
+      "scrollable": true,
+      "scrolled": true
+    },
+    {
+      "id": "ga4-lead-campaigns-table",
+      "exists": true,
+      "clientWidth": 360,
+      "scrollWidth": 730,
+      "before": 0,
+      "after": 120,
+      "scrollable": true,
+      "scrolled": true
+    }
+  ],
+  "docOverflowX": 0
+}

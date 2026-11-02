@@ -1,5 +1,6 @@
 // MildMate GA4 Ingestion API (Phase 10, multi-property extension 2026-10-02)
 // POST /api/v1/ga4/rows/upsert — Bearer-token GA4 fact upserts.
+// POST /api/v1/ga4/leads/upsert — Bearer-token GA4 lead-acquisition upserts.
 //   Multi-property (migration 055): rows carry property_id + property_scope
 //   ('website' 366290587 | 'etsy' 533944293); the match/upsert key includes
 //   property_id so properties can never overwrite each other. Etsy rows get
@@ -10,6 +11,7 @@
 
 const GA4_SERVICE_NAME = "mildmate-ga4-api";
 const GA4_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+const LEAD_EVENT_NAMES = new Set(["generate_lead", "quote_request"]);
 
 type AnyObj = Record<string, any>;
 
@@ -88,6 +90,14 @@ function normalizeDim(v: any, max = 120): string {
   const out = trimTo(v, max);
   if (out.toLowerCase() === "(not set)") return "";
   return out;
+}
+
+function normalizeLeadEventName(v: any): string {
+  const name = trimTo(v, 80).toLowerCase();
+  if (!LEAD_EVENT_NAMES.has(name)) {
+    throw new Error("event_name must be one of: generate_lead, quote_request");
+  }
+  return name;
 }
 
 function extractProductSlug(path: string): string | null {
@@ -512,6 +522,151 @@ async function handleRowsUpsert(request: Request, env: any): Promise<Response> {
   }
 }
 
+async function handleLeadRowsUpsert(request: Request, env: any): Promise<Response> {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+
+  let body: AnyObj;
+  try {
+    body = await request.json();
+  } catch {
+    return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5000) {
+    return response({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+
+  const source = trimTo(body.sync_source, 80) || "ga4-lead-manual-collector";
+  const scenario = trimTo(body.scenario, 200) || "phase10-ga4-lead-collector";
+  const propertyId = trimTo(body.property_id ?? body.propertyId, 40) || "308922589";
+  if (!/^\d{4,20}$/.test(propertyId)) {
+    return response({ success: false, error_code: "INVALID_PROPERTY", message: "property_id must be a numeric GA4 property id." }, 400);
+  }
+
+  const runId = await createSyncRun(env, source, scenario, rowsRaw.length);
+  const nowIso = new Date().toISOString();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects: Array<{ index: number; reason: string }> = [];
+
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate(raw.date || raw.report_date);
+        const eventName = normalizeLeadEventName(raw.event_name || raw.eventName);
+        const sessionSource = normalizeDim(raw.session_source ?? raw.source, 120).toLowerCase();
+        const sessionMedium = normalizeDim(raw.session_medium ?? raw.medium, 120).toLowerCase();
+        const sessionCampaign = normalizeDim(raw.session_campaign ?? raw.campaign, 180);
+        const eventCount = toNonNegativeInt(raw.event_count ?? raw.eventCount, "event_count");
+        const usersAvailableRaw = raw.users_available ?? raw.usersAvailable;
+        const usersAvailable =
+          usersAvailableRaw === undefined || usersAvailableRaw === null
+            ? (raw.event_users !== undefined && raw.event_users !== null)
+            : !!usersAvailableRaw;
+        const eventUsers = usersAvailable ? toNonNegativeInt(raw.event_users ?? raw.eventUsers ?? 0, "event_users") : null;
+
+        const existing: any = await env.DB.prepare(
+          `SELECT id, event_count, event_users, users_available
+             FROM ga4_lead_acquisition_daily
+            WHERE report_date = ?1
+              AND property_id = ?2
+              AND event_name = ?3
+              AND session_source = ?4
+              AND session_medium = ?5
+              AND session_campaign = ?6
+            LIMIT 1`
+        )
+          .bind(reportDate, propertyId, eventName, sessionSource, sessionMedium, sessionCampaign)
+          .first();
+
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO ga4_lead_acquisition_daily
+             (report_date, property_id, event_name, session_source, session_medium, session_campaign, event_count, event_users, users_available, source_updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`
+          )
+            .bind(reportDate, propertyId, eventName, sessionSource, sessionMedium, sessionCampaign, eventCount, eventUsers, usersAvailable ? 1 : 0, nowIso)
+            .run();
+          created++;
+          continue;
+        }
+
+        const noChange =
+          Number(existing.event_count || 0) === eventCount &&
+          sameNullable(existing.event_users, eventUsers) &&
+          Number(existing.users_available || 0) === (usersAvailable ? 1 : 0);
+
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+
+        await env.DB.prepare(
+          `UPDATE ga4_lead_acquisition_daily
+              SET event_count = ?1,
+                  event_users = ?2,
+                  users_available = ?3,
+                  source_updated_at = ?4,
+                  updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?5`
+        )
+          .bind(eventCount, eventUsers, usersAvailable ? 1 : 0, nowIso, Number(existing.id))
+          .run();
+        updated++;
+      } catch (e: any) {
+        rejected++;
+        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
+      }
+    }
+
+    const status: "success" | "partial" | "failed" =
+      rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
+    await finishSyncRun(env, runId, { status, created, updated, unchanged, rejected, error: null });
+
+    return response({
+      success: true,
+      run_id: runId,
+      source,
+      scenario,
+      property_id: propertyId,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected,
+      },
+      rejected_samples: rejects,
+    });
+  } catch (e: any) {
+    await finishSyncRun(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e),
+    });
+    return response(
+      {
+        success: false,
+        error_code: "GA4_LEAD_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId,
+      },
+      500
+    );
+  }
+}
+
 export async function handleGa4Api(request: Request, env: any): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
@@ -526,6 +681,10 @@ export async function handleGa4Api(request: Request, env: any): Promise<Response
 
   if (method === "POST" && (path === "/v1/ga4/rows/upsert" || path === "/api/v1/ga4/rows/upsert")) {
     return handleRowsUpsert(request, env);
+  }
+
+  if (method === "POST" && (path === "/v1/ga4/leads/upsert" || path === "/api/v1/ga4/leads/upsert")) {
+    return handleLeadRowsUpsert(request, env);
   }
 
   return response({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GA4 route not found." }, 404);
