@@ -174,6 +174,22 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="quote-ads-table"><div class="state">Loading…</div></div></div>
     </div>
 
+    <div class="card" id="order-acquisition-card" data-tab-group="overview">
+      <div class="card-header"><span>Order Acquisition (First-Touch)</span><span class="muted" style="font-size:0.75rem;font-weight:400">paid-order first-touch attribution from checkout snapshots; channel = verbatim captured source/medium; missing attribution is Unavailable, never Direct; no customer identifiers</span></div>
+      <div class="card-body">
+        <div id="order-acq-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div id="order-acq-notes" class="muted" style="font-size:0.75rem;line-height:1.6;margin-top:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>First-Touch Channels</span><span class="muted" style="font-size:0.75rem;font-weight:400">where paying customers first came from; paid_click = recorded gclid/gbraid/wbraid only</span></div>
+      <div class="table-wrap"><div id="order-acq-ft-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Checkout-Session Channels</span><span class="muted" style="font-size:0.75rem;font-weight:400">acquisition context at checkout time; (direct)/(none) is common after in-session browsing</span></div>
+      <div class="table-wrap"><div id="order-acq-cs-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Landing Paths</span><span class="muted" style="font-size:0.75rem;font-weight:400">first-touch landing page; session-ranked</span></div>
+      <div class="table-wrap"><div id="order-acq-landing-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Recent Paid Orders</span><span class="muted" style="font-size:0.75rem;font-weight:400">10 newest paid sessions; PII-free (truncated session id, product + amount only)</span></div>
+      <div class="table-wrap"><div id="order-acq-recent-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <div class="card" id="filters-card" data-tab-group="overview">
       <div class="card-header"><span>Filters</span><span class="muted" style="font-size:0.75rem;font-weight:400">dates apply to source order date (analytics day)</span></div>
       <div class="card-body">
@@ -2094,15 +2110,110 @@ function initDashboardTabs(){
   setDashboardTab(startTab);
 }
 
+// ── Order Acquisition (First-Touch) ──
+
+function orderAcqChannelRows(rows, tableId, emptyMsg){
+  if (!rows || !rows.length) {
+    setState(tableId, '', emptyMsg);
+    return;
+  }
+  var h = '<table><thead><tr><th>Channel</th><th class="num">Orders</th><th class="num">Paid Orders</th><th class="num">Unique Customers</th><th class="num">Revenue (USD)</th><th class="num">Revenue (THB)</th><th class="num">Paid-Click Orders</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    h += '<tr>' +
+      '<td>' + esc(r.channel || '(unavailable)') + '</td>' +
+      '<td class="num">' + fmtNum(r.orders) + '</td>' +
+      '<td class="num">' + fmtNum(r.paid_orders) + '</td>' +
+      '<td class="num">' + fmtNum(r.unique_customers) + '</td>' +
+      '<td class="num">' + (Number(r.revenue_usd) > 0 ? '$' + fmtNum(r.revenue_usd) : '—') + '</td>' +
+      '<td class="num">' + (Number(r.revenue_thb) > 0 ? fmtBaht(r.revenue_thb) : '—') + '</td>' +
+      '<td class="num">' + fmtNum(r.paid_click_orders) + '</td>' +
+      '</tr>';
+  });
+  document.getElementById(tableId).innerHTML = h + '</tbody></table>';
+}
+
+async function loadOrderAcquisition(){
+  setState('order-acq-ft-table', '', 'Loading…');
+  setState('order-acq-cs-table', '', 'Loading…');
+  setState('order-acq-landing-table', '', 'Loading…');
+  setState('order-acq-recent-table', '', 'Loading…');
+  try {
+    var d = await api('/order-acquisition?' + filterQS().slice(1));
+    if (!d.available) {
+      document.getElementById('order-acq-summary').innerHTML =
+        '<span class="badge badge-grey">Order acquisition unavailable</span>';
+      document.getElementById('order-acq-notes').textContent = d.message || '';
+      setState('order-acq-ft-table', '', 'No data.');
+      setState('order-acq-cs-table', '', 'No data.');
+      setState('order-acq-landing-table', '', 'No data.');
+      setState('order-acq-recent-table', '', 'No data.');
+      return;
+    }
+    var s = d.summary || {};
+    document.getElementById('order-acq-summary').innerHTML =
+      '<span class="badge badge-blue">Sessions: ' + fmtNum(s.sessions) + '</span>' +
+      '<span class="badge badge-blue">Paid Sessions: ' + fmtNum(s.paid_sessions) + '</span>' +
+      '<span class="badge badge-grey">Order Rows: ' + fmtNum(s.order_rows) + '</span>' +
+      '<span class="badge badge-grey">Paid Rows: ' + fmtNum(s.paid_order_rows) + '</span>' +
+      '<span class="badge badge-grey">Unique Customers: ' + fmtNum(s.unique_customers) + '</span>' +
+      '<span class="badge badge-amber">First-Touch Unavailable: ' + fmtNum(s.first_touch_unavailable) + '</span>';
+    document.getElementById('order-acq-notes').innerHTML =
+      'Attribution coverage begins <strong>' + esc(d.coverage_start || '2026-10-30') + '</strong> (Phase 3 capture deploy); ' +
+      'orders before that, and sessions with denied consent or missing attribution, count as <strong>Unavailable</strong> — never Direct. ' +
+      esc((d.notes && d.notes.exclusions) || '');
+
+    orderAcqChannelRows(d.first_touch_channels, 'order-acq-ft-table', 'No first-touch attribution rows for the selected filters.');
+    orderAcqChannelRows(d.checkout_channels, 'order-acq-cs-table', 'No checkout-session attribution rows for the selected filters.');
+
+    var lp = d.landing_paths || [];
+    if (!lp.length) {
+      setState('order-acq-landing-table', '', 'No landing paths captured for the selected filters.');
+    } else {
+      var lh = '<table><thead><tr><th>Landing Path</th><th class="num">Orders</th><th class="num">Paid Orders</th></tr></thead><tbody>';
+      lp.forEach(function(r){
+        lh += '<tr><td>' + esc(r.landing_path || '—') + '</td><td class="num">' + fmtNum(r.orders) + '</td><td class="num">' + fmtNum(r.paid_orders) + '</td></tr>';
+      });
+      document.getElementById('order-acq-landing-table').innerHTML = lh + '</tbody></table>';
+    }
+
+    var ro = d.recent_paid_orders || [];
+    if (!ro.length) {
+      setState('order-acq-recent-table', '', 'No paid orders in the selected window.');
+    } else {
+      var rh = '<table><thead><tr><th>Date</th><th>Session</th><th>Product</th><th>Amount</th><th>First-Touch Channel</th><th>Landing Path</th><th>Paid Click</th></tr></thead><tbody>';
+      ro.forEach(function(r){
+        var amt = (r.currency_amounts || []).map(function(a){ return a.currency === 'USD' ? '$' + fmtNum(a.amount) : (a.currency === 'THB' ? fmtBaht(a.amount) : esc(a.currency)); }).join(' + ') || '—';
+        rh += '<tr>' +
+          '<td>' + esc(r.created_at || '—') + '</td>' +
+          '<td class="muted">' + esc(r.order_session || '—') + '</td>' +
+          '<td>' + esc(r.product || '—') + '</td>' +
+          '<td class="num">' + amt + '</td>' +
+          '<td>' + (r.first_touch_channel ? esc(r.first_touch_channel) : '<span class="muted">Unavailable</span>') + '</td>' +
+          '<td class="muted">' + esc(r.landing_path || '—') + '</td>' +
+          '<td>' + (r.paid_click ? '✓' : '—') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('order-acq-recent-table').innerHTML = rh + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('order-acq-summary').innerHTML = '<span class="badge badge-red">Order acquisition unavailable</span>';
+    document.getElementById('order-acq-notes').innerHTML = '<span class="muted">Error: ' + esc(e.message) + '</span>';
+    setState('order-acq-ft-table', 'error', 'Could not load first-touch channels: ' + e.message);
+    setState('order-acq-cs-table', 'error', 'Could not load checkout channels: ' + e.message);
+    setState('order-acq-landing-table', 'error', 'Could not load landing paths: ' + e.message);
+    setState('order-acq-recent-table', 'error', 'Could not load recent paid orders: ' + e.message);
+  }
+}
+
 // ── Orchestration ──
 
 function applyFilters(){
   salesOffset = 0;
-  loadSummary(); loadQuoteFunnel(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadGa4LeadAcquisition(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability();
+  loadSummary(); loadQuoteFunnel(); loadOrderAcquisition(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadGa4LeadAcquisition(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability();
 }
 
 function loadAll(){
-  loadDQ(); loadSummary(); loadQuoteFunnel(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadGa4LeadAcquisition(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability(); loadOpportunity(); populateProductFilter();
+  loadDQ(); loadSummary(); loadQuoteFunnel(); loadOrderAcquisition(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadGa4LeadAcquisition(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability(); loadOpportunity(); populateProductFilter();
 }
 
 async function boot(){

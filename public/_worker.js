@@ -10390,6 +10390,185 @@ async function buildPhase5QuoteFunnel(env, f, baseSql, rangeBinds) {
   }
 }
 __name(buildPhase5QuoteFunnel, "buildPhase5QuoteFunnel");
+function oaTouchOf(attr, key) {
+  if (!attr || typeof attr !== "object") return null;
+  const v = attr[key];
+  if (!v) return null;
+  if (typeof v === "object") return v;
+  if (typeof v === "string") return phase5ParseAttributionJson(v);
+  return null;
+}
+__name(oaTouchOf, "oaTouchOf");
+async function getOrderAcquisition(env, f) {
+  try {
+    const range = createdRangeWhere(f, "o.created_at");
+    const orderRows = await env.DB.prepare(
+      `SELECT o.stripe_session_id, o.email, o.product_slug, o.product_title_en,
+              o.quantity, o.price_usd, o.price_thb, o.currency, o.status, o.created_at,
+              s.attribution_json
+       FROM orders o
+       LEFT JOIN checkout_session_snapshots s ON s.stripe_session_id = o.stripe_session_id
+       WHERE COALESCE(o.is_archived, 0) = 0${range.sql}
+       ORDER BY o.created_at DESC`
+    ).bind(...range.binds).all();
+    const sessions = /* @__PURE__ */ new Map();
+    let orderRowsTotal = 0;
+    let paidOrderRows = 0;
+    let excludedTestRows = 0;
+    for (const r of orderRows.results || []) {
+      const sessionId = String(r.stripe_session_id || "");
+      if (/^test-/i.test(sessionId)) {
+        excludedTestRows += 1;
+        continue;
+      }
+      orderRowsTotal += 1;
+      const status = String(r.status || "").toLowerCase();
+      const paid = PHASE5_PAID_ORDER_STATUSES.has(status);
+      if (paid) paidOrderRows += 1;
+      const emailKey = String(r.email || "").toLowerCase().trim();
+      let agg = sessions.get(sessionId);
+      if (!agg) {
+        const attr = phase5ParseAttributionJson(r.attribution_json);
+        const ft = oaTouchOf(attr, "first_touch");
+        const cs = oaTouchOf(attr, "checkout_session");
+        agg = {
+          sessionId,
+          customers: /* @__PURE__ */ new Set(),
+          paid: false,
+          rows: 0,
+          createdAt: String(r.created_at || ""),
+          revenue: {},
+          ftChannel: ft ? phase5ChannelOf(ft) : null,
+          csChannel: cs ? phase5ChannelOf(cs) : null,
+          landingPath: ft ? String(ft.landing_path || "").trim() || null : null,
+          paidClick: phase5HasPaidClick(ft) || phase5HasPaidClick(cs)
+        };
+        sessions.set(sessionId, agg);
+      }
+      agg.rows += 1;
+      if (paid) agg.paid = true;
+      if (emailKey) agg.customers.add(emailKey);
+      if (paid) {
+        const cur = String(r.currency || "").toUpperCase();
+        if (cur === "USD" || cur === "THB") {
+          const qty = Number(r.quantity || 1) || 1;
+          const unit = cur === "USD" ? Number(r.price_usd || 0) : Number(r.price_thb || 0);
+          agg.revenue[cur] = Math.round(((agg.revenue[cur] || 0) + unit * qty) * 100) / 100;
+        }
+      }
+      if (r.created_at && String(r.created_at) < agg.createdAt) agg.createdAt = String(r.created_at);
+    }
+    const customerSet = /* @__PURE__ */ new Set();
+    for (const s of sessions.values()) {
+      for (const c of s.customers) customerSet.add(c);
+    }
+    const mkBucket = /* @__PURE__ */ __name(() => ({ channel: "", sessions: /* @__PURE__ */ new Set(), paidSessions: 0, customers: /* @__PURE__ */ new Set(), revenue: {}, paidClickSessions: 0 }), "mkBucket");
+    const ftMap = /* @__PURE__ */ new Map();
+    const csMap = /* @__PURE__ */ new Map();
+    const landingMap = /* @__PURE__ */ new Map();
+    let ftUnavailable = 0;
+    for (const s of sessions.values()) {
+      if (s.ftChannel) {
+        let b = ftMap.get(s.ftChannel);
+        if (!b) {
+          b = mkBucket();
+          b.channel = s.ftChannel;
+          ftMap.set(s.ftChannel, b);
+        }
+        b.sessions.add(s.sessionId);
+        if (s.paid) b.paidSessions += 1;
+        for (const c of s.customers) b.customers.add(c);
+        for (const cur of Object.keys(s.revenue)) b.revenue[cur] = Math.round(((b.revenue[cur] || 0) + s.revenue[cur]) * 100) / 100;
+        if (s.paidClick) b.paidClickSessions += 1;
+      } else {
+        ftUnavailable += 1;
+      }
+      if (s.csChannel) {
+        let b = csMap.get(s.csChannel);
+        if (!b) {
+          b = mkBucket();
+          b.channel = s.csChannel;
+          csMap.set(s.csChannel, b);
+        }
+        b.sessions.add(s.sessionId);
+        if (s.paid) b.paidSessions += 1;
+        for (const c of s.customers) b.customers.add(c);
+        for (const cur of Object.keys(s.revenue)) b.revenue[cur] = Math.round(((b.revenue[cur] || 0) + s.revenue[cur]) * 100) / 100;
+        if (s.paidClick) b.paidClickSessions += 1;
+      }
+      if (s.landingPath) {
+        let l = landingMap.get(s.landingPath);
+        if (!l) {
+          l = { sessions: /* @__PURE__ */ new Set(), paidSessions: 0 };
+          landingMap.set(s.landingPath, l);
+        }
+        l.sessions.add(s.sessionId);
+        if (s.paid) l.paidSessions += 1;
+      }
+    }
+    const channelRows = /* @__PURE__ */ __name((map) => [...map.values()].map((b) => ({
+      channel: b.channel,
+      orders: b.sessions.size,
+      paid_orders: b.paidSessions,
+      unique_customers: b.customers.size,
+      revenue_usd: b.revenue["USD"] || 0,
+      revenue_thb: b.revenue["THB"] || 0,
+      paid_click_orders: b.paidClickSessions
+    })).sort((a, b) => b.orders - a.orders || a.channel.localeCompare(b.channel)), "channelRows");
+    const recentPaid = [...sessions.values()].filter((s) => s.paid).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 10).map((s) => {
+      const row = (orderRows.results || []).find((r) => String(r.stripe_session_id || "") === s.sessionId);
+      return {
+        created_at: s.createdAt,
+        order_session: s.sessionId ? s.sessionId.slice(0, 14) + "\u2026" : "(unknown)",
+        product: row ? row.product_title_en || row.product_slug || "(unknown)" : "(see order)",
+        currency_amounts: Object.keys(s.revenue).length > 0 ? Object.keys(s.revenue).map((cur) => ({ currency: cur, amount: s.revenue[cur] })) : [],
+        first_touch_channel: s.ftChannel,
+        checkout_channel: s.csChannel,
+        landing_path: s.landingPath,
+        paid_click: s.paidClick
+      };
+    });
+    const paidSessions = [...sessions.values()].filter((s) => s.paid).length;
+    const withFt = [...sessions.values()].filter((s) => s.ftChannel).length;
+    return json6({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end },
+      coverage_start: PHASE5_ATTRIBUTION_COVERAGE_START,
+      summary: {
+        order_rows: orderRowsTotal,
+        sessions: sessions.size,
+        paid_order_rows: paidOrderRows,
+        paid_sessions: paidSessions,
+        unique_customers: customerSet.size,
+        sessions_with_first_touch: withFt,
+        first_touch_unavailable: ftUnavailable
+      },
+      first_touch_channels: channelRows(ftMap),
+      checkout_channels: channelRows(csMap),
+      landing_paths: [...landingMap.entries()].map(([path, l]) => ({ landing_path: path, orders: l.sessions.size, paid_orders: l.paidSessions })).sort((a, b) => b.orders - a.orders || a.landing_path.localeCompare(b.landing_path)).slice(0, 10),
+      recent_paid_orders: recentPaid,
+      notes: {
+        pii: "No customer identifiers (email/name/phone) are returned; customers are aggregated server-side into distinct counts only.",
+        attribution_basis: "First-touch = verbatim captured source/medium at first observed touch (checkout_session_snapshots.attribution_json); missing/unparseable attribution counts as Unavailable, never Direct.",
+        paid_click_evidence: "paid_click counts only sessions whose captured attribution JSON contains gclid/gbraid/wbraid; observed values only, never inferred from spend.",
+        exclusions: "Archived order rows excluded; test sessions (TEST- prefix convention) excluded: " + excludedTestRows + " row(s) in window."
+      }
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table")) {
+      return json6({
+        success: true,
+        available: false,
+        message: "Order acquisition requires checkout_session_snapshots and orders tables.",
+        filters: { start: f.start, end: f.end }
+      });
+    }
+    return json6({ success: false, error: "order-acquisition failed: " + msg.slice(0, 200) }, 500);
+  }
+}
+__name(getOrderAcquisition, "getOrderAcquisition");
 async function getGsc(env, f) {
   const range = dayRangeWhere(f, "g.report_date");
   const binds = [...range.binds];
@@ -12480,6 +12659,7 @@ async function handleAdminAnalysis(request, env) {
   if (sub === "/gsc") return getGsc(env, f);
   if (sub === "/ga4") return getGa4(env, f);
   if (sub === "/ga4-leads") return getGa4Leads(env, f);
+  if (sub === "/order-acquisition") return getOrderAcquisition(env, f);
   if (sub === "/etsy") return getEtsy(env, f);
   if (sub === "/google-ads") return getGoogleAds(env, f);
   if (sub === "/quotes") return getQuotes(env, f);
@@ -22521,7 +22701,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-OLfy6G/functionsRoutes-0.11206550590229769.mjs
+// ../.wrangler/tmp/pages-VUH5KJ/functionsRoutes-0.7698092346085603.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
