@@ -3281,6 +3281,7 @@ __name(consumeClerkHandshake, "consumeClerkHandshake");
 // ../workers/api/clerk-session-token.ts
 var SESSION_COOKIE_RE = /^__session(?:_[A-Za-z0-9_-]{1,64})?$/;
 var DEV_SESSION_COOKIE_RE = /^__clerk_db_jwt(?:_[A-Za-z0-9_-]{1,64})?$/;
+var MAX_SESSION_CANDIDATES = 8;
 function isSessionTokenName(name) {
   return SESSION_COOKIE_RE.test(name) || DEV_SESSION_COOKIE_RE.test(name);
 }
@@ -3319,15 +3320,21 @@ function extractClerkSessionToken(request, options = {}) {
   const queryCandidates = options.allowQueryToken ? collectQueryCandidates(request) : [];
   const all = [...cookieCandidates, ...queryCandidates];
   if (!all.length) {
-    return { token: null, source: null, ambiguous: false };
+    return { token: null, source: null, ambiguous: false, candidates: [], candidatesComplete: true };
   }
   const uniqueValues = Array.from(new Set(all.map((candidate) => candidate.value)));
   if (uniqueValues.length !== 1) {
-    return { token: null, source: null, ambiguous: true };
+    return {
+      token: null,
+      source: null,
+      ambiguous: true,
+      candidates: uniqueValues.slice(0, MAX_SESSION_CANDIDATES),
+      candidatesComplete: uniqueValues.length <= MAX_SESSION_CANDIDATES
+    };
   }
   const token = uniqueValues[0];
   const source = all.some((candidate) => candidate.source === "cookie") ? "cookie" : "query";
-  return { token, source, ambiguous: false };
+  return { token, source, ambiguous: false, candidates: [token], candidatesComplete: true };
 }
 __name(extractClerkSessionToken, "extractClerkSessionToken");
 
@@ -21505,6 +21512,30 @@ function hasForbiddenTokenQuery(request) {
   return false;
 }
 __name(hasForbiddenTokenQuery, "hasForbiddenTokenQuery");
+async function verifySessionCandidates(session, request, env) {
+  if (!session.candidates.length) return { state: "none" };
+  if (!session.candidatesComplete) return { state: "invalid" };
+  let sawExpired = false;
+  let validCount = 0;
+  for (const candidate of session.candidates) {
+    const modifiedRequest = new Request(request.url, {
+      headers: new Headers({
+        ...Object.fromEntries(request.headers.entries()),
+        Authorization: `Bearer ${candidate}`
+      })
+    });
+    const result = await verifyClerkJwt(modifiedRequest, env);
+    if (result.valid) {
+      validCount++;
+      if (validCount > 1) return { state: "invalid" };
+    } else if (result.error === "Token expired") {
+      sawExpired = true;
+    }
+  }
+  if (validCount === 1) return { state: "valid" };
+  return { state: sawExpired ? "expired" : "invalid" };
+}
+__name(verifySessionCandidates, "verifySessionCandidates");
 var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   if (isDevelopmentAuthHost(context.request.url)) {
     return context.next();
@@ -21515,25 +21546,13 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
     return redirectToSignIn2(context.request.url, context.env);
   }
   const session = extractClerkSessionToken(context.request);
-  if (session.ambiguous) {
+  const verified = await verifySessionCandidates(session, context.request, context.env);
+  if (verified.state === "expired") {
+    const handshake = redirectToHandshake(context.request.url, context.env);
+    if (handshake) return handshake;
     return redirectToSignIn2(context.request.url, context.env);
   }
-  const sessionToken = session.token;
-  if (!sessionToken) {
-    return redirectToSignIn2(context.request.url, context.env);
-  }
-  const modifiedRequest = new Request(context.request.url, {
-    headers: new Headers({
-      ...Object.fromEntries(context.request.headers.entries()),
-      Authorization: `Bearer ${sessionToken}`
-    })
-  });
-  const result = await verifyClerkJwt(modifiedRequest, context.env);
-  if (!result.valid) {
-    if (result.error === "Token expired") {
-      const handshake = redirectToHandshake(context.request.url, context.env);
-      if (handshake) return handshake;
-    }
+  if (verified.state !== "valid") {
     return redirectToSignIn2(context.request.url, context.env);
   }
   const cleaned = stripHandshakeMarker(context.request.url);
@@ -21599,6 +21618,32 @@ function hasForbiddenTokenQuery2(request) {
   return false;
 }
 __name(hasForbiddenTokenQuery2, "hasForbiddenTokenQuery");
+async function verifySessionCandidates2(session, request, env) {
+  if (!session.candidates.length) return { state: "none" };
+  if (!session.candidatesComplete) return { state: "invalid" };
+  let sawExpired = false;
+  let validResult = null;
+  let validCount = 0;
+  for (const candidate of session.candidates) {
+    const modifiedRequest = new Request(request.url, {
+      headers: new Headers({
+        ...Object.fromEntries(request.headers.entries()),
+        Authorization: `Bearer ${candidate}`
+      })
+    });
+    const result = await verifyClerkJwt(modifiedRequest, env);
+    if (result.valid) {
+      validCount++;
+      if (!validResult) validResult = result;
+      if (validCount > 1) return { state: "invalid" };
+    } else if (result.error === "Token expired") {
+      sawExpired = true;
+    }
+  }
+  if (validCount === 1 && validResult) return { state: "valid", result: validResult };
+  return { state: sawExpired ? "expired" : "invalid" };
+}
+__name(verifySessionCandidates2, "verifySessionCandidates");
 function getPrimaryClerkEmail4(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -21642,27 +21687,16 @@ var onRequest12 = /* @__PURE__ */ __name(async (context) => {
     return redirectToSignIn3(context.request.url, context.env);
   }
   const session = extractClerkSessionToken(context.request);
-  if (session.ambiguous) {
+  const verified = await verifySessionCandidates2(session, context.request, context.env);
+  if (verified.state === "expired") {
+    const handshake = redirectToHandshake2(context.request.url, context.env);
+    if (handshake) return handshake;
     return redirectToSignIn3(context.request.url, context.env);
   }
-  const sessionToken = session.token;
-  if (!sessionToken) {
+  if (verified.state !== "valid") {
     return redirectToSignIn3(context.request.url, context.env);
   }
-  const modifiedRequest = new Request(context.request.url, {
-    headers: new Headers({
-      ...Object.fromEntries(context.request.headers.entries()),
-      Authorization: `Bearer ${sessionToken}`
-    })
-  });
-  const result = await verifyClerkJwt(modifiedRequest, context.env);
-  if (!result.valid) {
-    if (result.error === "Token expired") {
-      const handshake = redirectToHandshake2(context.request.url, context.env);
-      if (handshake) return handshake;
-    }
-    return redirectToSignIn3(context.request.url, context.env);
-  }
+  const result = verified.result;
   const cleaned = stripHandshakeMarker2(context.request.url);
   if (cleaned) return cleaned;
   const raw = result.payload.raw || {};
@@ -22701,7 +22735,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-VUH5KJ/functionsRoutes-0.7698092346085603.mjs
+// ../.wrangler/tmp/pages-mSiWMa/functionsRoutes-0.3864573229076579.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
