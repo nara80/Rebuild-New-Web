@@ -9,6 +9,28 @@
 
 ---
 
+# Reconciliation Update (2026-11-01)
+
+This file is retained as the master planning narrative, but execution status is now governed by reconciled production evidence.
+
+Canonical current-state references:
+
+- `AGENTS.md`
+- `Framework.md`
+- `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`
+- `01_MildMate_Marketing/09_Handoffs/Phase_01-17_Systematic_Reconciliation_2026-09-19.md`
+- `01_MildMate_Marketing/09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`
+
+Status summary:
+
+- **Implemented/deployed:** Phases 01–11, 13, 14, 17
+- **Open:** Phase 12 (Google Ads attribution closure)
+- **Pending:** Phases 15–16
+
+Additional release (2026-11-01, later pass) — **GA4 Lead Acquisition deployed to production**: migration `061_ga4_lead_acquisition.sql` applied to prod D1 (`ga4_lead_acquisition_daily` + `analysis_ga4_lead_freshness` view); Pages deployment `c023f9fd-7617-475c-8534-76742ac5e738`; collector version `9a093445-2457-4849-9a3b-79454b260307`. New `POST /api/v1/ga4/leads/upsert` (bearer), `GET /api/admin/analysis/ga4-leads` (admin), and a Data Analyst SEO-tab "GA4 Lead Acquisition" card. Lead events `generate_lead` + `quote_request` from canonical website property `308922589` only, inside the existing Monday GA4 dispatch — cron unchanged, no manual sync or backfill. First lead data lands with the next scheduled GA4 run; closure pending owner's authenticated browser acceptance. Evidence: `00_Issue/ga4-lead-acquisition-20261101/` and `09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md` (Pass 2). This extends Phase 10 (GA4) only; no other phase status changed.
+
+---
+
 # 1. Business Objective
 
 The system should answer one operating question:
@@ -37,9 +59,9 @@ Sales / Order Sources
         ↓
 Notion OrderList
         ↓
-Make.com
+Human-controlled Notion updates + mapping confirmation
         ↓
-Cloudflare Worker API
+Cloudflare Worker cron pipeline (`mildmate-marketing-sync` + source collectors)
         ↓
 Cloudflare D1
         ↓
@@ -113,7 +135,7 @@ The most important new layer is:
 |---|---|---|
 | Canonical database | **Cloudflare D1** | Product identity, sales facts, marketing facts, analytical tables, history |
 | API layer | **Cloudflare Workers / Pages Functions** | Controlled authenticated read/write access to D1 |
-| Integration / ETL | **Make.com** | Source collection, normalization, scheduling, synchronization |
+| Integration / ETL | **Cloudflare Worker crons** | Source collection, normalization, scheduling, synchronization |
 | Operational order system | **Notion OrderList** | Human-friendly sales operations and product mapping workflow |
 | Product admin mirror | **Google Sheets — MildMate Product Master** | Human review / controlled product overview |
 | Product website | **MildMate website + D1 product database** | Canonical product source |
@@ -121,7 +143,7 @@ The most important new layer is:
 | Hosting | **Cloudflare Pages** | Marketing Command Center / admin application |
 | Analytics dashboard | **Custom web app** | Human-readable analysis and decision UI |
 | AI interpretation | **Gemini / ChatGPT / AI analyst layer** | Explanation, opportunity interpretation, recommended actions |
-| Automation alerts | **Make.com + Slack/Email/Notion if needed** | Exceptions, sync errors, important opportunities |
+| Automation alerts | **Worker cron telemetry + Slack/Email/Notion if needed** | Exceptions, sync errors, important opportunities |
 | Marketing sources | **GSC, GA4, Etsy, Google Ads, Meta Ads, marketplace reports** | Performance data |
 
 ---

@@ -16,6 +16,30 @@
 
 ---
 
+# Reconciliation Update (2026-11-01)
+
+This document is now a reconciled planning record, not a greenfield build plan.
+
+Authoritative current-state references:
+
+- `AGENTS.md`
+- `Framework.md`
+- `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`
+- `01_MildMate_Marketing/09_Handoffs/Phase_01-17_Systematic_Reconciliation_2026-09-19.md`
+- `01_MildMate_Marketing/09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`
+
+Phase status snapshot:
+
+- **01–11:** implemented/deployed
+- **12:** open (collector live, attribution closure pending)
+- **13–14:** implemented
+- **15–16:** not started
+- **17:** deployed/operational (Worker-based; Make.com retired)
+
+Additional release (2026-11-01, later pass) — **GA4 Lead Acquisition deployed to production**: migration `061_ga4_lead_acquisition.sql` applied to prod D1; Pages deployment `c023f9fd-7617-475c-8534-76742ac5e738`; collector version `9a093445-2457-4849-9a3b-79454b260307`. New bearer ingestion route `POST /api/v1/ga4/leads/upsert`, admin analysis route `GET /api/admin/analysis/ga4-leads`, and a "GA4 Lead Acquisition" card in the Data Analyst SEO & Website tab. Lead events `generate_lead` + `quote_request` collected from canonical website property `308922589` only, within the existing Monday GA4 dispatch (cron unchanged, no manual sync). First lead data arrives with the next scheduled GA4 run; closure pending owner's authenticated browser acceptance. Full evidence: `00_Issue/ga4-lead-acquisition-20261101/` and `09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md` (Pass 2).
+
+---
+
 # 1. Clarified Product / UI Architecture
 
 ## Confirmed Implementation Decisions
@@ -152,9 +176,9 @@ It should **not** primarily be an executive dashboard.
 ```text
 Notion OrderList
       ↓
-Make.com
+Human entry + mapping confirmation in Notion
       ↓
-Cloudflare Worker API
+mildmate-marketing-sync Worker cron + analysis collectors
       ↓
 Cloudflare D1
       ↓
@@ -179,7 +203,7 @@ Marketing Command Center / AI Analyst
 |---|---|---|
 | Database | Cloudflare D1 | Canonical products, sales, marketing facts, analytical views/tables |
 | API | Cloudflare Workers / Pages Functions | Controlled authenticated data access |
-| Automation | Make.com | Ingestion, normalization, reconciliation |
+| Automation | Cloudflare Worker crons (`mildmate-marketing-sync`) | Ingestion, normalization, reconciliation |
 | Operational orders | Notion OrderList | Human operations + mapping workflow |
 | Admin UI | Existing MildMate Super Admin | Data Analyst + Marketing Command Center |
 | Frontend hosting | Cloudflare Pages | Existing production deployment |
@@ -1248,7 +1272,7 @@ CONFIRMED PROJECT DECISIONS
   sales_order_items
   sync_runs
 
-- Existing production Sales API and Notion → Make.com → D1 sales workflow already work.
+- Existing production Sales API and Worker-based Notion → D1 sales workflow are already operational.
 - Existing operational website orders must remain untouched.
 - The Data Analyst system is a read/analysis layer over canonical D1 analytics data.
 - Do not create a second database.

@@ -1,3 +1,5 @@
+> **DOC RECONCILIATION (2026-11-01).** Authoritative phase-status matrix: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`.
+
 # MildMate Marketing Decision System — Phase 10
 ## GA4 Website Behavior & Funnel Analytics
 
@@ -126,3 +128,16 @@ Status update: **DEPLOYED / PRODUCTION VERIFIED**. Live reconciliation completed
   - Admin pages (`public/admin/index.html`, `public/super-admin/index.html`) still bootstrap legacy property `G-ESL161CNBV`, bypassing the consent-gated public bootstrap (contamination FAIL).
   - Overall verdict: **GA4 purchase/Ads attribution remains UNVERIFIED; broad repair on HOLD** pending owner UI checks. Remediations RG-1 (GTM quote-event trigger), RA-1 (owner UI: auto-tagging/Ads link), RC-1 (producers + `google.co.th` CSP) are planned, none executed. See `09_Handoffs/MildMate_Ads_GA4_Attribution_Verification_2026-10-21.md` and `09_Handoffs/Post_R2_Paid_Ads_And_Event_Audit_2026-10-21.md`.
 - **Scheduling supersession (2026-10-08 handoff):** GA4 collection now runs on the `mildmate-marketing-sync` single daily cron (`0 1 * * *` UTC) with weekday dispatch (Mon GA4) — earlier "weekly Mon 04:00 UTC" wording is historical.
+
+## Update Note (2026-11-01) — GA4 Lead Acquisition Deployed
+
+Phase 10 scope extended with a lead-acquisition layer, deployed to production 2026-11-01:
+
+- **Migration `061_ga4_lead_acquisition.sql` applied to prod D1** (additive only): `ga4_lead_acquisition_daily` (daily session-acquisition grain, `UNIQUE(report_date, property_id, event_name, session_source, session_medium, session_campaign)`), 4 indexes, and `analysis_ga4_lead_freshness` view. Freshness view confirmed in correct empty state post-apply.
+- **Ingestion:** new bearer-token route `POST /api/v1/ga4/leads/upsert` (mirrored into `public/_worker.js` runtime bundle) with event-name validation (`generate_lead`, `quote_request` only) and idempotent `ON CONFLICT` upsert.
+- **Collector:** `marketing-sync-worker` now runs a GA4 lead sync (`executeGa4LeadSync`) inside the Monday GA4 dispatch — canonical property `308922589` only (legacy `366290587` never merged), dimensions `date / eventName / sessionSource / sessionMedium / sessionCampaignName`, metrics `eventCount` + `totalUsers` with automatic fallback to `eventCount`-only (`users_available=false`) on metric incompatibility. Source label: `ga4-lead-worker-cron:website`. Collector version `9a093445-2457-4849-9a3b-79454b260307` (prior `91421d42`).
+- **Analysis API:** `GET /api/admin/analysis/ga4-leads` (admin-authorized) — separate per-event counts/users (users render as Unavailable, never zero-fabricated), source/medium and campaign breakdowns, daily trend, freshness, historical-overlap note.
+- **Dashboard:** "GA4 Lead Acquisition" card added to the SEO & Website tab at `/super-admin/marketing/data-analyst/` (Pages deployment `c023f9fd-7617-475c-8534-76742ac5e738`; rollback target `f93e5301`).
+- **Guardrails respected:** cron schedule `0 1 * * *` and weekday routing unchanged; existing GA4 funnel events (`view_item`/`add_to_cart`/`begin_checkout`/`purchase`) and their metrics untouched; no manual sync or backfill triggered (post-check: 0 `ga4-lead-worker-cron:website` rows in prod `sync_runs`); admin API auth verified not weakened (401 without bearer/Clerk).
+- **Verification:** 53 targeted vitest tests + 2 collector config tests passed; preview validated (`7be7b8f8` / `ga4-lead-gate-preview`) on desktop 1366px + mobile 390px with mocked representative data — 7 tabs intact, no page-level horizontal overflow, tables horizontally scrollable in wrappers. Evidence: `00_Issue/ga4-lead-acquisition-20261101/`.
+- **Still pending:** first live lead rows land with the next scheduled Monday GA4 collection run; final closure requires the owner's authenticated browser acceptance test. The 2026-10-21 purchase-attribution findings above remain OPEN and are unaffected by this release.

@@ -1,5 +1,11 @@
 # MildMate Web Rebuild — Full Framework Plan
 
+## Documentation Reconciliation Snapshot (2026-11-01)
+- Marketing phase docs were reconciled to actual implementation and production evidence.
+- Canonical phase-status reference: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`.
+- Superseded/duplicate docs were moved to `01_MildMate_Marketing/Archive/2026-11-01/` to keep active guidance clean.
+- Reconciliation changed documentation only, not runtime or production state.
+
 ## Stack Confirmed
 - **Frontend:** Vanilla HTML + CSS + minimal JS
 - **Backend:** Cloudflare Workers (TypeScript)
@@ -27,6 +33,8 @@
 - Stripe regression status (2026-10-28): full offline suite 71/72; sole failure is the stale delayed-GTM assertion (root cause: `public/order-confirmed/index.html` lacks the `startOnce` guardrails entirely — GA/GTM workstream, not checkout).
 - Google Ads / GA4 attribution (2026-10-21 audits): Google Ads campaign `24321425466` live; D1 click/cost rows through 2026-10-19 (collector recovered after 2026-10-08 scheduler failure) — Phase 12 remains OPEN (no genuine purchase conversion validated; GA4↔Ads attribution HOLD). GA4 purchase attribution UNVERIFIED: Oct 18–20 dark window, 6 product pages missing ecommerce producers, blank source/medium rows (incl. one 2026-10-17 purchase), admin contamination via legacy `G-ESL161CNBV`. Remediations planned (RG-1/RA-1/RC-1), none executed.
 - Collector scheduling (supersession): `marketing-sync-worker` runs a single daily cron (`0 1 * * *` UTC) with weekday dispatch (Mon GA4 / Tue Etsy / Wed Google Ads / Thu GSC) since the 2026-10-08 handoff — older per-source "weekly Monday" schedule wording is historical.
+- **Data Quality sync-runs grouping release (deployed 2026-11-01):** Pages production deployment `f93e5301-251e-45e6-b636-aeeb0c940411` — Data Quality tab renders recent sync runs grouped per collector (`recent_run_groups`) with inferred-group / incomplete-window badges; grouping logic in `workers/api/admin-analysis.ts` + dashboard renderer.
+- **GA4 Lead Acquisition release (deployed 2026-11-01):** migration `061_ga4_lead_acquisition.sql` applied to prod D1 (`ga4_lead_acquisition_daily` + indexes + `analysis_ga4_lead_freshness` view, verified). Pages deployment `c023f9fd-7617-475c-8534-76742ac5e738` (rollback target `f93e5301`); collector `mildmate-marketing-sync` version `9a093445-2457-4849-9a3b-79454b260307` (prior `91421d42-3903-4a07-895b-2d663d7f3b5b`). New: `POST /api/v1/ga4/leads/upsert` (bearer), `GET /api/admin/analysis/ga4-leads` (admin), Data Analyst SEO-tab "GA4 Lead Acquisition" card. Lead events `generate_lead` + `quote_request`; canonical property `308922589` only. Cron schedule and weekday routing unchanged; no sync triggered at release (0 lead `sync_runs` rows post-check). First lead data arrives with the next scheduled Monday GA4 run; closure requires owner's authenticated browser acceptance. Evidence: `00_Issue/ga4-lead-acquisition-20261101/`.
 
 ---
 
@@ -983,7 +991,7 @@ Phase 2 is deployed (2026-06-14). The approach remains **redirect-first** — no
 
 ## D1 Database Schema
 
-**Actual schema has evolved beyond 001–030 (repo currently includes migrations through `041_*`).**
+**Actual schema has evolved beyond 001–030 (repo currently includes migrations through `061_*`).**
 **Operational reconciliation (2026-08):** taxonomy is now split into specialization (`product_niches`) and merchandising visibility (`product_collections`); `products.niches` remains as legacy compatibility fallback for transition safety.
 **Operational note:** `marketing_campaigns` is ensured by API at runtime for Super Admin marketing campaigns, `thankyou_queue` operational columns (`sent_at`, `last_error`) are auto-added by dispatch handler if absent, sales sync tables (`sales_orders`, `sales_order_items`, `sync_runs`) are provisioned by migration `039_unified_sales_analytics`, and checkout/webhook now auto-ensure `checkout_session_snapshots` for order line-item durability.
 
@@ -1189,7 +1197,7 @@ CREATE TABLE blog_posts (
 - **Post:** /blogs/{slug}/ — Pages Function (`functions/blogs/[[path]].ts`) SSR from D1
 
 
- 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet, 039_co_sleeping_top_sheet, 039_unified_sales_analytics, 040_boat_model_year_price, 041_boat_model_label, 042_marketing_analysis_layer, 043_product_mapping_aliases, 044_product_mapping_events, 045_marketing_sync_state, 046_gsc_analytics, 047_gsc_freshness_sources, 048_ga4_analytics, 049_etsy_analytics, 050_google_ads_analytics, 053_profitability_layer, 054_opportunity_engine, 055_ga4_multi_property, 056_ga4_property_unique_rebuild, 057_stripe_payment_idempotency, 058_products_seo_tagline_cta_fields, 059_quote_tier1_pipeline
+ 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet, 039_co_sleeping_top_sheet, 039_unified_sales_analytics, 040_boat_model_year_price, 041_boat_model_label, 042_marketing_analysis_layer, 043_product_mapping_aliases, 044_product_mapping_events, 045_marketing_sync_state, 046_gsc_analytics, 047_gsc_freshness_sources, 048_ga4_analytics, 049_etsy_analytics, 050_google_ads_analytics, 053_profitability_layer, 054_opportunity_engine, 055_ga4_multi_property, 056_ga4_property_unique_rebuild, 057_stripe_payment_idempotency, 058_products_seo_tagline_cta_fields, 059_quote_tier1_pipeline, 060_quote_acquisition_attribution, 061_ga4_lead_acquisition
 
 ---
 
@@ -2058,7 +2066,7 @@ Production cron runs on the dedicated Worker `mildmate-cron` (repo `cron-worker/
 Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().
 
 ### Database Migrations (001-059 in repo)
-Repo currently contains migrations through `059_quote_tier1_pipeline.sql`, including split-number families (`024_*`, `031_*`, `039_*`). Later additions include: marketing analysis layer views (`042_*`), mapping memory (`043_*`/`044_*`), Phase 17 sync state (`045_*`), GSC (`046_*`/`047_*`), GA4 (`048_*`, `055_*`, `056_*`), Etsy (`049_*`), Google Ads (`050_*`), profitability layer (`053_*`), opportunity engine (`054_*`), Stripe payment idempotency (`057_*`), products SEO tagline/CTA fields (`058_*`), and the Tier 1 quote pipeline (`059_*`: `orders.quote_id` + index, `quote_followup_events`, quote-followup `recovery_config` seeds). Note: `custom_quotes.free_shipping` exists in runtime schema and must be preserved in schema reconciliations.
+Repo currently contains migrations through `061_ga4_lead_acquisition.sql`, including split-number families (`024_*`, `031_*`, `039_*`). Later additions include: marketing analysis layer views (`042_*`), mapping memory (`043_*`/`044_*`), Phase 17 sync state (`045_*`), GSC (`046_*`/`047_*`), GA4 (`048_*`, `055_*`, `056_*`, and lead acquisition `061_*`), Etsy (`049_*`), Google Ads (`050_*`), profitability layer (`053_*`), opportunity engine (`054_*`), Stripe payment idempotency (`057_*`), products SEO tagline/CTA fields (`058_*`), the Tier 1 quote pipeline (`059_*`: `orders.quote_id` + index, `quote_followup_events`, quote-followup `recovery_config` seeds), and quote acquisition attribution (`060_*`). Note: `custom_quotes.free_shipping` exists in runtime schema and must be preserved in schema reconciliations.
 
 ### Fabric Color Inventory System (implemented 2026-07-12)
 - D1 table `fabric_color_inventory` (migration 036): `id, fabric, color, in_stock, updated_at` with UNIQUE(fabric, color).

@@ -1,3 +1,5 @@
+> **DOC RECONCILIATION (2026-11-01).** Historical phase summary. Canonical current runtime state is maintained in `AGENTS.md` and `Framework.md`.
+
 # Phase 8 — Polish + Launch
 **Status (2026-10-22 reconciliation): ✅ COMPLETE — All Part A and Part B items are fully complete, including Stripe Live Mode keys. Analytics reconciliation: GA4 now runs via Cloudflare Zaraz (server-side) using `G-0GWVSPJLVJ`; hardcoded client-side `gtag.js` page-head snippets were removed to prevent double counting.**
 **Goal:** Part A and Part B are complete — mobile issues fixed, Lighthouse targets achieved, and Stripe live mode keys deployed.

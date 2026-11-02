@@ -1,3 +1,5 @@
+> **DOC RECONCILIATION (2026-11-01).** Historical phase summary. Canonical current runtime state is maintained in `AGENTS.md` and `Framework.md`.
+
 ﻿## Phase 1 Completion Summary (2026-05-09)
 
 Scaffold built and functional. All folders created, `wrangler.toml` configured with D1 + R2 bindings, `migrations/001_initial.sql` creates 4 tables (products, orders, abandoned_carts, subscribers), `AGENTS.md` project memory created, placeholder HTML files in place.

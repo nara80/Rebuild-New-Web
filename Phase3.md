@@ -1,3 +1,5 @@
+> **DOC RECONCILIATION (2026-11-01).** Historical phase summary. Canonical current runtime state is maintained in `AGENTS.md` and `Framework.md`.
+
 ﻿## Phase 3 Completion Summary (2026-05-09)
 
 Design system implemented. `main.min.css` (~40KB minified) with brand tokens, Quicksand + Sarabun bilingual font system, sticky fixed header (scroll-shrinks via CSS class), mobile drawer (slides from left), 4-column minimal footer with icon-only marketplace links (Etsy, eBay, Shopee, Lazada, TikTok), centered social row, deep navy `#001d3d` footer background. Header + footer injected into all ~56 pages. Shop links to `/products/`, Fabrics to `/fabric/` (no mega-menu or dropdown built). LINE present in footer contact section. Cookie consent banner built. Clerk auth integration built.
