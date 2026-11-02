@@ -6,19 +6,16 @@
 
 import { verifyClerkJwt } from "../../workers/api/clerk-verify";
 import { consumeClerkHandshake } from "../../workers/api/clerk-handshake";
+import { extractClerkSessionToken } from "../../workers/api/clerk-session-token";
 
-function getClerkSessionToken(request: Request): string | null {
-  // 1. Check cookies (production: __session, dev: __clerk_db_jwt)
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  if (cookieMatch) return cookieMatch[1];
+const TOKEN_QUERY_NAME = /^__(?:session|clerk_db_jwt)(?:_[A-Za-z0-9_-]{1,64})?$/;
 
-  // 2. Check URL query params (Clerk dev mode redirects with ?__clerk_db_jwt=...)
+function hasForbiddenTokenQuery(request: Request): boolean {
   const url = new URL(request.url);
-  const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
-  if (qp) return qp;
-
-  return null;
+  for (const key of Array.from(url.searchParams.keys())) {
+    if (TOKEN_QUERY_NAME.test(key)) return true;
+  }
+  return false;
 }
 
 export const onRequest: PagesFunction<{
@@ -39,7 +36,15 @@ export const onRequest: PagesFunction<{
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
 
-  const sessionToken = getClerkSessionToken(context.request);
+  if (hasForbiddenTokenQuery(context.request)) {
+    return redirectToSignIn(context.request.url, context.env);
+  }
+
+  const session = extractClerkSessionToken(context.request);
+  if (session.ambiguous) {
+    return redirectToSignIn(context.request.url, context.env);
+  }
+  const sessionToken = session.token;
 
   if (!sessionToken) {
     return redirectToSignIn(context.request.url, context.env);

@@ -35,6 +35,9 @@ const JWT_CATEGORY_IGNORE = "cl_I7d4PD111III";
 
 // Clerk cookie names only (optionally suffixed, e.g. __session_abc12).
 const ALLOWED_COOKIE_NAME = /^(__session|__client_uat|__clerk_handshake)(_[A-Za-z0-9_-]{1,64})?$/;
+const HANDSHAKE_COOKIE_NAME = /^__clerk_handshake(?:_[A-Za-z0-9_-]{1,64})?$/;
+const SESSION_QUERY_NAME = /^__session(?:_[A-Za-z0-9_-]{1,64})?$/;
+const DBJWT_QUERY_NAME = /^__clerk_db_jwt(?:_[A-Za-z0-9_-]{1,64})?$/;
 // Header-safe cookie value charset (JWT/base64url + URL-encoding); blocks
 // separators and CR/LF so a directive can never smuggle extra headers.
 const ALLOWED_COOKIE_VALUE = /^[A-Za-z0-9._~%+/=-]*$/;
@@ -51,14 +54,48 @@ function b64urlToBytes(str: string): Uint8Array {
   return bytes;
 }
 
+function parseCookieHeader(cookieHeader: string): Array<{ name: string; value: string }> {
+  if (!cookieHeader) return [];
+  return cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const idx = part.indexOf("=");
+      if (idx <= 0) return { name: "", value: "" };
+      return {
+        name: part.slice(0, idx).trim(),
+        value: part.slice(idx + 1).trim(),
+      };
+    })
+    .filter((entry) => entry.name && entry.value);
+}
+
 function getHandshakeToken(request: Request): string | null {
   const cookieHeader = request.headers.get("Cookie") || "";
-  const m = cookieHeader.match(/(?:^|;\s*)__clerk_handshake=([^;]+)/);
-  if (m && m[1]) return m[1].trim();
+  const cookieTokens = parseCookieHeader(cookieHeader)
+    .filter((entry) => HANDSHAKE_COOKIE_NAME.test(entry.name))
+    .map((entry) => entry.value.trim())
+    .filter(Boolean);
+  const uniqueCookieTokens = Array.from(new Set(cookieTokens));
+  if (uniqueCookieTokens.length > 1) return null;
+
+  const queryTokens: string[] = [];
   try {
-    const qp = new URL(request.url).searchParams.get("__clerk_handshake");
-    if (qp) return qp.trim();
+    for (const [name, value] of new URL(request.url).searchParams.entries()) {
+      if (!value) continue;
+      if (!HANDSHAKE_COOKIE_NAME.test(name)) continue;
+      queryTokens.push(value.trim());
+    }
   } catch {}
+  const uniqueQueryTokens = Array.from(new Set(queryTokens.filter(Boolean)));
+  if (uniqueQueryTokens.length > 1) return null;
+
+  if (uniqueCookieTokens.length === 1 && uniqueQueryTokens.length === 1) {
+    return uniqueCookieTokens[0] === uniqueQueryTokens[0] ? uniqueCookieTokens[0] : null;
+  }
+  if (uniqueCookieTokens.length === 1) return uniqueCookieTokens[0];
+  if (uniqueQueryTokens.length === 1) return uniqueQueryTokens[0];
   return null;
 }
 
@@ -203,8 +240,16 @@ function parseDirective(directive: string, requestHost: string): ParsedDirective
 
 function stripAuthParams(url: URL): string {
   const clean = new URL(url.toString());
-  for (const p of ["__clerk_handshake", "__clerk_help", "__clerk_db_jwt", "__mm_hs"]) {
-    clean.searchParams.delete(p);
+  for (const key of Array.from(clean.searchParams.keys())) {
+    if (
+      key === "__clerk_help" ||
+      key === "__mm_hs" ||
+      HANDSHAKE_COOKIE_NAME.test(key) ||
+      DBJWT_QUERY_NAME.test(key) ||
+      SESSION_QUERY_NAME.test(key)
+    ) {
+      clean.searchParams.delete(key);
+    }
   }
   return clean.toString();
 }

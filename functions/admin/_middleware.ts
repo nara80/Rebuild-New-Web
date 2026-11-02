@@ -13,21 +13,16 @@
 import { verifyClerkJwt } from "../../workers/api/clerk-verify";
 import { consumeClerkHandshake } from "../../workers/api/clerk-handshake";
 import { hasAdminRole, emailAllowed, emailBlocked } from "../../workers/api/admin-auth";
+import { extractClerkSessionToken } from "../../workers/api/clerk-session-token";
 
-function getClerkSessionToken(request: Request): string | null {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch =
-    cookieHeader.match(/__session=([^;]+)/) ||
-    cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  if (cookieMatch) return cookieMatch[1];
+const TOKEN_QUERY_NAME = /^__(?:session|clerk_db_jwt)(?:_[A-Za-z0-9_-]{1,64})?$/;
 
+function hasForbiddenTokenQuery(request: Request): boolean {
   const url = new URL(request.url);
-  const qp =
-    url.searchParams.get("__clerk_db_jwt") ||
-    url.searchParams.get("__session");
-  if (qp) return qp;
-
-  return null;
+  for (const key of Array.from(url.searchParams.keys())) {
+    if (TOKEN_QUERY_NAME.test(key)) return true;
+  }
+  return false;
 }
 
 function getPrimaryClerkEmail(user: any): string {
@@ -84,7 +79,15 @@ export const onRequest: PagesFunction<{
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
 
-  const sessionToken = getClerkSessionToken(context.request);
+  if (hasForbiddenTokenQuery(context.request)) {
+    return redirectToSignIn(context.request.url, context.env);
+  }
+
+  const session = extractClerkSessionToken(context.request);
+  if (session.ambiguous) {
+    return redirectToSignIn(context.request.url, context.env);
+  }
+  const sessionToken = session.token;
 
   if (!sessionToken) {
     return redirectToSignIn(context.request.url, context.env);
@@ -200,7 +203,11 @@ function redirectToSignIn(currentUrl: string, env?: any) {
 
   const clean = new URL(parsed.origin + parsed.pathname + parsed.search);
   for (const key of Array.from(clean.searchParams.keys())) {
-    if (key.indexOf("__clerk_") === 0 || key === HANDSHAKE_MARKER) {
+    if (
+      key.indexOf("__clerk_") === 0 ||
+      key.indexOf("__session") === 0 ||
+      key === HANDSHAKE_MARKER
+    ) {
       clean.searchParams.delete(key);
     }
   }

@@ -24,6 +24,7 @@ function bundle(entry) {
 
 const account = await bundle('functions/account/_middleware.ts');
 const admin = await bundle('functions/admin/_middleware.ts');
+const clerkReturn = await bundle('functions/auth/clerk-return/[[path]].ts');
 
 // ── Keypairs: real instance key + an attacker key ──
 const KID = 'test-key';
@@ -112,6 +113,7 @@ const SIGNED_OUT_DIRECTIVES = [
 
 const ACCOUNT_URL = 'https://www.mildmate.com/account/?__mm_hs=1';
 const ADMIN_URL = 'https://www.mildmate.com/super-admin/?__mm_hs=1';
+const CALLBACK_URL = 'https://www.mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F';
 
 const validSession = await mintSession();
 const expiredSession = await mintSession({ exp: now() - 120 });
@@ -141,6 +143,14 @@ await check('account: handshake with fresh valid session → 302 clean URL + val
 await check('account: handshake via query param also consumed', async () => {
   const hs = await mintHandshake(freshDirectives(validSession));
   const res = await account.onRequest(ctx(`https://www.mildmate.com/account/?__mm_hs=1&__clerk_handshake=${hs}`, `__session=${expiredSession}`));
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get('location'), 'https://www.mildmate.com/account/');
+  assert.ok(setCookies(res).some((c) => c.startsWith(`__session=${validSession};`)));
+});
+
+await check('account: suffixed handshake cookie also consumed', async () => {
+  const hs = await mintHandshake(freshDirectives(validSession));
+  const res = await account.onRequest(ctx(ACCOUNT_URL, `__session=${expiredSession}; __clerk_handshake_b0Pb3ild=${hs}`));
   assert.equal(res.status, 302);
   assert.equal(res.headers.get('location'), 'https://www.mildmate.com/account/');
   assert.ok(setCookies(res).some((c) => c.startsWith(`__session=${validSession};`)));
@@ -267,6 +277,27 @@ await check('account: valid session, no handshake → page served (unchanged)', 
   assert.equal(await res.text(), 'PAGE');
 });
 
+await check('account: valid SUFFIXED session cookie → page served', async () => {
+  const res = await account.onRequest(ctx('https://www.mildmate.com/account/', `__session_b0Pb3ild=${validSession}`));
+  assert.equal(res.status, 200);
+  assert.equal(await res.text(), 'PAGE');
+});
+
+await check('account: conflicting session cookies are rejected', async () => {
+  const alternate = await mintSession({ sub: 'user_other' });
+  const res = await account.onRequest(
+    ctx('https://www.mildmate.com/account/', `__session=${validSession}; __session_b0Pb3ild=${alternate}`)
+  );
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+});
+
+await check('account: token-bearing query params are rejected on gated route', async () => {
+  const res = await account.onRequest(ctx(`https://www.mildmate.com/account/?__session_b0Pb3ild=${validSession}`, null));
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+});
+
 await check('account: expired session, no handshake, no marker → FAPI handshake redirect (unchanged)', async () => {
   const res = await account.onRequest(ctx('https://www.mildmate.com/account/', `__session=${expiredSession}`));
   assert.equal(res.status, 302);
@@ -295,9 +326,40 @@ await check('admin: refreshed session with role + allowlisted email → page ser
   assert.equal(res.status, 200);
 });
 
+await check('admin: valid SUFFIXED session cookie with role + allowlisted email → page served', async () => {
+  const jwt = await mintSession({ role: 'super-admin', email: 'admin@test.com' });
+  const res = await admin.onRequest(ctx('https://www.mildmate.com/super-admin/', `__session_b0Pb3ild=${jwt}`));
+  assert.equal(res.status, 200);
+});
+
+await check('admin: conflicting session cookies are rejected', async () => {
+  const jwtAdmin = await mintSession({ role: 'super-admin', email: 'admin@test.com' });
+  const jwtOther = await mintSession({ role: 'super-admin', email: 'outsider@test.com' });
+  const res = await admin.onRequest(
+    ctx('https://www.mildmate.com/super-admin/', `__session=${jwtAdmin}; __session_b0Pb3ild=${jwtOther}`)
+  );
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+});
+
+await check('admin: token-bearing query params are rejected on gated route', async () => {
+  const jwt = await mintSession({ role: 'super-admin', email: 'admin@test.com' });
+  const res = await admin.onRequest(
+    ctx(`https://www.mildmate.com/super-admin/?__session_b0Pb3ild=${jwt}`, `__session=${jwt}`)
+  );
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+});
+
 await check('admin: denylisted email with role → 403 blocked (denylist preserved)', async () => {
   const jwt = await mintSession({ role: 'super-admin', email: 'mildmateshop@gmail.com' });
-  const res = await admin.onRequest(ctx('https://www.mildmate.com/super-admin/', `__session=${jwt}`, { ...baseEnv, ADMIN_EMAILS: 'mildmateshop@gmail.com' }));
+  const res = await admin.onRequest(
+    ctx('https://www.mildmate.com/super-admin/', `__session=${jwt}`, {
+      ...baseEnv,
+      ADMIN_EMAILS: 'mildmateshop@gmail.com',
+      ADMIN_BLOCKED_EMAILS: 'mildmateshop@gmail.com',
+    })
+  );
   assert.equal(res.status, 403);
   assert.ok((await res.text()).includes('does not have super-admin access'));
 });
@@ -307,6 +369,55 @@ await check('admin: signed-out handshake → sign-in redirect (unauthorized cann
   const res = await admin.onRequest(ctx(ADMIN_URL, `__session=${expiredSession}; __clerk_handshake=${hs}`));
   assert.equal(res.status, 302);
   assert.ok(res.headers.get('location').startsWith('https://accounts.test/sign-in?'));
+});
+
+// ── Clerk return callback middleware ──
+await check('clerk-return: valid SUFFIXED session cookie redirects to next path', async () => {
+  const jwt = await mintSession({ role: 'super-admin', email: 'admin@test.com' });
+  const res = await clerkReturn.onRequest(ctx(CALLBACK_URL, `__session_b0Pb3ild=${jwt}`));
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get('location'), 'https://www.mildmate.com/super-admin/');
+});
+
+await check('clerk-return: valid SUFFIXED db-jwt cookie redirects to next path', async () => {
+  const jwt = await mintSession({ role: 'super-admin', email: 'admin@test.com' });
+  const res = await clerkReturn.onRequest(ctx(CALLBACK_URL, `__clerk_db_jwt_b0Pb3ild=${jwt}`));
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get('location'), 'https://www.mildmate.com/super-admin/');
+});
+
+await check('clerk-return: missing session token redirects back to sign-in callback', async () => {
+  const res = await clerkReturn.onRequest(ctx(CALLBACK_URL, null));
+  assert.equal(res.status, 302);
+  const loc = new URL(res.headers.get('location'));
+  assert.equal(loc.origin + loc.pathname, 'https://accounts.test/sign-in');
+  const rt = new URL(loc.searchParams.get('redirect_url'));
+  assert.equal(rt.origin + rt.pathname, 'https://www.mildmate.com/auth/clerk-return/');
+  assert.equal(rt.searchParams.get('next'), '/super-admin/');
+});
+
+await check('clerk-return: invalid token redirects back to sign-in callback', async () => {
+  const res = await clerkReturn.onRequest(ctx(CALLBACK_URL, `__session_b0Pb3ild=not.a.jwt`));
+  assert.equal(res.status, 302);
+  const loc = new URL(res.headers.get('location'));
+  assert.equal(loc.origin + loc.pathname, 'https://accounts.test/sign-in');
+});
+
+await check('clerk-return: expired token redirects back to sign-in callback', async () => {
+  const res = await clerkReturn.onRequest(ctx(CALLBACK_URL, `__session_b0Pb3ild=${expiredSession}`));
+  assert.equal(res.status, 302);
+  const loc = new URL(res.headers.get('location'));
+  assert.equal(loc.origin + loc.pathname, 'https://accounts.test/sign-in');
+});
+
+await check('clerk-return: conflicting callback tokens are rejected', async () => {
+  const alt = await mintSession({ sub: 'user_alt' });
+  const res = await clerkReturn.onRequest(
+    ctx(CALLBACK_URL + `&__clerk_db_jwt_b0Pb3ild=${validSession}`, `__session_b0Pb3ild=${alt}`)
+  );
+  assert.equal(res.status, 302);
+  const loc = new URL(res.headers.get('location'));
+  assert.equal(loc.origin + loc.pathname, 'https://accounts.test/sign-in');
 });
 
 console.log(`\nAll ${passed} handshake-consumption regression tests passed.`);

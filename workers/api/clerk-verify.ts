@@ -137,6 +137,7 @@ export async function verifyClerkJwt(
   const allowedOrigins = [
     "https://mildmate-new.pages.dev",
     "https://www.mildmate.com",
+    "https://mildmate.com",
   ];
   if (origin && !allowedOrigins.includes(origin) &&
       host !== "localhost" && !host.startsWith("127.0.0.1")) {

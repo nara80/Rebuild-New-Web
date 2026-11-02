@@ -52,9 +52,16 @@ function stubFetch(jwks: Record<string, any>) {
   }) as unknown as typeof fetch;
 }
 
-function makeRequest(token: string, url = "https://www.mildmate.com/api/auth/me"): Request {
+function makeRequest(
+  token: string,
+  url = "https://www.mildmate.com/api/auth/me",
+  extraHeaders: Record<string, string> = {}
+): Request {
   return new Request(url, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...extraHeaders,
+    },
   });
 }
 
@@ -193,6 +200,19 @@ describe("clerk-verify issuer validation", () => {
     expect(res.valid).toBe(false);
     if (!res.valid) expect(res.error).toBe("Missing token");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts apex mildmate.com as an allowed browser origin", async () => {
+    const res = await verifyClerkJwt(
+      makeRequest("invalid.token", "https://mildmate.com/api/auth/me", {
+        Origin: "https://mildmate.com",
+      }),
+      fakeEnv({ CLERK_ISSUER: PROD_ISSUER, CLERK_JWKS_URL: PROD_JWKS })
+    );
+    expect(res.valid).toBe(false);
+    if (!res.valid) {
+      expect(res.error).not.toBe("Invalid origin");
+    }
   });
 
   it("fail-closed: production host without Clerk prod config rejects with 503 (no dev fallback)", async () => {

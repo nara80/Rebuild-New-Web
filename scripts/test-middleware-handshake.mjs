@@ -152,6 +152,24 @@ await check('account: wrong issuer (valid signature) → sign-in redirect, not h
   assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
 });
 
+await check('account: token-bearing query params are rejected on gated route', async () => {
+  const res = await account.onRequest(ctx(account, ACCOUNT_URL + `?__session_b0Pb3ild=${validJwt}`, null));
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+});
+
+await check('account: conflicting session cookies are rejected', async () => {
+  const res = await account.onRequest({
+    request: new Request(ACCOUNT_URL, {
+      headers: { Cookie: `__session=${validJwt}; __session_b0Pb3ild=${wrongIssuerJwt}` },
+    }),
+    env: baseEnv,
+    next: async () => new Response('PAGE', { status: 200, headers: { 'Content-Type': 'text/html' } }),
+  });
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+});
+
 // ── Admin middleware ──
 await check('admin: missing token → sign-in redirect', async () => {
   const res = await admin.onRequest(ctx(admin, ADMIN_URL, null));
@@ -180,6 +198,27 @@ await check('admin: valid token with role + allowlisted email → page served (A
   assert.equal(await res.text(), 'PAGE');
 });
 
+await check('admin: token-bearing query params are rejected on gated route', async () => {
+  const jwt = await mintJwt({ role: 'super-admin', email: 'admin@test.com' });
+  const res = await admin.onRequest(ctx(admin, ADMIN_URL + `?__session_b0Pb3ild=${jwt}`, jwt));
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+});
+
+await check('admin: conflicting session cookies are rejected', async () => {
+  const jwtAdmin = await mintJwt({ role: 'super-admin', email: 'admin@test.com' });
+  const jwtOther = await mintJwt({ role: 'super-admin', email: 'outsider@test.com' });
+  const res = await admin.onRequest({
+    request: new Request(ADMIN_URL, {
+      headers: { Cookie: `__session=${jwtAdmin}; __session_b0Pb3ild=${jwtOther}` },
+    }),
+    env: baseEnv,
+    next: async () => new Response('PAGE', { status: 200, headers: { 'Content-Type': 'text/html' } }),
+  });
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+});
+
 await check('admin: valid token without role/email → 403 (AND gate preserved)', async () => {
   const res = await admin.onRequest(ctx(admin, ADMIN_URL, validJwt));
   assert.equal(res.status, 403);
@@ -194,7 +233,13 @@ await check('admin: valid token, role but email not allowlisted → 403 (AND gat
 
 await check('admin: valid token, denylisted email with role → 403 blocked variant', async () => {
   const jwt = await mintJwt({ role: 'super-admin', email: 'mildmateshop@gmail.com' });
-  const res = await admin.onRequest(ctx(admin, ADMIN_URL, jwt, { ...baseEnv, ADMIN_EMAILS: 'mildmateshop@gmail.com' }));
+  const res = await admin.onRequest(
+    ctx(admin, ADMIN_URL, jwt, {
+      ...baseEnv,
+      ADMIN_EMAILS: 'mildmateshop@gmail.com',
+      ADMIN_BLOCKED_EMAILS: 'mildmateshop@gmail.com',
+    })
+  );
   assert.equal(res.status, 403);
   assert.ok((await res.text()).includes('does not have super-admin access'));
 });

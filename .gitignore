@@ -23,3 +23,12 @@ node_modules/
 # Notion product mapper local state + run logs (may contain order metadata)
 scripts/.notion-mapper-state.json
 logs/
+
+# Isolated release worktrees (local deploy staging only)
+.release-*/
+
+# Windows shell junk
+desktop.ini
+
+# Full D1 backups must never enter the repo (customer PII)
+marketing-sync-worker/backup_mildmate_db_before_*.sql

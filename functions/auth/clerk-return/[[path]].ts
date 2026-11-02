@@ -1,5 +1,6 @@
 import { consumeClerkHandshake } from "../../../workers/api/clerk-handshake";
 import { verifyClerkJwt } from "../../../workers/api/clerk-verify";
+import { extractClerkSessionToken } from "../../../workers/api/clerk-session-token";
 
 const DEFAULT_NEXT_PATH = "/super-admin/";
 
@@ -14,15 +15,6 @@ function normalizeNextPath(raw: string | null): string {
   } catch {
     return DEFAULT_NEXT_PATH;
   }
-}
-
-function getSessionToken(request: Request): string {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch =
-    cookieHeader.match(/__session=([^;]+)/) ||
-    cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  if (cookieMatch && cookieMatch[1]) return cookieMatch[1].trim();
-  return "";
 }
 
 function buildCallbackUrl(url: URL, nextPath: string): string {
@@ -53,15 +45,19 @@ export const onRequest: PagesFunction<{
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
 
-  const sessionToken = getSessionToken(context.request);
-  if (!sessionToken) {
+  const session = extractClerkSessionToken(context.request, { allowQueryToken: true });
+  if (session.ambiguous) {
+    return redirectToSignIn(url, context.env, nextPath);
+  }
+
+  if (!session.token) {
     return redirectToSignIn(url, context.env, nextPath);
   }
 
   const verifyRequest = new Request(context.request.url, {
     headers: new Headers({
       ...Object.fromEntries(context.request.headers.entries()),
-      Authorization: `Bearer ${sessionToken}`,
+      Authorization: `Bearer ${session.token}`,
     }),
   });
   const verified = await verifyClerkJwt(verifyRequest, context.env);
