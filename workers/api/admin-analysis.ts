@@ -1853,10 +1853,10 @@ async function getGa4Leads(env: any, f: Filters): Promise<Response> {
 
     const sourceMap = new Map<string, any>();
     for (const r of sourceRows.results || []) {
-      const key = ga4LeadSourceMediumLabel(r.session_source, r.session_medium);
-      if (!sourceMap.has(key)) {
-        sourceMap.set(key, {
-          source_medium: key,
+      const sourceKey = ga4LeadSourceMediumLabel(r.session_source, r.session_medium);
+      if (!sourceMap.has(sourceKey)) {
+        sourceMap.set(sourceKey, {
+          source_medium: sourceKey,
           generate_lead_events: 0,
           generate_lead_users: null,
           generate_lead_users_available: false,
@@ -1865,7 +1865,7 @@ async function getGa4Leads(env: any, f: Filters): Promise<Response> {
           quote_request_users_available: false,
         });
       }
-      const s = sourceMap.get(key);
+      const s = sourceMap.get(sourceKey);
       const usersAvailable = Number(r.users_available || 0) === 1;
       if (String(r.event_name || "") === "generate_lead") {
         s.generate_lead_events = Number(r.event_count || 0);
@@ -1883,10 +1883,10 @@ async function getGa4Leads(env: any, f: Filters): Promise<Response> {
 
     const campaignMap = new Map<string, any>();
     for (const r of campaignRows.results || []) {
-      const key = ga4LeadLabel(r.session_campaign);
-      if (!campaignMap.has(key)) {
-        campaignMap.set(key, {
-          campaign: key,
+      const campaignKey = ga4LeadLabel(r.session_campaign);
+      if (!campaignMap.has(campaignKey)) {
+        campaignMap.set(campaignKey, {
+          campaign: campaignKey,
           generate_lead_events: 0,
           generate_lead_users: null,
           generate_lead_users_available: false,
@@ -1895,7 +1895,7 @@ async function getGa4Leads(env: any, f: Filters): Promise<Response> {
           quote_request_users_available: false,
         });
       }
-      const c = campaignMap.get(key);
+      const c = campaignMap.get(campaignKey);
       const usersAvailable = Number(r.users_available || 0) === 1;
       if (String(r.event_name || "") === "generate_lead") {
         c.generate_lead_events = Number(r.event_count || 0);

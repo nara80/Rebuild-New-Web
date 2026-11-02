@@ -59,6 +59,7 @@ import { handleAdminCampaigns } from "../../workers/api/admin-campaigns";
 import { handleCampaigns } from "../../workers/api/campaigns";
 import { handleAdminAccounts } from "../../workers/api/admin-accounts";
 import { handleAdminColorInventory } from "../../workers/api/admin-color-inventory";
+import { handleAdminTemplates } from "../../workers/api/admin-templates";
 import { handleFavorites } from "../../workers/api/favorites";
 import { handleCheckout } from "../../workers/api/checkout";
 import { handleShippingCalculate } from "../../workers/api/shipping";
@@ -320,6 +321,11 @@ export const onRequest: PagesFunction<{
   // Admin color inventory
   if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
     return handleAdminColorInventory(request, env);
+  }
+
+  // Admin site templates (header/footer)
+  if (path === "/api/admin/templates" || path === "/api/admin/templates/") {
+    return handleAdminTemplates(request, env);
   }
 
   // Admin accounts

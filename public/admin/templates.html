@@ -111,9 +111,9 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="../js/clerk.js"></script>
 <script>
 const API = '/api/admin/templates';
-const SECRET = (() => { try { return localStorage.getItem('admin_secret') || ''; } catch { return ''; } })();
 
 function showToast(msg, type) {
   const t = document.getElementById('toast');
@@ -122,8 +122,55 @@ function showToast(msg, type) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+// Auth: /api/admin/templates is a browser_admin route — Clerk bearer is
+// required on every host (X-Admin-Secret alone is rejected by the central
+// gate). Mirrors getAdminAuthHeaders() in /admin/index.html.
+async function authHeaders(includeJson) {
+  const headers = {};
+  if (includeJson) headers['Content-Type'] = 'application/json';
+  try {
+    if (typeof window.getClerkToken === 'function') {
+      const token = await window.getClerkToken();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+    }
+  } catch (e) {}
+  try {
+    const secret = localStorage.getItem('admin_secret') || '';
+    if (secret) headers['X-Admin-Secret'] = secret;
+  } catch (e) {}
+  return headers;
+}
+
+function showAuthRequired() {
+  document.getElementById('templates-container').innerHTML =
+    '<div class="card"><h2>Sign in required</h2>' +
+    '<p style="color:var(--color-error);margin-bottom:12px">Admin sign-in (Clerk) is required to manage site templates.</p>' +
+    '<p class="info">Sign in with an admin account, then <a href="#" onclick="location.reload();return false;" style="color:var(--color-primary)">retry</a>. ' +
+    'You can also sign in from the <a href="/admin/" style="color:var(--color-primary)">Admin Dashboard</a>.</p></div>';
+}
+
+// Wait briefly for clerk.js to finish initializing its session before
+// giving up (it auto-inits on /admin/* paths).
+async function waitForClerkToken(maxMs) {
+  const start = Date.now();
+  for (;;) {
+    try {
+      if (typeof window.getClerkToken === 'function') {
+        const token = await window.getClerkToken();
+        if (token) return token;
+      }
+    } catch (e) {}
+    if (Date.now() - start >= maxMs) return null;
+    await new Promise((r) => setTimeout(r, 300));
+  }
+}
+
 async function loadTemplates() {
-  const res = await fetch(API, { headers: { 'X-Admin-Secret': SECRET } });
+  const res = await fetch(API, { headers: await authHeaders(false) });
+  if (res.status === 401 || res.status === 403) {
+    showAuthRequired();
+    return;
+  }
   if (!res.ok) {
     document.getElementById('templates-container').innerHTML = '<div class="card"><p style="color:var(--color-error)">Failed to load: ' + res.status + '</p></div>';
     return;
@@ -165,7 +212,7 @@ async function saveTemplate(key) {
 
   const res = await fetch(API, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': SECRET },
+    headers: await authHeaders(true),
     body: JSON.stringify({ key, html })
   });
 
@@ -173,6 +220,8 @@ async function saveTemplate(key) {
     ta.setAttribute('data-original', html);
     document.getElementById('hint-' + key).classList.remove('show');
     showToast('Saved! Cache invalidated — live now.', 'success');
+  } else if (res.status === 401 || res.status === 403) {
+    showAuthRequired();
   } else {
     const err = await res.json().catch(() => ({}));
     showToast(err.error || 'Save failed', 'error');
@@ -192,7 +241,14 @@ function escapeAttr(str) {
   return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-loadTemplates();
+(async function boot() {
+  const token = await waitForClerkToken(5000);
+  if (!token) {
+    showAuthRequired();
+    return;
+  }
+  loadTemplates();
+})();
 </script>
 </body>
 </html>

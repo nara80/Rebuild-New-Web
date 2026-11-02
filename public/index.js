@@ -11063,7 +11063,7 @@ function isProductionHost7(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost7, "isProductionHost");
-function collectRoles8(raw) {
+function collectRoles8b(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -11088,20 +11088,20 @@ function collectRoles8(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles8, "collectRoles");
-function hasAdminRole8(rawClaims) {
-  const roles = collectRoles8(rawClaims);
+__name(collectRoles8b, "collectRoles");
+function hasAdminRole8b(rawClaims) {
+  const roles = collectRoles8b(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole8, "hasAdminRole");
-function emailAllowed8(email, env) {
+__name(hasAdminRole8b, "hasAdminRole");
+function emailAllowed8b(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed8, "emailAllowed");
+__name(emailAllowed8b, "emailAllowed");
 async function authorizeAdmin6(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -11110,7 +11110,7 @@ async function authorizeAdmin6(request, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) {
+      if (hasAdminRole8b(raw) || emailAllowed8b(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -11126,8 +11126,8 @@ async function authorizeAdmin6(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed8(email, env)) return { ok: true };
-            if (hasAdminRole8(metadata)) return { ok: true };
+            if (emailAllowed8b(email, env)) return { ok: true };
+            if (hasAdminRole8b(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -16201,7 +16201,7 @@ async function getActiveCampaignDiscounts(env) {
   return map;
 }
 __name(getActiveCampaignDiscounts, "getActiveCampaignDiscounts");
-function isProductionHost18(request) {
+function isProductionHost18b(request) {
   try {
     const host = new URL(request.url).hostname.toLowerCase();
     return host === "www.mildmate.com" || host === "mildmate.com";
@@ -16209,7 +16209,7 @@ function isProductionHost18(request) {
     return false;
   }
 }
-__name(isProductionHost18, "isProductionHost");
+__name(isProductionHost18b, "isProductionHost");
 function inferStripeSecretMode(secret) {
   if (secret.startsWith("sk_live_")) return "live";
   if (secret.startsWith("sk_test_")) return "test";
@@ -16217,7 +16217,7 @@ function inferStripeSecretMode(secret) {
 }
 __name(inferStripeSecretMode, "inferStripeSecretMode");
 function assertStripeRuntimeSafety(request, env, stripeKey) {
-  const prodHost = isProductionHost18(request);
+  const prodHost = isProductionHost18b(request);
   const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
   const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
   const stripeMode = inferStripeSecretMode(stripeKey);
@@ -16832,7 +16832,7 @@ function normalizeAddress2(raw) {
   return [(addr.street || addr.address || "").trim().toLowerCase(), (addr.city || "").trim().toLowerCase(), (addr.state || addr.province || "").trim().toLowerCase(), (addr.postal_code || addr.zip || addr.postal || "").trim().toLowerCase(), (addr.country || "").trim().toLowerCase()].join("|");
 }
 __name(normalizeAddress2, "normalizeAddress");
-function isProductionHost19(request) {
+function isProductionHost19b(request) {
   try {
     const host = new URL(request.url).hostname.toLowerCase();
     return host === "www.mildmate.com" || host === "mildmate.com";
@@ -16840,9 +16840,9 @@ function isProductionHost19(request) {
     return false;
   }
 }
-__name(isProductionHost19, "isProductionHost");
+__name(isProductionHost19b, "isProductionHost");
 function assertWebhookRuntimeSafety(request, env) {
-  const prodHost = isProductionHost19(request);
+  const prodHost = isProductionHost19b(request);
   const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
   const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
   const stripeEnvMode = String(env.STRIPE_ENV_MODE || "").trim().toLowerCase();
@@ -18815,6 +18815,85 @@ function r2Product3(p) {
   return out;
 }
 __name(r2Product3, "r2Product");
+// ─── Admin Templates API (mirrored from workers/api/admin-templates.ts) ───
+async function authorizeAdminTemplates(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) return { ok: false, status: verified.status || 401, error: verified.error || "Unauthorized" };
+    const raw = verified.payload.raw || {};
+    if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) return { ok: true };
+    const sub = verified.payload.sub;
+    const clerkKey = env.CLERK_SECRET_KEY;
+    if (sub && clerkKey) {
+      try {
+        const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+          headers: { Authorization: "Bearer " + clerkKey }
+        });
+        if (clerkResp.ok) {
+          const user = await clerkResp.json();
+          const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
+          const metadata = user.public_metadata || {};
+          if (emailAllowed8(email, env)) return { ok: true };
+          if (hasAdminRole8(metadata)) return { ok: true };
+        }
+      } catch (e) {
+        console.error("Clerk API lookup failed:", e?.message || e);
+      }
+    }
+    return { ok: false, status: 403, error: "Forbidden: admin role and email allowlist required" };
+  }
+  const host = new URL(request.url).hostname;
+  const prodHost = host === "www.mildmate.com" || host === "mildmate.com";
+  if (prodHost) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  const secret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const expected = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!secret || !expected || secret !== expected) return { ok: false, status: 401, error: "Unauthorized" };
+  return { ok: true };
+}
+__name(authorizeAdminTemplates, "authorizeAdmin");
+async function getAllTemplatesMirror(db) {
+  const { results } = await db.prepare("SELECT template_key, template_html, updated_at FROM site_templates ORDER BY template_key").all();
+  return results;
+}
+__name(getAllTemplatesMirror, "getAllTemplates");
+async function updateTemplateMirror(db, key, html) {
+  await db.prepare("INSERT OR REPLACE INTO site_templates (template_key, template_html, updated_at) VALUES (?, ?, datetime('now'))").bind(key, html).run();
+}
+__name(updateTemplateMirror, "updateTemplate");
+async function handleAdminTemplates(request, env) {
+  const auth = await authorizeAdminTemplates(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  const method = request.method.toUpperCase();
+  if (method === "GET") {
+    const templates = await getAllTemplatesMirror(env.DB);
+    return new Response(JSON.stringify({ templates }), { headers: { "Content-Type": "application/json" } });
+  }
+  if (method === "PUT") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }
+    if (!body.key || !body.html) {
+      return new Response(JSON.stringify({ error: "Missing key or html" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }
+    const allowed = ["header-standard", "footer-standard"];
+    if (!allowed.includes(body.key)) {
+      return new Response(JSON.stringify({ error: `Invalid template key. Allowed: ${allowed.join(", ")}` }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }
+    await updateTemplateMirror(env.DB, body.key, body.html);
+    return new Response(JSON.stringify({ ok: true, key: body.key }), { headers: { "Content-Type": "application/json" } });
+  }
+  return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { "Content-Type": "application/json" } });
+}
+__name(handleAdminTemplates, "handleAdminTemplates");
 var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -18956,6 +19035,9 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   }
   if (path === "/api/admin/accounts" || path === "/api/admin/accounts/") {
     return handleAdminAccounts(request, env);
+  }
+  if (path === "/api/admin/templates" || path === "/api/admin/templates/") {
+    return handleAdminTemplates(request, env);
   }
   if (path === "/api/admin/thankyou-dispatch" || path === "/api/admin/thankyou-dispatch/") {
     return handleAdminThankyouDispatch(request, env);
@@ -19792,7 +19874,7 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // r2/[[path]].ts
-var onRequest8 = /* @__PURE__ */ __name(async (context) => {
+var onRequest8b = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
@@ -20856,7 +20938,7 @@ var routes = [
     mountPath: "/r2",
     method: "",
     middlewares: [],
-    modules: [onRequest8]
+    modules: [onRequest8b]
   },
   {
     routePath: "/v1/:path*",
