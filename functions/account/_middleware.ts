@@ -7,6 +7,7 @@
 import { verifyClerkJwt } from "../../workers/api/clerk-verify";
 import { consumeClerkHandshake } from "../../workers/api/clerk-handshake";
 import { extractClerkSessionToken } from "../../workers/api/clerk-session-token";
+import type { ClerkSessionTokenResult } from "../../workers/api/clerk-session-token";
 
 const TOKEN_QUERY_NAME = /^__(?:session|clerk_db_jwt)(?:_[A-Za-z0-9_-]{1,64})?$/;
 
@@ -16,6 +17,49 @@ function hasForbiddenTokenQuery(request: Request): boolean {
     if (TOKEN_QUERY_NAME.test(key)) return true;
   }
   return false;
+}
+
+type SessionVerification =
+  | { state: "none" | "invalid" }
+  | { state: "expired" }
+  | { state: "valid" };
+
+/**
+ * Verify every distinct session-token candidate with the exact strict
+ * pipeline used for single-token requests (signature, issuer, expiry,
+ * fail-closed prod guard, rate limiting). Never selects by cookie order:
+ * exactly one fully valid candidate → "valid"; zero valid → "invalid"
+ * ("expired" when a candidate expired, preserving the handshake refresh
+ * path); two or more distinct valid candidates → "invalid"; truncated
+ * candidate list → "invalid".
+ */
+async function verifySessionCandidates(
+  session: ClerkSessionTokenResult,
+  request: Request,
+  env: any
+): Promise<SessionVerification> {
+  if (!session.candidates.length) return { state: "none" };
+  if (!session.candidatesComplete) return { state: "invalid" };
+
+  let sawExpired = false;
+  let validCount = 0;
+  for (const candidate of session.candidates) {
+    const modifiedRequest = new Request(request.url, {
+      headers: new Headers({
+        ...Object.fromEntries(request.headers.entries()),
+        Authorization: `Bearer ${candidate}`,
+      }),
+    });
+    const result = await verifyClerkJwt(modifiedRequest, env);
+    if (result.valid) {
+      validCount++;
+      if (validCount > 1) return { state: "invalid" }; // conflicting valid identities
+    } else if (result.error === "Token expired") {
+      sawExpired = true;
+    }
+  }
+  if (validCount === 1) return { state: "valid" };
+  return { state: sawExpired ? "expired" : "invalid" };
 }
 
 export const onRequest: PagesFunction<{
@@ -40,31 +84,18 @@ export const onRequest: PagesFunction<{
     return redirectToSignIn(context.request.url, context.env);
   }
 
+  // Conflicting session cookies are resolved by verifying EVERY distinct
+  // candidate with the strict JWT pipeline; authentication proceeds only
+  // when exactly one candidate fully verifies (see verifySessionCandidates).
   const session = extractClerkSessionToken(context.request);
-  if (session.ambiguous) {
+  const verified = await verifySessionCandidates(session, context.request, context.env);
+
+  if (verified.state === "expired") {
+    const handshake = redirectToHandshake(context.request.url, context.env);
+    if (handshake) return handshake;
     return redirectToSignIn(context.request.url, context.env);
   }
-  const sessionToken = session.token;
-
-  if (!sessionToken) {
-    return redirectToSignIn(context.request.url, context.env);
-  }
-
-  // Inject the session token as Bearer token so verifyClerkJwt can read it
-  const modifiedRequest = new Request(context.request.url, {
-    headers: new Headers({
-      ...Object.fromEntries(context.request.headers.entries()),
-      Authorization: `Bearer ${sessionToken}`,
-    }),
-  });
-
-  const result = await verifyClerkJwt(modifiedRequest, context.env);
-
-  if (!result.valid) {
-    if (result.error === "Token expired") {
-      const handshake = redirectToHandshake(context.request.url, context.env);
-      if (handshake) return handshake;
-    }
+  if (verified.state !== "valid") {
     return redirectToSignIn(context.request.url, context.env);
   }
 
