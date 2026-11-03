@@ -7,8 +7,11 @@
   <meta name="description" content="Duvet Insert by MildMate — Microfiber 200g/m² filling, hypoallergenic, quick-dry. Thai standard sizes (3FT–9.5FT). Thailand only. Made in Thailand.">
   <meta name="product-image" content="/images/products/duvet-insert/main.jpg">
   <title>Duvet Insert — MildMate</title>
-  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="preload" href="/css/fonts.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="/css/main.min.css">
+  <noscript>
+    <link href="/css/fonts.css" rel="stylesheet">
+  </noscript>
   <style>
     .product-page { background: #F8FAFC; }
     .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; overflow: hidden; }
@@ -226,7 +229,7 @@
   <meta name="twitter:title" content="Duvet Insert — MildMate">
   <meta name="twitter:description" content="Duvet Insert by MildMate — Microfiber 200g/m² filling, hypoallergenic, quick-dry. Thai standard sizes (3FT–9.5FT). Thailand only. Made in Thailand.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-  <script src="/js/analytics-env.js"></script>
+  <script src="/js/analytics-env.js" defer></script>
   <script>
     (function () {
       function bootMildmateAnalytics() {
@@ -296,7 +299,7 @@
       <div class="related-section">
         <h2>You might also like</h2>
         <div class="related-grid">
-          <a href="/product/3-sided-duvet/" class="related-card"><div class="card-image"><img src="/images/products/3-sided-duvet/main.jpg" alt="3-Sided Zipper Duvet Cover" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">3-Sided Zipper Duvet Cover</div><div class="card-price">From USD 65.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/pillowcase-envelope/" class="related-card"><div class="card-image"><img src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Envelope Pillowcase</div><div class="card-price">From USD 16.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/flat-sheet-standard/" class="related-card"><div class="card-image"><img src="/images/products/flat-sheet-standard/main.jpg" alt="Flat Sheet — Standard" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Flat Sheet — Standard</div><div class="card-price">From USD 38.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/mattress-encasement-general/" class="related-card"><div class="card-image"><img src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">6-Sided Mattress Encasement</div><div class="card-price">From USD 55.00</div><div class="card-price-note">TPU Waterproof</div></div></a>
+          <a href="/product/3-sided-duvet/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/3-sided-duvet/main.jpg" alt="3-Sided Zipper Duvet Cover" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">3-Sided Zipper Duvet Cover</div><div class="card-price">From USD 65.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/pillowcase-envelope/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">Envelope Pillowcase</div><div class="card-price">From USD 16.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/flat-sheet-standard/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/flat-sheet-standard/main.jpg" alt="Flat Sheet — Standard" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">Flat Sheet — Standard</div><div class="card-price">From USD 38.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/mattress-encasement-general/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">6-Sided Mattress Encasement</div><div class="card-price">From USD 55.00</div><div class="card-price-note">TPU Waterproof</div></div></a>
         </div>
       </div>
     </div>
@@ -336,6 +339,29 @@
   <script src="/js/cookie-consent.js"></script>
   <script src="/js/campaign-state.js?v=20260601"></script>
   <script src="/js/reviews-carousel.js"></script>
+  <script>
+    (function () {
+      var lazyImgs = Array.prototype.slice.call(document.querySelectorAll('img[data-mm-lazy-src]'));
+      if (!lazyImgs.length) return;
+      function reveal(img) {
+        if (!img || !img.getAttribute('data-mm-lazy-src')) return;
+        img.src = img.getAttribute('data-mm-lazy-src');
+        img.removeAttribute('data-mm-lazy-src');
+      }
+      if (!('IntersectionObserver' in window)) {
+        lazyImgs.forEach(reveal);
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          reveal(entry.target);
+          io.unobserve(entry.target);
+        });
+      }, { rootMargin: '280px 0px' });
+      lazyImgs.forEach(function (img) { io.observe(img); });
+    })();
+  </script>
   <script>
     (function () {
       var tabs = document.querySelectorAll('.tab-btn');

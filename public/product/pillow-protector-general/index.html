@@ -12,8 +12,11 @@
   <meta name="description" content="Pillow Protector by MildMate  -  TPU waterproof liner + your choice of outer fabric (CloudSoft, BreezePlus, PremaCotton, EcoLuxe). Ships worldwide.">
   <meta name="product-image" content="/images/products/pillow-protector-general/main.jpg">
   <title>Pillow Protector — MildMate</title>
-  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="preload" href="/css/fonts.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="/css/main.min.css">
+  <noscript>
+    <link href="/css/fonts.css" rel="stylesheet">
+  </noscript>
   <style>
     .product-page { background: #F8FAFC; }
     .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 56px; display: grid; grid-template-columns: minmax(0, 55%) minmax(0, 45%); gap: 40px; align-items: start; }
@@ -328,7 +331,7 @@
   <meta name="twitter:title" content="Pillow Protector — MildMate">
   <meta name="twitter:description" content="Pillow Protector by MildMate  -  TPU waterproof liner + your choice of outer fabric (CloudSoft, BreezePlus, PremaCotton, EcoLuxe). Ships worldwide.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-  <script src="/js/analytics-env.js"></script>
+  <script src="/js/analytics-env.js" defer></script>
   <script>
     (function () {
       function bootMildmateAnalytics() {
@@ -528,7 +531,7 @@
       <div class="related-section">
         <h2>You might also like</h2>
         <div class="related-grid">
-          <a href="/product/mattress-protector-standard/" class="related-card"><div class="card-image"><img src="/images/products/mattress-protector-standard/main.jpg" alt="Mattress Protector — Standard" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Mattress Protector — Standard</div><div class="card-price">From USD 38.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/pet-proof-mattress-protector/" class="related-card"><div class="card-image"><img src="/images/products/pet-proof-mattress-protector/main.jpg" alt="Pet-Proof Mattress Protector" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Pet-Proof Mattress Protector</div><div class="card-price">From USD 48.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/pillowcase-envelope/" class="related-card"><div class="card-image"><img src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Envelope Pillowcase</div><div class="card-price">From USD 16.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/3-sided-duvet/" class="related-card"><div class="card-image"><img src="/images/products/3-sided-duvet/main.jpg" alt="3-Sided Zipper Duvet Cover" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">3-Sided Zipper Duvet Cover</div><div class="card-price">From USD 65.00</div><div class="card-price-note">CloudSoft</div></div></a>
+          <a href="/product/mattress-protector-standard/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/mattress-protector-standard/main.jpg" alt="Mattress Protector — Standard" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">Mattress Protector — Standard</div><div class="card-price">From USD 38.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/pet-proof-mattress-protector/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/pet-proof-mattress-protector/main.jpg" alt="Pet-Proof Mattress Protector" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">Pet-Proof Mattress Protector</div><div class="card-price">From USD 48.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/pillowcase-envelope/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">Envelope Pillowcase</div><div class="card-price">From USD 16.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/3-sided-duvet/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/3-sided-duvet/main.jpg" alt="3-Sided Zipper Duvet Cover" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">3-Sided Zipper Duvet Cover</div><div class="card-price">From USD 65.00</div><div class="card-price-note">CloudSoft</div></div></a>
         </div>
       </div>
     </div>
@@ -548,6 +551,29 @@
   <script src="/js/campaign-state.js?v=20260601"></script>
   <script src="/js/product-configurator.js"></script>
   <script src="/js/reviews-carousel.js"></script>
+  <script>
+    (function () {
+      var lazyImgs = Array.prototype.slice.call(document.querySelectorAll('img[data-mm-lazy-src]'));
+      if (!lazyImgs.length) return;
+      function reveal(img) {
+        if (!img || !img.getAttribute('data-mm-lazy-src')) return;
+        img.src = img.getAttribute('data-mm-lazy-src');
+        img.removeAttribute('data-mm-lazy-src');
+      }
+      if (!('IntersectionObserver' in window)) {
+        lazyImgs.forEach(reveal);
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          reveal(entry.target);
+          io.unobserve(entry.target);
+        });
+      }, { rootMargin: '280px 0px' });
+      lazyImgs.forEach(function (img) { io.observe(img); });
+    })();
+  </script>
     <div class="mobile-cta-bar" id="mobile-cta-bar">
       <div class="cta-price-wrap">
         <span class="cta-price" id="mobile-cta-price">USD 18.00</span>
@@ -698,6 +724,73 @@
   var slug = location.pathname.split('/').filter(Boolean).pop();
   var currentSlide = 0;
   var gallery = [];
+  var TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+  var THUMB_WEBP_SLUGS = { 'custom-waterproof-cushion-protector': true };
+
+  function normalizeIdx(idx) {
+    if (!gallery.length) return 0;
+    if (idx < 0) return gallery.length - 1;
+    if (idx >= gallery.length) return 0;
+    return idx;
+  }
+
+  function buildThumbCandidate(imageUrl) {
+    if (!imageUrl || !THUMB_WEBP_SLUGS[slug]) return imageUrl;
+    try {
+      var parsed = new URL(imageUrl, window.location.origin);
+      var fileName = (parsed.pathname.split('/').pop() || '').trim();
+      if (!fileName) return imageUrl;
+      var base = fileName.replace(/\.[a-z0-9]+$/i, '');
+      if (!base) return imageUrl;
+      return '/images/products/' + slug + '/thumbs/' + base + '.webp';
+    } catch (e) {
+      return imageUrl;
+    }
+  }
+
+  function revealImage(img) {
+    if (!img) return;
+    var lazySrc = img.getAttribute('data-src');
+    if (!lazySrc) return;
+    var fallbackSrc = img.getAttribute('data-fallback');
+    if (fallbackSrc && !img.__mmFallbackBound) {
+      img.__mmFallbackBound = true;
+      img.addEventListener('error', function () {
+        if (img.getAttribute('src') === fallbackSrc) return;
+        img.setAttribute('src', fallbackSrc);
+      }, { once: true });
+    }
+    img.setAttribute('src', lazySrc);
+    img.removeAttribute('data-src');
+  }
+
+  function ensureSlideLoaded(idx) {
+    var track = document.getElementById('carousel-track');
+    if (!track || !gallery.length) return;
+    var slide = track.children[normalizeIdx(idx)];
+    if (!slide) return;
+    revealImage(slide.querySelector('img[data-src]'));
+  }
+
+  function ensureThumbLoaded(idx) {
+    var thumbs = document.querySelectorAll('.carousel-thumb');
+    if (!thumbs.length || !gallery.length) return;
+    var thumb = thumbs[normalizeIdx(idx)];
+    if (!thumb) return;
+    revealImage(thumb.querySelector('img[data-src]'));
+  }
+
+  function ensureVisibleThumbs() {
+    var wrap = document.getElementById('carousel-thumbs');
+    if (!wrap) return;
+    var wrapRect = wrap.getBoundingClientRect();
+    wrap.querySelectorAll('img[data-src]').forEach(function (img) {
+      var rect = img.getBoundingClientRect();
+      if (rect.right >= (wrapRect.left - 140) && rect.left <= (wrapRect.right + 140)) {
+        revealImage(img);
+      }
+    });
+  }
 
   function extractYouTubeId(url) {
     if (!url) return '';
@@ -730,7 +823,9 @@
           '<img class="yt-thumb" src="' + thumb + '" alt="Product video" width="480" height="360" loading="lazy" decoding="async">' +
           '<div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
       }
-      return '<div class="carousel-slide"><img src="' + item + '" alt="Product image" width="800" height="800" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async"' + (i === 0 ? ' fetchpriority="high"' : '') + '></div>';
+      var isFirstSlide = i === 0;
+      var slideSrc = isFirstSlide ? ('src="' + item + '"') : ('src="' + TRANSPARENT_PIXEL + '" data-src="' + item + '"');
+      return '<div class="carousel-slide"><img ' + slideSrc + ' alt="Product image" width="800" height="800" loading="' + (isFirstSlide ? 'eager' : 'lazy') + '" decoding="async"' + (isFirstSlide ? ' fetchpriority="high"' : ' fetchpriority="low"') + '></div>';
     }).join('');
 
     // Build dots
@@ -744,7 +839,10 @@
           var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/default.jpg';
           return '<button class="carousel-thumb thumb-video' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Video thumbnail"><img src="' + thumb + '" alt="Video thumb" loading="lazy" decoding="async"></button>';
         }
-        return '<button class="carousel-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Thumbnail ' + (i+1) + '"><img src="' + item + '" alt="Product thumbnail ' + (i+1) + '" loading="lazy" decoding="async"></button>';
+        var thumbSrc = buildThumbCandidate(item);
+        var thumbImageSrc = 'src="' + TRANSPARENT_PIXEL + '" data-src="' + thumbSrc + '"';
+        var fallbackAttr = thumbSrc !== item ? (' data-fallback="' + item + '"') : '';
+        return '<button class="carousel-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Thumbnail ' + (i+1) + '"><img ' + thumbImageSrc + fallbackAttr + ' alt="Product thumbnail ' + (i+1) + '" width="105" height="105" loading="lazy" decoding="async" fetchpriority="low"></button>';
       }).join('');
     }
 
@@ -769,6 +867,14 @@
           goToSlide(parseInt(thumb.getAttribute('data-idx'), 10));
         });
       });
+      var thumbScrollRaf = 0;
+      thumbsWrap.addEventListener('scroll', function () {
+        if (thumbScrollRaf) return;
+        thumbScrollRaf = window.requestAnimationFrame(function () {
+          thumbScrollRaf = 0;
+          ensureVisibleThumbs();
+        });
+      }, { passive: true });
     }
 
     // Arrow click
@@ -786,6 +892,11 @@
       }
     }, {passive:true});
 
+    ensureSlideLoaded(0);
+    ensureSlideLoaded(1);
+    ensureThumbLoaded(0);
+    ensureThumbLoaded(1);
+    ensureVisibleThumbs();
     goToSlide(0);
     if (typeof window.syncDesktopColumnsHeight === 'function') window.syncDesktopColumnsHeight();
   }
@@ -795,6 +906,9 @@
     if (idx < 0) idx = gallery.length - 1;
     if (idx >= gallery.length) idx = 0;
     currentSlide = idx;
+    ensureSlideLoaded(idx);
+    ensureSlideLoaded(idx + 1);
+    ensureSlideLoaded(idx - 1);
     var track = document.getElementById('carousel-track');
     if (track) {
       track.classList.remove('no-transition');
@@ -805,6 +919,10 @@
     if (dots[idx]) dots[idx].classList.add('active');
     var thumbs = document.querySelectorAll('.carousel-thumb');
     thumbs.forEach(function(t){ t.classList.remove('active'); });
+    ensureThumbLoaded(idx);
+    ensureThumbLoaded(idx + 1);
+    ensureThumbLoaded(idx - 1);
+    ensureVisibleThumbs();
     if (thumbs[idx]) {
       thumbs[idx].classList.add('active');
       if (typeof thumbs[idx].scrollIntoView === 'function') {

@@ -7,8 +7,11 @@
   <meta name="description" content="Marine Mattress Protector by MildMate — 14 boat mattress shapes with instant online pricing. Waterproof 3-layer protector (Cotton Quilted + Polyester Filling + TPU). Ships worldwide.">
   <meta name="product-image" content="https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781748617971-bdh8v6.jpg">
   <title>ผ้ารองกันเปื้อนที่นอนเรือ — MildMate</title>
-  <link href="/css/fonts.css?v=2" rel="stylesheet">
+  <link rel="preload" href="/css/fonts.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="/css/main.min.css">
+  <noscript>
+    <link href="/css/fonts.css?v=2" rel="stylesheet">
+  </noscript>
   <style>
     .product-page{background:#F8FAFC}
     .product-layout{max-width:1280px;margin:0 auto;padding:40px 24px 56px;display:grid;grid-template-columns:minmax(0,55%) minmax(0,45%);gap:40px;align-items:start}
@@ -200,7 +203,7 @@
   <meta name="twitter:title" content="Marine Mattress Protector — MildMate">
   <meta name="twitter:description" content="Marine Mattress Protector by MildMate — 14 boat mattress shapes with instant online pricing. Waterproof 3-layer protector (Cotton Quilted + Polyester Filling + TPU). Ships worldwide.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-  <script src="/js/analytics-env.js"></script>
+  <script src="/js/analytics-env.js" defer></script>
   <script>
     (function () {
       function bootMildmateAnalytics() {
@@ -427,7 +430,7 @@
     <div class="container" style="max-width:1280px;padding:0 24px;">
       <div class="related-section">
         <h2>You might also like</h2>
-        <div class="related-grid"><a href="/product/marine-fitted-sheet/" class="related-card"><div class="card-image"><img src="/images/products/boat-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Marine Fitted Sheet</div><div class="card-price">From USD 52.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/mattress-encasement-general/" class="related-card"><div class="card-image"><img src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">6-Sided Mattress Encasement</div><div class="card-price">From USD 55.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/pillow-protector-general/" class="related-card"><div class="card-image"><img src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Pillow Protector</div><div class="card-price">From USD 18.00</div><div class="card-price-note">CloudSoft</div></div></a></div>
+        <div class="related-grid"><a href="/product/marine-fitted-sheet/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/boat-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">Marine Fitted Sheet</div><div class="card-price">From USD 52.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/mattress-encasement-general/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">6-Sided Mattress Encasement</div><div class="card-price">From USD 55.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/pillow-protector-general/" class="related-card"><div class="card-image"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-mm-lazy-src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">Pillow Protector</div><div class="card-price">From USD 18.00</div><div class="card-price-note">CloudSoft</div></div></a></div>
       </div>
     </div>
     <div class="container" style="max-width:1280px;padding:0 24px 64px;">
@@ -444,6 +447,29 @@
   <script src="/js/cookie-consent.js"></script>
   <script src="/js/campaign-state.js?v=20260601"></script>
   <script src="/js/reviews-carousel.js"></script>
+  <script>
+    (function () {
+      var lazyImgs = Array.prototype.slice.call(document.querySelectorAll('img[data-mm-lazy-src]'));
+      if (!lazyImgs.length) return;
+      function reveal(img) {
+        if (!img || !img.getAttribute('data-mm-lazy-src')) return;
+        img.src = img.getAttribute('data-mm-lazy-src');
+        img.removeAttribute('data-mm-lazy-src');
+      }
+      if (!('IntersectionObserver' in window)) {
+        lazyImgs.forEach(reveal);
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          reveal(entry.target);
+          io.unobserve(entry.target);
+        });
+      }, { rootMargin: '280px 0px' });
+      lazyImgs.forEach(function (img) { io.observe(img); });
+    })();
+  </script>
   <div class="mobile-cta-bar" id="mobile-cta-bar">
     <div class="cta-price-wrap">
       <span class="cta-price" id="mobile-cta-price"> — </span>

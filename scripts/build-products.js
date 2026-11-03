@@ -272,6 +272,7 @@ function buildTagsHTML(tags) {
 // Generate related products HTML
 function buildRelatedHTML(relatedSlugs) {
   if (!relatedSlugs || relatedSlugs.length === 0) return '';
+  const transparentPixel = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
   let html = '';
   relatedSlugs.forEach(slug => {
     const prod = getProd(slug);
@@ -279,7 +280,8 @@ function buildRelatedHTML(relatedSlugs) {
     if (!prod) return;
     const priceStr = c && c.priceDisplay ? 'From ' + c.priceDisplay : (prod.priceUsd ? 'From USD ' + prod.priceUsd + '.00' : '');
     const note = c && c.lockedFabric ? fabricNames[c.lockedFabric] || '' : (c && c.fabrics && c.fabrics.length > 0 ? fabricNames[c.fabrics[0]] || '' : '');
-    html += '<a href="' + prod.url + '" class="related-card"><div class="card-image"><img src="' + prod.image + '" alt="' + prod.name + '" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">' + prod.name + '</div><div class="card-price">' + priceStr + '</div><div class="card-price-note">' + note + '</div></div></a>';
+    const imageSrc = prod.image || '/images/placeholder.jpg';
+    html += '<a href="' + prod.url + '" class="related-card"><div class="card-image"><img src="' + transparentPixel + '" data-mm-lazy-src="' + imageSrc + '" alt="' + prod.name + '" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low"></div><div class="card-body"><div class="card-title">' + prod.name + '</div><div class="card-price">' + priceStr + '</div><div class="card-price-note">' + note + '</div></div></a>';
   });
   return normalizeMojibake(html);
 }
@@ -369,7 +371,7 @@ function buildCustomizable(slug, p, prod) {
     replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your pillow at its widest and longest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   } else {
-    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram-01.png';
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram-01.webp';
     replacements['{{DIM_DIAGRAM_ALT}}'] = 'Mattress dimension diagram: Width (W), Length (L), Depth (D)';
     replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your mattress at its widest, longest, and deepest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
@@ -379,7 +381,7 @@ function buildCustomizable(slug, p, prod) {
   if (slug === 'custom-waterproof-cushion-protector') {
     replacements['{{SIZE_LABEL}}'] = 'Select Cushion Size';
     replacements['{{DIM_LABEL}}'] = 'cushion';
-    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-cushion-diagram-01.png';
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-cushion-diagram-01.webp';
     replacements['{{DIM_DIAGRAM_ALT}}'] = 'Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)';
     replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your cushion at its longest, widest, and thickest points';
     replacements['{{DEPTH_FIELD_HTML}}'] = replacements['{{DEPTH_FIELD_HTML}}'].replace('Depth (D)', 'Thickness (T)');
