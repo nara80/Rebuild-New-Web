@@ -1,6 +1,9 @@
 import { consumeClerkHandshake } from "../../../workers/api/clerk-handshake";
-import { verifyClerkJwt } from "../../../workers/api/clerk-verify";
-import { extractClerkSessionToken } from "../../../workers/api/clerk-session-token";
+import {
+  extractClerkSessionToken,
+  verifySessionCandidates,
+  redirectWithCookieClears,
+} from "../../../workers/api/clerk-session-token";
 
 const DEFAULT_NEXT_PATH = "/super-admin/";
 
@@ -45,24 +48,17 @@ export const onRequest: PagesFunction<{
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
 
+  // Conflicting session cookies (e.g. plain __session + Clerk's suffixed
+  // __session_<id> holding different tokens) are resolved by verifying EVERY
+  // distinct candidate with the strict JWT pipeline — never by cookie order.
+  // Rejections for ambiguous identities attach clearing directives for every
+  // conflicting cookie name in both host and domain scopes, so Clerk's next
+  // bounce starts from a clean jar instead of regenerating the loop.
   const session = extractClerkSessionToken(context.request, { allowQueryToken: true });
-  if (session.ambiguous) {
-    return redirectToSignIn(url, context.env, nextPath);
-  }
+  const verified = await verifySessionCandidates(session, context.request, context.env);
 
-  if (!session.token) {
-    return redirectToSignIn(url, context.env, nextPath);
-  }
-
-  const verifyRequest = new Request(context.request.url, {
-    headers: new Headers({
-      ...Object.fromEntries(context.request.headers.entries()),
-      Authorization: `Bearer ${session.token}`,
-    }),
-  });
-  const verified = await verifyClerkJwt(verifyRequest, context.env);
-  if (!verified.valid) {
-    return redirectToSignIn(url, context.env, nextPath);
+  if (verified.state !== "valid") {
+    return redirectWithCookieClears(redirectToSignIn(url, context.env, nextPath), verified.clears || []);
   }
 
   return Response.redirect(new URL(nextPath, url.origin).toString(), 302);

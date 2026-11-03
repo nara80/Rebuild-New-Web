@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { extractClerkSessionToken } from "../clerk-session-token";
 
 function req(path: string, cookie?: string): Request {
@@ -18,6 +18,7 @@ describe("clerk session token extraction", () => {
       ambiguous: false,
       candidates: ["token123"],
       candidatesComplete: true,
+      candidateCookieNames: ["__session_abc"],
     });
 
     const admin = extractClerkSessionToken(
@@ -29,6 +30,7 @@ describe("clerk session token extraction", () => {
       ambiguous: false,
       candidates: ["devtoken"],
       candidatesComplete: true,
+      candidateCookieNames: ["__clerk_db_jwt_xyz"],
     });
   });
 
@@ -64,6 +66,7 @@ describe("clerk session token extraction", () => {
       ambiguous: false,
       candidates: [],
       candidatesComplete: true,
+      candidateCookieNames: [],
     });
   });
 
@@ -78,6 +81,7 @@ describe("clerk session token extraction", () => {
       ambiguous: false,
       candidates: ["queryToken"],
       candidatesComplete: true,
+      candidateCookieNames: [],
     });
   });
 
@@ -96,7 +100,7 @@ describe("clerk session token extraction", () => {
   });
 
   it("marks candidate list truncated beyond the examination cap", () => {
-    // 9 distinct session-token values — over the bounded cap (8).
+    // 9 distinct session-token values â€” over the bounded cap (8).
     const cookies = Array.from({ length: 9 }, (_, i) => `__session_s${i}=tok${i}`).join("; ");
     const parsed = extractClerkSessionToken(req("/account/", cookies));
     expect(parsed.ambiguous).toBe(true);

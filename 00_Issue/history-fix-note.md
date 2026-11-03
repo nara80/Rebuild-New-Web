@@ -8,6 +8,104 @@
 
 ---
 
+## Reconciliation Snapshot (2026-11-03) — RC2 Callback Acceptance + Dashboard 401 Read-Only Audit
+
+Covers the owner acceptance state of production `236b87fb-aadf-4bdd-909c-ae229058bb1f` and the read-only investigation of partial `Unauthorized` failures on the Data Analyst dashboard (apex `mildmate.com`).
+
+### Owner acceptance status (as of this snapshot)
+- ✅ **Provisionally PASS (redirect loop):** `/admin/templates` loads template HTML; `/super-admin/` loads with no observed redirect loop; `/super-admin/marketing/data-analyst/` loads partially.
+- ⏳ **Overall release NOT fully accepted:** Template PUT and sign-out remain untested.
+- ❌ **Open defect:** on apex screenshots, Order Acquisition displays data while Overview commercial orders and GA4 Lead Acquisition show `Unauthorized`.
+
+### Audit method (strictly read-only; no changes, no credentials/cookies/JWTs read or logged)
+- Mapped the dashboard's fetch pattern in `public/super-admin/marketing/data-analyst/index.html`: every card uses the identical `api()` → `authHeaders()` → `getAdminBearerToken()` (Clerk `getToken()`; 15 s positive / 1.5 s negative client token cache) against `/api/admin/analysis/*` — Order Acquisition (`order-acquisition`), Overview (`summary`/`data-quality`), GA4 Leads (`ga4-leads`) differ only by path suffix. No per-card token logic exists.
+- Verified the live router (`functions/api/[[path]].ts`) gates ALL `/api/admin/*` routes once through `authorizeAdminForRoute` (strict Clerk-only bearer + role + allowlist, `workers/api/admin-auth.ts`) before dispatch — no endpoint-specific role, Origin, or hostname branch in the analysis dispatcher (`workers/api/admin-analysis.ts`, `admin-orders.ts`, `admin-stats.ts` use an identical legacy authorize pattern).
+- Apex vs www symmetry confirmed in source: `clerk-verify.ts` allowlists both `https://www.mildmate.com` and `https://mildmate.com` (apex entry restored by RC2); the `apex-to-www-canonical` rule excludes `/api/*`, so API calls stay on the requesting host.
+- Anonymous probes (no auth material): `ga4-leads`, `order-acquisition`, `/api/admin/orders` return identical 401s on both hosts; 8 sequential anonymous probes showed no IP-level blocking.
+
+### Findings
+1. **No code path differentiates the three cards' authorization.** Identical client token acquisition, identical centralized gate, identical host/Origin handling. A static per-endpoint auth defect is ruled out.
+2. **Exactly one stateful per-request, per-IP gate is shared by all admin API calls:** the auth rate limiter in `workers/api/clerk-verify.ts` (D1 `rate_limits`, `MAX_AUTH_REQUESTS = 30` per rolling minute per IP, counted per `verifyClerkJwt` invocation on success AND failure → 429 "Too many requests"). The dashboard fires ~16 authorized calls per load, and the owner's test sequence (`/admin/templates` → `/super-admin/` → data-analyst) consumes the same IP budget across pages before the dashboard loads. A mixed pass/fail outcome on identical requests is the signature of this shared-budget timing effect — the only mechanism in code that treats identical requests differently seconds apart.
+3. **Unresolved inconsistency:** a rate-limited request returns 429 "Too many requests", while the screenshots reportedly show "Unauthorized". A second candidate stays open: some early-fired calls may carry an empty/expired bearer (Clerk `getToken()` race or the 15 s client cache) → gate returns 401 "Unauthorized: bearer token required".
+4. **Hostname hypothesis not supported:** nothing in code distinguishes apex from www for these endpoints; the apex screenshots coincided with the owner's post-fix test session, not with a host-specific branch.
+
+### Discriminating evidence required (one DevTools capture decides it)
+Owner to retest once on either host after ~60 s idle (fresh load, DevTools → Network, one failing request; Authorization value redacted):
+| Observed | Root cause |
+|---|---|
+| 429, "Too many requests" | Auth rate-limit budget exhausted (30/min/IP shared across all admin calls) |
+| 401, "Unauthorized: bearer token required" | Calls fired with no Authorization header (Clerk token race / empty token) |
+| 401, "Token expired" | Stale 15 s client-side token cache |
+| 401 on apex but clean on www | Would genuinely reopen the hostname question (currently unsupported by code) |
+
+### Recommended minimal fix (AFTER the discriminating evidence — deliberately not applied)
+- **If rate-limit (most likely):** raise `MAX_AUTH_REQUESTS` in `workers/api/clerk-verify.ts` from 30 to ~120/min (still bounded), or count only FAILED verifications. One-line change; no security boundary affected. Regression: vitest burst test simulating a full dashboard load plus prior admin-page views, parametrized over BOTH production hostnames (Origin/Host headers), asserting every analysis endpoint authenticates.
+- **If empty/expired bearer:** single retry in the dashboard `api()` — on 401, invalidate the client token cache, re-acquire via `getToken()`, retry once. Regression: 401-retry unit tests for both hostnames.
+- Either path preserves the Clerk callback fix, Template Administration, analytics, Cloudflare redirects, and all existing security boundaries.
+
+### Status
+- ⏳ Awaiting the owner's one-request network capture (status + body + Authorization-header presence) to select the fix; **STOP honored — no deployment, rollback, Git commit/push, D1 mutation, Cloudflare config, or cron change was made during this audit.**
+
+---
+
+## Reconciliation Snapshot (2026-11-03) — Clerk Hardening Loss + Login Redirect Loop (two-stage incident)
+
+This section is the source of truth for the Clerk authentication incident chain of 2026-11-02/03: the silently lost `20aacf5` hardening, the failed first restore, the root-cause analysis, and the corrected RC2 + callback fix now live in production.
+
+### Incident chain (what actually happened)
+1. **Loss (pre-existing):** commit `20aacf5` ("harden Clerk session token handling and admin middleware") was deployed in the `cfb7e04e`/`ec23cde6` era, then **silently dropped** when later releases (DQ `f93e5301`, GA4 `c023f9fd`) deployed runtime bundles rebuilt from **pre-hardening source snapshots**. Lost content: suffixed Clerk session-cookie recognition, ambiguous-token rejection, `hasForbiddenTokenQuery` (session tokens in URL query rejection), handshake hardening, and the apex-origin allowlist entry (`"https://mildmate.com"` in `clerk-verify.ts allowedOrigins`).
+2. **First restore attempt:** production `6405ffa8` deployed the hardened code from isolated candidate `.release-clerk-hardening`. Owner immediately hit a **login redirect loop** (`/account/`, `/admin/templates` ⇄ Clerk sign-in) with Chrome on No throttling. Rolled back same day to `2fe70380` (rollback payload `.release-order-acquisition`).
+3. **RCA (read-only, reproduced locally):** the loop mechanism was reproduced with the real middleware handlers and synthetic locally-signed JWTs (test `workers/api/__tests__/clerk-redirect-loop-rca.test.ts`): browsers keep **host-scoped and domain-scoped `__session` cookies as separate entries**; the hardened `extractClerkSessionToken` rejected any multi-value state as "ambiguous" → sign-in → Clerk bounce → handshake replaced only ONE scope → still ambiguous → infinite loop. The old code accidentally worked by taking the first cookie.
+4. **RC2 fix (candidate verification):** ambiguous states now verify EVERY distinct candidate through the unchanged strict `verifyClerkJwt` pipeline; exactly one valid candidate authenticates, zero valid rejects (expired → one-shot handshake refresh preserved), ≥2 valid rejects, cap of 8 candidates fails closed. Deployed as production `2b4581e9` and browser-accepted.
+5. **Second loop (Nov 3):** loop returned on the **`/auth/clerk-return` super-admin callback** — the one auth route that had NOT received the candidate-verification fix. Owner evidence: `accounts.mildmate.com` held BOTH `__session` and Clerk's **suffixed** `__session_whv9OBe3`; network trace showed `sign-in (200) → /auth/clerk-return?next=/super-admin (302) → sign-in (200)` repeating. The handshake delivers the suffixed cookie while the plain one persists → the callback's old hard ambiguity rejection looped.
+6. **Callback fix (Nov 3):** `functions/auth/clerk-return/[[path]].ts` now uses the shared candidate verification, and conflict rejections attach **Set-Cookie clearing directives for every conflicting cookie name in both host and domain scopes** before restarting authentication. Deployed as production `236b87fb` — smoke PASS; owner authenticated acceptance in progress at time of writing.
+
+### Root causes (verified)
+1. **Hardening loss:** production deploys built runtime bundles from older release snapshots instead of current sources; no gate existed to detect previously deployed security functionality disappearing.
+2. **First loop:** ambiguous multi-value session cookies (host + domain scoped duplicates, both valid) rejected blindly instead of verified per-candidate.
+3. **Second loop:** the `/auth/clerk-return` handler was missed in the RC2 fix scope, and Clerk's suffixed session-cookie delivery (`__session_<id>`) recreates a two-value state on every handshake.
+
+### Completed fixes (implemented + verified)
+1. **Candidate verification (RC2, commit `a71a6d1`)**
+   - `workers/api/clerk-session-token.ts`: `extractClerkSessionToken` returns distinct candidates (bounded 8, `candidatesComplete`).
+   - `functions/admin/_middleware.ts` + `functions/account/_middleware.ts`: verify each candidate; exactly-one-valid proceeds; conflicts reject with conflict-clearing Set-Cookie directives.
+2. **Callback fix (Nov 3, uncommitted at snapshot time)**
+   - `workers/api/clerk-session-token.ts`: shared `verifySessionCandidates` + `buildSessionCookieClears` (host-scoped AND `Domain=mildmate.com` clears per conflicting name) + `redirectWithCookieClears`.
+   - `functions/auth/clerk-return/[[path]].ts`: candidate verification applied; ambiguous rejections carry the clearing directives.
+   - `public/_worker.js` rebuilt via `extract-worker.ps1` — normalized diff vs production contains only the fix.
+3. **Release-parity safeguard (commit `a71a6d1`)**
+   - `scripts/release-parity-check.mjs`: pre-deploy marker matrix — every security/feature marker present in the current production payload must survive into the candidate unless explicitly allow-listed as removed.
+4. **Regression suite (commit `a71a6d1` + Nov 3 additions)**
+   - `workers/api/__tests__/clerk-redirect-loop-rca.test.ts`: middleware-level redirect-round-trip simulator (dual-scope cookie jar, simulated Clerk bounces) — 10 tests covering valid single cookie, invalid-duplicate recovery, two-valid rejection with clearing, candidate cap, expired handshake, clerk-return flow with suffixed cookies.
+   - `workers/api/__tests__/clerk-session-token.test.ts` updated for the extended result shape.
+   - Full suite at reconciliation time: **21 files, 218/218 passing**.
+
+### Deployment + verification evidence
+- Production chain: `6405ffa8` (failed hardening, rolled back) → `2fe70380` (rollback, verified good) → `2b4581e9` (RC2, owner browser-accepted) → **`236b87fb` (current, callback fix)**.
+- Rollback artifacts on disk with recorded SHA-256: `.release-clerk-hardening` (= `2b4581e9` payload, `6dc87ad3…`), `.release-order-acquisition` (= `2fe70380` payload, `9cfe775e…`).
+- Post-deploy smoke on both hosts: health/home/checkout/products/blogs 200; admin APIs 401 anonymous; `/account/`, `/admin/`, `/admin/templates` 403 anonymous (pre-existing boundary); `/auth/clerk-return` anonymous → single 302 to sign-in with `next` preserved (no loop); dashboard cards (Order Acquisition + GA4) and template editor present.
+- Release-parity check vs the deployed RC2 payload: PASSED (all markers preserved; only the fix added).
+- Preview used during RC2 validation: `9cae82ef` (`clerk-hardening-rc2-preview`); rollback runbook: one `wrangler pages deploy <snapshot>/public --no-bundle` command per snapshot.
+
+### Remaining risks / pending items
+- ⏳ Owner authenticated acceptance of the **Nov 3 callback fix** (`236b87fb`): **provisionally PASS** (2026-11-03) — `/admin/templates` loads, `/super-admin/` shows no redirect loop; Template PUT and sign-out remain untested and overall release acceptance is still open. See the "RC2 Callback Acceptance + Dashboard 401 Read-Only Audit" snapshot above for the open dashboard-401 defect.
+- ⚠️ **Nov 3 fix is uncommitted** (5 source/test files + rebuilt `public/_worker.js`). Commit/push to `security/admin-api-remediation-r1` required after acceptance — until then, Git's committed bundle does not match the deployed runtime.
+- ⚠️ Two **valid** identities in one browser (two real Clerk sessions) are rejected and require one extra sign-in round-trip by design — safe, but owners should sign out of unused sessions.
+- ℹ️ Apex `mildmate.com` non-GET edge behavior reported earlier was root-caused to the apex briefly pointing at the legacy WordPress origin; resolved 2026-11-02 by restoring the Pages custom-domain association + `apex-to-www-canonical` redirect rule (301, path/query preserving, API/auth/checkout paths excluded).
+- ℹ️ Git `main` is still at `b5efebc`; `security/admin-api-remediation-r1` (`66e6b19` + pending Nov 3 fix) is ahead. PR to main recommended after acceptance.
+
+### Preventive SOP — release discipline (mandatory after this incident)
+1. **Never deploy a runtime bundle rebuilt from an older snapshot.** Build from current committed sources, or from a candidate whose overlay diff against production is fully reviewed.
+2. **Run `node scripts/release-parity-check.mjs --production <current-prod-snapshot>/public --candidate <candidate>/public` before every deploy** — it fails if any previously deployed security/feature marker disappears.
+3. **Refresh the current-production snapshot** (`.release-*` dir) at every release so the parity baseline is never stale.
+4. **Rebuild and commit the runtime bundle in the same commit as source changes** to functions/workers, so Git state == deployed state.
+5. **Record SHA-256 of every shipped file at freeze time** and re-verify after upload.
+6. **Keep rollback snapshots** of the immediate previous production payload with recorded hashes.
+7. **Auth-logic changes require middleware-level round-trip tests** (like the RCA simulator), not only endpoint tests — the dev-host bypass on `*.pages.dev` makes previews blind to production-host middleware behavior.
+8. **Post-deploy:** owner authenticated pass of `/account/` → `/admin/templates` → `/super-admin/` before closing the release.
+
+---
+
 ## Reconciliation Snapshot (2026-09-02) — New Product Visibility + Redirect Regression (`custom-waterproof-cushion-protector`)
 
 This section is the source of truth for the new SKU launch issue where the product was added in D1 and product page assets existed, but discovery and routing were inconsistent.

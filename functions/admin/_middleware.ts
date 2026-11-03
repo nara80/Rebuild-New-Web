@@ -13,8 +13,11 @@
 import { verifyClerkJwt } from "../../workers/api/clerk-verify";
 import { consumeClerkHandshake } from "../../workers/api/clerk-handshake";
 import { hasAdminRole, emailAllowed, emailBlocked } from "../../workers/api/admin-auth";
-import { extractClerkSessionToken } from "../../workers/api/clerk-session-token";
-import type { ClerkSessionTokenResult } from "../../workers/api/clerk-session-token";
+import {
+  extractClerkSessionToken,
+  verifySessionCandidates,
+  redirectWithCookieClears,
+} from "../../workers/api/clerk-session-token";
 
 const TOKEN_QUERY_NAME = /^__(?:session|clerk_db_jwt)(?:_[A-Za-z0-9_-]{1,64})?$/;
 
@@ -24,54 +27,6 @@ function hasForbiddenTokenQuery(request: Request): boolean {
     if (TOKEN_QUERY_NAME.test(key)) return true;
   }
   return false;
-}
-
-type SessionVerification =
-  | { state: "none" | "invalid" }
-  | { state: "expired" }
-  | { state: "valid"; result: Awaited<ReturnType<typeof verifyClerkJwt>> };
-
-/**
- * Verify every distinct session-token candidate with the exact strict
- * pipeline used for single-token requests (signature, issuer, expiry,
- * fail-closed prod guard, rate limiting). Never selects by cookie order,
- * role, or allowlist:
- * - exactly one fully valid candidate → "valid";
- * - zero valid candidates → "invalid", or "expired" when a candidate
- *   expired (preserves the one-shot handshake refresh path);
- * - two or more distinct valid candidates → "invalid" (cannot safely
- *   disambiguate conflicting authenticated identities);
- * - truncated candidate list (over the extractor's cap) → "invalid".
- */
-async function verifySessionCandidates(
-  session: ClerkSessionTokenResult,
-  request: Request,
-  env: any
-): Promise<SessionVerification> {
-  if (!session.candidates.length) return { state: "none" };
-  if (!session.candidatesComplete) return { state: "invalid" };
-
-  let sawExpired = false;
-  let validResult: Awaited<ReturnType<typeof verifyClerkJwt>> | null = null;
-  let validCount = 0;
-  for (const candidate of session.candidates) {
-    const modifiedRequest = new Request(request.url, {
-      headers: new Headers({
-        ...Object.fromEntries(request.headers.entries()),
-        Authorization: `Bearer ${candidate}`,
-      }),
-    });
-    const result = await verifyClerkJwt(modifiedRequest, env);
-    if (result.valid) {
-      validCount++;
-      if (!validResult) validResult = result;
-      if (validCount > 1) return { state: "invalid" }; // conflicting valid identities
-    } else if (result.error === "Token expired") {
-      sawExpired = true;
-    }
-  }
-  if (validCount === 1 && validResult) return { state: "valid", result: validResult };
-  return { state: sawExpired ? "expired" : "invalid" };
 }
 
 function getPrimaryClerkEmail(user: any): string {
@@ -147,7 +102,10 @@ export const onRequest: PagesFunction<{
     return redirectToSignIn(context.request.url, context.env);
   }
   if (verified.state !== "valid") {
-    return redirectToSignIn(context.request.url, context.env);
+    // On a cookie CONFLICT (≥2 valid identities or truncated candidate list)
+    // the rejection also clears every conflicting cookie in both scopes, so
+    // Clerk's next handshake cannot regenerate the loop.
+    return redirectWithCookieClears(redirectToSignIn(context.request.url, context.env), verified.clears || []);
   }
   const result = verified.result;
 

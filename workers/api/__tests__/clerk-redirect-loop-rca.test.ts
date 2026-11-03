@@ -29,6 +29,18 @@ function findOldAdminMiddleware(): string {
   throw new Error("previous-production snapshot (.release-order-acquisition) not found above test dir");
 }
 
+function findFileAbove(relative: string): string {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  for (let i = 0; i < 8; i++) {
+    const candidate = join(dir, relative);
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  throw new Error(`${relative} not found above test dir`);
+}
+
 const PROD_ISSUER = "https://clerk.mildmate.com";
 const PROD_JWKS = "https://clerk.mildmate.com/.well-known/jwks.json";
 const OWNER_EMAIL = "owner@mildmate.com";
@@ -113,17 +125,21 @@ function isSignInRedirect(resp: Response): boolean {
 
 /**
  * Simulate the full browser round-trip:
- * middleware → (302 sign-in) → Clerk sees a signed-in user → 302 back to the
- * return URL with a FRESH __clerk_handshake query token (+ handshake clearing
- * directives) → middleware again … until a terminal response or maxHops.
+ * handler → (302 sign-in) → Clerk sees a signed-in user → 302 back with a
+ * FRESH __clerk_handshake query token → handler again … until a terminal
+ * response or maxHops. isSuccess marks a non-loop terminal outcome.
  */
-async function simulate(mw: Middleware, env: any, jar: CookieJar, startUrl: string, maxHops = 6) {
+async function simulate(mw: Middleware, env: any, jar: CookieJar, startUrl: string, maxHops = 6, isSuccess?: (resp: Response) => boolean) {
   let url = startUrl;
   const trace: string[] = [];
   for (let hop = 0; hop < maxHops; hop++) {
     const resp = await mw(makeContext(url, jar.header(), env));
     trace.push(`${resp.status} ${url}${jar.header() ? ` [jar: ${jar.header()}]` : ""}`);
+    if (isSuccess && isSuccess(resp)) return { terminal: resp, trace };
     if (isSignInRedirect(resp)) {
+      // Browsers apply Set-Cookie on EVERY response — including the redirect
+      // to the sign-in portal (this is how conflict clears take effect).
+      jar.applyAll(resp);
       // Clerk-side: owner has a live Clerk session, so the portal immediately
       // bounces back through the FAPI handshake with a fresh token.
       const loc = new URL(resp.headers.get("Location")!);
@@ -153,18 +169,21 @@ let env: any;
 let validToken: string;
 let hardenedMw: Middleware;
 let oldMw: Middleware;
+let clerkReturn: Middleware;
 let nextHandshakeSeq = 0;
 
 async function makeHandshakeJwt(): Promise<string> {
   // Fresh handshake minted by the real Clerk instance: session directive +
   // handshake-cookie clearing directive. `cat` intentionally omitted —
   // matches Clerk SDK parity (typ may be omitted, cat undefined = session-ish).
+  // The session directive uses Clerk's SUFFIXED cookie name, mirroring the
+  // owner's Nov-3 evidence (__session_whv9OBe3 alongside __session).
   const expires = new Date(Date.now() - 1000).toUTCString();
   const payload = {
     iss: PROD_ISSUER,
     exp: Math.floor(Date.now() / 1000) + 120,
     handshake: [
-      `__session=${validToken}; Path=/; Domain=mildmate.com; Secure; HttpOnly`,
+      `__session_whv9OBe3=${validToken}; Path=/; Domain=mildmate.com; Secure; HttpOnly`,
       `__clerk_handshake=; Path=/; Domain=mildmate.com; Expires=${expires}`,
     ],
   };
@@ -196,6 +215,7 @@ beforeEach(async () => {
 
   ({ onRequest: hardenedMw } = await import("../../../functions/admin/_middleware"));
   ({ onRequest: oldMw } = await import(pathToFileURL(findOldAdminMiddleware()).href));
+  ({ onRequest: clerkReturn } = await import(pathToFileURL(findFileAbove(join("functions", "auth", "clerk-return", "[[path]].ts")))));
 
   nextHandshakeSeq = 0;
 });
@@ -360,5 +380,89 @@ describe("RCA: Clerk redirect loop after hardening (20aacf5)", () => {
     const resp = await hardenedMw(makeContext(ADMIN_URL, jar.header(), env));
     expect(resp.status).toBe(302);
     expect(isSignInRedirect(resp)).toBe(true);
+  });
+
+  // ── Nov-3 loop: /auth/clerk-return + Clerk's suffixed session cookies ────
+
+  it("T9 clerk-return + suffixed handshake cookie: two distinct valid candidates resolve without looping", async () => {
+    // Owner state: plain __session (earlier session) + suffixed
+    // __session_whv9OBe3 (Clerk FAPI) — two different, both-valid tokens.
+    const secondKp = await generateKeyPair();
+    const secondJwk = await crypto.subtle.exportKey("jwk", secondKp.publicKey);
+    const fetchMock = vi.fn(async (url: string) => {
+      if (String(url) === PROD_JWKS) {
+        const first = await crypto.subtle.exportKey("jwk", prodKp.publicKey);
+        return {
+          ok: true,
+          json: async () => ({
+            keys: [
+              { kid: "prod-kid", kty: "RSA", alg: "RS256", n: (first as any).n, e: (first as any).e, use: "sig" },
+              { kid: "second-kid", kty: "RSA", alg: "RS256", n: (secondJwk as any).n, e: (secondJwk as any).e, use: "sig" },
+            ],
+          }),
+        } as unknown as Response;
+      }
+      return { ok: false, status: 404, json: async () => ({}) } as unknown as Response;
+    }) as unknown as typeof fetch;
+    vi.stubGlobal("fetch", fetchMock);
+    const secondToken = await signJwt(secondKp, "second-kid", { alg: "RS256", kid: "second-kid" }, {
+      sub: "user_owner_2", iss: PROD_ISSUER, exp: now + 300, email: OWNER_EMAIL, role: "admin",
+    });
+
+    const jar = new CookieJar();
+    jar.entries.push({ scope: "host", name: "__session", value: validToken });
+    jar.entries.push({ scope: "domain", name: "__session_whv9OBe3", value: secondToken });
+    const { terminal, trace } = await simulate(
+      clerkReturn, env, jar, "https://www.mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F", 8,
+      (resp) => resp.status === 302 && (resp.headers.get("Location") || "").includes("/super-admin"),
+    );
+    // POST-FIX: the conflict is cleared, Clerk re-mints ONE suffixed session,
+    // and the callback completes to the next path — no loop.
+    expect(terminal, `MUST RESOLVE: ${trace.join(" | ")}`).not.toBeNull();
+    expect(terminal!.status, trace.join(" | ")).toBe(302);
+    expect(terminal!.headers.get("Location"), trace.join(" | ")).toContain("/super-admin");
+    // Exactly one live session cookie remains — the conflict cannot regenerate.
+    expect(jar.values("__session").length + jar.values("__session_whv9OBe3").length, trace.join(" | ")).toBe(1);
+  });
+
+  it("T10 clerk-return: conflicting cookies are CLEARED on rejection (host + domain scopes)", async () => {
+    const secondKp = await generateKeyPair();
+    const secondJwk = await crypto.subtle.exportKey("jwk", secondKp.publicKey);
+    const fetchMock = vi.fn(async (url: string) => {
+      if (String(url) === PROD_JWKS) {
+        const first = await crypto.subtle.exportKey("jwk", prodKp.publicKey);
+        return {
+          ok: true,
+          json: async () => ({
+            keys: [
+              { kid: "prod-kid", kty: "RSA", alg: "RS256", n: (first as any).n, e: (first as any).e, use: "sig" },
+              { kid: "second-kid", kty: "RSA", alg: "RS256", n: (secondJwk as any).n, e: (secondJwk as any).e, use: "sig" },
+            ],
+          }),
+        } as unknown as Response;
+      }
+      return { ok: false, status: 404, json: async () => ({}) } as unknown as Response;
+    }) as unknown as typeof fetch;
+    vi.stubGlobal("fetch", fetchMock);
+    const secondToken = await signJwt(secondKp, "second-kid", { alg: "RS256", kid: "second-kid" }, {
+      sub: "user_owner_2", iss: PROD_ISSUER, exp: now + 300, email: OWNER_EMAIL, role: "admin",
+    });
+
+    const jar = new CookieJar();
+    jar.entries.push({ scope: "host", name: "__session", value: validToken });
+    jar.entries.push({ scope: "domain", name: "__session_whv9OBe3", value: secondToken });
+    const resp = await clerkReturn(makeContext(
+      "https://www.mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F", jar.header(), env));
+    // Rejection is still a rejection (two valid identities are never auto-chosen)…
+    expect(resp.status).toBe(302);
+    expect(isSignInRedirect(resp)).toBe(true);
+    // …but it CARRIES the clearing directives for every conflicting name in
+    // both scopes, so the next Clerk bounce starts clean.
+    const setCookies = (resp.headers as any).getSetCookie ? (resp.headers as any).getSetCookie() : [];
+    const clearedNames = new Set((setCookies as string[])
+      .filter((c) => /expires=thu, 01 jan 1970/i.test(c))
+      .map((c) => c.split("=")[0].trim()));
+    expect(clearedNames.has("__session")).toBe(true);
+    expect(clearedNames.has("__session_whv9OBe3")).toBe(true);
   });
 });

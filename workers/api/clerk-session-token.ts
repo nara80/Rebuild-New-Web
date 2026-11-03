@@ -1,6 +1,8 @@
 const SESSION_COOKIE_RE = /^__session(?:_[A-Za-z0-9_-]{1,64})?$/;
 const DEV_SESSION_COOKIE_RE = /^__clerk_db_jwt(?:_[A-Za-z0-9_-]{1,64})?$/;
 
+import { verifyClerkJwt } from "./clerk-verify";
+
 type TokenCandidate = {
   name: string;
   value: string;
@@ -18,6 +20,9 @@ export type ClerkSessionTokenResult = {
   // false when more distinct values were seen than MAX_SESSION_CANDIDATES —
   // callers must reject rather than partially examine.
   candidatesComplete: boolean;
+  // Distinct session-cookie NAMES observed (e.g. "__session", a Clerk
+  // suffixed variant). Used to build conflict-clearing Set-Cookie directives.
+  candidateCookieNames: string[];
 };
 
 // Upper bound on distinct session-token candidates examined per request.
@@ -74,9 +79,10 @@ export function extractClerkSessionToken(
   const all = [...cookieCandidates, ...queryCandidates];
 
   if (!all.length) {
-    return { token: null, source: null, ambiguous: false, candidates: [], candidatesComplete: true };
+    return { token: null, source: null, ambiguous: false, candidates: [], candidatesComplete: true, candidateCookieNames: [] };
   }
 
+  const cookieNames = Array.from(new Set(cookieCandidates.map((candidate) => candidate.name)));
   const uniqueValues = Array.from(new Set(all.map((candidate) => candidate.value)));
   if (uniqueValues.length !== 1) {
     // Conflicting credentials: never choose by cookie order, role, or
@@ -89,10 +95,105 @@ export function extractClerkSessionToken(
       ambiguous: true,
       candidates: uniqueValues.slice(0, MAX_SESSION_CANDIDATES),
       candidatesComplete: uniqueValues.length <= MAX_SESSION_CANDIDATES,
+      candidateCookieNames: cookieNames.slice(0, MAX_SESSION_CANDIDATES),
     };
   }
 
   const token = uniqueValues[0];
   const source = all.some((candidate) => candidate.source === "cookie") ? "cookie" : "query";
-  return { token, source, ambiguous: false, candidates: [token], candidatesComplete: true };
+  return { token, source, ambiguous: false, candidates: [token], candidatesComplete: true, candidateCookieNames: cookieNames };
+}
+
+export type SessionVerification =
+  | { state: "none" }
+  | { state: "expired" }
+  | { state: "invalid"; clears: string[] }
+  | { state: "valid"; token: string; result: any };
+
+/**
+ * Build Set-Cookie directives that clear the given cookie names in BOTH
+ * storage scopes a browser may hold: host-scoped (no Domain attribute) and
+ * domain-scoped (Domain = registered apex of the request host, e.g.
+ * mildmate.com for www.mildmate.com). Without the domain-scoped variant a
+ * host-scoped duplicate survives Clerk handshakes and regenerates conflicts.
+ */
+export function buildSessionCookieClears(request: Request, names: string[]): string[] {
+  const host = new URL(request.url).hostname.toLowerCase();
+  const apex = host.startsWith("www.") ? host.slice(4) : host;
+  const past = "Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  const out: string[] = [];
+  for (const name of names) {
+    out.push(`${name}=; Path=/; ${past}; Secure; HttpOnly`);
+    if (host !== apex) out.push(`${name}=; Domain=${apex}; Path=/; ${past}; Secure; HttpOnly`);
+  }
+  return out;
+}
+
+/**
+ * Verify every distinct session-token candidate with the exact strict
+ * pipeline used for single-token requests (signature, issuer, expiry,
+ * fail-closed prod guard, rate limiting). Never selects by cookie order,
+ * role, or allowlist:
+ * - exactly one fully valid candidate → "valid" (token + verified result);
+ * - zero valid candidates → "invalid", or "expired" when a candidate expired
+ *   (preserves the one-shot handshake refresh path in callers);
+ * - two or more distinct valid candidates, or a truncated candidate list →
+ *   "invalid" WITH Set-Cookie clears for every conflicting cookie name in
+ *   both scopes, so the caller can reject WITHOUT letting the conflicting
+ *   cookies regenerate the loop on the next Clerk bounce.
+ */
+export async function verifySessionCandidates(
+  session: ClerkSessionTokenResult,
+  request: Request,
+  env: any
+): Promise<SessionVerification> {
+  if (!session.candidates.length) return { state: "none" };
+
+  let sawExpired = false;
+  let validToken: string | null = null;
+  let validResult: any = null;
+  let validCount = 0;
+
+  for (const candidate of session.candidates) {
+    const modifiedRequest = new Request(request.url, {
+      headers: new Headers({
+        ...Object.fromEntries(request.headers.entries()),
+        Authorization: `Bearer ${candidate}`,
+      }),
+    });
+    const result = await verifyClerkJwt(modifiedRequest, env);
+    if (result.valid) {
+      validCount++;
+      if (!validToken) {
+        validToken = candidate;
+        validResult = result;
+      }
+    } else if (result.error === "Token expired") {
+      sawExpired = true;
+    }
+  }
+
+  if (validCount === 1 && validToken) {
+    return { state: "valid", token: validToken, result: validResult };
+  }
+
+  // Conflict (≥2 valid, or truncated cap) or zero-valid ambiguity: attach
+  // clears so the caller's sign-in redirect removes every conflicting cookie
+  // scope and Clerk's next handshake starts from a clean jar.
+  const clears = session.ambiguous || !session.candidatesComplete
+    ? buildSessionCookieClears(request, session.candidateCookieNames)
+    : [];
+  return { state: "invalid", clears };
+}
+
+/**
+ * Re-issue a redirect Response with conflict-clearing Set-Cookie directives
+ * attached (Response.redirect headers are immutable, so the response is
+ * rebuilt with a mutable Headers copy).
+ */
+export function redirectWithCookieClears(signInResponse: Response, clears: string[]): Response {
+  if (!clears.length) return signInResponse;
+  const headers = new Headers(signInResponse.headers);
+  for (const clear of clears) headers.append("Set-Cookie", clear);
+  return new Response(null, { status: signInResponse.status, headers });
 }
