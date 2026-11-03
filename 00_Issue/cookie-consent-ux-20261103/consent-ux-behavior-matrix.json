@@ -1,0 +1,510 @@
+{
+  "generatedAt": "2026-11-03T06:23:09.918Z",
+  "base": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev",
+  "results": [
+    {
+      "page": "en_home",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_products",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_customizable",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_fixed",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_marine",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_faq",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_home",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_products",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_customizable",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_fixed",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_marine",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_faq",
+      "viewport": "desktop",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_home",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_products",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_customizable",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_fixed",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_marine",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "en_faq",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_home",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_products",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_customizable",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_fixed",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_marine",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "page": "th_faq",
+      "viewport": "mobile",
+      "checks": {
+        "bannerVisible": true,
+        "labelsMatch": true,
+        "buttonsPresent": true,
+        "noOverlap": true,
+        "inViewport": true,
+        "keyboardOrder": true,
+        "essentialOnlyState": true,
+        "essentialOnlyCookie": true,
+        "persistsAfterReload": true,
+        "settingsOpens": true,
+        "granularSave": true,
+        "persistsAcrossNavigation": true,
+        "acceptAllState": true
+      },
+      "status": "PASS",
+      "errors": []
+    }
+  ]
+}

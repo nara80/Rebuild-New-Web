@@ -200,58 +200,24 @@
   <meta name="twitter:title" content="Marine Mattress Protector — MildMate">
   <meta name="twitter:description" content="Marine Mattress Protector by MildMate — 14 boat mattress shapes with instant online pricing. Waterproof 3-layer protector (Cotton Quilted + Polyester Filling + TPU). Ships worldwide.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-    <script>
+  <script src="/js/analytics-env.js"></script>
+  <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-
-      function loadScript(src, async) {
-        var s = document.createElement('script');
-        s.src = src;
-        if (async) s.async = true;
-        document.head.appendChild(s);
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
       }
-
-      function loadAnalytics() {
-        if (window.__mildmateAnalyticsLoaded) return;
-        window.__mildmateAnalyticsLoaded = true;
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
-      }
-
-      window.__mildmateLoadAnalytics = loadAnalytics;
-
-      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-      if (!isMobile) {
-        loadAnalytics();
-        return;
-      }
-
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        loadAnalytics();
-      };
-
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
       } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+        bootMildmateAnalytics();
       }
     })();
   </script>
 </head>
 <body class="product-page">
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
   <!-- __HEADER__ -->
   <main>
     <div class="container" style="padding-top:24px;">
@@ -497,7 +463,20 @@
     /* â”€â”€ Favorite Toggle â”€â”€ */
     var productSlug='marine-mattress-protector';
     var productName='Marine Mattress Protector';
-    var TURNSTILE_SITE_KEY = '0x4AAAAAADts338jUP9D3kg6';
+    var TURNSTILE_SITE_KEY = '************************';
+    var TURNSTILE_API_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    function resolveTurnstileSiteKey(raw){
+      if(typeof raw==='string')return raw.trim();
+      if(raw&&typeof raw==='object'){
+        var keys=['sitekey','siteKey','key','value','publicKey'];
+        for(var i=0;i<keys.length;i++){
+          var candidate=raw[keys[i]];
+          if(typeof candidate==='string'&&candidate.trim())return candidate.trim();
+        }
+      }
+      return '';
+    }
+    var TURNSTILE_SITE_KEY_RESOLVED = resolveTurnstileSiteKey(TURNSTILE_SITE_KEY);
     function updateFavUI(){
       var btn=document.getElementById('fav-btn');
       var toast=document.getElementById('fav-toast');
@@ -2285,9 +2264,9 @@
         };
       }
       function ensureTurnstileScript() {
-        if (document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) return;
+        if (document.querySelector('script[src*="challenges.cloudflare.com/turnstile/v0/api.js"]')) return;
         var s = document.createElement('script');
-        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+        s.src = TURNSTILE_API_SRC;
         s.async = true;
         s.defer = true;
         document.head.appendChild(s);
@@ -2312,17 +2291,21 @@
       function renderTurnstileWidget(){
         var el = document.getElementById('marine-ts-widget');
         if (!el) return;
+        if (!TURNSTILE_SITE_KEY_RESOLVED) {
+          console.error('[Marine Quote] Missing Turnstile sitekey.');
+          return;
+        }
         if (window.turnstile && typeof window.turnstile.render === 'function') {
           if (_marineWidgetId !== null) {
             try { window.turnstile.reset(_marineWidgetId); } catch(e) {}
           } else {
-            try { _marineWidgetId = window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY }); } catch(e) {}
+            try { _marineWidgetId = window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY_RESOLVED }); } catch(e) {}
           }
         } else {
           var ts = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
           if (ts) ts.addEventListener('load', function(){
             if (window.turnstile && typeof window.turnstile.render === 'function') {
-              try { _marineWidgetId = window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY }); } catch(e) {}
+              try { _marineWidgetId = window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY_RESOLVED }); } catch(e) {}
             }
           });
         }

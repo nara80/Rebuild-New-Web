@@ -328,58 +328,24 @@
   <meta name="twitter:title" content="{{TITLE}}">
   <meta name="twitter:description" content="{{META_DESCRIPTION}}">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-    <script>
+  <script src="/js/analytics-env.js"></script>
+  <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-
-      function loadScript(src, async) {
-        var s = document.createElement('script');
-        s.src = src;
-        if (async) s.async = true;
-        document.head.appendChild(s);
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
       }
-
-      function loadAnalytics() {
-        if (window.__mildmateAnalyticsLoaded) return;
-        window.__mildmateAnalyticsLoaded = true;
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
-      }
-
-      window.__mildmateLoadAnalytics = loadAnalytics;
-
-      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-      if (!isMobile) {
-        loadAnalytics();
-        return;
-      }
-
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        loadAnalytics();
-      };
-
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
       } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+        bootMildmateAnalytics();
       }
     })();
   </script>
 </head>
 <body class="product-page">
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
   <!-- __HEADER__ -->
   <main>
     <div class="container" style="padding-top:24px;">
@@ -394,7 +360,7 @@
         <div class="carousel-wrap" id="carousel-wrap">
           <div class="carousel-track" id="carousel-track">
             <div class="carousel-slide">
-              <img src="{{IMAGE_PATH}}" alt="{{PRODUCT_NAME}}" id="gallery-main-img" width="800" height="800" loading="eager">
+              <img src="{{IMAGE_PATH}}" alt="{{PRODUCT_NAME}}" id="gallery-main-img" width="800" height="800" loading="eager" fetchpriority="high" decoding="async">
             </div>
           </div>
           <button class="carousel-prev" id="carousel-prev" aria-label="Previous image">
@@ -455,7 +421,7 @@
             </div>
             <div class="unit-warning" id="unit-warning-note">Default: <strong>cm</strong>. Using inches? Switch to <strong>inch</strong> first.</div>
             <div class="dim-diagram">
-              <img src="{{DIM_DIAGRAM_IMG}}" alt="{{DIM_DIAGRAM_ALT}}">
+              <img src="{{DIM_DIAGRAM_IMG}}" alt="{{DIM_DIAGRAM_ALT}}" loading="lazy" decoding="async">
               <p class="dim-diagram-caption">{{DIM_DIAGRAM_CAPTION}}</p>
             </div>
             <div class="dim-inputs{{DIM_INPUTS_CLASS}}">
@@ -757,14 +723,14 @@
     }
 
     // Build slides
-    track.innerHTML = gallery.map(function(item){
+    track.innerHTML = gallery.map(function(item, i){
       if (typeof item === 'object' && item.videoId) {
         var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/hqdefault.jpg';
         return '<div class="carousel-slide carousel-slide-video" data-video-id="' + item.videoId + '">' +
-          '<img class="yt-thumb" src="' + thumb + '" alt="Product video" width="480" height="360" loading="lazy">' +
+          '<img class="yt-thumb" src="' + thumb + '" alt="Product video" width="480" height="360" loading="lazy" decoding="async">' +
           '<div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
       }
-      return '<div class="carousel-slide"><img src="' + item + '" alt="Product image" width="800" height="800" loading="eager"></div>';
+      return '<div class="carousel-slide"><img src="' + item + '" alt="Product image" width="800" height="800" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async"' + (i === 0 ? ' fetchpriority="high"' : '') + '></div>';
     }).join('');
 
     // Build dots
@@ -776,9 +742,9 @@
       thumbsWrap.innerHTML = gallery.map(function(item, i){
         if (typeof item === 'object' && item.videoId) {
           var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/default.jpg';
-          return '<button class="carousel-thumb thumb-video' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Video thumbnail"><img src="' + thumb + '" alt="Video thumb" loading="lazy"></button>';
+          return '<button class="carousel-thumb thumb-video' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Video thumbnail"><img src="' + thumb + '" alt="Video thumb" loading="lazy" decoding="async"></button>';
         }
-        return '<button class="carousel-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Thumbnail ' + (i+1) + '"><img src="' + item + '" alt="Product thumbnail ' + (i+1) + '" loading="lazy"></button>';
+        return '<button class="carousel-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Thumbnail ' + (i+1) + '"><img src="' + item + '" alt="Product thumbnail ' + (i+1) + '" loading="lazy" decoding="async"></button>';
       }).join('');
     }
 

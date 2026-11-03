@@ -1,0 +1,81 @@
+{
+  "generatedAt": "2026-11-03T07:38:50.055Z",
+  "base": "https://www.mildmate.com",
+  "results": [
+    {
+      "name": "pricing_product_en",
+      "status": "PASS",
+      "detail": "$37"
+    },
+    {
+      "name": "quote_ui_en",
+      "status": "PASS",
+      "detail": "quote UI detected"
+    },
+    {
+      "name": "cart_checkout_smoke_en",
+      "status": "PASS",
+      "detail": "item present in checkout"
+    },
+    {
+      "name": "turnstile_console_marine",
+      "status": "PASS",
+      "detail": "no turnstile-specific errors"
+    },
+    {
+      "name": "auth_api_contract",
+      "status": "PASS",
+      "detail": "{\"meStatus\":200,\"meBody\":\"{\\\"authenticated\\\":false}\",\"ordersStatus\":401}"
+    },
+    {
+      "name": "clerk_account_route_behavior",
+      "status": "PASS",
+      "detail": "https://accounts.mildmate.com/sign-in?redirect_url=https%3A%2F%2Fwww.mildmate.com%2Faccount%2F"
+    },
+    {
+      "name": "template_admin_status",
+      "status": "PASS",
+      "detail": "status=302"
+    },
+    {
+      "name": "admin_blog_status",
+      "status": "PASS",
+      "detail": "status=302"
+    },
+    {
+      "name": "super_admin_status",
+      "status": "PASS",
+      "detail": "status=302"
+    },
+    {
+      "name": "marketing_data_analyst_status",
+      "status": "PASS",
+      "detail": "status=302"
+    },
+    {
+      "name": "thai_claim_duvet_metadata",
+      "status": "PASS",
+      "detail": "updated phrase present"
+    },
+    {
+      "name": "thai_claim_protection_metadata",
+      "status": "PASS",
+      "detail": "updated phrase present"
+    },
+    {
+      "name": "canonical_product_en",
+      "status": "PASS",
+      "detail": "status=200 canonical=https://www.mildmate.com/product/co-sleeping-top-sheet/"
+    },
+    {
+      "name": "canonical_product_th",
+      "status": "PASS",
+      "detail": "status=200 canonical=https://www.mildmate.com/th/product/co-sleeping-top-sheet/"
+    },
+    {
+      "name": "sitemap_counts",
+      "status": "PASS",
+      "detail": "total=112 product=62 en=31 th=31"
+    }
+  ]
+}

@@ -105,7 +105,8 @@ function resolveLegacyProduct(slug: string): string {
     return '/product/pet-owner-fitted-sheet/';
   }
 
-  if (slug.includes('co-sleeping') || slug.includes('family')) return '/product/family-fitted-sheet/';
+  if (slug.includes('co-sleeping')) return '/product/co-sleeping-top-sheet/';
+  if (slug.includes('family')) return '/product/family-fitted-sheet/';
   if (slug.includes('duvet')) return '/product/3-sided-duvet/';
   if (slug.includes('encasement') || slug.includes('zippered-tpu-mattress-cover')) return '/product/mattress-encasement-general/';
   if (slug.includes('sheet-protectors') || slug.includes('protector') || slug === 'pillow-case') return '/product/mattress-protector-standard/';

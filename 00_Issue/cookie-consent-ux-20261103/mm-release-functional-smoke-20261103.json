@@ -1,0 +1,29 @@
+{
+  "checks": [
+    {
+      "name": "pricing_configurable_en",
+      "status": "PASS",
+      "detail": "$33"
+    },
+    {
+      "name": "quote_ui_popup_en",
+      "status": "PASS",
+      "detail": "quote UI element detected"
+    },
+    {
+      "name": "cart_checkout_smoke_en",
+      "status": "PASS",
+      "detail": "item rendered in checkout"
+    },
+    {
+      "name": "auth_api_contract",
+      "status": "PASS",
+      "detail": "{\"meStatus\":200,\"meBody\":\"{\\\"authenticated\\\":false}\",\"ordersStatus\":401}"
+    },
+    {
+      "name": "turnstile_console_smoke_marine",
+      "status": "PASS",
+      "detail": "no turnstile console errors"
+    }
+  ]
+}

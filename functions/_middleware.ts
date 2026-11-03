@@ -557,12 +557,14 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'standard-fitted-sheet',
   'deep-pocket-fitted-sheet',
   'marine-fitted-sheet',
+  'marine-top-sheet',
   'dorm-fitted-sheet',
   'rv-truck-fitted-sheet',
   'family-fitted-sheet',
   'pet-owner-fitted-sheet',
   'flat-sheet-standard',
   'flat-sheet-extra-deep-pocket',
+  'co-sleeping-top-sheet',
   '3-sided-duvet',
   'weighted-duvet-cover',
   'pet-owner-duvet-cover',
@@ -604,7 +606,8 @@ function resolveLegacyProductPath(pathname: string): string | null {
   const rawSlug = subpath.replace(/\/+$/, '').toLowerCase();
   if (rawSlug === '%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1') return '/product/duvet-insert/';
   if (rawSlug.startsWith('%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9')) return '/product/family-fitted-sheet/';
-  if (rawSlug.startsWith('product-boat-bedding') || rawSlug.startsWith('product-boat-top-sheet')) return '/product/marine-fitted-sheet/';
+  if (rawSlug.startsWith('product-boat-bedding')) return '/product/marine-fitted-sheet/';
+  if (rawSlug.startsWith('product-boat-top-sheet')) return '/product/marine-top-sheet/';
   if (rawSlug.includes('boat') && rawSlug.includes('pillow')) return '/product/pillowcase-envelope/';
 
   if (rawSlug.includes('dorm')) return rawSlug.includes('duvet') ? '/product/duvet-cover-dorm/' : '/product/dorm-fitted-sheet/';
@@ -622,7 +625,8 @@ function resolveLegacyProductPath(pathname: string): string | null {
     return '/product/pet-owner-fitted-sheet/';
   }
 
-  if (rawSlug.includes('co-sleeping') || rawSlug.includes('family')) return '/product/family-fitted-sheet/';
+  if (rawSlug.includes('co-sleeping')) return '/product/co-sleeping-top-sheet/';
+  if (rawSlug.includes('family')) return '/product/family-fitted-sheet/';
   if (rawSlug.includes('duvet')) return '/product/3-sided-duvet/';
   if (rawSlug.includes('encasement') || rawSlug.includes('zippered-tpu-mattress-cover')) return '/product/mattress-encasement-general/';
   if (rawSlug.includes('sheet-protectors') || rawSlug.includes('protector') || rawSlug === 'pillow-case') return '/product/mattress-protector-standard/';

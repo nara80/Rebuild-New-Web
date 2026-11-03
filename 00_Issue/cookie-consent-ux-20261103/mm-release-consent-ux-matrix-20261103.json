@@ -1,0 +1,380 @@
+{
+  "generatedAt": "2026-11-03T07:10:06.374Z",
+  "base": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev",
+  "results": [
+    {
+      "viewport": "desktop",
+      "page": "home_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "home_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "product_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "product_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "category_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "category_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "blog_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "blog_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "info_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "info_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "account_en",
+      "status": "SKIP",
+      "reason": "protected_route_redirect_variability",
+      "checks": {}
+    },
+    {
+      "viewport": "desktop",
+      "page": "account_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "page": "admin_blog",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "home_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "home_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "product_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "product_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "category_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "category_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "blog_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "blog_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "info_en",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "info_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "account_en",
+      "status": "SKIP",
+      "reason": "protected_route_redirect_variability",
+      "checks": {}
+    },
+    {
+      "viewport": "mobile",
+      "page": "account_th",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    },
+    {
+      "viewport": "mobile",
+      "page": "admin_blog",
+      "status": "PASS",
+      "reason": "",
+      "checks": {
+        "bannerVisible": true,
+        "labels": true,
+        "essentialState": true,
+        "essentialCookie": true,
+        "persistReload": true,
+        "settingsOpen": true,
+        "granular": true
+      }
+    }
+  ]
+}

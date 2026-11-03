@@ -1,0 +1,277 @@
+{
+  "generatedAt": "2026-11-03T06:26:00.655Z",
+  "base": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev",
+  "results": [
+    {
+      "page": "customizable_en",
+      "state": "unset",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": false,
+      "mmCookie": true
+    },
+    {
+      "page": "customizable_en",
+      "state": "denied",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "customizable_en",
+      "state": "analytics_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "customizable_en",
+      "state": "marketing_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "customizable_en",
+      "state": "all_granted",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_en",
+      "state": "unset",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": false,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_en",
+      "state": "denied",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_en",
+      "state": "analytics_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_en",
+      "state": "marketing_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_en",
+      "state": "all_granted",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_en",
+      "state": "unset",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": false,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_en",
+      "state": "denied",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_en",
+      "state": "analytics_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_en",
+      "state": "marketing_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_en",
+      "state": "all_granted",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "customizable_th",
+      "state": "unset",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": false,
+      "mmCookie": true
+    },
+    {
+      "page": "customizable_th",
+      "state": "denied",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "customizable_th",
+      "state": "analytics_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "customizable_th",
+      "state": "marketing_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "customizable_th",
+      "state": "all_granted",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_th",
+      "state": "unset",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": false,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_th",
+      "state": "denied",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_th",
+      "state": "analytics_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_th",
+      "state": "marketing_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "fixed_th",
+      "state": "all_granted",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_th",
+      "state": "unset",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": false,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_th",
+      "state": "denied",
+      "gtmRequests": 0,
+      "uniqueRequests": 0,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_th",
+      "state": "analytics_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_th",
+      "state": "marketing_only",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    },
+    {
+      "page": "marine_th",
+      "state": "all_granted",
+      "gtmRequests": 1,
+      "uniqueRequests": 1,
+      "hasViewItem": true,
+      "hasConsentUpdate": true,
+      "mmCookie": true
+    }
+  ],
+  "note": "synthetic non-production override used to validate consent gating on preview"
+}

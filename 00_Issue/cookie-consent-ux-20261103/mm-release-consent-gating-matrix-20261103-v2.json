@@ -1,0 +1,656 @@
+{
+  "generatedAt": "2026-11-03T07:08:01.953Z",
+  "base": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev",
+  "results": [
+    {
+      "page": "home_en",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "home_en",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "home_en",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "home_en",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "home_en",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "home_th",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "home_th",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "home_th",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "home_th",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "home_th",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "product_en",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/product/standard-fitted-sheet/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "product_en",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/product/standard-fitted-sheet/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "product_en",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/product/standard-fitted-sheet/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "product_en",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/product/standard-fitted-sheet/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "product_en",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/product/standard-fitted-sheet/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "product_th",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/product/standard-fitted-sheet/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "product_th",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/product/standard-fitted-sheet/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "product_th",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/product/standard-fitted-sheet/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "product_th",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/product/standard-fitted-sheet/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "product_th",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/product/standard-fitted-sheet/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": true
+    },
+    {
+      "page": "category_en",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/sheets/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "category_en",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/sheets/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "category_en",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/sheets/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "category_en",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/sheets/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "category_en",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/sheets/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "category_th",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/sheets/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "category_th",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/sheets/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "category_th",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/sheets/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "category_th",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/sheets/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "category_th",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/sheets/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_en",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/blogs/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_en",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/blogs/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_en",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/blogs/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_en",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/blogs/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_en",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/blogs/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_th",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/blogs/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_th",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/blogs/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_th",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/blogs/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_th",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/blogs/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "blog_th",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/blogs/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_en",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/faq/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_en",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/faq/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_en",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/faq/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_en",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/faq/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_en",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/faq/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_th",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/faq/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_th",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/faq/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_th",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/faq/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_th",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/faq/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "info_th",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/faq/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "account_en",
+      "state": "unset",
+      "status": "SKIP",
+      "reason": "protected_route_redirect_variability",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/account/",
+      "gtmRequests": 0,
+      "hasInit": false,
+      "hasViewItem": null
+    },
+    {
+      "page": "account_en",
+      "state": "denied",
+      "status": "SKIP",
+      "reason": "protected_route_redirect_variability",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/account/",
+      "gtmRequests": 0,
+      "hasInit": false,
+      "hasViewItem": null
+    },
+    {
+      "page": "account_en",
+      "state": "analytics_only",
+      "status": "SKIP",
+      "reason": "protected_route_redirect_variability",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/account/",
+      "gtmRequests": 0,
+      "hasInit": false,
+      "hasViewItem": null
+    },
+    {
+      "page": "account_en",
+      "state": "marketing_only",
+      "status": "SKIP",
+      "reason": "protected_route_redirect_variability",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/account/",
+      "gtmRequests": 0,
+      "hasInit": false,
+      "hasViewItem": null
+    },
+    {
+      "page": "account_en",
+      "state": "all_granted",
+      "status": "SKIP",
+      "reason": "protected_route_redirect_variability",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/account/",
+      "gtmRequests": 0,
+      "hasInit": false,
+      "hasViewItem": null
+    },
+    {
+      "page": "account_th",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/account/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "account_th",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/account/",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "account_th",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/account/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "account_th",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/account/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "account_th",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/th/account/",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "admin_blog",
+      "state": "unset",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/admin/blog",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "admin_blog",
+      "state": "denied",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/admin/blog",
+      "gtmRequests": 0,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "admin_blog",
+      "state": "analytics_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/admin/blog",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "admin_blog",
+      "state": "marketing_only",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/admin/blog",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    },
+    {
+      "page": "admin_blog",
+      "state": "all_granted",
+      "status": "PASS",
+      "reason": "",
+      "finalUrl": "https://security-admin-api-remediati-p2nk.mildmate-new.pages.dev/admin/blog",
+      "gtmRequests": 1,
+      "hasInit": true,
+      "hasViewItem": false
+    }
+  ]
+}

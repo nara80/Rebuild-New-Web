@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="MildMate Easy Bed Maker & Mattress Lifter. Ergonomic ABS design lifts and holds heavy mattresses. Reduce back strain and tuck sheets effortlessly. Ships worldwide.">
   <meta name="product-image" content="/images/products/mattress-lift-helper/main.jpg">
-  <title>Ã—"à¸±à¸§Ã—`Ã—Ã—à¸§à¸¢à¸¢à¸Ã—à¸µÃ—Ã—Ã—"à¸­Ã—" â€” MildMate</title>
+  <title>×"ัว×`××วยยก×ี×××"อ×" — MildMate</title>
   <link href="/css/fonts.css?v=2" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
@@ -27,7 +27,7 @@
     .carousel-slide-video .yt-play-circle svg { width: 24px; height: 24px; fill: #fff; }
     .carousel-slide-video iframe { width: 100%; height: 100%; border: none; display: block; }
     .carousel-thumb.thumb-video { position: relative; }
-    .carousel-thumb.thumb-video::after { content: "â–¶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); color: #fff; font-size: 1.25rem; }
+    .carousel-thumb.thumb-video::after { content: "▶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); color: #fff; font-size: 1.25rem; }
     .carousel-prev, .carousel-next { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.88); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,0.12); transition: background 0.15s; }
     .carousel-prev:hover, .carousel-next:hover { background: #fff; }
     .carousel-prev { left: 10px; }
@@ -115,7 +115,7 @@
     .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
     .tab-content ul li { margin-bottom: 6px; color: #64748b; line-height: 1.5; }
 
-    /* Phase 5: Fabric Comparison Grid â€” removed */
+    /* Phase 5: Fabric Comparison Grid — removed */
 
     .related-section { grid-column: 1 / -1; border-top: 1px solid #e2e8f0; padding-top: 32px; margin-top: 48px; }
     .related-section h2 { font-size: 1.25rem; font-weight: 700; color: var(--color-text); margin-bottom: 20px; }
@@ -163,7 +163,7 @@
       .mobile-cta-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 2px solid #e2e8f0; padding: 12px 16px; z-index: 200; display: flex; gap: 12px; align-items: center; box-shadow: 0 -4px 16px rgba(0,0,0,0.10); }
       .mobile-cta-bar .cta-price { flex: 1; font-weight: 700; font-size: 0.9375rem; color: var(--color-text); }
       .mobile-cta-bar .cta-price .cta-price-strike { text-decoration: line-through; color: #94a3b8; font-size: 0.8125rem; margin-right: 6px; }
-      .mobile-cta-bar .cta-price .cta-price-sale { color: #dc2626; }
+      .mobile-cta-bar .cta-price .cta-price-sale { color: #16a34a; }
       .mobile-cta-bar .cta-btn { padding: 12px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-weight: 700; font-size: 0.9375rem; font-family: var(--font-main); cursor: pointer; white-space: nowrap; transition: background 0.15s; }
       .mobile-cta-bar .cta-btn:hover { background: var(--color-primary-dark); }
       .mobile-cta-bar .cta-btn:disabled { background: #94a3b8; cursor: not-allowed; }
@@ -216,61 +216,27 @@
   <!-- Phase 8: Tracking + OG -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MildMate">
-  <meta property="og:title" content="Easy Bed Maker & Mattress Lifter â€” MildMate">
+  <meta property="og:title" content="Easy Bed Maker & Mattress Lifter — MildMate">
   <meta property="og:description" content="MildMate Easy Bed Maker & Mattress Lifter. Ergonomic ABS design lifts and holds heavy mattresses. Reduce back strain and tuck sheets effortlessly. Ships worldwide.">
   <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:alt" content="MildMate custom bedding">
   <meta property="og:url" content="https://www.mildmate.com">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Easy Bed Maker & Mattress Lifter â€” MildMate">
+  <meta name="twitter:title" content="Easy Bed Maker & Mattress Lifter — MildMate">
   <meta name="twitter:description" content="MildMate Easy Bed Maker & Mattress Lifter. Ergonomic ABS design lifts and holds heavy mattresses. Reduce back strain and tuck sheets effortlessly. Ships worldwide.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-    <script>
+  <script src="/js/analytics-env.js"></script>
+  <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-
-      function loadScript(src, async) {
-        var s = document.createElement('script');
-        s.src = src;
-        if (async) s.async = true;
-        document.head.appendChild(s);
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
       }
-
-      function loadAnalytics() {
-        if (window.__mildmateAnalyticsLoaded) return;
-        window.__mildmateAnalyticsLoaded = true;
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
-      }
-
-      window.__mildmateLoadAnalytics = loadAnalytics;
-
-      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-      if (!isMobile) {
-        loadAnalytics();
-        return;
-      }
-
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        loadAnalytics();
-      };
-
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
       } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+        bootMildmateAnalytics();
       }
     })();
   </script>
@@ -280,7 +246,7 @@
 </head>
 <body class="product-page">
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
   <!-- __HEADER__ -->
   <main>
     <div class="container" style="padding-top:24px;">
@@ -295,7 +261,7 @@
         <div class="carousel-wrap" id="carousel-wrap">
           <div class="carousel-track" id="carousel-track">
             <div class="carousel-slide">
-              <img src="/images/products/mattress-lift-helper/main.jpg" alt="Easy Bed Maker & Mattress Lifter" id="gallery-main-img" width="800" height="600" loading="eager">
+              <img src="/images/products/mattress-lift-helper/main.jpg" alt="Easy Bed Maker & Mattress Lifter" id="gallery-main-img" width="800" height="600" loading="eager" fetchpriority="high" decoding="async">
             </div>
           </div>
           <button class="carousel-prev" id="carousel-prev" aria-label="Previous image">
@@ -311,10 +277,10 @@
       <div class="product-info">
         <div class="product-title-row">
           <h1 class="product-title">Easy Bed Maker & Mattress Lifter</h1>
-          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">â™¡</button>
+          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">♡</button>
         </div>
         <p class="favorite-toast" id="fav-toast"></p>
-        <p class="product-tagline">Lift heavy mattresses effortlessly. No more back strain â€” ergonomic ABS wedge design for seniors and caregivers.</p>
+        <p class="product-tagline">Lift heavy mattresses effortlessly. No more back strain — ergonomic ABS wedge design for seniors and caregivers.</p>
         <div class="trust-signals trust-signals-mobile">
           <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</div>
           <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>Top Rated</div>
@@ -322,12 +288,12 @@
           <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Secure Pay</div>
         </div>
         <div id="sale-info"></div>
-        <div class="pricing-panel"><div class="one-size-badge">One Size</div><div class="price-display" id="price-display">USD 22.00</div><div class="price-note">Excludes shipping &amp; import tariff</div><div class="specs-grid"><div class="spec-item"><div class="spec-label">Material</div><div class="spec-value">High-quality ABS Plastic</div></div><div class="spec-item"><div class="spec-label">Dimensions</div><div class="spec-value">38 Ã— 13 cm</div></div></div><button class="add-to-cart-btn" id="add-to-cart" onclick="if(typeof addToCart==='function'){addToCart({slug:'mattress-lift-helper',name:'Easy Bed Maker & Mattress Lifter',price:22,priceThb:790,qty:1})}">Add to Cart</button></div>
+        <div class="pricing-panel"><div class="one-size-badge">One Size</div><div class="price-display" id="price-display">USD 22.00</div><div class="price-note">Excludes shipping &amp; import tariff</div><div class="specs-grid"><div class="spec-item"><div class="spec-label">Material</div><div class="spec-value">High-quality ABS Plastic</div></div><div class="spec-item"><div class="spec-label">Dimensions</div><div class="spec-value">38 × 13 cm</div></div></div><button class="add-to-cart-btn" id="add-to-cart" onclick="if(typeof addToCart==='function'){addToCart({slug:'mattress-lift-helper',name:'Easy Bed Maker & Mattress Lifter',price:22,priceThb:790,qty:1})}">Add to Cart</button></div>
       </div>
     </div>
     <div class="container trust-signals-desktop-wrap" style="max-width:1280px; padding:0 24px 28px;"><div class="trust-signals trust-signals-desktop"><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Premium Quality</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</div></div></div>
     <div id="fixed-content-wrapper">
-      <div class="container" style="max-width:1280px; padding:0 24px;"><div style="padding:32px 0;"><div style="margin-bottom:40px;"><h2 style="font-size:1.8rem; margin-bottom:12px; color:var(--color-heading);">Make Your Bed Without the Heavy Lifting</h2><p style="font-size:1.1rem; color:var(--color-muted); line-height:1.6; max-width:800px;">Lifting a heavy mattress to tuck in sheets is a daily chore that strains your back, shoulders, and wrists. The MildMate Easy Bed Maker & Mattress Lifter is the ultimate ergonomic tool designed to take the weight off your hands. It slides between the mattress and base (or box spring), keeping the mattress raised so both hands are free to make the bed.</p></div><div style="background:var(--color-surface); border-radius:var(--radius); padding:32px; margin-bottom:40px; border:1px solid var(--color-border);"><h3 style="margin-bottom:20px; font-size:1.4rem; color:var(--color-heading);">How It Works</h3><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px;"><div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);"><span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">1</span><h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Slide Under</h4><p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Insert the smooth, wedge-shaped lifter between your mattress and base. It slides in easily without catching.</p></div><div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);"><span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">2</span><h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Lift & Hold</h4><p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Push down gently on the handle to lift the mattress. The wedge locks in place like a kickstand, keeping the mattress raised.</p></div><div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);"><span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">3</span><h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Easy Tucking</h4><p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Use both hands to quickly tuck sheets. Use the flat edge of the lifter to tuck the sheet under for a clean, tight fit without scraping knuckles.</p></div></div></div><div style="margin-bottom:40px;"><h3 style="margin-bottom:24px; font-size:1.4rem; color:var(--color-heading);">Why It Works Better</h3><div style="display:grid; grid-template-columns:1fr; gap:20px;"><div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">âœ“</span><div><h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">Ergonomic Back-Saving Design</h4><p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;"><strong style="color:var(--color-heading);">The Problem:</strong> Lifting heavy mattresses repeatedly causes back fatigue, neck strain, and sore wrists, especially for seniors, caregivers, or hotel housekeepers.<br><strong style="color:var(--color-heading);">The Solution:</strong> Our angled leverage design does the heavy lifting for you. Simply slide it in and press down to raise the bed, saving your back from strain.</p></div></div><div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">âœ“</span><div><h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">Stable "Kickstand" Support</h4><p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;"><strong style="color:var(--color-heading);">The Problem:</strong> Trying to hold a heavy mattress up with one hand while tucking sheets with the other is clumsy and exhausting.<br><strong style="color:var(--color-heading);">The Solution:</strong> The wedge-shaped body slides deep under the mattress and acts as a stable kickstand, keeping the mattress raised so both hands are completely free.</p></div></div><div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">âœ“</span><div><h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">Protective Sheet Tucker Edge</h4><p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;"><strong style="color:var(--color-heading);">The Problem:</strong> Tucking sheets under tight bed frames leads to scraped knuckles, friction burns, and ruined manicures.<br><strong style="color:var(--color-heading);">The Solution:</strong> The smooth, flat front edge of the lifter doubles as an ergonomic sheet tucker. Slide sheets under cleanly and quickly without ever putting your hands near rough surfaces.</p></div></div><div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">âœ“</span><div><h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">Heavy-Duty Reinforced ABS</h4><p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;"><strong style="color:var(--color-heading);">The Problem:</strong> Flimsy lifters bend, warp, or snap under the immense pressure of thick latex, hybrid, or memory foam mattresses.<br><strong style="color:var(--color-heading);">The Solution:</strong> Constructed from thick, high-density reinforced ABS plastic, this tool is built to withstand high pressure and easily lifts the heaviest King-size mattresses.</p></div></div></div></div><div><h3 style="margin-bottom:16px; font-size:1.4rem; color:var(--color-heading);">Care & Storage</h3><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;"><div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1rem;">â—</span><span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">Wipe clean with a damp cloth</span></div><div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1rem;">â—</span><span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">Store flat or hang by the handle slot</span></div><div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1rem;">â—</span><span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">Keep away from high heat</span></div><div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1rem;">â—</span><span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">Avoid chemical cleaning agents</span></div></div></div></div></div>
+      <div class="container" style="max-width:1280px; padding:0 24px;"><div style="padding:32px 0;"><div style="margin-bottom:40px;"><h2 style="font-size:1.8rem; margin-bottom:12px; color:var(--color-heading);">Make Your Bed Without the Heavy Lifting</h2><p style="font-size:1.1rem; color:var(--color-muted); line-height:1.6; max-width:800px;">Lifting a heavy mattress to tuck in sheets is a daily chore that strains your back, shoulders, and wrists. The MildMate Easy Bed Maker & Mattress Lifter is the ultimate ergonomic tool designed to take the weight off your hands. It slides between the mattress and base (or box spring), keeping the mattress raised so both hands are free to make the bed.</p></div><div style="background:var(--color-surface); border-radius:var(--radius); padding:32px; margin-bottom:40px; border:1px solid var(--color-border);"><h3 style="margin-bottom:20px; font-size:1.4rem; color:var(--color-heading);">How It Works</h3><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px;"><div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);"><span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">1</span><h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Slide Under</h4><p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Insert the smooth, wedge-shaped lifter between your mattress and base. It slides in easily without catching.</p></div><div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);"><span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">2</span><h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Lift & Hold</h4><p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Push down gently on the handle to lift the mattress. The wedge locks in place like a kickstand, keeping the mattress raised.</p></div><div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);"><span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">3</span><h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Easy Tucking</h4><p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Use both hands to quickly tuck sheets. Use the flat edge of the lifter to tuck the sheet under for a clean, tight fit without scraping knuckles.</p></div></div></div><div style="margin-bottom:40px;"><h3 style="margin-bottom:24px; font-size:1.4rem; color:var(--color-heading);">Why It Works Better</h3><div style="display:grid; grid-template-columns:1fr; gap:20px;"><div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">✓</span><div><h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">Ergonomic Back-Saving Design</h4><p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;"><strong style="color:var(--color-heading);">The Problem:</strong> Lifting heavy mattresses repeatedly causes back fatigue, neck strain, and sore wrists, especially for seniors, caregivers, or hotel housekeepers.<br><strong style="color:var(--color-heading);">The Solution:</strong> Our angled leverage design does the heavy lifting for you. Simply slide it in and press down to raise the bed, saving your back from strain.</p></div></div><div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">✓</span><div><h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">Stable "Kickstand" Support</h4><p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;"><strong style="color:var(--color-heading);">The Problem:</strong> Trying to hold a heavy mattress up with one hand while tucking sheets with the other is clumsy and exhausting.<br><strong style="color:var(--color-heading);">The Solution:</strong> The wedge-shaped body slides deep under the mattress and acts as a stable kickstand, keeping the mattress raised so both hands are completely free.</p></div></div><div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">✓</span><div><h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">Protective Sheet Tucker Edge</h4><p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;"><strong style="color:var(--color-heading);">The Problem:</strong> Tucking sheets under tight bed frames leads to scraped knuckles, friction burns, and ruined manicures.<br><strong style="color:var(--color-heading);">The Solution:</strong> The smooth, flat front edge of the lifter doubles as an ergonomic sheet tucker. Slide sheets under cleanly and quickly without ever putting your hands near rough surfaces.</p></div></div><div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">✓</span><div><h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">Heavy-Duty Reinforced ABS</h4><p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;"><strong style="color:var(--color-heading);">The Problem:</strong> Flimsy lifters bend, warp, or snap under the immense pressure of thick latex, hybrid, or memory foam mattresses.<br><strong style="color:var(--color-heading);">The Solution:</strong> Constructed from thick, high-density reinforced ABS plastic, this tool is built to withstand high pressure and easily lifts the heaviest King-size mattresses.</p></div></div></div></div><div><h3 style="margin-bottom:16px; font-size:1.4rem; color:var(--color-heading);">Care & Storage</h3><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;"><div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1rem;">●</span><span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">Wipe clean with a damp cloth</span></div><div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1rem;">●</span><span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">Store flat or hang by the handle slot</span></div><div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1rem;">●</span><span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">Keep away from high heat</span></div><div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);"><span style="color:var(--color-primary); font-size:1rem;">●</span><span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">Avoid chemical cleaning agents</span></div></div></div></div></div>
     </div>
     <div class="container" style="max-width:1280px; padding:0 24px;">
       <div class="related-section">
@@ -349,7 +315,7 @@
         <div class="reviews-summary" id="product-review-summary">
           <div class="summary-score" id="product-review-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars" id="product-review-stars">â˜…â˜…â˜…â˜…â˜…</div>
+            <div class="summary-stars" id="product-review-stars">★★★★★</div>
             <div class="summary-text" id="product-review-count">Loading reviews...</div>
           </div>
         </div>
@@ -397,7 +363,7 @@
       </button>
     </div>
     <script>
-      /* Mobile CTA â€” persistent bottom bar */
+      /* Mobile CTA — persistent bottom bar */
       (function() {
         var bar = document.getElementById('mobile-cta-bar');
         var desktopBtn = document.getElementById('add-to-cart');
@@ -426,7 +392,7 @@
           textObserver.observe(desktopBtn, { childList: true, characterData: true, subtree: true });
           mobileBtn.innerHTML = desktopBtn.innerHTML;
         }
-        // 4. Mobile CTA click â†’ trigger desktop Add to Cart
+        // 4. Mobile CTA click → trigger desktop Add to Cart
         if (mobileBtn && desktopBtn) {
           mobileBtn.addEventListener('click', function() {
             desktopBtn.click();
@@ -435,7 +401,7 @@
       })();
 
 
-      // â”€â”€ Favorite + Sale â”€â”€
+      // ── Favorite + Sale ──
       var productSlug = 'mattress-lift-helper';
       var productName = 'Easy Bed Maker & Mattress Lifter';
 
@@ -443,20 +409,20 @@
         var btn = document.getElementById('fav-btn');
         if (!btn) return;
         var isFav = MildMateCampaigns.isFavorite(productSlug);
-        btn.innerHTML = isFav ? 'â™¥' : 'â™¡';
+        btn.innerHTML = isFav ? '♥' : '♡';
         btn.className = isFav ? 'favorite-btn active' : 'favorite-btn';
         btn.title = isFav ? 'Remove from favorites' : 'Save to favorites';
       }
 
       window.toggleFavoriteProduct = async function() {
-        // Optimistic local toggle â€” instant UI feedback
+        // Optimistic local toggle — instant UI feedback
         var isFav = MildMateCampaigns.toggleFavorite(productSlug, productName);
         updateFavUI();
         var toast = document.getElementById('fav-toast');
         if (toast) {
           if (isFav) {
             var offer = MildMateCampaigns.getOffers().favorite || 15;
-            toast.textContent = 'â™¥ Saved!';
+            toast.textContent = '♥ Saved!';
             toast.style.color = '#dc2626';
           } else { toast.textContent = ''; }
         }
@@ -465,7 +431,7 @@
         if (window.MildMateCampaigns && typeof MildMateCampaigns.toggleFavoriteServer === 'function') {
           var result = await MildMateCampaigns.toggleFavoriteServer(productSlug, productName);
           if (!result.ok) {
-            // Undo local toggle â€” server rejected it
+            // Undo local toggle — server rejected it
             MildMateCampaigns.toggleFavorite(productSlug, productName);
             updateFavUI();
             if (toast) {
@@ -511,7 +477,7 @@
       window.addEventListener('clerk:signed-out', updateFavUI);
       updateSaleDisplay();
 
-      // â”€â”€ Add to Cart (Phase 5) â”€â”€
+      // ── Add to Cart (Phase 5) ──
       window.addToCart = function(item) {
         var dimensions = {};
         var sizeLabel = '';
@@ -557,7 +523,7 @@
         }
       };
 
-      // â”€â”€ YouTube Video + Carousel Builder â”€â”€
+      // ── YouTube Video + Carousel Builder ──
       (function() {
         var slug = location.pathname.split('/').filter(Boolean).pop();
         var currentSlide = 0;
@@ -587,14 +553,14 @@
           }
 
           // Build slides
-          track.innerHTML = gallery.map(function(item) {
+          track.innerHTML = gallery.map(function(item, i) {
             if (typeof item === 'object' && item.videoId) {
               var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/hqdefault.jpg';
               return '<div class="carousel-slide carousel-slide-video" data-video-id="' + item.videoId + '">' +
-                '<img class="yt-thumb" src="' + thumb + '" alt="Product video" width="480" height="360" loading="lazy">' +
+                '<img class="yt-thumb" src="' + thumb + '" alt="Product video" width="480" height="360" loading="lazy" decoding="async">' +
                 '<div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
             }
-            return '<div class="carousel-slide"><img src="' + item + '" alt="Product image" width="800" height="600" loading="eager"></div>';
+            return '<div class="carousel-slide"><img src="' + item + '" alt="Product image" width="800" height="600" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async"' + (i === 0 ? ' fetchpriority="high"' : '') + '></div>';
           }).join('');
 
           // Build dots
@@ -609,9 +575,9 @@
             thumbsWrap.innerHTML = gallery.map(function(item, i) {
               if (typeof item === 'object' && item.videoId) {
                 var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/default.jpg';
-                return '<button class="carousel-thumb thumb-video' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Video thumbnail"><img src="' + thumb + '" alt="Video thumb" loading="lazy"></button>';
+                return '<button class="carousel-thumb thumb-video' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Video thumbnail"><img src="' + thumb + '" alt="Video thumb" loading="lazy" decoding="async"></button>';
               }
-              return '<button class="carousel-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Thumbnail ' + (i+1) + '"><img src="' + item + '" alt="Product thumbnail ' + (i+1) + '" loading="lazy"></button>';
+              return '<button class="carousel-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Thumbnail ' + (i+1) + '"><img src="' + item + '" alt="Product thumbnail ' + (i+1) + '" loading="lazy" decoding="async"></button>';
             }).join('');
           }
 
@@ -730,6 +696,5 @@
     </script>
 </body>
 </html>
-
 
 

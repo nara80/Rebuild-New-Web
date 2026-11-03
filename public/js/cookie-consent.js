@@ -26,6 +26,7 @@
   };
 
   let consent = { ...defaultConsent };
+  let lastActiveElement = null;
 
   // Load saved consent from localStorage
   try {
@@ -39,6 +40,50 @@
   } catch (e) {
     // Ignore parsing errors
   }
+
+  const isThaiPage = (function () {
+    const htmlLang = (document.documentElement && document.documentElement.lang || '').toLowerCase();
+    const path = (window.location && window.location.pathname || '').toLowerCase();
+    return htmlLang === 'th' || path.indexOf('/th/') === 0;
+  })();
+
+  const copy = isThaiPage
+    ? {
+        bannerLabel: 'การยินยอมคุกกี้',
+        modalLabel: 'การตั้งค่าคุกกี้',
+        bannerText: 'เราใช้คุกกี้ทางเลือกเพื่อปรับปรุงประสบการณ์การช้อปปิ้งและวิเคราะห์ประสิทธิภาพเว็บไซต์ คุณสามารถยอมรับทั้งหมด ใช้เฉพาะคุกกี้ที่จำเป็น หรือปรับแต่งการตั้งค่าได้',
+        settingsButton: 'ตั้งค่า',
+        essentialOnlyButton: 'เฉพาะคุกกี้ที่จำเป็น',
+        acceptAllButton: 'ยอมรับคุกกี้ทั้งหมด',
+        modalTitle: 'การตั้งค่าคุกกี้',
+        modalDesc: 'จัดการการตั้งค่าคุกกี้ของคุณด้านล่าง คุกกี้ที่จำเป็นจะเปิดใช้งานเสมอเพื่อให้เว็บไซต์ทำงานได้ตามปกติ',
+        essentialTitle: 'คุกกี้ที่จำเป็น',
+        essentialDesc: 'จำเป็นต่อการทำงานของเว็บไซต์ ไม่สามารถปิดได้',
+        analyticsTitle: 'คุกกี้วิเคราะห์',
+        analyticsDesc: 'ช่วยให้เราเข้าใจการใช้งานเว็บไซต์ (Google Analytics 4)',
+        marketingTitle: 'คุกกี้การตลาด',
+        marketingDesc: 'ใช้วัดผลโฆษณา เช่น คำสั่งซื้อจาก Google Ads โดยไม่เปิดใช้อัตโนมัติเมื่อยอมรับคุกกี้วิเคราะห์',
+        savePreferences: 'บันทึกการตั้งค่า',
+        acceptAllShort: 'ยอมรับทั้งหมด'
+      }
+    : {
+        bannerLabel: 'Cookie consent',
+        modalLabel: 'Cookie preferences',
+        bannerText: 'We use optional cookies to improve your shopping experience and understand website performance. You can accept all, use essential cookies only, or customize your preferences.',
+        settingsButton: 'Settings',
+        essentialOnlyButton: 'Essential Only',
+        acceptAllButton: 'Accept All Cookies',
+        modalTitle: 'Cookie Preferences',
+        modalDesc: 'Manage your cookie preferences below. Essential cookies are always enabled as they are necessary for the website to function.',
+        essentialTitle: 'Essential',
+        essentialDesc: 'Required for the website to function. Cannot be disabled.',
+        analyticsTitle: 'Analytics',
+        analyticsDesc: 'Help us understand how visitors interact with our website (Google Analytics 4).',
+        marketingTitle: 'Marketing',
+        marketingDesc: 'Measure advertising performance, such as purchases from Google Ads. Not enabled by Analytics acceptance.',
+        savePreferences: 'Save Preferences',
+        acceptAllShort: 'Accept All'
+      };
 
   function readAttributionState() {
     try {
@@ -341,15 +386,51 @@
     }
   }
 
+  function injectStyles() {
+    if (document.getElementById('cookie-consent-ux-style')) return;
+    const style = document.createElement('style');
+    style.id = 'cookie-consent-ux-style';
+    style.textContent = `
+      #cookie-banner .cookie-banner-inner{align-items:flex-start}
+      #cookie-banner .cookie-banner-text{margin:0;line-height:1.45}
+      #cookie-banner .cookie-banner-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:min(720px,100%)}
+      #cookie-banner .cookie-btn{min-height:44px;padding:12px 16px;line-height:1.2;white-space:normal;text-align:center}
+      #cookie-banner .cookie-btn-settings{background:#fff;border-color:var(--color-border);color:var(--color-text)}
+      #cookie-banner .cookie-btn-settings:hover{border-color:var(--color-primary);color:var(--color-primary);background:#fff}
+      #cookie-banner .cookie-btn-essential{background:#fff;border-color:var(--color-primary);color:var(--color-primary)}
+      #cookie-banner .cookie-btn-essential:hover{background:#e8f4fd}
+      #cookie-banner .cookie-btn-accept{background:var(--color-primary);border-color:var(--color-primary);color:#fff}
+      #cookie-banner .cookie-btn-accept:hover{background:var(--color-primary-dark);border-color:var(--color-primary-dark)}
+      #cookie-banner .cookie-btn:focus-visible,
+      #cookie-modal .cookie-btn:focus-visible,
+      #cookie-modal .cookie-toggle input:focus-visible + .cookie-toggle-slider{
+        outline:3px solid rgba(44,150,244,.35);
+        outline-offset:2px
+      }
+      @media (max-width:1024px){
+        #cookie-banner .cookie-banner-inner{gap:16px}
+        #cookie-banner .cookie-banner-actions{grid-template-columns:1fr 1fr}
+        #cookie-banner .cookie-btn-settings{grid-column:1 / -1}
+      }
+      @media (max-width:640px){
+        #cookie-banner{padding:16px}
+        #cookie-banner .cookie-banner-inner{text-align:left;gap:12px}
+        #cookie-banner .cookie-banner-actions{grid-template-columns:1fr}
+        #cookie-banner .cookie-btn-settings{grid-column:auto}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   // Banner HTML
   const bannerHTML = `
-    <div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Cookie consent" aria-modal="false" style="display:none;">
+    <div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="${copy.bannerLabel}" aria-modal="false" style="display:none;">
       <div class="cookie-banner-inner">
-        <p class="cookie-banner-text">We use cookies (and other similar technologies) to collect data to improve your shopping experience.</p>
+        <p class="cookie-banner-text" id="cookie-banner-text">${copy.bannerText}</p>
         <div class="cookie-banner-actions">
-          <button type="button" class="cookie-btn cookie-btn-settings" id="cookie-btn-settings">Settings</button>
-          <button type="button" class="cookie-btn cookie-btn-reject" id="cookie-btn-reject">Reject all</button>
-          <button type="button" class="cookie-btn cookie-btn-accept" id="cookie-btn-accept">Accept All Cookies</button>
+          <button type="button" class="cookie-btn cookie-btn-settings" id="cookie-btn-settings" aria-label="${copy.settingsButton}">${copy.settingsButton}</button>
+          <button type="button" class="cookie-btn cookie-btn-essential" id="cookie-btn-reject" aria-label="${copy.essentialOnlyButton}">${copy.essentialOnlyButton}</button>
+          <button type="button" class="cookie-btn cookie-btn-accept" id="cookie-btn-accept" aria-label="${copy.acceptAllButton}">${copy.acceptAllButton}</button>
         </div>
       </div>
     </div>
@@ -357,17 +438,17 @@
 
   // Settings modal HTML
   const modalHTML = `
-    <div id="cookie-modal" class="cookie-modal" role="dialog" aria-label="Cookie preferences" aria-modal="true" style="display:none;">
+    <div id="cookie-modal" class="cookie-modal" role="dialog" aria-label="${copy.modalLabel}" aria-modal="true" style="display:none;">
       <div class="cookie-modal-backdrop" id="cookie-modal-backdrop"></div>
       <div class="cookie-modal-panel">
-        <h2 class="cookie-modal-title">Cookie Preferences</h2>
-        <p class="cookie-modal-desc">Manage your cookie preferences below. Essential cookies are always enabled as they are necessary for the website to function.</p>
+        <h2 class="cookie-modal-title" id="cookie-modal-title" tabindex="-1">${copy.modalTitle}</h2>
+        <p class="cookie-modal-desc">${copy.modalDesc}</p>
 
         <div class="cookie-category">
           <div class="cookie-category-header">
             <div>
-              <h3>Essential</h3>
-              <p class="cookie-category-desc">Required for the website to function. Cannot be disabled.</p>
+              <h3>${copy.essentialTitle}</h3>
+              <p class="cookie-category-desc">${copy.essentialDesc}</p>
             </div>
             <label class="cookie-toggle">
               <input type="checkbox" checked disabled>
@@ -379,8 +460,8 @@
         <div class="cookie-category">
           <div class="cookie-category-header">
             <div>
-              <h3>Analytics</h3>
-              <p class="cookie-category-desc">Help us understand how visitors interact with our website (Google Analytics 4).</p>
+              <h3>${copy.analyticsTitle}</h3>
+              <p class="cookie-category-desc">${copy.analyticsDesc}</p>
             </div>
             <label class="cookie-toggle">
               <input type="checkbox" id="cookie-toggle-analytics">
@@ -392,8 +473,8 @@
         <div class="cookie-category">
           <div class="cookie-category-header">
             <div>
-              <h3>Marketing</h3>
-              <p class="cookie-category-desc">Measure advertising performance, such as purchases from Google Ads. Not enabled by Analytics acceptance.</p>
+              <h3>${copy.marketingTitle}</h3>
+              <p class="cookie-category-desc">${copy.marketingDesc}</p>
             </div>
             <label class="cookie-toggle">
               <input type="checkbox" id="cookie-toggle-marketing">
@@ -403,8 +484,8 @@
         </div>
 
         <div class="cookie-modal-actions">
-          <button type="button" class="cookie-btn cookie-btn-settings" id="cookie-modal-save">Save Preferences</button>
-          <button type="button" class="cookie-btn cookie-btn-accept" id="cookie-modal-accept-all">Accept All</button>
+          <button type="button" class="cookie-btn cookie-btn-settings" id="cookie-modal-save">${copy.savePreferences}</button>
+          <button type="button" class="cookie-btn cookie-btn-accept" id="cookie-modal-accept-all">${copy.acceptAllShort}</button>
         </div>
       </div>
     </div>
@@ -412,6 +493,7 @@
 
   // Inject banner and modal into body
   function injectUI() {
+    injectStyles();
     const div = document.createElement('div');
     div.innerHTML = bannerHTML + modalHTML;
     document.body.appendChild(div);
@@ -439,8 +521,18 @@
   function showModal() {
     const modal = document.getElementById('cookie-modal');
     if (modal) {
+      lastActiveElement = document.activeElement;
       modal.style.display = 'flex';
-      setTimeout(() => modal.classList.add('active'), 10);
+      setTimeout(() => {
+        modal.classList.add('active');
+        const focusTarget =
+          document.getElementById('cookie-toggle-analytics') ||
+          document.getElementById('cookie-modal-save') ||
+          document.getElementById('cookie-modal-title');
+        if (focusTarget && typeof focusTarget.focus === 'function') {
+          focusTarget.focus();
+        }
+      }, 10);
       document.body.style.overflow = 'hidden';
 
       // Set toggles to current consent state
@@ -459,6 +551,10 @@
       setTimeout(() => {
         modal.style.display = 'none';
         document.body.style.overflow = '';
+        if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
+          lastActiveElement.focus();
+        }
+        lastActiveElement = null;
       }, 300);
     }
   }
