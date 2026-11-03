@@ -3339,14 +3339,29 @@ function extractClerkSessionToken(request, options = {}) {
   return { token, source, ambiguous: false, candidates: [token], candidatesComplete: true, candidateCookieNames: cookieNames };
 }
 __name(extractClerkSessionToken, "extractClerkSessionToken");
-function buildSessionCookieClears(request, names) {
+var DEFAULT_TRUSTED_SESSION_COOKIE_DOMAIN = "mildmate.com";
+function sanitizeCookieDomain(raw) {
+  const trimmed = String(raw || "").trim().toLowerCase().replace(/^\.+/, "");
+  if (!trimmed) return null;
+  if (!/^[a-z0-9.-]+$/.test(trimmed)) return null;
+  if (!/[a-z0-9]$/.test(trimmed)) return null;
+  return trimmed;
+}
+__name(sanitizeCookieDomain, "sanitizeCookieDomain");
+function resolveTrustedSessionCookieDomain(request, env) {
   const host = new URL(request.url).hostname.toLowerCase();
-  const apex = host.startsWith("www.") ? host.slice(4) : host;
+  const configured = sanitizeCookieDomain(String(env?.CLERK_SESSION_COOKIE_DOMAIN || ""));
+  const trusted = configured || DEFAULT_TRUSTED_SESSION_COOKIE_DOMAIN;
+  if (host === trusted || host.endsWith("." + trusted)) return trusted;
+  return null;
+}
+__name(resolveTrustedSessionCookieDomain, "resolveTrustedSessionCookieDomain");
+function buildSessionCookieClears(request, names, trustedDomain) {
   const past = "Expires=Thu, 01 Jan 1970 00:00:00 GMT";
   const out = [];
   for (const name of names) {
     out.push(`${name}=; Path=/; ${past}; Secure; HttpOnly`);
-    if (host !== apex) out.push(`${name}=; Domain=${apex}; Path=/; ${past}; Secure; HttpOnly`);
+    if (trustedDomain) out.push(`${name}=; Domain=${trustedDomain}; Path=/; ${past}; Secure; HttpOnly`);
   }
   return out;
 }
@@ -3378,7 +3393,8 @@ async function verifySessionCandidates(session, request, env) {
   if (validCount === 1 && validToken) {
     return { state: "valid", token: validToken, result: validResult };
   }
-  const clears = session.ambiguous || !session.candidatesComplete ? buildSessionCookieClears(request, session.candidateCookieNames) : [];
+  const trustedDomain = resolveTrustedSessionCookieDomain(request, env);
+  const clears = session.ambiguous || !session.candidatesComplete ? buildSessionCookieClears(request, session.candidateCookieNames, trustedDomain) : [];
   return { state: "invalid", clears };
 }
 __name(verifySessionCandidates, "verifySessionCandidates");
@@ -22725,7 +22741,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-521L1H/functionsRoutes-0.45438280714136214.mjs
+// ../.wrangler/tmp/pages-q7wBF3/functionsRoutes-0.9329427573674283.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

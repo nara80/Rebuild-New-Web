@@ -110,21 +110,43 @@ export type SessionVerification =
   | { state: "invalid"; clears: string[] }
   | { state: "valid"; token: string; result: any };
 
+const DEFAULT_TRUSTED_SESSION_COOKIE_DOMAIN = "mildmate.com";
+
+function sanitizeCookieDomain(raw: string): string | null {
+  const trimmed = String(raw || "").trim().toLowerCase().replace(/^\.+/, "");
+  if (!trimmed) return null;
+  if (!/^[a-z0-9.-]+$/.test(trimmed)) return null;
+  if (!/[a-z0-9]$/.test(trimmed)) return null;
+  return trimmed;
+}
+
+function resolveTrustedSessionCookieDomain(request: Request, env: any): string | null {
+  const host = new URL(request.url).hostname.toLowerCase();
+  const configured = sanitizeCookieDomain(String(env?.CLERK_SESSION_COOKIE_DOMAIN || ""));
+  const trusted = configured || DEFAULT_TRUSTED_SESSION_COOKIE_DOMAIN;
+  if (host === trusted || host.endsWith("." + trusted)) return trusted;
+  return null;
+}
+
 /**
  * Build Set-Cookie directives that clear the given cookie names in BOTH
- * storage scopes a browser may hold: host-scoped (no Domain attribute) and
- * domain-scoped (Domain = registered apex of the request host, e.g.
- * mildmate.com for www.mildmate.com). Without the domain-scoped variant a
- * host-scoped duplicate survives Clerk handshakes and regenerates conflicts.
+ * storage scopes a browser may hold:
+ * - host-scoped (no Domain attribute)
+ * - domain-scoped (Domain=<trusted domain>)
+ *
+ * The domain-scoped variant MUST use an explicit trusted domain, never a
+ * parent-domain guess from arbitrary request hostnames.
  */
-export function buildSessionCookieClears(request: Request, names: string[]): string[] {
-  const host = new URL(request.url).hostname.toLowerCase();
-  const apex = host.startsWith("www.") ? host.slice(4) : host;
+export function buildSessionCookieClears(
+  request: Request,
+  names: string[],
+  trustedDomain: string | null
+): string[] {
   const past = "Expires=Thu, 01 Jan 1970 00:00:00 GMT";
   const out: string[] = [];
   for (const name of names) {
     out.push(`${name}=; Path=/; ${past}; Secure; HttpOnly`);
-    if (host !== apex) out.push(`${name}=; Domain=${apex}; Path=/; ${past}; Secure; HttpOnly`);
+    if (trustedDomain) out.push(`${name}=; Domain=${trustedDomain}; Path=/; ${past}; Secure; HttpOnly`);
   }
   return out;
 }
@@ -180,8 +202,9 @@ export async function verifySessionCandidates(
   // Conflict (≥2 valid, or truncated cap) or zero-valid ambiguity: attach
   // clears so the caller's sign-in redirect removes every conflicting cookie
   // scope and Clerk's next handshake starts from a clean jar.
+  const trustedDomain = resolveTrustedSessionCookieDomain(request, env);
   const clears = session.ambiguous || !session.candidatesComplete
-    ? buildSessionCookieClears(request, session.candidateCookieNames)
+    ? buildSessionCookieClears(request, session.candidateCookieNames, trustedDomain)
     : [];
   return { state: "invalid", clears };
 }

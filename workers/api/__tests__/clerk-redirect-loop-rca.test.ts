@@ -206,6 +206,7 @@ beforeEach(async () => {
   env = {
     CLERK_ISSUER: PROD_ISSUER,
     CLERK_JWKS_URL: PROD_JWKS,
+    CLERK_SESSION_COOKIE_DOMAIN: "mildmate.com",
     ADMIN_EMAILS: OWNER_EMAIL,
   };
 
@@ -464,5 +465,101 @@ describe("RCA: Clerk redirect loop after hardening (20aacf5)", () => {
       .map((c) => c.split("=")[0].trim()));
     expect(clearedNames.has("__session")).toBe(true);
     expect(clearedNames.has("__session_whv9OBe3")).toBe(true);
+  });
+
+  // ── Nov-3 PM regression guard: explicit trusted cookie-domain clears ───────
+  // The fix requires Domain-scoped clearing on BOTH apex and www, using an
+  // explicit trusted domain (CLERK_SESSION_COOKIE_DOMAIN), not host-derived
+  // parent-domain guesses.
+
+  async function stageTwoValidSessions(jar: CookieJar) {
+    const secondKp = await generateKeyPair();
+    const secondJwk = await crypto.subtle.exportKey("jwk", secondKp.publicKey);
+    const firstJwk = await crypto.subtle.exportKey("jwk", prodKp.publicKey);
+    const fetchMock = vi.fn(async (url: string) => {
+      if (String(url) === PROD_JWKS) {
+        return {
+          ok: true,
+          json: async () => ({
+            keys: [
+              { kid: "prod-kid", kty: "RSA", alg: "RS256", n: (firstJwk as any).n, e: (firstJwk as any).e, use: "sig" },
+              { kid: "second-kid", kty: "RSA", alg: "RS256", n: (secondJwk as any).n, e: (secondJwk as any).e, use: "sig" },
+            ],
+          }),
+        } as unknown as Response;
+      }
+      return { ok: false, status: 404, json: async () => ({}) } as unknown as Response;
+    }) as unknown as typeof fetch;
+    vi.stubGlobal("fetch", fetchMock);
+    const secondToken = await signJwt(secondKp, "second-kid", { alg: "RS256", kid: "second-kid" }, {
+      sub: "user_owner_2", iss: PROD_ISSUER, exp: now + 300, email: OWNER_EMAIL, role: "admin",
+    });
+    // Owner evidence shape: plain __session + Clerk suffixed variant, both
+    // DOMAIN-scoped (that is why both are visible on accounts.mildmate.com —
+    // Domain cookies are sent to every subdomain, including accounts and apex).
+    // The stale cookie holds a DIFFERENT identity token than the handshake
+    // re-mints (makeHandshakeJwt mints validToken into __session_whv9OBe3) —
+    // a second live session / previous sign-in, per the owner's trace.
+    jar.entries.push({ scope: "domain", name: "__session", value: secondToken });
+    jar.entries.push({ scope: "domain", name: "__session_whv9OBe3", value: validToken });
+  }
+
+  it("T11 FIXED: apex callback resolves and the browser jar actually removes conflicting Domain cookies", async () => {
+    const jar = new CookieJar();
+    await stageTwoValidSessions(jar);
+    const { terminal, trace } = await simulate(
+      clerkReturn, env, jar, "https://mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F", 8,
+      (resp) => resp.status === 302 && (resp.headers.get("Location") || "").includes("/super-admin"),
+    );
+    expect(terminal, `MUST RESOLVE ON APEX: ${trace.join(" | ")}`).not.toBeNull();
+    expect(terminal!.headers.get("Location"), trace.join(" | ")).toContain("/super-admin");
+    // Browser-level effect check (not just header generation): the conflicting
+    // plain __session cookie is gone after the clears are applied.
+    expect(jar.values("__session").length, trace.join(" | ")).toBe(0);
+    expect(jar.values("__session_whv9OBe3").length, trace.join(" | ")).toBe(1);
+  });
+
+  it("T12 CONTROL: the identical state resolves on www (both clear scopes present)", async () => {
+    const jar = new CookieJar();
+    await stageTwoValidSessions(jar);
+    const { terminal, trace } = await simulate(
+      clerkReturn, env, jar, "https://www.mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F", 8,
+      (resp) => resp.status === 302 && (resp.headers.get("Location") || "").includes("/super-admin"),
+    );
+    expect(terminal, `MUST RESOLVE ON WWW: ${trace.join(" | ")}`).not.toBeNull();
+    expect(terminal!.headers.get("Location"), trace.join(" | ")).toContain("/super-admin");
+  });
+
+  it("T13 expired single Domain-scoped cookie on apex recovers through the handshake (no loop)", async () => {
+    // Expired token in the ONLY cookie (Domain-scoped): not ambiguous, so no
+    // clears — sign-in bounce → handshake re-mints the SAME name+scope →
+    // the domain entry is replaced → exactly one valid candidate → success.
+    const expiredToken = await signJwt(prodKp, "prod-kid", { alg: "RS256", kid: "prod-kid" }, {
+      sub: "user_owner", iss: PROD_ISSUER, exp: now - 10, email: OWNER_EMAIL, role: "admin",
+    });
+    const jar = new CookieJar();
+    jar.entries.push({ scope: "domain", name: "__session", value: expiredToken });
+    const { terminal, trace } = await simulate(
+      clerkReturn, env, jar, "https://mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F", 8,
+      (resp) => resp.status === 302 && (resp.headers.get("Location") || "").includes("/super-admin"),
+    );
+    expect(terminal, `MUST RECOVER: ${trace.join(" | ")}`).not.toBeNull();
+    expect(terminal!.headers.get("Location"), trace.join(" | ")).toContain("/super-admin");
+  });
+
+  it("T14 diagnostic criterion: only 302 sign-in responses bounce — a 200 portal render terminates the trace", async () => {
+    // Distinguishes the two owner-visible failures: a redirect LOOP is a chain
+    // of 302 sign-in redirects; a "blank sign-in screen" is a terminal 200
+    // from the portal (render failure — outside this worker's control).
+    // isSignInRedirect classifies only 302s as bounces, so a rendered portal
+    // page can never regenerate the loop in this model.
+    const jar = new CookieJar();
+    const { trace } = await simulate(
+      clerkReturn, env, jar, "https://mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F", 4,
+    );
+    expect(trace.length, trace.join(" | ")).toBeLessThanOrEqual(4);
+    for (const line of trace) {
+      expect(line.startsWith("200 "), `portal render cannot be a loop bounce: ${trace.join(" | ")}`).toBe(false);
+    }
   });
 });
