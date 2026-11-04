@@ -776,7 +776,7 @@
         if (filtered.length === 0) {
           noResults.style.display = 'block';
           grid.style.display = 'none';
-          loadMoreContainer.style.display = 'none';
+          if (loadMoreContainer) loadMoreContainer.style.display = 'none';
         } else {
           noResults.style.display = 'none';
           grid.style.display = '';
@@ -789,10 +789,12 @@
             }
           });
           
-          if (!showAll && filtered.length > effectiveLimit) {
-            loadMoreContainer.style.display = '';
-          } else {
-            loadMoreContainer.style.display = 'none';
+          if (loadMoreContainer) {
+            if (!showAll && filtered.length > effectiveLimit) {
+              loadMoreContainer.style.display = '';
+            } else {
+              loadMoreContainer.style.display = 'none';
+            }
           }
         }
 
@@ -858,22 +860,31 @@
       });
 
       // Load more listener
-      loadMoreBtn.addEventListener('click', function() {
-        visibleLimit += itemsPerPage;
-        updateGrid();
-      });
+      if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+          visibleLimit += itemsPerPage;
+          updateGrid();
+        });
+      }
 
       // Run initial load
+      window.addEventListener('mildmate:campaigns-updated', updateGrid);
       if (typeof MildMateCampaigns !== 'undefined' && typeof MildMateCampaigns.loadStorefrontCampaigns === 'function') {
-        MildMateCampaigns.loadStorefrontCampaigns(false).finally(updateGrid);
+        var initialCampaignLoad;
+        try {
+          initialCampaignLoad = MildMateCampaigns.loadStorefrontCampaigns(false);
+        } catch (e) {
+          initialCampaignLoad = null;
+        }
+        Promise.resolve(initialCampaignLoad).then(updateGrid).catch(updateGrid);
       } else {
         updateGrid();
       }
-      window.addEventListener('mildmate:campaigns-updated', updateGrid);
       saleRefreshTimer = window.setInterval(updateGrid, 60000);
     })();
   </script>
 </body>
 </html>
+
 
 
