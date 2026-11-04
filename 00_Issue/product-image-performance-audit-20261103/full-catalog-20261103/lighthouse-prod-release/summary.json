@@ -1,0 +1,177 @@
+{
+  "generated_at": "2026-11-03T23:58:11.262Z",
+  "base": "https://www.mildmate.com",
+  "runs": 2,
+  "results": [
+    {
+      "tag": "customizable-en",
+      "path": "/product/standard-fitted-sheet/",
+      "run": 1,
+      "score": 80,
+      "lcp_ms": 2040,
+      "cls": 0.023,
+      "total_bytes": 1219595,
+      "image_bytes": 446049
+    },
+    {
+      "tag": "customizable-en",
+      "path": "/product/standard-fitted-sheet/",
+      "run": 2,
+      "score": 93,
+      "lcp_ms": 1848,
+      "cls": 0.032,
+      "total_bytes": 1915019,
+      "image_bytes": 446092
+    },
+    {
+      "tag": "customizable-th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "run": 1,
+      "score": 81,
+      "lcp_ms": 1851,
+      "cls": 0.024,
+      "total_bytes": 2225047,
+      "image_bytes": 248334
+    },
+    {
+      "tag": "customizable-th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "run": 2,
+      "score": 72,
+      "lcp_ms": 2289,
+      "cls": 0.022,
+      "total_bytes": 2256032,
+      "image_bytes": 248331
+    },
+    {
+      "tag": "marine-en",
+      "path": "/product/marine-fitted-sheet/",
+      "run": 1,
+      "score": 94,
+      "lcp_ms": 2490,
+      "cls": 0.023,
+      "total_bytes": 710297,
+      "image_bytes": 473013
+    },
+    {
+      "tag": "marine-en",
+      "path": "/product/marine-fitted-sheet/",
+      "run": 2,
+      "score": 89,
+      "lcp_ms": 2502,
+      "cls": 0,
+      "total_bytes": 709203,
+      "image_bytes": 473004
+    },
+    {
+      "tag": "marine-th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "run": 1,
+      "score": 91,
+      "lcp_ms": 2489,
+      "cls": 0.027,
+      "total_bytes": 589813,
+      "image_bytes": 314859
+    },
+    {
+      "tag": "marine-th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "run": 2,
+      "score": 86,
+      "lcp_ms": 2709,
+      "cls": 0.03,
+      "total_bytes": 589882,
+      "image_bytes": 272783
+    },
+    {
+      "tag": "fixed-en",
+      "path": "/product/bedbridge-connector/",
+      "run": 1,
+      "score": 79,
+      "lcp_ms": 1890,
+      "cls": 0.03,
+      "total_bytes": 452966,
+      "image_bytes": 269571
+    },
+    {
+      "tag": "fixed-en",
+      "path": "/product/bedbridge-connector/",
+      "run": 2,
+      "score": 89,
+      "lcp_ms": 1947,
+      "cls": 0,
+      "total_bytes": 453491,
+      "image_bytes": 268271
+    },
+    {
+      "tag": "fixed-th",
+      "path": "/th/product/bedbridge-connector/",
+      "run": 1,
+      "score": 90,
+      "lcp_ms": 2041,
+      "cls": 0.03,
+      "total_bytes": 529560,
+      "image_bytes": 268358
+    },
+    {
+      "tag": "fixed-th",
+      "path": "/th/product/bedbridge-connector/",
+      "run": 2,
+      "score": 96,
+      "lcp_ms": 1803,
+      "cls": 0.013,
+      "total_bytes": 530011,
+      "image_bytes": 268318
+    }
+  ],
+  "summary": [
+    {
+      "tag": "customizable-en",
+      "path": "/product/standard-fitted-sheet/",
+      "avg_score": 87,
+      "avg_lcp_ms": 1944,
+      "avg_total_bytes": 1567307,
+      "avg_image_bytes": 446071
+    },
+    {
+      "tag": "customizable-th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "avg_score": 77,
+      "avg_lcp_ms": 2070,
+      "avg_total_bytes": 2240540,
+      "avg_image_bytes": 248333
+    },
+    {
+      "tag": "marine-en",
+      "path": "/product/marine-fitted-sheet/",
+      "avg_score": 92,
+      "avg_lcp_ms": 2496,
+      "avg_total_bytes": 709750,
+      "avg_image_bytes": 473009
+    },
+    {
+      "tag": "marine-th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "avg_score": 89,
+      "avg_lcp_ms": 2599,
+      "avg_total_bytes": 589848,
+      "avg_image_bytes": 293821
+    },
+    {
+      "tag": "fixed-en",
+      "path": "/product/bedbridge-connector/",
+      "avg_score": 84,
+      "avg_lcp_ms": 1919,
+      "avg_total_bytes": 453229,
+      "avg_image_bytes": 268921
+    },
+    {
+      "tag": "fixed-th",
+      "path": "/th/product/bedbridge-connector/",
+      "avg_score": 93,
+      "avg_lcp_ms": 1922,
+      "avg_total_bytes": 529786,
+      "avg_image_bytes": 268338
+    }
+  ]
+}

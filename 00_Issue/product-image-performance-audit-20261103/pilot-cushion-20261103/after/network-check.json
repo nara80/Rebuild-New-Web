@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-11-03T10:09:41.869Z",
+  "base": "https://pilot-cushion-image-variant.mildmate-new.pages.dev",
+  "results": [
+    {
+      "pagePath": "/product/custom-waterproof-cushion-protector/",
+      "status": 200,
+      "imageRequestCount": 39,
+      "imageBytes": 520130,
+      "imageKB": 507.9,
+      "lcpMs": 0,
+      "thumbCount": 18,
+      "slideCount": 18,
+      "fullResRequestCount": 7,
+      "thumbRequestCount": 14,
+      "slideVariantRequestCount": 3,
+      "thumbUsesFullRes": false,
+      "sampleFullResRequests": [
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1780995572013-t3oikm.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781056665479-p0t3vz.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781064676801-z0akmm.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781060990691-1dmmg4.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1780983943377-61ufj7.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781061208674-b9xh1s.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781062363234-rndi7k.jpg"
+      ],
+      "sampleThumbRequests": [
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362335343-7urweb.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362342355-3744ir.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362344591-1aos78.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362337271-1jqend.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362333244-ibsso2.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362348005-7vfha2.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362379429-otxcj4.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362340669-6we2ww.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362369851-5fvabh.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362374789-k4ieai.webp"
+      ],
+      "sampleSlideVariantRequests": [
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/slides/1788362379429-otxcj4-640.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/slides/1788362333244-ibsso2-640.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/slides/1788362335343-7urweb-640.webp"
+      ],
+      "consoleErrorCount": 7
+    },
+    {
+      "pagePath": "/th/product/custom-waterproof-cushion-protector/",
+      "status": 200,
+      "imageRequestCount": 39,
+      "imageBytes": 519692,
+      "imageKB": 507.5,
+      "lcpMs": 0,
+      "thumbCount": 18,
+      "slideCount": 18,
+      "fullResRequestCount": 7,
+      "thumbRequestCount": 14,
+      "slideVariantRequestCount": 3,
+      "thumbUsesFullRes": false,
+      "sampleFullResRequests": [
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781060990691-1dmmg4.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781061208674-b9xh1s.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1780983943377-61ufj7.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1780995572013-t3oikm.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781056665479-p0t3vz.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781062363234-rndi7k.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781064676801-z0akmm.jpg"
+      ],
+      "sampleThumbRequests": [
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362333244-ibsso2.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362337271-1jqend.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362335343-7urweb.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362379429-otxcj4.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362340669-6we2ww.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362344591-1aos78.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362342355-3744ir.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362348005-7vfha2.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788509248615-s1knu8.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/thumbs/1788362376680-h3jlqm.webp"
+      ],
+      "sampleSlideVariantRequests": [
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/slides/1788362335343-7urweb-640.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/slides/1788362333244-ibsso2-640.webp",
+        "https://pilot-cushion-image-variant.mildmate-new.pages.dev/images/products/custom-waterproof-cushion-protector/slides/1788362379429-otxcj4-640.webp"
+      ],
+      "consoleErrorCount": 7
+    }
+  ]
+}

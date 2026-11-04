@@ -2,6 +2,7 @@
 // Reads product-content.json + products.json, applies templates, writes product pages
 const fs = require('fs');
 const path = require('path');
+const { ensureCatalogImageVariants } = require('./image-variant-pipeline.cjs');
 
 const ROOT = path.join(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data');
@@ -79,6 +80,34 @@ function normalizeMojibake(s) {
     .replace(/\u00c3\u2014/g, '×')
     .replace(/\u00c2\u00b7/g, '·')
     .replace(/\ufffd/g, '×');
+}
+
+function buildVariantKey(imageUrl) {
+  if (!imageUrl || typeof imageUrl !== 'string') return '';
+  try {
+    const parsed = new URL(imageUrl, 'https://www.mildmate.com');
+    const pathname = (parsed.pathname || '')
+      .replace(/\/+/g, '/')
+      .replace(/\/$/, '')
+      .replace(/\.[a-z0-9]+$/i, '')
+      .replace(/^\/+/, '');
+    if (!pathname) return '';
+    return pathname.replace(/[^a-z0-9/_-]+/gi, '_').replace(/\//g, '__').toLowerCase();
+  } catch (_err) {
+    return '';
+  }
+}
+
+let VARIANT_VERSION = '';
+
+function withVariantVersion(url) {
+  return VARIANT_VERSION ? url + '?v=' + VARIANT_VERSION : url;
+}
+
+function buildSlideVariantPath(imageUrl) {
+  const key = buildVariantKey(imageUrl);
+  if (!key) return imageUrl;
+  return withVariantVersion('/images/products/variants/slides/' + key + '-960.webp');
 }
 
 const dimLabels = {
@@ -301,6 +330,8 @@ function buildCustomizable(slug, p, prod) {
     '{{BREADCRUMB_CATEGORY_LABEL}}': p.breadcrumbCategoryLabel || 'Products',
     '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
     '{{IMAGE_PATH}}': prod.image || '/images/products/mattress-protector-standard/main.jpg',
+    '{{IMAGE_PATH_VARIANT}}': buildSlideVariantPath(prod.image || '/images/products/mattress-protector-standard/main.jpg'),
+    '{{VARIANT_VERSION}}': VARIANT_VERSION,
     '{{PRODUCT_SLUG}}': slug,
     '{{PRODUCT_NAME}}': p.breadcrumbName || '',
     '{{SHORT_TITLE}}': shortTitle ? '  -  ' + shortTitle : '',
@@ -312,6 +343,7 @@ function buildCustomizable(slug, p, prod) {
     '{{SIZE_PLACEHOLDER}}': sizePlaceholders[pt] || 'Choose size',
     '{{NEEDS_DEPTH}}': String(p.needsDepth === true),
     '{{DIM_LABEL}}': dimLabels[pt] || 'product',
+    '{{DIM_DIAGRAM_FALLBACK}}': '/images/products/common/measure-mattress-diagram-01.png',
     '{{DIM_DIAGRAM_ALT}}': 'Mattress dimension diagram: Width (W), Length (L), Depth (D)',
     '{{DIM_DIAGRAM_CAPTION}}': 'Measure your mattress at its widest, longest, and deepest points',
     '{{MAX_WIDTH}}': String(dims.width),
@@ -356,22 +388,26 @@ function buildCustomizable(slug, p, prod) {
 
   // Dim diagram image: per product type
   if (slug === 'marine-fitted-sheet') {
-    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-VBerth-diagram.png';
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-VBerth-diagram.webp';
+    replacements['{{DIM_DIAGRAM_FALLBACK}}'] = '/images/products/common/measure-VBerth-diagram.png';
     replacements['{{DIM_DIAGRAM_ALT}}'] = 'Marine mattress diagram: Head Width (HW), Length (L), Depth (D), and Foot Width (FW)';
     replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your boat mattress shape and enter HW, L, D, and FW where shown';
     replacements['{{DIM_INPUTS_CLASS}}'] = ' vberth';
   } else if (pt === 'duvet') {
-    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Duvet.png';
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Duvet.webp';
+    replacements['{{DIM_DIAGRAM_FALLBACK}}'] = '/images/products/common/Duvet.png';
     replacements['{{DIM_DIAGRAM_ALT}}'] = 'Duvet or blanket dimensions diagram: Width (W) and Length (L)';
     replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your duvet or blanket at its widest and longest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   } else if (pt === 'pillowcase' || pt === 'pillow-protector') {
-    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Pillowcase.png';
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Pillowcase.webp';
+    replacements['{{DIM_DIAGRAM_FALLBACK}}'] = '/images/products/common/Pillowcase.png';
     replacements['{{DIM_DIAGRAM_ALT}}'] = 'Pillow dimensions diagram: Width (W) and Length (L)';
     replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your pillow at its widest and longest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   } else {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram-01.webp';
+    replacements['{{DIM_DIAGRAM_FALLBACK}}'] = '/images/products/common/measure-mattress-diagram-01.png';
     replacements['{{DIM_DIAGRAM_ALT}}'] = 'Mattress dimension diagram: Width (W), Length (L), Depth (D)';
     replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your mattress at its widest, longest, and deepest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
@@ -382,6 +418,7 @@ function buildCustomizable(slug, p, prod) {
     replacements['{{SIZE_LABEL}}'] = 'Select Cushion Size';
     replacements['{{DIM_LABEL}}'] = 'cushion';
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-cushion-diagram-01.webp';
+    replacements['{{DIM_DIAGRAM_FALLBACK}}'] = '/images/products/common/measure-cushion-diagram-01.png';
     replacements['{{DIM_DIAGRAM_ALT}}'] = 'Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)';
     replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your cushion at its longest, widest, and thickest points';
     replacements['{{DEPTH_FIELD_HTML}}'] = replacements['{{DEPTH_FIELD_HTML}}'].replace('Depth (D)', 'Thickness (T)');
@@ -411,6 +448,8 @@ function buildFixed(slug, p, prod) {
     '{{BREADCRUMB_CATEGORY_LABEL}}': p.breadcrumbCategoryLabel || 'Products',
     '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
     '{{IMAGE_PATH}}': prod.image || '/images/products/mattress-protector-standard/main.jpg',
+    '{{IMAGE_PATH_VARIANT}}': buildSlideVariantPath(prod.image || '/images/products/mattress-protector-standard/main.jpg'),
+    '{{VARIANT_VERSION}}': VARIANT_VERSION,
     '{{PRODUCT_NAME}}': p.breadcrumbName || '',
     '{{SHORT_TITLE_SUFFIX}}': '',
     '{{TAGLINE}}': p.tagline || '',
@@ -464,6 +503,8 @@ function buildMarine(slug, p, prod) {
     '{{BREADCRUMB_CATEGORY_LABEL}}': p.breadcrumbCategoryLabel || 'Products',
     '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
     '{{IMAGE_PATH}}': prod.image || '/images/products/mattress-protector-standard/main.jpg',
+    '{{IMAGE_PATH_VARIANT}}': buildSlideVariantPath(prod.image || '/images/products/mattress-protector-standard/main.jpg'),
+    '{{VARIANT_VERSION}}': VARIANT_VERSION,
     '{{PRODUCT_NAME}}': p.breadcrumbName || '',
     '{{SHORT_TITLE}}': shortTitle,
     '{{TAGLINE}}': p.tagline || '',
@@ -952,6 +993,25 @@ function buildThaiFor(enHtml, slug, prod) {
 
 // ===== MAIN BUILD =====
 console.log('Building product pages...');
+try {
+  const variantManifest = ensureCatalogImageVariants({
+    rootDir: ROOT,
+    auditCsvPath: path.join(ROOT, '00_Issue', 'product-image-performance-audit-20261103', 'IMAGE_ASSET_INVENTORY.csv'),
+    manifestPath: path.join(ROOT, 'public', 'images', 'products', 'variants', 'manifest.json'),
+    quiet: false
+  });
+  VARIANT_VERSION = (variantManifest && variantManifest.variant_version) || '';
+} catch (err) {
+  console.warn('[build-products] image variant pipeline skipped:', err && err.message ? err.message : err);
+  try {
+    const existingManifest = readJsonFile(path.join(ROOT, 'public', 'images', 'products', 'variants', 'manifest.json'));
+    VARIANT_VERSION = (existingManifest && existingManifest.variant_version) || '';
+  } catch (_err) {}
+}
+if (!VARIANT_VERSION) {
+  console.warn('[build-products] no variant version available; variant URLs will be unversioned.');
+}
+console.log('[build-products] variant version token:', VARIANT_VERSION || '(none)');
 let builtCount = 0;
 let builtThCount = 0;
 

@@ -1,0 +1,82 @@
+{
+  "generatedAt": "2026-11-03T10:00:45.780Z",
+  "base": "https://www.mildmate.com",
+  "results": [
+    {
+      "pagePath": "/product/custom-waterproof-cushion-protector/",
+      "status": 200,
+      "imageRequestCount": 44,
+      "imageBytes": 602675,
+      "imageKB": 588.5,
+      "lcpMs": 0,
+      "thumbCount": 18,
+      "slideCount": 18,
+      "fullResRequestCount": 8,
+      "thumbRequestCount": 14,
+      "slideVariantRequestCount": 0,
+      "thumbUsesFullRes": false,
+      "sampleFullResRequests": [
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1788362333244-ibsso2.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1788362335343-7urweb.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1788362379429-otxcj4.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781060709470-cm3u3g.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781064676801-z0akmm.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1780983943377-61ufj7.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781062272554-w0aywq.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781062073559-xxin2u.jpg"
+      ],
+      "sampleThumbRequests": [
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362379429-otxcj4.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362348005-7vfha2.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362344591-1aos78.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362333244-ibsso2.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362342355-3744ir.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362335343-7urweb.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362340669-6we2ww.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362337271-1jqend.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362376680-h3jlqm.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362374789-k4ieai.webp"
+      ],
+      "sampleSlideVariantRequests": [],
+      "consoleErrorCount": 20
+    },
+    {
+      "pagePath": "/th/product/custom-waterproof-cushion-protector/",
+      "status": 200,
+      "imageRequestCount": 44,
+      "imageBytes": 600623,
+      "imageKB": 586.5,
+      "lcpMs": 0,
+      "thumbCount": 18,
+      "slideCount": 18,
+      "fullResRequestCount": 8,
+      "thumbRequestCount": 14,
+      "slideVariantRequestCount": 0,
+      "thumbUsesFullRes": false,
+      "sampleFullResRequests": [
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1788362333244-ibsso2.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1788362335343-7urweb.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1788362379429-otxcj4.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1780983943377-61ufj7.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781060709470-cm3u3g.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781062073559-xxin2u.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781064676801-z0akmm.jpg",
+        "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781062272554-w0aywq.jpg"
+      ],
+      "sampleThumbRequests": [
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362342355-3744ir.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362335343-7urweb.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362379429-otxcj4.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362333244-ibsso2.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362340669-6we2ww.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362348005-7vfha2.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362344591-1aos78.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362337271-1jqend.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788362359570-9di3y4.webp",
+        "https://www.mildmate.com/images/products/custom-waterproof-cushion-protector/thumbs/1788509248615-s1knu8.webp"
+      ],
+      "sampleSlideVariantRequests": [],
+      "consoleErrorCount": 19
+    }
+  ]
+}

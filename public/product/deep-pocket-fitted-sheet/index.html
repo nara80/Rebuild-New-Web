@@ -363,7 +363,7 @@
         <div class="carousel-wrap" id="carousel-wrap">
           <div class="carousel-track" id="carousel-track">
             <div class="carousel-slide">
-              <img src="https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781148534900-lsysxk.jpg" alt="Deep Pocket Fitted Sheet" id="gallery-main-img" width="800" height="800" loading="eager" fetchpriority="high" decoding="async">
+              <img src="/images/products/variants/slides/products__uploads__1781148534900-lsysxk-960.webp?v=e8f03f9bb8" data-fallback="https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781148534900-lsysxk.jpg" onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.removeAttribute('srcset');this.removeAttribute('sizes');this.src=this.dataset.fallback;}" alt="Deep Pocket Fitted Sheet" id="gallery-main-img" width="800" height="800" loading="eager" fetchpriority="high" decoding="async">
             </div>
           </div>
           <button class="carousel-prev" id="carousel-prev" aria-label="Previous image">
@@ -424,7 +424,7 @@
             </div>
             <div class="unit-warning" id="unit-warning-note">Default: <strong>cm</strong>. Using inches? Switch to <strong>inch</strong> first.</div>
             <div class="dim-diagram">
-              <img src="/images/products/common/measure-mattress-diagram-01.webp" alt="Mattress dimension diagram: Width (W), Length (L), Depth (D)" loading="lazy" decoding="async">
+              <img src="/images/products/common/measure-mattress-diagram-01.webp" data-fallback="/images/products/common/measure-mattress-diagram-01.png" onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}" alt="Mattress dimension diagram: Width (W), Length (L), Depth (D)" loading="lazy" decoding="async">
               <p class="dim-diagram-caption">Measure your mattress at its widest, longest, and deepest points</p>
             </div>
             <div class="dim-inputs">
@@ -555,9 +555,34 @@
     (function () {
       var lazyImgs = Array.prototype.slice.call(document.querySelectorAll('img[data-mm-lazy-src]'));
       if (!lazyImgs.length) return;
+      var VARIANT_BASE = '/images/products/variants';
+      var VARIANT_VERSION = 'e8f03f9bb8';
+      function vv(u) { return VARIANT_VERSION ? u + '?v=' + VARIANT_VERSION : u; }
+      function buildVariantKey(imageUrl) {
+        if (!imageUrl || typeof imageUrl !== 'string') return '';
+        try {
+          var parsed = new URL(imageUrl, window.location.origin);
+          var pathname = (parsed.pathname || '').replace(/\/+/g, '/').replace(/\/$/, '');
+          if (!pathname) return '';
+          pathname = pathname.replace(/\.[a-z0-9]+$/i, '');
+          if (!pathname) return '';
+          return pathname.replace(/^\/+/, '').replace(/[^a-z0-9/_-]+/gi, '_').replace(/\//g, '__').toLowerCase();
+        } catch (e) {
+          return '';
+        }
+      }
       function reveal(img) {
         if (!img || !img.getAttribute('data-mm-lazy-src')) return;
-        img.src = img.getAttribute('data-mm-lazy-src');
+        var source = img.getAttribute('data-mm-lazy-src');
+        var key = buildVariantKey(source);
+        var candidate = key ? vv(VARIANT_BASE + '/related/' + key + '-480.webp') : source;
+        if (candidate !== source) {
+          img.addEventListener('error', function () {
+            if (img.getAttribute('src') === source) return;
+            img.setAttribute('src', source);
+          }, { once: true });
+        }
+        img.setAttribute('src', candidate);
         img.removeAttribute('data-mm-lazy-src');
       }
       if (!('IntersectionObserver' in window)) {
@@ -725,7 +750,10 @@
   var currentSlide = 0;
   var gallery = [];
   var TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
-  var THUMB_WEBP_SLUGS = { 'custom-waterproof-cushion-protector': true };
+  var VARIANT_BASE = '/images/products/variants';
+  var VARIANT_VERSION = 'e8f03f9bb8';
+
+  function vv(u) { return VARIANT_VERSION ? u + '?v=' + VARIANT_VERSION : u; }
 
   function normalizeIdx(idx) {
     if (!gallery.length) return 0;
@@ -734,31 +762,60 @@
     return idx;
   }
 
-  function buildThumbCandidate(imageUrl) {
-    if (!imageUrl || !THUMB_WEBP_SLUGS[slug]) return imageUrl;
+  function buildVariantKey(imageUrl) {
+    if (!imageUrl || typeof imageUrl !== 'string') return '';
     try {
       var parsed = new URL(imageUrl, window.location.origin);
-      var fileName = (parsed.pathname.split('/').pop() || '').trim();
-      if (!fileName) return imageUrl;
-      var base = fileName.replace(/\.[a-z0-9]+$/i, '');
-      if (!base) return imageUrl;
-      return '/images/products/' + slug + '/thumbs/' + base + '.webp';
+      var pathname = (parsed.pathname || '').replace(/\/+/g, '/').replace(/\/$/, '');
+      if (!pathname) return '';
+      pathname = pathname.replace(/\.[a-z0-9]+$/i, '');
+      if (!pathname) return '';
+      return pathname.replace(/^\/+/, '').replace(/[^a-z0-9/_-]+/gi, '_').replace(/\//g, '__').toLowerCase();
     } catch (e) {
-      return imageUrl;
+      return '';
     }
   }
 
-  function revealImage(img) {
+  function buildVariantSet(imageUrl) {
+    var key = buildVariantKey(imageUrl);
+    if (!key) return null;
+    return {
+      thumb: vv(VARIANT_BASE + '/thumbs/' + key + '.webp'),
+      slide640: vv(VARIANT_BASE + '/slides/' + key + '-640.webp'),
+      slide960: vv(VARIANT_BASE + '/slides/' + key + '-960.webp')
+    };
+  }
+
+  function bindFallback(img) {
     if (!img) return;
-    var lazySrc = img.getAttribute('data-src');
-    if (!lazySrc) return;
     var fallbackSrc = img.getAttribute('data-fallback');
     if (fallbackSrc && !img.__mmFallbackBound) {
       img.__mmFallbackBound = true;
       img.addEventListener('error', function () {
         if (img.getAttribute('src') === fallbackSrc) return;
+        img.removeAttribute('srcset');
+        img.removeAttribute('sizes');
+        img.removeAttribute('data-srcset');
+        img.removeAttribute('data-sizes');
         img.setAttribute('src', fallbackSrc);
       }, { once: true });
+    }
+  }
+
+  function revealImage(img) {
+    if (!img) return;
+    bindFallback(img);
+    var lazySrc = img.getAttribute('data-src');
+    if (!lazySrc) return;
+    var lazySrcset = img.getAttribute('data-srcset');
+    if (lazySrcset) {
+      img.setAttribute('srcset', lazySrcset);
+      img.removeAttribute('data-srcset');
+    }
+    var lazySizes = img.getAttribute('data-sizes');
+    if (lazySizes) {
+      img.setAttribute('sizes', lazySizes);
+      img.removeAttribute('data-sizes');
     }
     img.setAttribute('src', lazySrc);
     img.removeAttribute('data-src');
@@ -823,10 +880,16 @@
           '<img class="yt-thumb" src="' + thumb + '" alt="Product video" width="480" height="360" loading="lazy" decoding="async">' +
           '<div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
       }
+      var variantSet = buildVariantSet(item);
+      var slideSrc = variantSet ? variantSet.slide960 : item;
+      var fallbackAttr = variantSet ? (' data-fallback="' + item + '"') : '';
+      var eagerSrcset = variantSet ? (' srcset="' + variantSet.slide640 + ' 640w, ' + variantSet.slide960 + ' 960w" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 800px"') : '';
+      var lazySrcset = variantSet ? (' data-srcset="' + variantSet.slide640 + ' 640w, ' + variantSet.slide960 + ' 960w" data-sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 800px"') : '';
       var isFirstSlide = i === 0;
-      var slideSrc = isFirstSlide ? ('src="' + item + '"') : ('src="' + TRANSPARENT_PIXEL + '" data-src="' + item + '"');
-      return '<div class="carousel-slide"><img ' + slideSrc + ' alt="Product image" width="800" height="800" loading="' + (isFirstSlide ? 'eager' : 'lazy') + '" decoding="async"' + (isFirstSlide ? ' fetchpriority="high"' : ' fetchpriority="low"') + '></div>';
+      var srcAttr = isFirstSlide ? ('src="' + slideSrc + '"' + eagerSrcset + fallbackAttr) : ('src="' + TRANSPARENT_PIXEL + '" data-src="' + slideSrc + '"' + lazySrcset + fallbackAttr);
+      return '<div class="carousel-slide"><img ' + srcAttr + ' alt="Product image" width="800" height="800" loading="' + (isFirstSlide ? 'eager' : 'lazy') + '" decoding="async"' + (isFirstSlide ? ' fetchpriority="high"' : ' fetchpriority="low"') + '></div>';
     }).join('');
+    track.querySelectorAll('img[data-fallback]').forEach(bindFallback);
 
     // Build dots
     dotsWrap.innerHTML = gallery.map(function(item, i){
@@ -839,11 +902,13 @@
           var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/default.jpg';
           return '<button class="carousel-thumb thumb-video' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Video thumbnail"><img src="' + thumb + '" alt="Video thumb" loading="lazy" decoding="async"></button>';
         }
-        var thumbSrc = buildThumbCandidate(item);
+        var variantSet = buildVariantSet(item);
+        var thumbSrc = variantSet ? variantSet.thumb : item;
         var thumbImageSrc = 'src="' + TRANSPARENT_PIXEL + '" data-src="' + thumbSrc + '"';
         var fallbackAttr = thumbSrc !== item ? (' data-fallback="' + item + '"') : '';
         return '<button class="carousel-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Thumbnail ' + (i+1) + '"><img ' + thumbImageSrc + fallbackAttr + ' alt="Product thumbnail ' + (i+1) + '" width="105" height="105" loading="lazy" decoding="async" fetchpriority="low"></button>';
       }).join('');
+      thumbsWrap.querySelectorAll('img[data-fallback]').forEach(bindFallback);
     }
 
     // Click handler on video slides: swap thumbnail for iframe

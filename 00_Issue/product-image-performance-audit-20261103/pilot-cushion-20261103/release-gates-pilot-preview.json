@@ -1,0 +1,226 @@
+{
+  "generatedAt": "2026-11-03T10:10:32.855Z",
+  "base": "https://pilot-cushion-image-variant.mildmate-new.pages.dev",
+  "expectProdAnalytics": false,
+  "pass": true,
+  "failedGates": [],
+  "results": [
+    {
+      "gate": "consent_basic_mode_v2",
+      "pagePath": "/product/standard-fitted-sheet/",
+      "status": 200,
+      "consentClicked": true,
+      "before": {
+        "analyticsLoaded": false,
+        "dataLayerLen": 1
+      },
+      "after": {
+        "analyticsLoaded": false,
+        "dataLayerLen": 2,
+        "gtmStartEvents": 0
+      },
+      "gtmRequestsBeforeConsent": 0,
+      "gtmRequestsAfterConsent": 0,
+      "consoleErrorCount": 8,
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "expectProdAnalytics": false,
+      "pass": true
+    },
+    {
+      "gate": "consent_basic_mode_v2",
+      "pagePath": "/th/product/standard-fitted-sheet/",
+      "status": 200,
+      "consentClicked": true,
+      "before": {
+        "analyticsLoaded": false,
+        "dataLayerLen": 1
+      },
+      "after": {
+        "analyticsLoaded": false,
+        "dataLayerLen": 2,
+        "gtmStartEvents": 0
+      },
+      "gtmRequestsBeforeConsent": 0,
+      "gtmRequestsAfterConsent": 0,
+      "consoleErrorCount": 7,
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "expectProdAnalytics": false,
+      "pass": true
+    },
+    {
+      "gate": "cushion_quote_gallery_webp",
+      "pagePath": "/product/custom-waterproof-cushion-protector/",
+      "status": 200,
+      "customPrice": "$27",
+      "dimensionsFilled": {
+        "dimW": true,
+        "dimL": true,
+        "dimD": true
+      },
+      "quoteOverlayOpen": true,
+      "events": [
+        "view_item",
+        "mildmate_consent_update",
+        "quote_request",
+        "generate_lead"
+      ],
+      "quoteEventsPresent": true,
+      "viewItemPresent": true,
+      "imgAudit": {
+        "thumbCount": 18,
+        "thumbWebpDataSrcCount": 10,
+        "thumbFallbackCount": 18,
+        "thumbRequests": 8,
+        "mainImageSrc": "",
+        "hasMainImage": false
+      },
+      "consoleErrorCount": 16,
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN"
+      ],
+      "pass": true
+    },
+    {
+      "gate": "cushion_quote_gallery_webp",
+      "pagePath": "/th/product/custom-waterproof-cushion-protector/",
+      "status": 200,
+      "customPrice": "฿800",
+      "dimensionsFilled": {
+        "dimW": true,
+        "dimL": true,
+        "dimD": true
+      },
+      "quoteOverlayOpen": true,
+      "events": [
+        "view_item",
+        "mildmate_consent_update",
+        "quote_request",
+        "generate_lead"
+      ],
+      "quoteEventsPresent": true,
+      "viewItemPresent": true,
+      "imgAudit": {
+        "thumbCount": 18,
+        "thumbWebpDataSrcCount": 10,
+        "thumbFallbackCount": 18,
+        "thumbRequests": 8,
+        "mainImageSrc": "",
+        "hasMainImage": false
+      },
+      "consoleErrorCount": 8,
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "pass": true
+    },
+    {
+      "gate": "standard_add_to_cart_checkout",
+      "pagePath": "/product/standard-fitted-sheet/",
+      "status": 200,
+      "sizeChosen": true,
+      "addClicked": true,
+      "events": [
+        "view_item",
+        "mildmate_consent_update",
+        "add_to_cart"
+      ],
+      "viewItemPresent": true,
+      "addToCartPresent": true,
+      "cartInfo": {
+        "itemCount": 1
+      },
+      "checkoutSmoke": {
+        "hasCheckoutShell": true,
+        "hasProceedButton": true
+      },
+      "consoleErrorCount": 8,
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "pass": true
+    },
+    {
+      "gate": "standard_add_to_cart_checkout",
+      "pagePath": "/th/product/standard-fitted-sheet/",
+      "status": 200,
+      "sizeChosen": true,
+      "addClicked": true,
+      "events": [
+        "view_item",
+        "mildmate_consent_update",
+        "add_to_cart"
+      ],
+      "viewItemPresent": true,
+      "addToCartPresent": true,
+      "cartInfo": {
+        "itemCount": 1
+      },
+      "checkoutSmoke": {
+        "hasCheckoutShell": true,
+        "hasProceedButton": true
+      },
+      "consoleErrorCount": 7,
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "pass": true
+    },
+    {
+      "gate": "purchase_tracking_logic_mocked",
+      "status": 200,
+      "events": [
+        "purchase"
+      ],
+      "purchasePresent": true,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "pass": true
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-11-03T13:08:45.043Z",
+  "manifest_source_count": 510,
+  "manifest_variant_version": "80a4343588",
+  "audit": {
+    "audit_asset_urls": 506,
+    "audit_image_urls": 506,
+    "audit_non_image_urls": 0,
+    "audit_non_image_examples": [],
+    "audit_images_missing_from_manifest": 0,
+    "audit_missing_examples": []
+  },
+  "prod_api": {
+    "slugs_checked": 31,
+    "slugs_with_missing_refs": 0,
+    "missing": [],
+    "co_sleeping_top_sheet": {
+      "ref_count": 17,
+      "missing_count": 0,
+      "missing": []
+    },
+    "deep_pocket_fitted_sheet": {
+      "ref_count": 18,
+      "missing_count": 0,
+      "missing": []
+    }
+  },
+  "variant_files": {
+    "incomplete_count": 0,
+    "incomplete": [],
+    "stale_unreferenced_count": 460,
+    "stale_examples": [
+      "thumbs/images__products__marine-top-sheet__how-to-order-1.webp",
+      "thumbs/images__products__marine-top-sheet__how-to-order-2.webp",
+      "thumbs/products__uploads__1781144387341-dmoeg4.webp",
+      "thumbs/products__uploads__1781144387607-3qkqna.webp",
+      "thumbs/products__uploads__1781144387845-91uf01.webp",
+      "thumbs/products__uploads__1781148171255-oxis0f.webp",
+      "thumbs/products__uploads__1781148173896-js6vsz.webp",
+      "thumbs/products__uploads__1781148174113-p90s8a.webp",
+      "thumbs/products__uploads__1781148174332-ibuqd0.webp",
+      "thumbs/products__uploads__1781148174615-crh3q3.webp"
+    ],
+    "pruned": 460
+  }
+}

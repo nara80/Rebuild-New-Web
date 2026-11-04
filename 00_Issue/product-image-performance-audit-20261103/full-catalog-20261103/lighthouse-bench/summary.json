@@ -1,0 +1,917 @@
+{
+  "generated_at": "2026-11-03T12:46:36.642Z",
+  "preview_base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+  "runs_per_page": 3,
+  "pages": [
+    {
+      "family": "customizable",
+      "lang": "en",
+      "path": "/product/standard-fitted-sheet/"
+    },
+    {
+      "family": "customizable",
+      "lang": "th",
+      "path": "/th/product/standard-fitted-sheet/"
+    },
+    {
+      "family": "marine",
+      "lang": "en",
+      "path": "/product/marine-fitted-sheet/"
+    },
+    {
+      "family": "marine",
+      "lang": "th",
+      "path": "/th/product/marine-fitted-sheet/"
+    },
+    {
+      "family": "fixed",
+      "lang": "en",
+      "path": "/product/bedbridge-connector/"
+    },
+    {
+      "family": "fixed",
+      "lang": "th",
+      "path": "/th/product/bedbridge-connector/"
+    }
+  ],
+  "runs": [
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "customizable",
+      "lang": "en",
+      "path": "/product/standard-fitted-sheet/",
+      "run": 1,
+      "url": "https://www.mildmate.com/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-customizable-en-run1.json",
+      "metrics": {
+        "score": 97,
+        "lcp_ms": 1657,
+        "cls": 0.026,
+        "total_bytes": 3079542,
+        "request_count": 63,
+        "image_bytes": 1134147,
+        "image_request_count": 27
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "customizable",
+      "lang": "en",
+      "path": "/product/standard-fitted-sheet/",
+      "run": 2,
+      "url": "https://www.mildmate.com/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-customizable-en-run2.json",
+      "metrics": {
+        "score": 79,
+        "lcp_ms": 2084,
+        "cls": 0.026,
+        "total_bytes": 2560813,
+        "request_count": 60,
+        "image_bytes": 1145311,
+        "image_request_count": 27
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "customizable",
+      "lang": "en",
+      "path": "/product/standard-fitted-sheet/",
+      "run": 3,
+      "url": "https://www.mildmate.com/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-customizable-en-run3.json",
+      "metrics": {
+        "score": 90,
+        "lcp_ms": 1732,
+        "cls": 0.026,
+        "total_bytes": 2962000,
+        "request_count": 60,
+        "image_bytes": 1149977,
+        "image_request_count": 27
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "customizable",
+      "lang": "th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "run": 1,
+      "url": "https://www.mildmate.com/th/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-customizable-th-run1.json",
+      "metrics": {
+        "score": 89,
+        "lcp_ms": 1968,
+        "cls": 0.024,
+        "total_bytes": 1827859,
+        "request_count": 60,
+        "image_bytes": 980479,
+        "image_request_count": 21
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "customizable",
+      "lang": "th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "run": 2,
+      "url": "https://www.mildmate.com/th/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-customizable-th-run2.json",
+      "metrics": {
+        "score": 94,
+        "lcp_ms": 1936,
+        "cls": 0.024,
+        "total_bytes": 1520421,
+        "request_count": 60,
+        "image_bytes": 987839,
+        "image_request_count": 21
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "customizable",
+      "lang": "th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "run": 3,
+      "url": "https://www.mildmate.com/th/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-customizable-th-run3.json",
+      "metrics": {
+        "score": 89,
+        "lcp_ms": 1878,
+        "cls": 0.024,
+        "total_bytes": 3042029,
+        "request_count": 63,
+        "image_bytes": 993808,
+        "image_request_count": 21
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "marine",
+      "lang": "en",
+      "path": "/product/marine-fitted-sheet/",
+      "run": 1,
+      "url": "https://www.mildmate.com/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-marine-en-run1.json",
+      "metrics": {
+        "score": 85,
+        "lcp_ms": 2496,
+        "cls": 0.023,
+        "total_bytes": 2345803,
+        "request_count": 67,
+        "image_bytes": 2115151,
+        "image_request_count": 39
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "marine",
+      "lang": "en",
+      "path": "/product/marine-fitted-sheet/",
+      "run": 2,
+      "url": "https://www.mildmate.com/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-marine-en-run2.json",
+      "metrics": {
+        "score": 91,
+        "lcp_ms": 2402,
+        "cls": 0.023,
+        "total_bytes": 2359757,
+        "request_count": 67,
+        "image_bytes": 2165552,
+        "image_request_count": 39
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "marine",
+      "lang": "en",
+      "path": "/product/marine-fitted-sheet/",
+      "run": 3,
+      "url": "https://www.mildmate.com/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-marine-en-run3.json",
+      "metrics": {
+        "score": 88,
+        "lcp_ms": 2429,
+        "cls": 0.023,
+        "total_bytes": 2348712,
+        "request_count": 67,
+        "image_bytes": 2115712,
+        "image_request_count": 39
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "marine",
+      "lang": "th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "run": 1,
+      "url": "https://www.mildmate.com/th/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-marine-th-run1.json",
+      "metrics": {
+        "score": 89,
+        "lcp_ms": 2704,
+        "cls": 0.021,
+        "total_bytes": 2263806,
+        "request_count": 66,
+        "image_bytes": 1965073,
+        "image_request_count": 33
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "marine",
+      "lang": "th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "run": 2,
+      "url": "https://www.mildmate.com/th/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-marine-th-run2.json",
+      "metrics": {
+        "score": 89,
+        "lcp_ms": 2573,
+        "cls": 0.029,
+        "total_bytes": 2276321,
+        "request_count": 66,
+        "image_bytes": 1963225,
+        "image_request_count": 33
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "marine",
+      "lang": "th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "run": 3,
+      "url": "https://www.mildmate.com/th/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-marine-th-run3.json",
+      "metrics": {
+        "score": 77,
+        "lcp_ms": 2535,
+        "cls": 0.027,
+        "total_bytes": 2272022,
+        "request_count": 66,
+        "image_bytes": 1960119,
+        "image_request_count": 33
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "fixed",
+      "lang": "en",
+      "path": "/product/bedbridge-connector/",
+      "run": 1,
+      "url": "https://www.mildmate.com/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-fixed-en-run1.json",
+      "metrics": {
+        "score": 92,
+        "lcp_ms": 1811,
+        "cls": 0.03,
+        "total_bytes": 2680401,
+        "request_count": 54,
+        "image_bytes": 2495882,
+        "image_request_count": 33
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "fixed",
+      "lang": "en",
+      "path": "/product/bedbridge-connector/",
+      "run": 2,
+      "url": "https://www.mildmate.com/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-fixed-en-run2.json",
+      "metrics": {
+        "score": 73,
+        "lcp_ms": 1967,
+        "cls": 0.03,
+        "total_bytes": 2659775,
+        "request_count": 54,
+        "image_bytes": 2478723,
+        "image_request_count": 33
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "fixed",
+      "lang": "en",
+      "path": "/product/bedbridge-connector/",
+      "run": 3,
+      "url": "https://www.mildmate.com/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-fixed-en-run3.json",
+      "metrics": {
+        "score": 98,
+        "lcp_ms": 1833,
+        "cls": 0.03,
+        "total_bytes": 2670537,
+        "request_count": 54,
+        "image_bytes": 2487029,
+        "image_request_count": 33
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "fixed",
+      "lang": "th",
+      "path": "/th/product/bedbridge-connector/",
+      "run": 1,
+      "url": "https://www.mildmate.com/th/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-fixed-th-run1.json",
+      "metrics": {
+        "score": 88,
+        "lcp_ms": 1935,
+        "cls": 0.043,
+        "total_bytes": 2748883,
+        "request_count": 61,
+        "image_bytes": 2488495,
+        "image_request_count": 33
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "fixed",
+      "lang": "th",
+      "path": "/th/product/bedbridge-connector/",
+      "run": 2,
+      "url": "https://www.mildmate.com/th/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-fixed-th-run2.json",
+      "metrics": {
+        "score": 86,
+        "lcp_ms": 1965,
+        "cls": 0.043,
+        "total_bytes": 2747183,
+        "request_count": 61,
+        "image_bytes": 2486978,
+        "image_request_count": 33
+      }
+    },
+    {
+      "env": "before_prod",
+      "base": "https://www.mildmate.com",
+      "family": "fixed",
+      "lang": "th",
+      "path": "/th/product/bedbridge-connector/",
+      "run": 3,
+      "url": "https://www.mildmate.com/th/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\before_prod-fixed-th-run3.json",
+      "metrics": {
+        "score": 72,
+        "lcp_ms": 2087,
+        "cls": 0.041,
+        "total_bytes": 2742198,
+        "request_count": 61,
+        "image_bytes": 2486327,
+        "image_request_count": 33
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "customizable",
+      "lang": "en",
+      "path": "/product/standard-fitted-sheet/",
+      "run": 1,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-customizable-en-run1.json",
+      "metrics": {
+        "score": 89,
+        "lcp_ms": 1982,
+        "cls": 0.026,
+        "total_bytes": 908512,
+        "request_count": 54,
+        "image_bytes": 479650,
+        "image_request_count": 27
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "customizable",
+      "lang": "en",
+      "path": "/product/standard-fitted-sheet/",
+      "run": 2,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-customizable-en-run2.json",
+      "metrics": {
+        "score": 98,
+        "lcp_ms": 2022,
+        "cls": 0.026,
+        "total_bytes": 906208,
+        "request_count": 54,
+        "image_bytes": 479636,
+        "image_request_count": 27
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "customizable",
+      "lang": "en",
+      "path": "/product/standard-fitted-sheet/",
+      "run": 3,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-customizable-en-run3.json",
+      "metrics": {
+        "score": 99,
+        "lcp_ms": 1928,
+        "cls": 0.026,
+        "total_bytes": 914489,
+        "request_count": 53,
+        "image_bytes": 479613,
+        "image_request_count": 27
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "customizable",
+      "lang": "th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "run": 1,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/th/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-customizable-th-run1.json",
+      "metrics": {
+        "score": 97,
+        "lcp_ms": 1879,
+        "cls": 0.025,
+        "total_bytes": 978078,
+        "request_count": 59,
+        "image_bytes": 479692,
+        "image_request_count": 27
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "customizable",
+      "lang": "th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "run": 2,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/th/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-customizable-th-run2.json",
+      "metrics": {
+        "score": 98,
+        "lcp_ms": 1831,
+        "cls": 0.025,
+        "total_bytes": 2443162,
+        "request_count": 61,
+        "image_bytes": 465588,
+        "image_request_count": 27
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "customizable",
+      "lang": "th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "run": 3,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/th/product/standard-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-customizable-th-run3.json",
+      "metrics": {
+        "score": 91,
+        "lcp_ms": 1843,
+        "cls": 0.024,
+        "total_bytes": 977958,
+        "request_count": 59,
+        "image_bytes": 479637,
+        "image_request_count": 27
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "marine",
+      "lang": "en",
+      "path": "/product/marine-fitted-sheet/",
+      "run": 1,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-marine-en-run1.json",
+      "metrics": {
+        "score": 96,
+        "lcp_ms": 1747,
+        "cls": 0.023,
+        "total_bytes": 636751,
+        "request_count": 47,
+        "image_bytes": 443550,
+        "image_request_count": 25
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "marine",
+      "lang": "en",
+      "path": "/product/marine-fitted-sheet/",
+      "run": 2,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-marine-en-run2.json",
+      "metrics": {
+        "score": 97,
+        "lcp_ms": 1968,
+        "cls": 0.023,
+        "total_bytes": 636868,
+        "request_count": 47,
+        "image_bytes": 441996,
+        "image_request_count": 25
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "marine",
+      "lang": "en",
+      "path": "/product/marine-fitted-sheet/",
+      "run": 3,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-marine-en-run3.json",
+      "metrics": {
+        "score": 96,
+        "lcp_ms": 1707,
+        "cls": 0.023,
+        "total_bytes": 654430,
+        "request_count": 47,
+        "image_bytes": 453220,
+        "image_request_count": 25
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "marine",
+      "lang": "th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "run": 1,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/th/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-marine-th-run1.json",
+      "metrics": {
+        "score": 90,
+        "lcp_ms": 2635,
+        "cls": 0.023,
+        "total_bytes": 731014,
+        "request_count": 53,
+        "image_bytes": 453196,
+        "image_request_count": 25
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "marine",
+      "lang": "th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "run": 2,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/th/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-marine-th-run2.json",
+      "metrics": {
+        "score": 93,
+        "lcp_ms": 2119,
+        "cls": 0.023,
+        "total_bytes": 726147,
+        "request_count": 53,
+        "image_bytes": 453231,
+        "image_request_count": 25
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "marine",
+      "lang": "th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "run": 3,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/th/product/marine-fitted-sheet/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-marine-th-run3.json",
+      "metrics": {
+        "score": 96,
+        "lcp_ms": 2276,
+        "cls": 0.023,
+        "total_bytes": 730872,
+        "request_count": 53,
+        "image_bytes": 453166,
+        "image_request_count": 25
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "fixed",
+      "lang": "en",
+      "path": "/product/bedbridge-connector/",
+      "run": 1,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-fixed-en-run1.json",
+      "metrics": {
+        "score": 95,
+        "lcp_ms": 1869,
+        "cls": 0.03,
+        "total_bytes": 453167,
+        "request_count": 34,
+        "image_bytes": 306858,
+        "image_request_count": 18
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "fixed",
+      "lang": "en",
+      "path": "/product/bedbridge-connector/",
+      "run": 2,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-fixed-en-run2.json",
+      "metrics": {
+        "score": 99,
+        "lcp_ms": 1946,
+        "cls": 0.03,
+        "total_bytes": 470755,
+        "request_count": 34,
+        "image_bytes": 318078,
+        "image_request_count": 18
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "fixed",
+      "lang": "en",
+      "path": "/product/bedbridge-connector/",
+      "run": 3,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-fixed-en-run3.json",
+      "metrics": {
+        "score": 97,
+        "lcp_ms": 1847,
+        "cls": 0.03,
+        "total_bytes": 470788,
+        "request_count": 34,
+        "image_bytes": 317984,
+        "image_request_count": 18
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "fixed",
+      "lang": "th",
+      "path": "/th/product/bedbridge-connector/",
+      "run": 1,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/th/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-fixed-th-run1.json",
+      "metrics": {
+        "score": 99,
+        "lcp_ms": 1757,
+        "cls": 0.03,
+        "total_bytes": 529701,
+        "request_count": 40,
+        "image_bytes": 306924,
+        "image_request_count": 18
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "fixed",
+      "lang": "th",
+      "path": "/th/product/bedbridge-connector/",
+      "run": 2,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/th/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-fixed-th-run2.json",
+      "metrics": {
+        "score": 99,
+        "lcp_ms": 1702,
+        "cls": 0.031,
+        "total_bytes": 547184,
+        "request_count": 40,
+        "image_bytes": 316571,
+        "image_request_count": 18
+      }
+    },
+    {
+      "env": "after_preview",
+      "base": "https://catalog-image-variants-20261.mildmate-new.pages.dev",
+      "family": "fixed",
+      "lang": "th",
+      "path": "/th/product/bedbridge-connector/",
+      "run": 3,
+      "url": "https://catalog-image-variants-20261.mildmate-new.pages.dev/th/product/bedbridge-connector/",
+      "out_file": "D:\\00_mildmate\\re-build_web\\00_Issue\\product-image-performance-audit-20261103\\full-catalog-20261103\\lighthouse-bench\\after_preview-fixed-th-run3.json",
+      "metrics": {
+        "score": 95,
+        "lcp_ms": 2185,
+        "cls": 0.03,
+        "total_bytes": 547215,
+        "request_count": 40,
+        "image_bytes": 316529,
+        "image_request_count": 18
+      }
+    }
+  ],
+  "summary": [
+    {
+      "family": "customizable",
+      "lang": "en",
+      "path": "/product/standard-fitted-sheet/",
+      "before_prod_avg": {
+        "score": 88.7,
+        "lcp_ms": 1824.3,
+        "cls": 0.026,
+        "total_bytes": 2867451.7,
+        "request_count": 61,
+        "image_bytes": 1143145,
+        "image_request_count": 27
+      },
+      "after_preview_avg": {
+        "score": 95.3,
+        "lcp_ms": 1977.3,
+        "cls": 0.026,
+        "total_bytes": 909736.3,
+        "request_count": 53.7,
+        "image_bytes": 479633,
+        "image_request_count": 27
+      },
+      "delta": {
+        "score": 6.6,
+        "lcp_ms": 153,
+        "cls": 0,
+        "total_bytes": -1957715.4,
+        "request_count": -7.3,
+        "image_bytes": -663512,
+        "image_request_count": 0
+      }
+    },
+    {
+      "family": "customizable",
+      "lang": "th",
+      "path": "/th/product/standard-fitted-sheet/",
+      "before_prod_avg": {
+        "score": 90.7,
+        "lcp_ms": 1927.3,
+        "cls": 0.024,
+        "total_bytes": 2130103,
+        "request_count": 61,
+        "image_bytes": 987375.3,
+        "image_request_count": 21
+      },
+      "after_preview_avg": {
+        "score": 95.3,
+        "lcp_ms": 1851,
+        "cls": 0.025,
+        "total_bytes": 1466399.3,
+        "request_count": 59.7,
+        "image_bytes": 474972.3,
+        "image_request_count": 27
+      },
+      "delta": {
+        "score": 4.6,
+        "lcp_ms": -76.3,
+        "cls": 0.001,
+        "total_bytes": -663703.7,
+        "request_count": -1.3,
+        "image_bytes": -512403,
+        "image_request_count": 6
+      }
+    },
+    {
+      "family": "marine",
+      "lang": "en",
+      "path": "/product/marine-fitted-sheet/",
+      "before_prod_avg": {
+        "score": 88,
+        "lcp_ms": 2442.3,
+        "cls": 0.023,
+        "total_bytes": 2351424,
+        "request_count": 67,
+        "image_bytes": 2132138.3,
+        "image_request_count": 39
+      },
+      "after_preview_avg": {
+        "score": 96.3,
+        "lcp_ms": 1807.3,
+        "cls": 0.023,
+        "total_bytes": 642683,
+        "request_count": 47,
+        "image_bytes": 446255.3,
+        "image_request_count": 25
+      },
+      "delta": {
+        "score": 8.3,
+        "lcp_ms": -635,
+        "cls": 0,
+        "total_bytes": -1708741,
+        "request_count": -20,
+        "image_bytes": -1685883,
+        "image_request_count": -14
+      }
+    },
+    {
+      "family": "marine",
+      "lang": "th",
+      "path": "/th/product/marine-fitted-sheet/",
+      "before_prod_avg": {
+        "score": 85,
+        "lcp_ms": 2604,
+        "cls": 0.026,
+        "total_bytes": 2270716.3,
+        "request_count": 66,
+        "image_bytes": 1962805.7,
+        "image_request_count": 33
+      },
+      "after_preview_avg": {
+        "score": 93,
+        "lcp_ms": 2343.3,
+        "cls": 0.023,
+        "total_bytes": 729344.3,
+        "request_count": 53,
+        "image_bytes": 453197.7,
+        "image_request_count": 25
+      },
+      "delta": {
+        "score": 8,
+        "lcp_ms": -260.7,
+        "cls": -0.003,
+        "total_bytes": -1541372,
+        "request_count": -13,
+        "image_bytes": -1509608,
+        "image_request_count": -8
+      }
+    },
+    {
+      "family": "fixed",
+      "lang": "en",
+      "path": "/product/bedbridge-connector/",
+      "before_prod_avg": {
+        "score": 87.7,
+        "lcp_ms": 1870.3,
+        "cls": 0.03,
+        "total_bytes": 2670237.7,
+        "request_count": 54,
+        "image_bytes": 2487211.3,
+        "image_request_count": 33
+      },
+      "after_preview_avg": {
+        "score": 97,
+        "lcp_ms": 1887.3,
+        "cls": 0.03,
+        "total_bytes": 464903.3,
+        "request_count": 34,
+        "image_bytes": 314306.7,
+        "image_request_count": 18
+      },
+      "delta": {
+        "score": 9.3,
+        "lcp_ms": 17,
+        "cls": 0,
+        "total_bytes": -2205334.4,
+        "request_count": -20,
+        "image_bytes": -2172904.6,
+        "image_request_count": -15
+      }
+    },
+    {
+      "family": "fixed",
+      "lang": "th",
+      "path": "/th/product/bedbridge-connector/",
+      "before_prod_avg": {
+        "score": 82,
+        "lcp_ms": 1995.7,
+        "cls": 0.042,
+        "total_bytes": 2746088,
+        "request_count": 61,
+        "image_bytes": 2487266.7,
+        "image_request_count": 33
+      },
+      "after_preview_avg": {
+        "score": 97.7,
+        "lcp_ms": 1881.3,
+        "cls": 0.03,
+        "total_bytes": 541366.7,
+        "request_count": 40,
+        "image_bytes": 313341.3,
+        "image_request_count": 18
+      },
+      "delta": {
+        "score": 15.7,
+        "lcp_ms": -114.4,
+        "cls": -0.012,
+        "total_bytes": -2204721.3,
+        "request_count": -21,
+        "image_bytes": -2173925.4,
+        "image_request_count": -15
+      }
+    }
+  ]
+}

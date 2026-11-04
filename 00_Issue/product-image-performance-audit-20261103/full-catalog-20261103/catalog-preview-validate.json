@@ -1,0 +1,1630 @@
+{
+  "generated_at": "2026-11-03T23:51:40.870Z",
+  "summary": {
+    "base_url": "https://www.mildmate.com",
+    "total_pages": 62,
+    "passed_pages": 62,
+    "failed_pages": 0,
+    "failed_paths": []
+  },
+  "results": [
+    {
+      "path": "/product/3-sided-duvet/",
+      "url": "https://www.mildmate.com/product/3-sided-duvet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "3-Sided Zipper Duvet Cover — MildMate",
+        "thumbsTotal": 21,
+        "slidesTotal": 21,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/product/bedbridge-connector/",
+      "url": "https://www.mildmate.com/product/bedbridge-connector/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "BedBridge Connector — MildMate",
+        "thumbsTotal": 19,
+        "slidesTotal": 19,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/product/co-sleeping-top-sheet/",
+      "url": "https://www.mildmate.com/product/co-sleeping-top-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Co-Sleeping Top Sheet — MildMate",
+        "thumbsTotal": 16,
+        "slidesTotal": 16,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/custom-waterproof-cushion-protector/",
+      "url": "https://www.mildmate.com/product/custom-waterproof-cushion-protector/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Custom Spill-Proof Cushion Protector with 360° Elastic Fit — MildMate",
+        "thumbsTotal": 18,
+        "slidesTotal": 18,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "https://www.mildmate.com/images/products/common/measure-cushion-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/deep-pocket-fitted-sheet/",
+      "url": "https://www.mildmate.com/product/deep-pocket-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Deep Pocket Fitted Sheet — MildMate",
+        "thumbsTotal": 18,
+        "slidesTotal": 18,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/dorm-fitted-sheet/",
+      "url": "https://www.mildmate.com/product/dorm-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "Dorm Fitted Sheet — MildMate",
+        "thumbsTotal": 12,
+        "slidesTotal": 12,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/duvet-cover-dorm/",
+      "url": "https://www.mildmate.com/product/duvet-cover-dorm/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Duvet Cover — Dorm — MildMate",
+        "thumbsTotal": 21,
+        "slidesTotal": 21,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/product/duvet-cover-marine/",
+      "url": "https://www.mildmate.com/product/duvet-cover-marine/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Duvet Cover — Marine — MildMate",
+        "thumbsTotal": 18,
+        "slidesTotal": 18,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/product/duvet-cover-rv/",
+      "url": "https://www.mildmate.com/product/duvet-cover-rv/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "Duvet Cover — RV — MildMate",
+        "thumbsTotal": 14,
+        "slidesTotal": 14,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/product/duvet-insert/",
+      "url": "https://www.mildmate.com/product/duvet-insert/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "Duvet Insert — MildMate",
+        "thumbsTotal": 6,
+        "slidesTotal": 6,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/product/family-fitted-sheet/",
+      "url": "https://www.mildmate.com/product/family-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "Family & Co-Sleeping Fitted Sheet — MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/flat-sheet-extra-deep-pocket/",
+      "url": "https://www.mildmate.com/product/flat-sheet-extra-deep-pocket/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Flat Sheet — Extra Deep Pocket — MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/flat-sheet-standard/",
+      "url": "https://www.mildmate.com/product/flat-sheet-standard/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Flat Sheet - Standard — MildMate",
+        "thumbsTotal": 11,
+        "slidesTotal": 11,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/marine-fitted-sheet/",
+      "url": "https://www.mildmate.com/product/marine-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "Marine Fitted Sheet — MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/product/marine-mattress-protector/",
+      "url": "https://www.mildmate.com/product/marine-mattress-protector/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "Marine Mattress Protector — MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/product/marine-top-sheet/",
+      "url": "https://www.mildmate.com/product/marine-top-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "Marine Top Sheet — MildMate",
+        "thumbsTotal": 7,
+        "slidesTotal": 7,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/product/mattress-encasement-general/",
+      "url": "https://www.mildmate.com/product/mattress-encasement-general/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "6-Sided Mattress Encasement — MildMate",
+        "thumbsTotal": 19,
+        "slidesTotal": 19,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/mattress-lift-helper/",
+      "url": "https://www.mildmate.com/product/mattress-lift-helper/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "Easy Bed Maker & Mattress Lifter — MildMate",
+        "thumbsTotal": 3,
+        "slidesTotal": 3,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/product/mattress-protector-deep-pocket/",
+      "url": "https://www.mildmate.com/product/mattress-protector-deep-pocket/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Mattress Protector — Deep Pocket — MildMate",
+        "thumbsTotal": 15,
+        "slidesTotal": 15,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/mattress-protector-family/",
+      "url": "https://www.mildmate.com/product/mattress-protector-family/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Mattress Protector, Family & Co-Sleep — MildMate",
+        "thumbsTotal": 16,
+        "slidesTotal": 16,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/mattress-protector-standard/",
+      "url": "https://www.mildmate.com/product/mattress-protector-standard/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "Mattress Protector: Standard Size — MildMate",
+        "thumbsTotal": 15,
+        "slidesTotal": 15,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/pet-owner-duvet-cover/",
+      "url": "https://www.mildmate.com/product/pet-owner-duvet-cover/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "Pet Owner Duvet Cover — MildMate",
+        "thumbsTotal": 15,
+        "slidesTotal": 15,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/product/pet-owner-fitted-sheet/",
+      "url": "https://www.mildmate.com/product/pet-owner-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Pet Owner Fitted Sheet — MildMate",
+        "thumbsTotal": 19,
+        "slidesTotal": 19,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/pet-proof-mattress-protector/",
+      "url": "https://www.mildmate.com/product/pet-proof-mattress-protector/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "Pet-Proof Mattress Protector — MildMate",
+        "thumbsTotal": 19,
+        "slidesTotal": 19,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/pillow-protector-general/",
+      "url": "https://www.mildmate.com/product/pillow-protector-general/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Pillow Protector — MildMate",
+        "thumbsTotal": 18,
+        "slidesTotal": 18,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Pillowcase.webp"
+      }
+    },
+    {
+      "path": "/product/pillowcase-envelope/",
+      "url": "https://www.mildmate.com/product/pillowcase-envelope/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "Envelope Pillowcase — MildMate",
+        "thumbsTotal": 15,
+        "slidesTotal": 15,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Pillowcase.webp"
+      }
+    },
+    {
+      "path": "/product/pillowcase-sham/",
+      "url": "https://www.mildmate.com/product/pillowcase-sham/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "Sham Pillowcase — MildMate",
+        "thumbsTotal": 12,
+        "slidesTotal": 12,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Pillowcase.webp"
+      }
+    },
+    {
+      "path": "/product/pillowcase-zipper/",
+      "url": "https://www.mildmate.com/product/pillowcase-zipper/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "Zipper Pillowcase — MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Pillowcase.webp"
+      }
+    },
+    {
+      "path": "/product/rv-truck-fitted-sheet/",
+      "url": "https://www.mildmate.com/product/rv-truck-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "RV & Truck Fitted Sheet — MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/rv-truck-mattress-encasement/",
+      "url": "https://www.mildmate.com/product/rv-truck-mattress-encasement/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "RV & Truck Mattress Encasement — MildMate",
+        "thumbsTotal": 17,
+        "slidesTotal": 17,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/product/standard-fitted-sheet/",
+      "url": "https://www.mildmate.com/product/standard-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "Standard Fitted Sheet — MildMate",
+        "thumbsTotal": 14,
+        "slidesTotal": 14,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/3-sided-duvet/",
+      "url": "https://www.mildmate.com/th/product/3-sided-duvet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ปลอกผ้านวมซิป 3 ด้าน เปลี่ยนง่าย สั่งตัดตามขนาด — MildMate",
+        "thumbsTotal": 21,
+        "slidesTotal": 21,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/th/product/bedbridge-connector/",
+      "url": "https://www.mildmate.com/th/product/bedbridge-connector/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "ตัวเชื่อมที่นอน เบดบริดจ์ — MildMate",
+        "thumbsTotal": 19,
+        "slidesTotal": 19,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/th/product/co-sleeping-top-sheet/",
+      "url": "https://www.mildmate.com/th/product/co-sleeping-top-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ผ้าปูเรียบเตียงครอบครัว ผืนใหญ่คลุม 2 ที่นอน สั่งตัดได้ — MildMate",
+        "thumbsTotal": 16,
+        "slidesTotal": 16,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/custom-waterproof-cushion-protector/",
+      "url": "https://www.mildmate.com/th/product/custom-waterproof-cushion-protector/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ปลอกกันน้ำสำหรับเบาะโซฟา สั่งตัดตามขนาด — MildMate",
+        "thumbsTotal": 18,
+        "slidesTotal": 18,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "https://www.mildmate.com/images/products/common/measure-cushion-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/deep-pocket-fitted-sheet/",
+      "url": "https://www.mildmate.com/th/product/deep-pocket-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "ผ้าปูที่นอนรัดมุมสำหรับที่นอนหนาพิเศษ สูงสุด 20 นิ้ว สั่งตัดได้ — MildMate",
+        "thumbsTotal": 18,
+        "slidesTotal": 18,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/dorm-fitted-sheet/",
+      "url": "https://www.mildmate.com/th/product/dorm-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ผ้าปูที่นอนหอพักต่างประเทศ สั่งตัดตามขนาดจริง เตรียมพร้อมก่อนลูกไปเรียนต่อ — MildMate",
+        "thumbsTotal": 12,
+        "slidesTotal": 12,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/duvet-cover-dorm/",
+      "url": "https://www.mildmate.com/th/product/duvet-cover-dorm/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ปลอกผ้านวมหอพักต่างประเทศ ซิป 3 ด้าน สั่งตัด | MildMate",
+        "thumbsTotal": 21,
+        "slidesTotal": 21,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/th/product/duvet-cover-marine/",
+      "url": "https://www.mildmate.com/th/product/duvet-cover-marine/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ปลอกผ้านวมเรือและยอชต์ ซิป 3 ด้าน สั่งตัด | MildMate",
+        "thumbsTotal": 18,
+        "slidesTotal": 18,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/th/product/duvet-cover-rv/",
+      "url": "https://www.mildmate.com/th/product/duvet-cover-rv/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ปลอกผ้านวมรถบ้าน RV ซิป 3 ด้าน สั่งตัดได้ | MildMate",
+        "thumbsTotal": 14,
+        "slidesTotal": 14,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/th/product/duvet-insert/",
+      "url": "https://www.mildmate.com/th/product/duvet-insert/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "ไส้ผ้านวมไมโครไฟเบอร์ — MildMate",
+        "thumbsTotal": 6,
+        "slidesTotal": 6,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/th/product/family-fitted-sheet/",
+      "url": "https://www.mildmate.com/th/product/family-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ผ้าปูเตียงครอบครัว ผืนเดียวคลุม 2 ที่นอน | MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/flat-sheet-extra-deep-pocket/",
+      "url": "https://www.mildmate.com/th/product/flat-sheet-extra-deep-pocket/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ผ้าปูที่นอนไม่รัดมุม สำหรับที่นอนหนา สั่งตัด | MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/flat-sheet-standard/",
+      "url": "https://www.mildmate.com/th/product/flat-sheet-standard/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ผ้าปูที่นอนไม่รัดมุม สไตล์โรงแรม สั่งตัดได้ | MildMate",
+        "thumbsTotal": 11,
+        "slidesTotal": 11,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/marine-fitted-sheet/",
+      "url": "https://www.mildmate.com/th/product/marine-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "ผ้าปูที่นอนเรือ V-Berth รัดมุม สั่งตัดตามทรง | MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/th/product/marine-mattress-protector/",
+      "url": "https://www.mildmate.com/th/product/marine-mattress-protector/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "ผ้ารองกันเปื้อนที่นอนเรือ V-Berth กันน้ำ TPU สั่งตัด | MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/th/product/marine-top-sheet/",
+      "url": "https://www.mildmate.com/th/product/marine-top-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "ผ้าปูที่นอนเรือ V-Berth ไม่รัดมุม สั่งตัดได้ | MildMate",
+        "thumbsTotal": 7,
+        "slidesTotal": 7,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/th/product/mattress-encasement-general/",
+      "url": "https://www.mildmate.com/th/product/mattress-encasement-general/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ปลอกหุ้มที่นอนกันน้ำ 6 ด้าน มีซิป สั่งตัดได้ | MildMate",
+        "thumbsTotal": 19,
+        "slidesTotal": 19,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/mattress-lift-helper/",
+      "url": "https://www.mildmate.com/th/product/mattress-lift-helper/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [],
+      "details": {
+        "pageTitle": "ตัวช่วยยกที่นอน — MildMate",
+        "thumbsTotal": 3,
+        "slidesTotal": 3,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": ""
+      }
+    },
+    {
+      "path": "/th/product/mattress-protector-deep-pocket/",
+      "url": "https://www.mildmate.com/th/product/mattress-protector-deep-pocket/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ผ้าปูกันเปื้อนความลึกพิเศษ — MildMate",
+        "thumbsTotal": 15,
+        "slidesTotal": 15,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/mattress-protector-family/",
+      "url": "https://www.mildmate.com/th/product/mattress-protector-family/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ผ้ารองกันเปื้อนเตียงครอบครัว กันน้ำ TPU สั่งตัด | MildMate",
+        "thumbsTotal": 16,
+        "slidesTotal": 16,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/mattress-protector-standard/",
+      "url": "https://www.mildmate.com/th/product/mattress-protector-standard/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ผ้ารองกันเปื้อนที่นอน กันน้ำ TPU สั่งตัดได้ | MildMate",
+        "thumbsTotal": 15,
+        "slidesTotal": 15,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/pet-owner-duvet-cover/",
+      "url": "https://www.mildmate.com/th/product/pet-owner-duvet-cover/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ปลอกผ้านวมบ้านมีสัตว์เลี้ยง ปัดขนง่าย ซิป 3 ด้าน | MildMate",
+        "thumbsTotal": 15,
+        "slidesTotal": 15,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Duvet.webp"
+      }
+    },
+    {
+      "path": "/th/product/pet-owner-fitted-sheet/",
+      "url": "https://www.mildmate.com/th/product/pet-owner-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ผ้าปูที่นอนสำหรับบ้านมีสัตว์เลี้ยง ปัดขนง่าย | MildMate",
+        "thumbsTotal": 19,
+        "slidesTotal": 19,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/pet-proof-mattress-protector/",
+      "url": "https://www.mildmate.com/th/product/pet-proof-mattress-protector/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ผ้ารองกันเปื้อนสัตว์เลี้ยง กันฉี่หมาแมว TPU | MildMate",
+        "thumbsTotal": 19,
+        "slidesTotal": 19,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/pillow-protector-general/",
+      "url": "https://www.mildmate.com/th/product/pillow-protector-general/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ปลอกกันเปื้อนหมอน กันน้ำ TPU มีซิป สั่งตัด | MildMate",
+        "thumbsTotal": 18,
+        "slidesTotal": 18,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Pillowcase.webp"
+      }
+    },
+    {
+      "path": "/th/product/pillowcase-envelope/",
+      "url": "https://www.mildmate.com/th/product/pillowcase-envelope/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy."
+      ],
+      "details": {
+        "pageTitle": "ปลอกหมอนแบบซอง ไม่ต้องใช้ซิป สั่งตัดตามขนาด | MildMate",
+        "thumbsTotal": 15,
+        "slidesTotal": 15,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Pillowcase.webp"
+      }
+    },
+    {
+      "path": "/th/product/pillowcase-sham/",
+      "url": "https://www.mildmate.com/th/product/pillowcase-sham/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ปลอกหมอนขอบระบาย แต่งขอบสไตล์โรงแรม สั่งตัด | MildMate",
+        "thumbsTotal": 12,
+        "slidesTotal": 12,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Pillowcase.webp"
+      }
+    },
+    {
+      "path": "/th/product/pillowcase-zipper/",
+      "url": "https://www.mildmate.com/th/product/pillowcase-zipper/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ปลอกหมอนซิปซ่อน สั่งตัดตามขนาด เลือกผ้าได้ | MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/Pillowcase.webp"
+      }
+    },
+    {
+      "path": "/th/product/rv-truck-fitted-sheet/",
+      "url": "https://www.mildmate.com/th/product/rv-truck-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ผ้าปูที่นอนรถบ้าน RV รถบรรทุก สั่งตัดได้ | MildMate",
+        "thumbsTotal": 20,
+        "slidesTotal": 20,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/rv-truck-mattress-encasement/",
+      "url": "https://www.mildmate.com/th/product/rv-truck-mattress-encasement/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Refused to connect to 'data:,' because it violates the following Content Security Policy directive: \"connect-src 'self' https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com https://*.alg13.dnstest.challenges.cloudflare.com https://*.mldsa44.dnstest.challenges.cloudflare.com https://dnstest.dev https://ca2.cloudflarecaptcha.com https://ca1.cloudflarecaptcha.com\".\n",
+        "Fetch API cannot load data:,. Refused to connect because it violates the document's Content Security Policy.",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ปลอกหุ้มที่นอน RV รถบ้าน รถบรรทุก กันน้ำ TPU | MildMate",
+        "thumbsTotal": 17,
+        "slidesTotal": 17,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    },
+    {
+      "path": "/th/product/standard-fitted-sheet/",
+      "url": "https://www.mildmate.com/th/product/standard-fitted-sheet/",
+      "pass": true,
+      "status": 200,
+      "imageFailures": [],
+      "requestFailures": [],
+      "consoleErrors": [
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%d font-size:0;color:transparent NaN",
+        "%c%o font-size:0;color:transparent {}",
+        "%c%o font-size:0;color:transparent {}"
+      ],
+      "details": {
+        "pageTitle": "ผ้าปูที่นอนรัดมุม 360° ขอบลึก 30 ซม. สั่งตัด | MildMate",
+        "thumbsTotal": 14,
+        "slidesTotal": 14,
+        "relatedTotal": 0,
+        "thumbNonVariant": [],
+        "relatedNonVariant": [],
+        "slideNonVariant": [],
+        "broken": [],
+        "dimDiagramSrc": "/images/products/common/measure-mattress-diagram-01.webp"
+      }
+    }
+  ]
+}
