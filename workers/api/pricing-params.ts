@@ -8,6 +8,19 @@ export async function handlePricingParams(request: Request, env: any): Promise<R
 
   // GET /api/pricing-params — full params dump
   if (request.method === "GET" && path === "/api/pricing-params") {
+    const buildVersion = () => {
+      const base = [
+        ...(params as any[]).map((r: any) => `${String(r.key)}=${String(r.value)}`),
+        ...(rates as any[]).map((r: any) => `${String(r.currency)}=${String(r.rate_per_thb)}`),
+      ].sort().join("|");
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < base.length; i++) {
+        h ^= base.charCodeAt(i);
+        h = Math.imul(h, 16777619) >>> 0;
+      }
+      return `pp-${h.toString(16)}`;
+    };
+
     const { results: params } = await env.DB.prepare(
       "SELECT key, value, label, category FROM pricing_params ORDER BY category, key"
     ).all();
@@ -75,6 +88,7 @@ export async function handlePricingParams(request: Request, env: any): Promise<R
       protector_depth_tiers: protectorDepthTiers.sort((a, b) => a.min - b.min),
       fixed_costs: fixed,
       exchange_rates: rates,
+      pricing_version: buildVersion(),
     }), {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300" },
     });

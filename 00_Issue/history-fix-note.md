@@ -8,6 +8,154 @@
 
 ---
 
+## Reconciliation Snapshot (2026-11-04) — Pricing Parity Gate + Runtime Alignment (Family 7FT TH)
+
+### Symptom
+- `/th/product/family-fitted-sheet/` (7FT `214×198×46`, CloudSoft) showed **2,400 THB** on page, while `/api/pricing` returned **2,100 THB**.
+
+### Root cause (verified)
+- Two pricing engines drifted:
+  - storefront configurator (`public/js/product-configurator.js`) used live `pricing_params` via `/api/pricing-params`
+  - `/api/pricing` (`workers/api/pricing.ts`) used stale hardcoded defaults for fitted/flat/duvet/pillow paths.
+
+### Fix applied
+1. `workers/api/pricing.ts`
+   - Runtime params loader added (from `pricing_params`) and applied to:
+     - fitted-sheet
+     - flat-sheet
+     - duvet
+     - pillowcase
+     - pillow-protector
+   - Added `pricing_version` in `/api/pricing` response.
+2. `workers/api/pricing-params.ts`
+   - Added deterministic `pricing_version` to `/api/pricing-params` response.
+3. `public/super-admin/index.html`
+   - Pricing Params page now displays current `pricing_version`.
+4. `scripts/pricing-parity-check.mjs` (new)
+   - Deploy-blocking parity gate comparing `/api/pricing` vs canonical computation from `/api/pricing-params` (7 cases).
+5. `workers/api/__tests__/pricing-runtime-parity.test.ts` (new)
+   - Unit test proving family fitted uses runtime params and yields expected THB.
+6. `public/_worker.js`
+   - Rebuilt via `extract-worker.ps1` before deploy.
+
+### Deployment evidence
+- Production deployments:
+  - `80815cd5` (first deploy)
+  - `f20aa708` (final deploy, current)
+- Rollback baseline remains available: `34c1f64d`.
+
+### Validation evidence
+- `npm run lint --silent` ✅
+- `npx vitest run workers/api/__tests__/pricing-runtime-parity.test.ts` ✅
+- Pre-deploy parity gate: failed (correctly blocked stale runtime).
+- Post-deploy parity gate: `Pricing parity check passed (7 cases)` ✅
+- Live check now returns:
+  - `/api/pricing?...family-fitted-sheet...214x198x46` → `price_thb: 2400`, `pricing_version: pp-c74e21e3`
+  - `/api/pricing-params` → `pricing_version: pp-c5f798fe`
+
+### Notes
+- `pricing_version` values differ between endpoints because `/api/pricing` version currently hashes `pricing_params` only, while `/api/pricing-params` hashes `pricing_params + exchange_rates`. This does not affect THB parity; unify hash basis later if strict equality is needed.
+
+---
+
+## Reconciliation Snapshot (2026-11-04) — Clerk/Auth Root-Cause Consolidation (from `CLERK_PREVIEW_LOOP_AUDIT.md`, `REPORT.md`, `FIX_GO_NO_GO_REPORT.md`)
+
+This section consolidates the latest authentication incidents and release outcomes into one history entry.
+
+### A) Preview sign-in loop (`/super-admin/*`) — root cause and fix
+- **Root cause (verified):** Preview super-admin sign-in routed through `/auth/clerk-return/`, which requires server-verifiable session evidence (`__session`/handshake). Clerk Development returns relied on `__clerk_db_jwt` for **client-side** bootstrap, so callback verification could not complete and looped between hosted sign-in and callback.
+- **Additional trigger observed:** stale browser-cached HTML/CSP caused false CSP block reports against `ui.browser.js` even after correct preview deployment.
+- **Fix implemented:**  
+  - `public/js/clerk.js`: dev-host bypass for `/super-admin*` return path (`*.pages.dev`/localhost go direct to page, not callback).  
+  - `functions/auth/clerk-return/[[path]].ts`: dev-host forward branch, same-origin sanitized `next`, preserve only `__clerk_*` params, open-redirect protections retained.  
+  - `public/checkout/index.html` + `public/th/checkout/index.html`: `hasClerkSessionHint()` now detects `__clerk_db_jwt` / handshake URL+cooke hints so dev return bootstraps correctly.
+- **Outcome:** preview loop resolved; owner authenticated acceptance passed on `9bb7c79e`.
+
+### B) Recurring Data Analyst “Unauthorized” — root cause and fix
+- **Root cause (verified):** admin API requests were Clerk-verified **twice** (router gate + legacy handler auth) against a shared per-IP 30/min auth bucket. Dashboard fan-out reached 16 calls (32 verifications), deterministically exhausting the limit and converting real 429s into misleading 401 “Unauthorized” via legacy fallback.
+- **Fix implemented:**  
+  1. per-request memoization (`WeakMap<Request,...>`) for `verifyClerkJwt` and `authorizeAdminBrowser` to enforce single effective verification per request.  
+  2. split rate-limit budgets: `auth-fail` (30/min failures) and `auth` verified-traffic ceiling (240/min).  
+  3. truthful status propagation in legacy handlers (`401/403/429/503` preserved; no 429→401 swallow).  
+  4. `admin-products` auth path hardened to structured status handling parity.
+- **Validation:** full offline suite passed (**276/276**), preview burst behavior corrected, owner accepted authenticated preview flow.
+
+### C) Preview Data Analyst HTTP 500s after auth pass — root cause
+- **Root cause (verified):** preview D1 schema lag, not auth/code regression. Preview DB lacked multiple marketing-analysis objects/migrations used by `order-acquisition`, `opportunity`, `quotes`, `profitability`.
+- **Classification:** preview-only migration gap; production schema already contains required objects.
+- **Release decision impact:** did **not** block auth-fix production release.
+
+### D) Production release + post-deploy status
+- **Production deployment:** `8d7a935a` (branch `master`, source `d08fb5a`) now live.
+- **Rollback baseline (corrected):** `34c1f64d` (secondary `db2afd48`), replacing older historical rollback references.
+- **Post-deploy auth checks:** pass (truthful 401 behavior unauthenticated, production Clerk redirect path preserved, no preview-origin CSP leakage on production checkout).
+- **Family 46+5 checks:** live EN/TH standard-size depth behavior verified (46 cm standard depth UI + production-email tuck-under note); Order `#41` remained unchanged (still 30 cm) pending separate explicit authorization.
+- **Open owner-side follow-up only:** authenticated production smoke on `/super-admin/` + Data Analyst refresh/filter run in a live owner session.
+
+---
+
+## Reconciliation Snapshot (2026-11-03) — Clerk Callback Final RCA Validation + Conditional Local Fix (NOT deployed)
+
+This is the current source of truth for the post-deploy callback-loop investigation requested after production `236b87fb` and branch commit `4fd819e`.
+
+### What is confirmed as completed/built/verified
+1. **Production runtime confirmed unchanged**
+   - Cloudflare Pages production remains `236b87fb-aadf-4bdd-909c-ae229058bb1f`.
+   - No deployment/rollback/config changes were performed in this pass.
+
+2. **Live callback behavior verified on both hosts**
+   - Probe: `GET /auth/clerk-return?next=/super-admin` with synthetic conflicting cookie names (no real token values).
+   - `www.mildmate.com` response: 302 to Clerk sign-in + **4** `Set-Cookie` clears (host + `Domain=mildmate.com` for both names).
+   - `mildmate.com` (apex) response: 302 to Clerk sign-in + **2** `Set-Cookie` clears (host-only).
+   - This proves current production emits fewer clear directives on apex than on www.
+
+3. **Root cause now verified in code + simulator**
+   - `workers/api/clerk-session-token.ts` currently derives the clear-domain from request-host shape (`www` stripping), so apex requests skip the `Domain=` clear variant.
+   - Browser rule impact: host-only delete does **not** delete a cookie stored with `Domain=mildmate.com`; those domain-scoped conflicts can survive callback retries.
+   - RCA simulator (`workers/api/__tests__/clerk-redirect-loop-rca.test.ts`) was extended to validate actual cookie-jar removal behavior, not just header presence.
+
+4. **Conditional minimal local fix implemented (local-only, not shipped)**
+   - File: `workers/api/clerk-session-token.ts`
+   - Added explicit trusted cookie-domain handling:
+     - `CLERK_SESSION_COOKIE_DOMAIN` env override
+     - safe default `mildmate.com`
+     - scope guard: only emit domain clear when request host is within trusted domain
+   - `buildSessionCookieClears(...)` now clears host-scope **and** trusted-domain scope on both apex + www.
+   - No auth weakening: JWT verification, issuer/expiry checks, candidate ambiguity handling, role/allowlist/denylist gates are unchanged.
+
+5. **Regression coverage expanded and passing**
+   - Added/updated callback RCA tests:
+     - apex + www conflict flows
+     - host-only + domain-scoped cookie interplay
+     - plain + suffixed session names
+     - expired single-token recovery through handshake
+     - repeated callback bounce behavior and loop-vs-render diagnostic criterion
+   - Results:
+     - Targeted RCA file: **14/14 pass**
+     - Full suite: **21 files, 222/222 pass**
+
+6. **Source/runtime parity check passed (local candidate only)**
+   - Rebuilt `public/_worker.js` locally via `extract-worker.ps1`.
+   - `release-parity-check.mjs` passed against `.release-clerk-hardening/public` with expected additions:
+     - `verifySessionCandidates`
+     - `buildSessionCookieClears`
+     - `redirectWithCookieClears`
+     - `CLERK_SESSION_COOKIE_DOMAIN`
+   - Existing preserved markers remain intact (templates, order-acquisition, ga4-lead, sync-runs, webhook, handshake, admin emails).
+
+### Hostname reconciliation (www vs apex)
+- Prior screenshot evidence included `redirect_url=https://www.mildmate.com/auth/clerk-return...`, so at least one failing chain was on **www**.
+- The newly verified production defect is strongest on **apex** (missing `Domain=` clears).
+- Therefore, this pass confirms a real clear-scope defect and a minimal fix, but **does not claim that every observed failure was apex-only**.
+- Final closure still requires one sanitized failing request capture (failed callback request host + cookie-name/attribute presence) to map owner-observed loop(s) precisely across hosts.
+
+### Current status after this reconciliation
+- ✅ Built and verified locally: explicit trusted-domain clear fix + regression coverage + parity gate.
+- ⛔ Not yet promoted: no commit/push/deploy performed for this new local fix in this pass.
+- ⏳ Pending for release approval: owner review of this evidence, then controlled production release decision.
+
+---
+
 ## Reconciliation Snapshot (2026-11-03) — RC2 Callback Acceptance + Dashboard 401 Read-Only Audit
 
 Covers the owner acceptance state of production `236b87fb-aadf-4bdd-909c-ae229058bb1f` and the read-only investigation of partial `Unauthorized` failures on the Data Analyst dashboard (apex `mildmate.com`).

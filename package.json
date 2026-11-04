@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint \"public/js/**/*.js\" \"scripts/**/*.js\"",
     "deploy": "next build && wrangler pages deploy out",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:pricing-parity": "node scripts/pricing-parity-check.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.0.0",

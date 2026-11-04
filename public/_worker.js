@@ -2874,29 +2874,37 @@ function isProductionHostname(hostname) {
 __name(isProductionHostname, "isProductionHostname");
 var jwksCache = /* @__PURE__ */ new Map();
 var RATE_WINDOW_MS = 60 * 1e3;
-var MAX_AUTH_REQUESTS = 30;
-async function checkAuthRateLimit(env, ip) {
+var MAX_AUTH_FAILURES = 30;
+var MAX_VERIFIED_REQUESTS = 240;
+async function readAuthRateCounts(env, ip) {
   try {
-    const row = await env.DB.prepare(
-      `SELECT COUNT(*) as cnt FROM rate_limits
-       WHERE ip_address = ?1 AND endpoint = 'auth'
-       AND created_at > datetime('now', '-1 minute')`
-    ).bind(ip).first();
-    return (row?.cnt || 0) >= MAX_AUTH_REQUESTS;
+    const res = await env.DB.prepare(
+      `SELECT endpoint, COUNT(*) as cnt FROM rate_limits
+       WHERE ip_address = ?1 AND endpoint IN ('auth', 'auth-fail')
+       AND created_at > datetime('now', '-1 minute')
+       GROUP BY endpoint`
+    ).bind(ip).all();
+    let failures = 0;
+    let verified = 0;
+    for (const row of res?.results || []) {
+      if (row.endpoint === "auth-fail") failures = Number(row.cnt) || 0;
+      else if (row.endpoint === "auth") verified = Number(row.cnt) || 0;
+    }
+    return { failures, verified };
   } catch {
-    return false;
+    return { failures: 0, verified: 0 };
   }
 }
-__name(checkAuthRateLimit, "checkAuthRateLimit");
-async function recordRateLimit(env, ip) {
+__name(readAuthRateCounts, "readAuthRateCounts");
+async function recordAuthEvent(env, ip, endpoint) {
   try {
     await env.DB.prepare(
-      "INSERT INTO rate_limits (ip_address, endpoint) VALUES (?1, 'auth')"
-    ).bind(ip).run();
+      "INSERT INTO rate_limits (ip_address, endpoint) VALUES (?1, ?2)"
+    ).bind(ip, endpoint).run();
   } catch {
   }
 }
-__name(recordRateLimit, "recordRateLimit");
+__name(recordAuthEvent, "recordAuthEvent");
 async function getJwks(jwksUrl) {
   const cached = jwksCache.get(jwksUrl);
   if (cached && Date.now() - cached.fetchedAt < JWKS_CACHE_MS) {
@@ -2935,7 +2943,16 @@ async function importRsaKey(jwk) {
   );
 }
 __name(importRsaKey, "importRsaKey");
+var perRequestVerifyCache = /* @__PURE__ */ new WeakMap();
 async function verifyClerkJwt(request, env) {
+  const cached = perRequestVerifyCache.get(request);
+  if (cached) return cached;
+  const result = await verifyClerkJwtUncached(request, env);
+  perRequestVerifyCache.set(request, result);
+  return result;
+}
+__name(verifyClerkJwt, "verifyClerkJwt");
+async function verifyClerkJwtUncached(request, env) {
   const origin = request.headers.get("Origin") || "";
   const host = request.headers.get("Host") || "";
   const allowedOrigins = [
@@ -2954,10 +2971,25 @@ async function verifyClerkJwt(request, env) {
   } catch {
   }
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  if (await checkAuthRateLimit(env, ip)) {
+  const counts = await readAuthRateCounts(env, ip);
+  if (counts.failures >= MAX_AUTH_FAILURES) {
     return { valid: false, error: "Too many requests", status: 429 };
   }
-  await recordRateLimit(env, ip);
+  const result = await verifyTokenCore(request, env);
+  if (result.valid) {
+    if (counts.verified >= MAX_VERIFIED_REQUESTS) {
+      return { valid: false, error: "Too many requests", status: 429 };
+    }
+    await recordAuthEvent(env, ip, "auth");
+    return result;
+  }
+  if (result.status !== 503) {
+    await recordAuthEvent(env, ip, "auth-fail");
+  }
+  return result;
+}
+__name(verifyClerkJwtUncached, "verifyClerkJwtUncached");
+async function verifyTokenCore(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
   if (!token) {
@@ -3043,7 +3075,7 @@ async function verifyClerkJwt(request, env) {
   }
   return { valid: true, payload };
 }
-__name(verifyClerkJwt, "verifyClerkJwt");
+__name(verifyTokenCore, "verifyTokenCore");
 
 // ../workers/api/clerk-handshake.ts
 var HANDSHAKE_JWKS_CACHE_MS = 3600 * 1e3;
@@ -3434,9 +3466,24 @@ function redirectToSignIn(url, env, nextPath) {
   return Response.redirect(signInUrl2.toString(), 302);
 }
 __name(redirectToSignIn, "redirectToSignIn");
+function isDevelopmentAuthHost(url) {
+  const hostname = url.hostname.toLowerCase();
+  if (hostname.endsWith(".pages.dev")) return true;
+  if (hostname === "localhost") return true;
+  if ((hostname === "127.0.0.1" || hostname === "::1") && url.protocol === "http:") return true;
+  return false;
+}
+__name(isDevelopmentAuthHost, "isDevelopmentAuthHost");
 var onRequest2 = /* @__PURE__ */ __name(async (context) => {
   const url = new URL(context.request.url);
   const nextPath = normalizeNextPath(url.searchParams.get("next"));
+  if (isDevelopmentAuthHost(url)) {
+    const dest = new URL(nextPath, url.origin);
+    url.searchParams.forEach((value, key) => {
+      if (key.startsWith("__clerk_") && value) dest.searchParams.set(key, value);
+    });
+    return Response.redirect(dest.toString(), 302);
+  }
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
   const session = extractClerkSessionToken(context.request, { allowQueryToken: true });
@@ -4922,6 +4969,116 @@ var DERIVED_MARKUP_KEY_PREFIX = "derived_markup_";
 var DEFAULT_DERIVED_MARKUPS = {
   "weighted-duvet-cover": 10
 };
+function toNumberOr(v, fallback) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+__name(toNumberOr, "toNumberOr");
+function buildPricingVersionFromRows(rows) {
+  const base = rows.map((r) => `${String(r.key)}=${String(r.value)}`).sort().join("|");
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < base.length; i++) {
+    h ^= base.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return `pp-${h.toString(16)}`;
+}
+__name(buildPricingVersionFromRows, "buildPricingVersionFromRows");
+async function loadRuntimePricingParams(env) {
+  const defaults = {
+    sqcmPerYard: SQCM_PER_YARD,
+    wasteFactorFabric: 1.2,
+    wasteFactorPillowcase: PILLOW_WASTE,
+    packingCost: PACKING_COST,
+    deliveryCost: DOMESTIC_DELIVERY_COST,
+    operatingRate: OPERATING_RATE,
+    marketingRate: MARKETING_RATE,
+    marginStandard: MARGIN_RATE,
+    marginFamily: FAMILY_MARGIN_RATE,
+    marginDuvet: MARGIN_RATE,
+    marginPillow: PILLOWCASE_MARGIN_RATE,
+    marginPillowProtector: PILLOW_PROTECTOR_MARGIN_RATE,
+    marginCushionProtector: CUSHION_PROTECTOR_MARGIN_RATE,
+    maxWidthCm: MAX_WIDTH_CM,
+    flatTuckCm: 25,
+    flatSewingCost: FLAT_SHEET_SEWING_COST,
+    zipperRate: 0.4,
+    pillowSewingCost: PILLOW_SEWING_COST,
+    pillowShamSewingCost: PILLOW_SHAM_SEWING_COST,
+    tpuRate: 120,
+    tpuSqcmPerLm: 21e3,
+    sewingTiers: [...SEWING_TIERS],
+    duvetSewingTiers: [...DUVET_SEWING_TIERS],
+    fabricRates: { ...FABRIC_COST_PER_YARD_THB },
+    version: "pp-default"
+  };
+  try {
+    const { results } = await env.DB.prepare("SELECT key, value FROM pricing_params").all();
+    const rows = (results || []).map((r) => ({
+      key: String(r.key || ""),
+      value: Number(r.value)
+    })).filter((r) => r.key);
+    if (!rows.length) return defaults;
+    const map = /* @__PURE__ */ new Map();
+    for (const r of rows) map.set(r.key, Number(r.value));
+    const get = /* @__PURE__ */ __name((k, fallback) => toNumberOr(map.get(k), fallback), "get");
+    const tiers = [];
+    for (let i = 1; i <= 12; i++) {
+      const maxKey = `sewing_tier${i}_max`;
+      const costKey = `sewing_tier${i}_cost`;
+      if (!map.has(maxKey) || !map.has(costKey)) continue;
+      tiers.push({
+        maxArea: get(maxKey, Infinity),
+        cost: get(costKey, 0)
+      });
+    }
+    const duvetTiers = [];
+    for (let i = 1; i <= 12; i++) {
+      const maxKey = `duvet_sewing_tier${i}_max`;
+      const costKey = `duvet_sewing_tier${i}_cost`;
+      if (!map.has(maxKey) || !map.has(costKey)) continue;
+      duvetTiers.push({
+        maxArea: get(maxKey, Infinity),
+        cost: get(costKey, 0)
+      });
+    }
+    return {
+      sqcmPerYard: get("sqcm_per_yard", defaults.sqcmPerYard),
+      wasteFactorFabric: 1 + get("waste_factor_fabric", 20) / 100,
+      wasteFactorPillowcase: 1 + get("waste_factor_pillowcase", 60) / 100,
+      packingCost: get("packing_cost", defaults.packingCost),
+      deliveryCost: get("delivery_cost", defaults.deliveryCost),
+      operatingRate: get("ops_rate", defaults.operatingRate * 100) / 100,
+      marketingRate: get("mkt_rate", defaults.marketingRate * 100) / 100,
+      marginStandard: get("margin_rate_standard", defaults.marginStandard * 100) / 100,
+      marginFamily: get("margin_rate_family", defaults.marginFamily * 100) / 100,
+      marginDuvet: get("margin_rate_duvet", defaults.marginDuvet * 100) / 100,
+      marginPillow: get("margin_rate_pillow", defaults.marginPillow * 100) / 100,
+      marginPillowProtector: get("margin_rate_pillow_protector", defaults.marginPillowProtector * 100) / 100,
+      marginCushionProtector: get("margin_rate_cushion_protector", defaults.marginCushionProtector * 100) / 100,
+      maxWidthCm: get("max_width_cm", defaults.maxWidthCm),
+      flatTuckCm: get("flat_tuck_cm", defaults.flatTuckCm),
+      flatSewingCost: get("flat_sewing_cost", defaults.flatSewingCost),
+      zipperRate: get("zipper_rate", defaults.zipperRate),
+      pillowSewingCost: get("pillow_sewing_cost", defaults.pillowSewingCost),
+      pillowShamSewingCost: get("pillow_sham_sewing_cost", defaults.pillowShamSewingCost),
+      tpuRate: get("fabric_rate_tpu", defaults.tpuRate),
+      tpuSqcmPerLm: get("tpu_sqcm_per_lm", defaults.tpuSqcmPerLm),
+      sewingTiers: tiers.length ? tiers.sort((a, b) => a.maxArea - b.maxArea) : defaults.sewingTiers,
+      duvetSewingTiers: duvetTiers.length ? duvetTiers.sort((a, b) => a.maxArea - b.maxArea) : defaults.duvetSewingTiers,
+      fabricRates: {
+        cloudsoft: get("fabric_rate_cloudsoft", defaults.fabricRates.cloudsoft),
+        breezeplus: get("fabric_rate_breezeplus", defaults.fabricRates.breezeplus),
+        premacotton: get("fabric_rate_premacotton", defaults.fabricRates.premacotton),
+        ecoluxe: get("fabric_rate_ecoluxe", defaults.fabricRates.ecoluxe)
+      },
+      version: buildPricingVersionFromRows(rows)
+    };
+  } catch {
+    return defaults;
+  }
+}
+__name(loadRuntimePricingParams, "loadRuntimePricingParams");
 function inchToCm(val) {
   return val * 2.54;
 }
@@ -4940,6 +5097,20 @@ function getDuvetSewingCost(areaSqCm) {
   return DUVET_SEWING_TIERS[DUVET_SEWING_TIERS.length - 1].cost;
 }
 __name(getDuvetSewingCost, "getDuvetSewingCost");
+function getRuntimeSewingCost(areaSqCm, tiers) {
+  for (const tier of tiers) {
+    if (areaSqCm <= tier.maxArea) return tier.cost;
+  }
+  return tiers.length ? tiers[tiers.length - 1].cost : 500;
+}
+__name(getRuntimeSewingCost, "getRuntimeSewingCost");
+function getRuntimeDuvetSewingCost(areaSqCm, tiers) {
+  for (const tier of tiers) {
+    if (areaSqCm <= tier.maxArea) return tier.cost;
+  }
+  return tiers.length ? tiers[tiers.length - 1].cost : 600;
+}
+__name(getRuntimeDuvetSewingCost, "getRuntimeDuvetSewingCost");
 function calculateFittedSheetPrice(wCm, lCm, dCm, fabric, marginRate = MARGIN_RATE) {
   const fabricW = wCm + 2 * dCm + 14;
   const fabricL = lCm + 2 * dCm + 14;
@@ -4977,6 +5148,175 @@ function calculateFittedSheetPrice(wCm, lCm, dCm, fabric, marginRate = MARGIN_RA
   };
 }
 __name(calculateFittedSheetPrice, "calculateFittedSheetPrice");
+function calculateFittedSheetPriceRuntime(wCm, lCm, dCm, fabric, marginRate, cfg) {
+  const fabricW = wCm + 2 * dCm + 14;
+  const fabricL = lCm + 2 * dCm + 14;
+  const fabricArea = fabricW * fabricL;
+  const yardRate = cfg.fabricRates[fabric] || cfg.fabricRates.cloudsoft || 100;
+  const fabricCost = fabricArea * yardRate / cfg.sqcmPerYard * cfg.wasteFactorFabric;
+  const sewingCost = getRuntimeSewingCost(fabricArea, cfg.sewingTiers);
+  const accessories = fabricCost * 0.1;
+  const subtotal = fabricCost + sewingCost + accessories + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * marginRate;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round(rounded / THB_TO_USD * 100) / 100;
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(fabricArea * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: sewingCost,
+      accessoriesThb: Math.round(accessories * 100) / 100,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded
+    }
+  };
+}
+__name(calculateFittedSheetPriceRuntime, "calculateFittedSheetPriceRuntime");
+function calculateFlatSheetPriceRuntime(wCm, lCm, dCm, fabric, cfg) {
+  const fabricW = wCm + 2 * dCm + cfg.flatTuckCm * 2;
+  const fabricL = lCm + 2 * dCm + cfg.flatTuckCm * 2;
+  const fabricArea = fabricW * fabricL;
+  const yardRate = cfg.fabricRates[fabric] || cfg.fabricRates.cloudsoft || 100;
+  const fabricCost = fabricArea * yardRate / cfg.sqcmPerYard * cfg.wasteFactorFabric;
+  const subtotal = fabricCost + cfg.flatSewingCost + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * cfg.marginStandard;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round(rounded / THB_TO_USD * 100) / 100;
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(fabricArea * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: cfg.flatSewingCost,
+      accessoriesThb: 0,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded
+    }
+  };
+}
+__name(calculateFlatSheetPriceRuntime, "calculateFlatSheetPriceRuntime");
+function calculateDuvetPriceRuntime(wCm, lCm, fabric, cfg) {
+  const rawArea = 2 * (wCm + 5) * (lCm + 5);
+  const floorArea = rawArea * cfg.wasteFactorFabric;
+  const yardRate = cfg.fabricRates[fabric] || cfg.fabricRates.cloudsoft || 100;
+  const fabricCost = floorArea * yardRate / cfg.sqcmPerYard;
+  const zipperCost = cfg.zipperRate * (2 * lCm + wCm);
+  const sewingCost = getRuntimeDuvetSewingCost(rawArea, cfg.duvetSewingTiers);
+  const subtotal = fabricCost + zipperCost + sewingCost + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * cfg.marginDuvet;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round(rounded / THB_TO_USD * 100) / 100;
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(floorArea * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: sewingCost,
+      accessoriesThb: Math.round(zipperCost * 100) / 100,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded
+    }
+  };
+}
+__name(calculateDuvetPriceRuntime, "calculateDuvetPriceRuntime");
+function calculatePillowcasePriceRuntime(wCm, lCm, fabric, variant, cfg) {
+  let rawArea = 2 * (wCm + 5) * (lCm + 5);
+  if (variant === "sham") rawArea *= 1 + PILLOW_SHAM_FABRIC_EXTRA;
+  const area = rawArea * cfg.wasteFactorPillowcase;
+  const yardRate = cfg.fabricRates[fabric] || cfg.fabricRates.cloudsoft || 100;
+  const fabricCost = area * yardRate / cfg.sqcmPerYard;
+  const zipperCost = variant === "zipper" ? cfg.zipperRate * Math.max(wCm, lCm) : 0;
+  const sewingCost = variant === "sham" ? cfg.pillowShamSewingCost : cfg.pillowSewingCost;
+  const subtotal = fabricCost + zipperCost + sewingCost + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * cfg.marginPillow;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round(rounded / THB_TO_USD * 100) / 100;
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(area * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: sewingCost,
+      accessoriesThb: Math.round(zipperCost * 100) / 100,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded
+    }
+  };
+}
+__name(calculatePillowcasePriceRuntime, "calculatePillowcasePriceRuntime");
+function calculatePillowProtectorPriceRuntime(wCm, lCm, cfg) {
+  const rawArea = 2 * (wCm + 5) * (lCm + 5);
+  const area = rawArea * cfg.wasteFactorPillowcase;
+  const fabricCost = cfg.tpuRate * area / cfg.tpuSqcmPerLm;
+  const zipperCost = cfg.zipperRate * Math.max(wCm, lCm);
+  const subtotal = fabricCost + zipperCost + cfg.pillowSewingCost + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * cfg.marginPillowProtector;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round(rounded / THB_TO_USD * 100) / 100;
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(area * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: cfg.pillowSewingCost,
+      accessoriesThb: Math.round(zipperCost * 100) / 100,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded
+    }
+  };
+}
+__name(calculatePillowProtectorPriceRuntime, "calculatePillowProtectorPriceRuntime");
 function calculateFlatSheetPrice(wCm, lCm, dCm, fabric) {
   const fabricW = wCm + 2 * dCm + 50;
   const fabricL = lCm + 2 * dCm + 50;
@@ -5190,7 +5530,7 @@ function isPillowcaseProduct(product) {
   return { isPillowcase: false };
 }
 __name(isPillowcaseProduct, "isPillowcaseProduct");
-function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
+function calculatePrice(input, currency = "USD", derivedMarkups = {}, runtimeParams) {
   const product = input.product || "";
   const mode = input.mode || "sheet";
   const fabric = input.fabric || "cloudsoft";
@@ -5217,7 +5557,7 @@ function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
       return { price: 0 };
     }
     if (w2 > 0 && l2 > 0) {
-      const result = calculatePillowcasePrice(w2, l2, fabric, pillowcase.variant);
+      const result = runtimeParams ? calculatePillowcasePriceRuntime(w2, l2, fabric, pillowcase.variant, runtimeParams) : calculatePillowcasePrice(w2, l2, fabric, pillowcase.variant);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
@@ -5236,7 +5576,7 @@ function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
       return { price: 0 };
     }
     if (w2 > 0 && l2 > 0) {
-      const result = calculatePillowProtectorPrice(w2, l2);
+      const result = runtimeParams ? calculatePillowProtectorPriceRuntime(w2, l2, runtimeParams) : calculatePillowProtectorPrice(w2, l2);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
@@ -5252,7 +5592,7 @@ function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
       l2 = inchToCm(l2);
     }
     if (w2 > 0 && l2 > 0) {
-      const result = calculateDuvetPrice(w2, l2, fabric);
+      const result = runtimeParams ? calculateDuvetPriceRuntime(w2, l2, fabric, runtimeParams) : calculateDuvetPrice(w2, l2, fabric);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
@@ -5270,7 +5610,7 @@ function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
       d = inchToCm(d);
     }
     if (w2 > 0 && l2 > 0 && d > 0) {
-      const result = calculateFlatSheetPrice(w2, l2, d, fabric);
+      const result = runtimeParams ? calculateFlatSheetPriceRuntime(w2, l2, d, fabric, runtimeParams) : calculateFlatSheetPrice(w2, l2, d, fabric);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
@@ -5288,16 +5628,17 @@ function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
       d = inchToCm(d);
     }
     if (w2 > 0 && l2 > 0 && d > 0) {
-      if (product !== "family-fitted-sheet" && w2 > MAX_WIDTH_CM) {
-        const result2 = calculateFittedSheetPrice(w2, l2, d, fabric);
+      const maxWidth = runtimeParams ? runtimeParams.maxWidthCm : MAX_WIDTH_CM;
+      if (product !== "family-fitted-sheet" && w2 > maxWidth) {
+        const result2 = runtimeParams ? calculateFittedSheetPriceRuntime(w2, l2, d, fabric, runtimeParams.marginStandard, runtimeParams) : calculateFittedSheetPrice(w2, l2, d, fabric);
         return {
           price: applyDerivedMarkup(currency === "THB" ? result2.priceThb : result2.priceUsd),
           breakdown: { ...result2.breakdown, roundedThb: -1 }
           // -1 signals "requires family sheet"
         };
       }
-      const marginRate = product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : product === "custom-waterproof-cushion-protector" ? CUSHION_PROTECTOR_MARGIN_RATE : MARGIN_RATE;
-      const result = calculateFittedSheetPrice(w2, l2, d, fabric, marginRate);
+      const marginRate = runtimeParams ? product === "family-fitted-sheet" ? runtimeParams.marginFamily : product === "custom-waterproof-cushion-protector" ? runtimeParams.marginCushionProtector : runtimeParams.marginStandard : product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : product === "custom-waterproof-cushion-protector" ? CUSHION_PROTECTOR_MARGIN_RATE : MARGIN_RATE;
+      const result = runtimeParams ? calculateFittedSheetPriceRuntime(w2, l2, d, fabric, marginRate, runtimeParams) : calculateFittedSheetPrice(w2, l2, d, fabric, marginRate);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
@@ -5366,8 +5707,9 @@ async function handlePricing(request, env) {
         };
       }
       const derivedMarkupMap = await loadDerivedMarkupMap(env);
-      const resultUsd = calculatePrice(body, "USD", derivedMarkupMap);
-      const resultThb = calculatePrice(body, "THB", derivedMarkupMap);
+      const runtimeParams = await loadRuntimePricingParams(env);
+      const resultUsd = calculatePrice(body, "USD", derivedMarkupMap, runtimeParams);
+      const resultThb = calculatePrice(body, "THB", derivedMarkupMap, runtimeParams);
       let formulaType = "legacy";
       const pc = isPillowcaseProduct(body.product || "");
       if (pc.isPillowcase) {
@@ -5389,7 +5731,8 @@ async function handlePricing(request, env) {
         fabric: body.fabric || "cloudsoft",
         unit: body.unit || "cm",
         formula: formulaType,
-        derived_markup_pct: body.product ? derivedMarkupMap[body.product] || 0 : 0
+        derived_markup_pct: body.product ? derivedMarkupMap[body.product] || 0 : 0,
+        pricing_version: runtimeParams.version
       };
       if (resultUsd.breakdown) {
         response6.breakdown = resultUsd.breakdown;
@@ -6778,6 +7121,18 @@ async function handlePricingParams(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   if (request.method === "GET" && path === "/api/pricing-params") {
+    const buildVersion = /* @__PURE__ */ __name(() => {
+      const base = [
+        ...params.map((r) => `${String(r.key)}=${String(r.value)}`),
+        ...rates.map((r) => `${String(r.currency)}=${String(r.rate_per_thb)}`)
+      ].sort().join("|");
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < base.length; i++) {
+        h ^= base.charCodeAt(i);
+        h = Math.imul(h, 16777619) >>> 0;
+      }
+      return `pp-${h.toString(16)}`;
+    }, "buildVersion");
     const { results: params } = await env.DB.prepare(
       "SELECT key, value, label, category FROM pricing_params ORDER BY category, key"
     ).all();
@@ -6838,7 +7193,8 @@ async function handlePricingParams(request, env) {
       protector_fabric_tiers: protectorFabricTiers.sort((a, b) => a.max - b.max),
       protector_depth_tiers: protectorDepthTiers.sort((a, b) => a.min - b.min),
       fixed_costs: fixed,
-      exchange_rates: rates
+      exchange_rates: rates,
+      pricing_version: buildVersion()
     }), {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300" }
     });
@@ -7182,7 +7538,16 @@ function configuredAdminSecret(env) {
   return typeof env?.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
 }
 __name(configuredAdminSecret, "configuredAdminSecret");
+var perRequestAdminAuthCache = /* @__PURE__ */ new WeakMap();
 async function authorizeAdminBrowser(request, env) {
+  const cached = perRequestAdminAuthCache.get(request);
+  if (cached) return cached;
+  const result = await authorizeAdminBrowserUncached(request, env);
+  perRequestAdminAuthCache.set(request, result);
+  return result;
+}
+__name(authorizeAdminBrowser, "authorizeAdminBrowser");
+async function authorizeAdminBrowserUncached(request, env) {
   if (!hasBearerAuth(request)) {
     return { ok: false, status: 401, error: "Unauthorized: bearer token required" };
   }
@@ -7209,7 +7574,7 @@ async function authorizeAdminBrowser(request, env) {
   }
   return { ok: false, status: 403, error: "Forbidden: admin role and email allowlist required" };
 }
-__name(authorizeAdminBrowser, "authorizeAdminBrowser");
+__name(authorizeAdminBrowserUncached, "authorizeAdminBrowserUncached");
 async function authorizeAdminMachineSecret(request, env) {
   const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   if (!providedSecret) {
@@ -7409,7 +7774,6 @@ function isProductionHost2(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost2, "isProductionHost");
-var ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
 function collectRoles3(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -7451,42 +7815,50 @@ __name(emailAllowed3, "emailAllowed");
 async function authCheck(request, env) {
   const hostname = request.headers.get("Host") || "";
   const prodHost = isProductionHost2(hostname);
-  if (!prodHost) return true;
+  if (!prodHost) return { ok: true };
   const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
     const verified = await verifyClerkJwt(request, env);
-    if (verified.valid) {
-      const raw = verified.payload.raw || {};
-      if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) return true;
-      const sub = verified.payload.sub;
-      const clerkKey = env.CLERK_SECRET_KEY;
-      if (sub && clerkKey) {
-        try {
-          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
-            headers: { Authorization: "Bearer " + clerkKey }
-          });
-          if (clerkResp.ok) {
-            const user = await clerkResp.json();
-            const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
-            const metadata = user.public_metadata || {};
-            if (emailAllowed3(email, env) || hasAdminRole3(metadata)) return true;
-          }
-        } catch {
+    if (!verified.valid) {
+      return { ok: false, status: verified.status, error: verified.error };
+    }
+    const raw = verified.payload.raw || {};
+    if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) return { ok: true };
+    const sub = verified.payload.sub;
+    const clerkKey = env.CLERK_SECRET_KEY;
+    if (sub && clerkKey) {
+      try {
+        const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+          headers: { Authorization: "Bearer " + clerkKey }
+        });
+        if (clerkResp.ok) {
+          const user = await clerkResp.json();
+          const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
+          const metadata = user.public_metadata || {};
+          if (emailAllowed3(email, env) || hasAdminRole3(metadata)) return { ok: true };
         }
+      } catch {
       }
     }
+    return { ok: false, status: 403, error: "Forbidden: admin role required" };
   }
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!provided) return false;
-  if (!configured) return false;
-  return provided === configured;
+  if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (!allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  if (!configured) return { ok: false, status: 401, error: "Unauthorized" };
+  if (provided === configured) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authCheck, "authCheck");
 async function handleAdminProducts(request, env) {
-  if (!await authCheck(request, env)) {
-    return new Response(ADMIN_SECRET_ERROR, {
-      status: 401,
+  const auth = await authCheck(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
       headers: { "Content-Type": "application/json" }
     });
   }
@@ -8012,6 +8384,7 @@ async function authorizeAdmin2(request, env) {
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
+      return { ok: false, status: verified.status, error: verified.error };
     } else {
       const raw = verified.payload.raw || {};
       if (hasAdminRole5(raw) || emailAllowed5(verified.payload.email || "", env)) {
@@ -8560,6 +8933,7 @@ async function authorizeAdmin4(request, env) {
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
+      return { ok: false, status: verified.status, error: verified.error };
     } else {
       const raw = verified.payload.raw || {};
       if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
@@ -9506,6 +9880,7 @@ async function authorizeAdmin5(request, env) {
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
+      return { ok: false, status: verified.status, error: verified.error };
     } else {
       const raw = verified.payload.raw || {};
       if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) {
@@ -12820,6 +13195,7 @@ async function authorizeAdmin6(request, env) {
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
+      return { ok: false, status: verified.status, error: verified.error };
     } else {
       const raw = verified.payload.raw || {};
       if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) {
@@ -13889,6 +14265,7 @@ async function authorizeAdmin7(request, env) {
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
+      return { ok: false, status: verified.status, error: verified.error };
     } else {
       const raw = verified.payload.raw || {};
       if (hasAdminRole10(raw) || emailAllowed10(verified.payload.email || "", env)) {
@@ -18541,6 +18918,389 @@ async function handleCheckout(request, env) {
 }
 __name(handleCheckout, "handleCheckout");
 
+// ../workers/api/production-email.ts
+var PRODUCTION_REVIEW_FLAG = "PRODUCTION REVIEW REQUIRED";
+var FAMILY_FITTED_SLUG = "family-fitted-sheet";
+var FAMILY_TUCK_UNDER_CM = 5;
+var SITE_BASE_URL = "https://www.mildmate.com";
+var CUSHION_SLUG = "custom-waterproof-cushion-protector";
+var FIXED_SIZE_SLUGS = /* @__PURE__ */ new Set(["bedbridge-connector", "mattress-lift-helper", "duvet-insert"]);
+var FABRIC_LABELS = {
+  cloudsoft: "CloudSoft",
+  breezeplus: "BreezePlus",
+  premacotton: "PremaCotton",
+  ecoluxe: "EcoLuxe",
+  tpu: "TPU (waterproof)"
+};
+var COLOR_LABELS = {
+  "dark-grey": "Dark Grey",
+  silver: "Silver",
+  sand: "Sand",
+  sky: "Sky",
+  emerald: "Emerald",
+  sea: "Sea",
+  "pure-white": "Pure White",
+  "baby-pink": "Baby Pink",
+  ivory: "Ivory",
+  mint: "Mint",
+  charcoal: "Charcoal",
+  grey: "Grey",
+  sapphire: "Sapphire",
+  forest: "Forest",
+  denim: "Denim",
+  rosegold: "RoseGold",
+  beige: "Beige",
+  ovaltine: "Ovaltine",
+  white: "White",
+  lavender: "Lavender",
+  olive: "Olive",
+  "snow-white": "Snow White",
+  "vanilla-linen": "Vanilla Linen"
+};
+var PRODUCTION_SPECS = {
+  [FAMILY_FITTED_SLUG]: "Custom fitted sheet for a joined family bed, according to the selected dimensions."
+};
+var DEFAULT_FABRIC_COLOR_SETS = {
+  breezeplus: /* @__PURE__ */ new Set(["baby-pink", "dark-grey", "emerald", "ivory", "pure-white", "sand", "sea", "silver", "sky"]),
+  cloudsoft: /* @__PURE__ */ new Set(["beige", "charcoal", "denim", "forest", "grey", "lavender", "mint", "olive", "ovaltine", "rosegold", "sapphire", "white"]),
+  ecoluxe: /* @__PURE__ */ new Set(["vanilla-linen"]),
+  premacotton: /* @__PURE__ */ new Set(["snow-white"])
+};
+var LOCALIZED_COLOR_ALIASES = {
+  // German (observed vector: browser auto-translation)
+  holzkohle: "charcoal",
+  weiss: "white",
+  "wei\xDF": "white",
+  grau: "grey",
+  dunkelgrau: "dark-grey",
+  "dunkel-grau": "dark-grey",
+  reinweiss: "pure-white",
+  "reinwei\xDF": "pure-white",
+  schneeweiss: "snow-white",
+  "schneewei\xDF": "snow-white",
+  silber: "silver",
+  minze: "mint",
+  saphir: "sapphire",
+  wald: "forest",
+  lavendel: "lavender",
+  elfenbein: "ivory",
+  smaragd: "emerald",
+  meer: "sea",
+  himmel: "sky",
+  babyrosa: "baby-pink",
+  "baby-rosa": "baby-pink",
+  "smaragdgr\xFCn": "emerald",
+  "ros\xE9gold": "rosegold",
+  "vanille-leinen": "vanilla-linen",
+  vanilleleinen: "vanilla-linen"
+};
+function toFinite(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : void 0;
+}
+__name(toFinite, "toFinite");
+function round12(n) {
+  return Math.round(n * 10) / 10;
+}
+__name(round12, "round1");
+function isPrintableAscii(s) {
+  return /^[\x20-\x7E]*$/.test(s);
+}
+__name(isPrintableAscii, "isPrintableAscii");
+function normalizeColorKey(raw) {
+  return String(raw || "").trim().toLowerCase().replace(/\s+/g, "-");
+}
+__name(normalizeColorKey, "normalizeColorKey");
+function resolveCanonicalColor(raw, fabricKey, fabricColorSets = DEFAULT_FABRIC_COLOR_SETS) {
+  const rawStr = String(raw || "").trim();
+  if (!rawStr) return { label: null, raw: "", review: null };
+  const set = fabricKey ? fabricColorSets[String(fabricKey).toLowerCase()] : void 0;
+  const checkSet = /* @__PURE__ */ __name((key2) => set && !set.has(key2) ? `color "${COLOR_LABELS[key2]}" is not part of the ${String(fabricKey)} swatch set \u2014 verify before cutting` : null, "checkSet");
+  const key = normalizeColorKey(rawStr);
+  if (COLOR_LABELS[key]) return { label: COLOR_LABELS[key], raw: rawStr, review: checkSet(key) };
+  const compact = key.replace(/-/g, "");
+  for (const k of Object.keys(COLOR_LABELS)) {
+    if (k.replace(/-/g, "") === compact) return { label: COLOR_LABELS[k], raw: rawStr, review: checkSet(k) };
+  }
+  const aliasKey = LOCALIZED_COLOR_ALIASES[key] || LOCALIZED_COLOR_ALIASES[compact];
+  if (aliasKey && COLOR_LABELS[aliasKey]) {
+    if (set && !set.has(aliasKey)) {
+      return {
+        label: null,
+        raw: rawStr,
+        review: "stored localized color label resolves to a color outside the fabric swatch set \u2014 verify in the order record before cutting"
+      };
+    }
+    return { label: COLOR_LABELS[aliasKey], raw: rawStr, review: null };
+  }
+  return {
+    label: null,
+    raw: rawStr,
+    review: "stored color label could not be safely resolved to a canonical English swatch color \u2014 verify in the order record before cutting"
+  };
+}
+__name(resolveCanonicalColor, "resolveCanonicalColor");
+function resolveCanonicalFabric(raw) {
+  const rawStr = String(raw || "").trim();
+  if (!rawStr) return { label: null, raw: "" };
+  const key = rawStr.toLowerCase();
+  return { label: FABRIC_LABELS[key] || null, raw: rawStr };
+}
+__name(resolveCanonicalFabric, "resolveCanonicalFabric");
+function formatMoneyMinor(minor, currency) {
+  const major = minor / 100;
+  const code = String(currency || "usd").toUpperCase();
+  return `${major.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${code}`;
+}
+__name(formatMoneyMinor, "formatMoneyMinor");
+function needsMattressDepth(slug) {
+  if (slug === FAMILY_FITTED_SLUG) return true;
+  if (/marine/.test(slug)) return false;
+  return /fitted-sheet|flat-sheet|encasement/.test(slug) || /mattress-protector/.test(slug) && !/pillow-protector/.test(slug) || slug === "pet-proof-mattress-protector";
+}
+__name(needsMattressDepth, "needsMattressDepth");
+function isWidthLengthOnly(slug) {
+  return slug.indexOf("duvet") !== -1 && slug !== "duvet-insert" || slug.indexOf("pillowcase") !== -1 || slug.indexOf("pillow-protector") !== -1 || slug === "co-sleeping-top-sheet";
+}
+__name(isWidthLengthOnly, "isWidthLengthOnly");
+function renderProductionDims(slug, dimsRaw) {
+  const dims = dimsRaw && typeof dimsRaw === "object" ? dimsRaw : {};
+  const unit = String(dims.unit || "cm");
+  const lines = [];
+  const review = [];
+  if (FIXED_SIZE_SLUGS.has(slug)) {
+    const sizeText2 = String(dims.size_text || "").trim();
+    lines.push(sizeText2 ? `Size: ${sizeText2} (fixed-size item)` : "Size: Fixed-size item \u2014 no custom dimensions required");
+    return { lines, review };
+  }
+  const boatModelName = String(dims.boat_model_name || "").trim();
+  if (boatModelName) {
+    const modelKey = String(dims.boat_model_key || "").trim();
+    lines.push(`Boat Model: ${boatModelName}${modelKey ? ` (${modelKey})` : ""}`);
+    return { lines, review };
+  }
+  const shapeCode = String(dims.shape_code || "").trim();
+  const shapeName = String(dims.shape_name || "").trim();
+  const values = dims.values && typeof dims.values === "object" && !Array.isArray(dims.values) ? dims.values : null;
+  if (shapeCode || shapeName || values) {
+    lines.push(`Shape: ${[shapeCode ? `Shape ${shapeCode}` : "", shapeName].filter(Boolean).join(" \u2014 ") || "Custom"}`);
+    if (values) {
+      const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+      const pairs = Object.keys(values).sort((a, b) => {
+        const ai = order.indexOf(String(a).toUpperCase());
+        const bi = order.indexOf(String(b).toUpperCase());
+        if (ai === -1 && bi === -1) return String(a).localeCompare(String(b));
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      }).map((k) => {
+        const n = toFinite(values[k]);
+        return n ? `${String(k).toUpperCase()}: ${n} ${unit}` : null;
+      }).filter(Boolean);
+      if (pairs.length) lines.push(`Measurements: ${pairs.join(", ")}`);
+    }
+    const areaCm2 = toFinite(dims.area_cm2);
+    if (areaCm2) lines.push(`Area: ${Math.round(areaCm2).toLocaleString("en-US")} cm\xB2`);
+    return { lines, review };
+  }
+  const w = toFinite(dims.w);
+  const l = toFinite(dims.l);
+  const d = toFinite(dims.d);
+  const sizeText = String(dims.size_text || "").trim();
+  if (!w || !l) {
+    if (sizeText) {
+      lines.push(`Customer Size Label (reference): ${sizeText}`);
+      review.push("numeric production dimensions missing \u2014 only the size label text is stored; verify W \xD7 L before cutting");
+    } else {
+      review.push("missing production dimensions \u2014 check the Stripe session snapshot before production");
+    }
+    return { lines, review };
+  }
+  if (slug === CUSHION_SLUG) {
+    lines.push(`Width: ${w} ${unit}`);
+    lines.push(`Length: ${l} ${unit}`);
+    if (d) {
+      lines.push(`Cushion Thickness: ${d} ${unit}`);
+    } else {
+      review.push("missing cushion thickness");
+    }
+  } else if (isWidthLengthOnly(slug)) {
+    lines.push(`Width: ${w} ${unit}`);
+    lines.push(`Length: ${l} ${unit}`);
+  } else {
+    lines.push(`Width: ${w} ${unit}`);
+    lines.push(`Length: ${l} ${unit}`);
+    if (d) {
+      if (slug === FAMILY_FITTED_SLUG) {
+        if (unit === "cm") {
+          lines.push(`Mattress Depth: ${d} cm`);
+          lines.push(`Additional Tuck-Under Allowance: ${FAMILY_TUCK_UNDER_CM} cm`);
+          lines.push(`Total Fabric-Depth Allowance: ${round12(d + FAMILY_TUCK_UNDER_CM)} cm`);
+        } else {
+          const dCm = round12(d * 2.54);
+          lines.push(`Mattress Depth: ${d} ${unit} (${dCm} cm)`);
+          lines.push(`Additional Tuck-Under Allowance: ${FAMILY_TUCK_UNDER_CM} cm`);
+          lines.push(`Total Fabric-Depth Allowance: ${round12(dCm + FAMILY_TUCK_UNDER_CM)} cm`);
+        }
+      } else {
+        lines.push(`Mattress Depth: ${d} ${unit}`);
+      }
+    } else if (needsMattressDepth(slug)) {
+      review.push("missing mattress depth");
+    }
+  }
+  return { lines, review };
+}
+__name(renderProductionDims, "renderProductionDims");
+function buildInternalProductionEmail(ctx, items, catalog, fabricColorSets = DEFAULT_FABRIC_COLOR_SETS) {
+  const anyReview = [];
+  const itemBlocks = [];
+  items.forEach((item, idx) => {
+    const review = [];
+    const slug = String(item.slug || "").trim().toLowerCase();
+    const cat = slug ? catalog[slug] : void 0;
+    const block = [];
+    block.push(`--- Item ${idx + 1} of ${items.length} ---`);
+    if (cat && cat.title_en) {
+      block.push(`Product: ${cat.title_en}`);
+      block.push(`Product URL: ${SITE_BASE_URL}/product/${slug}/`);
+      if (cat.id !== null && cat.id !== void 0) block.push(`Product ID: ${cat.id}`);
+    } else if (slug) {
+      block.push(`Product: ${slug}`);
+      block.push(`Product URL: ${SITE_BASE_URL}/product/${slug}/`);
+      review.push(`product slug "${slug}" not found in catalog \u2014 verify product identity`);
+    } else {
+      block.push("Product: UNKNOWN \u2014 see order record");
+      review.push("product slug missing \u2014 verify product identity in Stripe session");
+    }
+    if (item.quote_id) block.push(`Quote: ${item.quote_id}`);
+    const fixedSize = FIXED_SIZE_SLUGS.has(slug);
+    const fabric = resolveCanonicalFabric(item.fabric);
+    if (fabric.label) {
+      block.push(`Fabric: ${fabric.label}`);
+    } else if (fabric.raw && isPrintableAscii(fabric.raw)) {
+      block.push(`Fabric: ${fabric.raw}`);
+      review.push(`non-canonical fabric value "${fabric.raw}" \u2014 verify fabric before cutting`);
+    } else if (fabric.raw) {
+      block.push("Fabric: UNRESOLVED \u2014 see order record");
+      review.push("stored fabric value is not a canonical fabric key \u2014 verify in the order record before cutting");
+    } else if (!fixedSize) {
+      block.push("Fabric: N/A");
+      review.push("fabric missing");
+    }
+    const fabricKey = fabric.label ? String(item.fabric || "").trim().toLowerCase() : null;
+    const color = resolveCanonicalColor(item.color, fabricKey, fabricColorSets);
+    if (color.label) {
+      block.push(`Color: ${color.label}`);
+      if (color.review) review.push(color.review);
+    } else if (color.raw) {
+      block.push("Color: UNRESOLVED \u2014 see order record");
+      if (color.review) review.push(color.review);
+    } else if (!fixedSize) {
+      block.push("Color: N/A");
+      review.push("color missing");
+    }
+    const dims = renderProductionDims(slug, item.dims);
+    block.push(...dims.lines);
+    review.push(...dims.review);
+    const qty = Number(item.qty || 1) || 1;
+    block.push(`Quantity: ${qty}`);
+    const unitMinor = Number(item.unit_amount || 0) || 0;
+    if (unitMinor > 0) {
+      block.push(`Unit Price: ${formatMoneyMinor(unitMinor, ctx.currency)}`);
+      block.push(`Line Total: ${formatMoneyMinor(unitMinor * qty, ctx.currency)}`);
+    } else {
+      block.push("Unit Price: N/A \u2014 see Stripe session");
+    }
+    if (PRODUCTION_SPECS[slug]) block.push(`Production Specification: ${PRODUCTION_SPECS[slug]}`);
+    if (review.length) {
+      block.push(`\u26A0 ${PRODUCTION_REVIEW_FLAG}: ${review.join("; ")}`);
+      anyReview.push(...review);
+    }
+    itemBlocks.push(block.join("\n"));
+  });
+  const header = [
+    "MILDMATE INTERNAL PRODUCTION ORDER",
+    "(English-only internal copy \u2014 do not forward to the customer)",
+    "",
+    `Order: #${ctx.orderNumber}`,
+    `Order Date: ${ctx.orderDate}`,
+    `Payment Status: ${String(ctx.paymentStatus || "").toUpperCase() || "UNKNOWN"} (Stripe)`
+  ];
+  if (ctx.amountTotalMinor && ctx.amountTotalMinor > 0) {
+    header.push(`Order Total: ${formatMoneyMinor(ctx.amountTotalMinor, ctx.currency)}`);
+  } else {
+    header.push("Order Total: N/A \u2014 see Stripe session");
+  }
+  if (ctx.discountCode) header.push(`Discount Code: ${ctx.discountCode}`);
+  header.push(`Shipping Type: ${ctx.shippingServiceType || "N/A"}`);
+  if (ctx.dutyTaxNotice) header.push(`Duty/Tax: ${ctx.dutyTaxNotice}`);
+  const customer = [
+    "",
+    "CUSTOMER / FULFILLMENT",
+    `Name: ${ctx.customerName || "Guest"}`,
+    `Email: ${ctx.customerEmail || "N/A"}`,
+    `Phone: ${ctx.customerPhone || "N/A"}`,
+    `Shipping Address: ${ctx.shippingAddress || "N/A"}`
+  ];
+  if (ctx.customerNote) {
+    customer.push(`Message Type: ${ctx.customerNoteType || "other"}`);
+    customer.push(`Customer Message: ${ctx.customerNote}`);
+  }
+  const text = [
+    header.join("\n"),
+    customer.join("\n"),
+    "",
+    `ITEMS (${items.length})`,
+    itemBlocks.join("\n\n"),
+    "",
+    "\u2014 MildMate Stripe Webhook (internal production copy)"
+  ].join("\n");
+  const firstSlug = String(items[0]?.slug || "").trim().toLowerCase();
+  const firstTitle = catalog[firstSlug]?.title_en || firstSlug || "Order";
+  const subjectProduct = items.length === 1 ? firstTitle : `${items.length} items`;
+  const subject = `New Production Order \u2014 #${ctx.orderNumber} \u2014 ${subjectProduct}` + (anyReview.length ? ` [${PRODUCTION_REVIEW_FLAG}]` : "");
+  return { subject, text };
+}
+__name(buildInternalProductionEmail, "buildInternalProductionEmail");
+async function loadCatalogForSlugs(env, slugs) {
+  const out = {};
+  const unique = Array.from(new Set(slugs.map((s) => String(s || "").trim().toLowerCase()).filter(Boolean)));
+  for (const slug of unique) {
+    try {
+      const row = await env.DB.prepare(
+        "SELECT id, title_en FROM products WHERE slug = ?1 LIMIT 1"
+      ).bind(slug).first();
+      if (row && row.title_en) {
+        out[slug] = { id: Number.isFinite(Number(row.id)) ? Number(row.id) : null, title_en: String(row.title_en) };
+      }
+    } catch (e) {
+      console.error("production email catalog lookup failed:", slug, e?.message || e);
+    }
+  }
+  return out;
+}
+__name(loadCatalogForSlugs, "loadCatalogForSlugs");
+async function loadFabricColorSets(env) {
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT fabric, color FROM fabric_color_inventory"
+    ).all();
+    const out = {};
+    for (const row of results || []) {
+      const fabric = String(row.fabric || "").trim().toLowerCase();
+      const color = String(row.color || "").trim().toLowerCase();
+      if (!fabric || !color) continue;
+      (out[fabric] ||= /* @__PURE__ */ new Set()).add(color);
+    }
+    if (Object.keys(out).length > 0) return out;
+  } catch (e) {
+    console.error("production email color inventory lookup failed:", e?.message || e);
+  }
+  return DEFAULT_FABRIC_COLOR_SETS;
+}
+__name(loadFabricColorSets, "loadFabricColorSets");
+
 // ../workers/api/webhook.ts
 async function sha2562(text) {
   const d = new TextEncoder().encode(text);
@@ -19408,7 +20168,9 @@ async function handleStripeWebhook(request, env) {
       if (env.RESEND_API_KEY) {
         const itemList = items.map((i) => {
           const dims = i.dims || {};
-          return `- ${i.name} | ${i.fabric || "N/A"} | ${i.color || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
+          const familyDepthUnit = String(dims.unit || "cm") === "inch" ? "in" : "cm";
+          const familyNote = String(i.slug || "") === FAMILY_FITTED_SLUG && Number.isFinite(Number(dims.d)) ? ` (mattress depth ${Number(dims.d)} ${familyDepthUnit} + ${FAMILY_TUCK_UNDER_CM} cm tuck-under allowance)` : "";
+          return `- ${i.name} | ${i.fabric || "N/A"} | ${i.color || "N/A"} | ${formatDimsForEmail(dims)}${familyNote} | Qty: ${i.qty || 1}`;
         }).join("\n");
         const total = session.amount_total ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || "USD"}` : "N/A";
         const shippingCountryCode = String(
@@ -19417,8 +20179,6 @@ async function handleStripeWebhook(request, env) {
         const dutyTaxNotice = shippingCountryCode === "US" || shippingCountryCode === "CA" ? "Import duties and taxes are included (DDP) for this shipment." : shippingCountryCode === "TH" ? "" : "Import duties, VAT, and local taxes are not included and may be collected on delivery.";
         const dutyTaxLine = dutyTaxNotice ? `
 
-Duty/Tax: ${dutyTaxNotice}` : "";
-        const dutyTaxTeamLine = dutyTaxNotice ? `
 Duty/Tax: ${dutyTaxNotice}` : "";
         try {
           const customerMail = await sendEmail(env, {
@@ -19443,24 +20203,43 @@ We'll notify you when your order ships.
         }
         const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
         try {
-          const customerNoteText = customerNote ? `
-Message Type: ${customerNoteType || "other"}
-Customer Message: ${customerNote}` : "";
+          const catalog = await loadCatalogForSlugs(env, items.map((i) => String(i.slug || "")));
+          const fabricColorSets = await loadFabricColorSets(env);
+          const orderCreatedMs = (Number(session.created) || Math.floor(Date.now() / 1e3)) * 1e3;
+          const production = buildInternalProductionEmail(
+            {
+              orderNumber: session.id.slice(-8),
+              orderDate: new Date(orderCreatedMs).toISOString().replace("T", " ").slice(0, 16) + " UTC",
+              currency: sessionCurrency,
+              amountTotalMinor: Number(session.amount_total) || null,
+              paymentStatus: String(session.payment_status || "paid"),
+              customerName: metadata.name || "Guest",
+              customerEmail: email,
+              customerPhone: metadata.phone || "",
+              shippingAddress: metadata.address || "",
+              shippingServiceType,
+              dutyTaxNotice,
+              customerNoteType,
+              customerNote,
+              discountCode: metadata.discount_code || null
+            },
+            items.map((i) => ({
+              slug: String(i.slug || ""),
+              name: String(i.name || ""),
+              quote_id: i.quote_id || null,
+              fabric: i.fabric || null,
+              color: i.color || null,
+              dims: i.dims || {},
+              qty: Number(i.qty || 1) || 1,
+              unit_amount: Number(i.unit_amount || 0) || fallbackUnitAmount
+            })),
+            catalog,
+            fabricColorSets
+          );
           const teamMail = await sendEmail(env, {
             to: teamEmail,
-            subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,
-            text: `New order received!
-
-Order: #${session.id.slice(-8)}
-Customer: ${metadata.name || "Guest"} (${email})
-Phone: ${metadata.phone || "N/A"}
-Address: ${metadata.address || "N/A"}
-Shipping Type: ${shippingServiceType}${customerNoteText}
-
-Items:
-${itemList}
-
-Total: ${total}${dutyTaxTeamLine}`
+            subject: production.subject,
+            text: production.text
           });
           if (!teamMail.success) console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
         } catch (err4) {
@@ -21586,7 +22365,7 @@ function hasForbiddenTokenQuery(request) {
 }
 __name(hasForbiddenTokenQuery, "hasForbiddenTokenQuery");
 var onRequest11 = /* @__PURE__ */ __name(async (context) => {
-  if (isDevelopmentAuthHost(context.request.url)) {
+  if (isDevelopmentAuthHost2(context.request.url)) {
     return context.next();
   }
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
@@ -21639,7 +22418,7 @@ function stripHandshakeMarker(currentUrl) {
 __name(stripHandshakeMarker, "stripHandshakeMarker");
 function redirectToSignIn2(currentUrl, env) {
   const parsed = new URL(currentUrl);
-  const isDev = isDevelopmentAuthHost(currentUrl);
+  const isDev = isDevelopmentAuthHost2(currentUrl);
   const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
   const cleanReturnUrl = parsed.origin + parsed.pathname;
   const signInUrl2 = new URL(`https://${accountsDomain}/sign-in`);
@@ -21647,7 +22426,7 @@ function redirectToSignIn2(currentUrl, env) {
   return Response.redirect(signInUrl2.toString(), 302);
 }
 __name(redirectToSignIn2, "redirectToSignIn");
-function isDevelopmentAuthHost(url) {
+function isDevelopmentAuthHost2(url) {
   const parsed = new URL(url);
   const hostname = parsed.hostname.toLowerCase();
   if (hostname.includes("pages.dev")) return true;
@@ -21655,7 +22434,7 @@ function isDevelopmentAuthHost(url) {
   if ((hostname === "127.0.0.1" || hostname === "::1") && parsed.protocol === "http:") return true;
   return false;
 }
-__name(isDevelopmentAuthHost, "isDevelopmentAuthHost");
+__name(isDevelopmentAuthHost2, "isDevelopmentAuthHost");
 
 // admin/_middleware.ts
 var TOKEN_QUERY_NAME2 = /^__(?:session|clerk_db_jwt)(?:_[A-Za-z0-9_-]{1,64})?$/;
@@ -21701,8 +22480,18 @@ async function enrichAdminFromClerk(sub, env) {
 }
 __name(enrichAdminFromClerk, "enrichAdminFromClerk");
 var onRequest12 = /* @__PURE__ */ __name(async (context) => {
-  if (isDevelopmentAuthHost2(context.request.url)) {
-    return context.next();
+  if (isDevelopmentAuthHost3(context.request.url)) {
+    const devResponse = await context.next();
+    const contentType = devResponse.headers.get("Content-Type") || "";
+    if (!contentType.includes("text/html")) return devResponse;
+    const csp = devResponse.headers.get("Content-Security-Policy");
+    if (!csp || csp.includes("kind-joey-29.clerk.accounts.dev")) return devResponse;
+    const headers = new Headers(devResponse.headers);
+    headers.set("Content-Security-Policy", allowDevClerkOrigins(csp));
+    return new Response(devResponse.body, {
+      status: devResponse.status,
+      headers
+    });
   }
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
@@ -21786,7 +22575,7 @@ function stripHandshakeMarker2(currentUrl) {
 __name(stripHandshakeMarker2, "stripHandshakeMarker");
 function redirectToSignIn3(currentUrl, env) {
   const parsed = new URL(currentUrl);
-  const isDev = isDevelopmentAuthHost2(currentUrl);
+  const isDev = isDevelopmentAuthHost3(currentUrl);
   const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
   const clean = new URL(parsed.origin + parsed.pathname + parsed.search);
   for (const key of Array.from(clean.searchParams.keys())) {
@@ -21810,7 +22599,7 @@ function escHtml3(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 __name(escHtml3, "escHtml");
-function isDevelopmentAuthHost2(url) {
+function isDevelopmentAuthHost3(url) {
   const parsed = new URL(url);
   const hostname = parsed.hostname.toLowerCase();
   if (hostname.includes("pages.dev")) return true;
@@ -21818,7 +22607,13 @@ function isDevelopmentAuthHost2(url) {
   if ((hostname === "127.0.0.1" || hostname === "::1") && parsed.protocol === "http:") return true;
   return false;
 }
-__name(isDevelopmentAuthHost2, "isDevelopmentAuthHost");
+__name(isDevelopmentAuthHost3, "isDevelopmentAuthHost");
+function allowDevClerkOrigins(csp) {
+  const DEV_ORIGIN = "https://kind-joey-29.clerk.accounts.dev";
+  if (!csp || csp.includes(DEV_ORIGIN)) return csp;
+  return csp.replace("script-src ", `script-src ${DEV_ORIGIN} `).replace("connect-src ", `connect-src ${DEV_ORIGIN} `).replace("frame-src ", `frame-src ${DEV_ORIGIN} `);
+}
+__name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
 // _middleware.ts
 var CACHE_TTL2 = 5 * 60 * 1e3;
@@ -22738,7 +23533,7 @@ ${JSON_LD_WEBSITE}
     const csp = response6.headers.get("Content-Security-Policy");
     if (csp) {
       finalHeaders = new Headers(response6.headers);
-      finalHeaders.set("Content-Security-Policy", allowDevClerkOrigins(csp));
+      finalHeaders.set("Content-Security-Policy", allowDevClerkOrigins2(csp));
     }
   }
   return new Response(html, { status: response6.status, headers: finalHeaders });
@@ -22755,14 +23550,14 @@ function isDevCspHost(requestUrl) {
   }
 }
 __name(isDevCspHost, "isDevCspHost");
-function allowDevClerkOrigins(csp) {
+function allowDevClerkOrigins2(csp) {
   const DEV_ORIGIN = "https://kind-joey-29.clerk.accounts.dev";
   if (!csp || csp.includes(DEV_ORIGIN)) return csp;
   return csp.replace("script-src ", `script-src ${DEV_ORIGIN} `).replace("connect-src ", `connect-src ${DEV_ORIGIN} `).replace("frame-src ", `frame-src ${DEV_ORIGIN} `);
 }
-__name(allowDevClerkOrigins, "allowDevClerkOrigins");
+__name(allowDevClerkOrigins2, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-QQ0RoC/functionsRoutes-0.22720597532323594.mjs
+// ../.wrangler/tmp/pages-d56Jbc/functionsRoutes-0.19033066137302446.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

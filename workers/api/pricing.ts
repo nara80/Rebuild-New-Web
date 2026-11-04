@@ -117,10 +117,160 @@ interface PriceBreakdown {
   };
 }
 
+interface RuntimePricingParams {
+  sqcmPerYard: number;
+  wasteFactorFabric: number;
+  wasteFactorPillowcase: number;
+  packingCost: number;
+  deliveryCost: number;
+  operatingRate: number;
+  marketingRate: number;
+  marginStandard: number;
+  marginFamily: number;
+  marginDuvet: number;
+  marginPillow: number;
+  marginPillowProtector: number;
+  marginCushionProtector: number;
+  maxWidthCm: number;
+  flatTuckCm: number;
+  flatSewingCost: number;
+  zipperRate: number;
+  pillowSewingCost: number;
+  pillowShamSewingCost: number;
+  tpuRate: number;
+  tpuSqcmPerLm: number;
+  sewingTiers: { maxArea: number; cost: number }[];
+  duvetSewingTiers: { maxArea: number; cost: number }[];
+  fabricRates: Record<string, number>;
+  version: string;
+}
+
 const DERIVED_MARKUP_KEY_PREFIX = "derived_markup_";
 const DEFAULT_DERIVED_MARKUPS: Record<string, number> = {
   "weighted-duvet-cover": 10,
 };
+
+function toNumberOr(v: unknown, fallback: number): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function buildPricingVersionFromRows(rows: Array<{ key: string; value: number }>): string {
+  const base = rows
+    .map((r) => `${String(r.key)}=${String(r.value)}`)
+    .sort()
+    .join("|");
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < base.length; i++) {
+    h ^= base.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return `pp-${h.toString(16)}`;
+}
+
+async function loadRuntimePricingParams(env: any): Promise<RuntimePricingParams> {
+  const defaults: RuntimePricingParams = {
+    sqcmPerYard: SQCM_PER_YARD,
+    wasteFactorFabric: 1.20,
+    wasteFactorPillowcase: PILLOW_WASTE,
+    packingCost: PACKING_COST,
+    deliveryCost: DOMESTIC_DELIVERY_COST,
+    operatingRate: OPERATING_RATE,
+    marketingRate: MARKETING_RATE,
+    marginStandard: MARGIN_RATE,
+    marginFamily: FAMILY_MARGIN_RATE,
+    marginDuvet: MARGIN_RATE,
+    marginPillow: PILLOWCASE_MARGIN_RATE,
+    marginPillowProtector: PILLOW_PROTECTOR_MARGIN_RATE,
+    marginCushionProtector: CUSHION_PROTECTOR_MARGIN_RATE,
+    maxWidthCm: MAX_WIDTH_CM,
+    flatTuckCm: 25,
+    flatSewingCost: FLAT_SHEET_SEWING_COST,
+    zipperRate: 0.4,
+    pillowSewingCost: PILLOW_SEWING_COST,
+    pillowShamSewingCost: PILLOW_SHAM_SEWING_COST,
+    tpuRate: 120,
+    tpuSqcmPerLm: 21000,
+    sewingTiers: [...SEWING_TIERS],
+    duvetSewingTiers: [...DUVET_SEWING_TIERS],
+    fabricRates: { ...FABRIC_COST_PER_YARD_THB },
+    version: "pp-default",
+  };
+
+  try {
+    const { results } = await env.DB.prepare("SELECT key, value FROM pricing_params").all();
+    const rows = ((results || []) as any[]).map((r) => ({
+      key: String(r.key || ""),
+      value: Number(r.value),
+    })).filter((r) => r.key);
+    if (!rows.length) return defaults;
+
+    const map = new Map<string, number>();
+    for (const r of rows) map.set(r.key, Number(r.value));
+    const get = (k: string, fallback: number) => toNumberOr(map.get(k), fallback);
+
+    const tiers: { maxArea: number; cost: number }[] = [];
+    for (let i = 1; i <= 12; i++) {
+      const maxKey = `sewing_tier${i}_max`;
+      const costKey = `sewing_tier${i}_cost`;
+      if (!map.has(maxKey) || !map.has(costKey)) continue;
+      tiers.push({
+        maxArea: get(maxKey, Infinity),
+        cost: get(costKey, 0),
+      });
+    }
+
+    const duvetTiers: { maxArea: number; cost: number }[] = [];
+    for (let i = 1; i <= 12; i++) {
+      const maxKey = `duvet_sewing_tier${i}_max`;
+      const costKey = `duvet_sewing_tier${i}_cost`;
+      if (!map.has(maxKey) || !map.has(costKey)) continue;
+      duvetTiers.push({
+        maxArea: get(maxKey, Infinity),
+        cost: get(costKey, 0),
+      });
+    }
+
+    return {
+      sqcmPerYard: get("sqcm_per_yard", defaults.sqcmPerYard),
+      wasteFactorFabric: 1 + get("waste_factor_fabric", 20) / 100,
+      wasteFactorPillowcase: 1 + get("waste_factor_pillowcase", 60) / 100,
+      packingCost: get("packing_cost", defaults.packingCost),
+      deliveryCost: get("delivery_cost", defaults.deliveryCost),
+      operatingRate: get("ops_rate", defaults.operatingRate * 100) / 100,
+      marketingRate: get("mkt_rate", defaults.marketingRate * 100) / 100,
+      marginStandard: get("margin_rate_standard", defaults.marginStandard * 100) / 100,
+      marginFamily: get("margin_rate_family", defaults.marginFamily * 100) / 100,
+      marginDuvet: get("margin_rate_duvet", defaults.marginDuvet * 100) / 100,
+      marginPillow: get("margin_rate_pillow", defaults.marginPillow * 100) / 100,
+      marginPillowProtector: get("margin_rate_pillow_protector", defaults.marginPillowProtector * 100) / 100,
+      marginCushionProtector: get("margin_rate_cushion_protector", defaults.marginCushionProtector * 100) / 100,
+      maxWidthCm: get("max_width_cm", defaults.maxWidthCm),
+      flatTuckCm: get("flat_tuck_cm", defaults.flatTuckCm),
+      flatSewingCost: get("flat_sewing_cost", defaults.flatSewingCost),
+      zipperRate: get("zipper_rate", defaults.zipperRate),
+      pillowSewingCost: get("pillow_sewing_cost", defaults.pillowSewingCost),
+      pillowShamSewingCost: get("pillow_sham_sewing_cost", defaults.pillowShamSewingCost),
+      tpuRate: get("fabric_rate_tpu", defaults.tpuRate),
+      tpuSqcmPerLm: get("tpu_sqcm_per_lm", defaults.tpuSqcmPerLm),
+      sewingTiers: tiers.length
+        ? tiers.sort((a, b) => a.maxArea - b.maxArea)
+        : defaults.sewingTiers,
+      duvetSewingTiers: duvetTiers.length
+        ? duvetTiers.sort((a, b) => a.maxArea - b.maxArea)
+        : defaults.duvetSewingTiers,
+      fabricRates: {
+        cloudsoft: get("fabric_rate_cloudsoft", defaults.fabricRates.cloudsoft),
+        breezeplus: get("fabric_rate_breezeplus", defaults.fabricRates.breezeplus),
+        premacotton: get("fabric_rate_premacotton", defaults.fabricRates.premacotton),
+        ecoluxe: get("fabric_rate_ecoluxe", defaults.fabricRates.ecoluxe),
+      },
+      version: buildPricingVersionFromRows(rows),
+    };
+  } catch {
+    return defaults;
+  }
+}
 
 function inchToCm(val: number): number {
   return val * 2.54;
@@ -138,6 +288,20 @@ function getDuvetSewingCost(areaSqCm: number): number {
     if (areaSqCm <= tier.maxArea) return tier.cost;
   }
   return DUVET_SEWING_TIERS[DUVET_SEWING_TIERS.length - 1].cost;
+}
+
+function getRuntimeSewingCost(areaSqCm: number, tiers: { maxArea: number; cost: number }[]): number {
+  for (const tier of tiers) {
+    if (areaSqCm <= tier.maxArea) return tier.cost;
+  }
+  return tiers.length ? tiers[tiers.length - 1].cost : 500;
+}
+
+function getRuntimeDuvetSewingCost(areaSqCm: number, tiers: { maxArea: number; cost: number }[]): number {
+  for (const tier of tiers) {
+    if (areaSqCm <= tier.maxArea) return tier.cost;
+  }
+  return tiers.length ? tiers[tiers.length - 1].cost : 600;
 }
 
 /**
@@ -211,6 +375,205 @@ function calculateFittedSheetPrice(
       accessoriesThb: Math.round(accessories * 100) / 100,
       packingThb: packing,
       deliveryThb: delivery,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded,
+    },
+  };
+}
+
+function calculateFittedSheetPriceRuntime(
+  wCm: number,
+  lCm: number,
+  dCm: number,
+  fabric: string,
+  marginRate: number,
+  cfg: RuntimeFittedPricingParams,
+): { priceThb: number; priceUsd: number; breakdown: PriceBreakdown["breakdown"] } {
+  const fabricW = wCm + 2 * dCm + 14;
+  const fabricL = lCm + 2 * dCm + 14;
+  const fabricArea = fabricW * fabricL;
+
+  const yardRate = cfg.fabricRates[fabric] || cfg.fabricRates.cloudsoft || 100;
+  const fabricCost = (fabricArea * yardRate / cfg.sqcmPerYard) * cfg.wasteFactorFabric;
+  const sewingCost = getRuntimeSewingCost(fabricArea, cfg.sewingTiers);
+  const accessories = fabricCost * 0.10;
+  const subtotal = fabricCost + sewingCost + accessories + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * marginRate;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(fabricArea * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: sewingCost,
+      accessoriesThb: Math.round(accessories * 100) / 100,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded,
+    },
+  };
+}
+
+function calculateFlatSheetPriceRuntime(
+  wCm: number,
+  lCm: number,
+  dCm: number,
+  fabric: string,
+  cfg: RuntimePricingParams,
+): { priceThb: number; priceUsd: number; breakdown: PriceBreakdown["breakdown"] } {
+  const fabricW = wCm + 2 * dCm + (cfg.flatTuckCm * 2);
+  const fabricL = lCm + 2 * dCm + (cfg.flatTuckCm * 2);
+  const fabricArea = fabricW * fabricL;
+  const yardRate = cfg.fabricRates[fabric] || cfg.fabricRates.cloudsoft || 100;
+  const fabricCost = (fabricArea * yardRate / cfg.sqcmPerYard) * cfg.wasteFactorFabric;
+  const subtotal = fabricCost + cfg.flatSewingCost + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * cfg.marginStandard;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(fabricArea * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: cfg.flatSewingCost,
+      accessoriesThb: 0,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded,
+    },
+  };
+}
+
+function calculateDuvetPriceRuntime(
+  wCm: number,
+  lCm: number,
+  fabric: string,
+  cfg: RuntimePricingParams,
+): { priceThb: number; priceUsd: number; breakdown: PriceBreakdown["breakdown"] } {
+  const rawArea = 2 * (wCm + 5) * (lCm + 5);
+  const floorArea = rawArea * cfg.wasteFactorFabric;
+  const yardRate = cfg.fabricRates[fabric] || cfg.fabricRates.cloudsoft || 100;
+  const fabricCost = (floorArea * yardRate / cfg.sqcmPerYard);
+  const zipperCost = cfg.zipperRate * (2 * lCm + wCm);
+  const sewingCost = getRuntimeDuvetSewingCost(rawArea, cfg.duvetSewingTiers);
+  const subtotal = fabricCost + zipperCost + sewingCost + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * cfg.marginDuvet;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(floorArea * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: sewingCost,
+      accessoriesThb: Math.round(zipperCost * 100) / 100,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded,
+    },
+  };
+}
+
+function calculatePillowcasePriceRuntime(
+  wCm: number,
+  lCm: number,
+  fabric: string,
+  variant: "envelope" | "zipper" | "sham",
+  cfg: RuntimePricingParams,
+): { priceThb: number; priceUsd: number; breakdown: PriceBreakdown["breakdown"] } {
+  let rawArea = 2 * (wCm + 5) * (lCm + 5);
+  if (variant === "sham") rawArea *= (1 + PILLOW_SHAM_FABRIC_EXTRA);
+  const area = rawArea * cfg.wasteFactorPillowcase;
+  const yardRate = cfg.fabricRates[fabric] || cfg.fabricRates.cloudsoft || 100;
+  const fabricCost = (area * yardRate / cfg.sqcmPerYard);
+  const zipperCost = variant === "zipper" ? cfg.zipperRate * Math.max(wCm, lCm) : 0;
+  const sewingCost = variant === "sham" ? cfg.pillowShamSewingCost : cfg.pillowSewingCost;
+  const subtotal = fabricCost + zipperCost + sewingCost + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * cfg.marginPillow;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(area * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: sewingCost,
+      accessoriesThb: Math.round(zipperCost * 100) / 100,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded,
+    },
+  };
+}
+
+function calculatePillowProtectorPriceRuntime(
+  wCm: number,
+  lCm: number,
+  cfg: RuntimePricingParams,
+): { priceThb: number; priceUsd: number; breakdown: PriceBreakdown["breakdown"] } {
+  const rawArea = 2 * (wCm + 5) * (lCm + 5);
+  const area = rawArea * cfg.wasteFactorPillowcase;
+  const fabricCost = (cfg.tpuRate * area / cfg.tpuSqcmPerLm);
+  const zipperCost = cfg.zipperRate * Math.max(wCm, lCm);
+  const subtotal = fabricCost + zipperCost + cfg.pillowSewingCost + cfg.packingCost + cfg.deliveryCost;
+  const operating = subtotal * cfg.operatingRate;
+  const marketing = subtotal * cfg.marketingRate;
+  const margin = subtotal * cfg.marginPillowProtector;
+  const total = subtotal + operating + marketing + margin;
+  const rounded = Math.ceil(total / 100) * 100;
+  const usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(area * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: cfg.pillowSewingCost,
+      accessoriesThb: Math.round(zipperCost * 100) / 100,
+      packingThb: cfg.packingCost,
+      deliveryThb: cfg.deliveryCost,
       subtotalThb: Math.round(subtotal * 100) / 100,
       operatingThb: Math.round(operating * 100) / 100,
       marketingThb: Math.round(marketing * 100) / 100,
@@ -588,6 +951,7 @@ export function calculatePrice(
   input: PricingInput,
   currency: "USD" | "THB" = "USD",
   derivedMarkups: Record<string, number> = {},
+  runtimeParams?: RuntimePricingParams,
 ): { price: number; breakdown?: PriceBreakdown["breakdown"] } {
   const product = input.product || "";
   const mode = input.mode || "sheet";
@@ -622,7 +986,9 @@ export function calculatePrice(
     }
 
     if (w > 0 && l > 0) {
-      const result = calculatePillowcasePrice(w, l, fabric, pillowcase.variant!);
+      const result = runtimeParams
+        ? calculatePillowcasePriceRuntime(w, l, fabric, pillowcase.variant!, runtimeParams)
+        : calculatePillowcasePrice(w, l, fabric, pillowcase.variant!);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
@@ -646,7 +1012,9 @@ export function calculatePrice(
     }
 
     if (w > 0 && l > 0) {
-      const result = calculatePillowProtectorPrice(w, l);
+      const result = runtimeParams
+        ? calculatePillowProtectorPriceRuntime(w, l, runtimeParams)
+        : calculatePillowProtectorPrice(w, l);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
@@ -666,7 +1034,9 @@ export function calculatePrice(
     }
 
     if (w > 0 && l > 0) {
-      const result = calculateDuvetPrice(w, l, fabric);
+      const result = runtimeParams
+        ? calculateDuvetPriceRuntime(w, l, fabric, runtimeParams)
+        : calculateDuvetPrice(w, l, fabric);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
@@ -688,7 +1058,9 @@ export function calculatePrice(
     }
 
     if (w > 0 && l > 0 && d > 0) {
-      const result = calculateFlatSheetPrice(w, l, d, fabric);
+      const result = runtimeParams
+        ? calculateFlatSheetPriceRuntime(w, l, d, fabric, runtimeParams)
+        : calculateFlatSheetPrice(w, l, d, fabric);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
@@ -711,20 +1083,35 @@ export function calculatePrice(
 
     if (w > 0 && l > 0 && d > 0) {
       // Constraint: W > 220 cm → redirect to Family/Co-Sleep
-      if (product !== "family-fitted-sheet" && w > MAX_WIDTH_CM) {
-        const result = calculateFittedSheetPrice(w, l, d, fabric);
+      const maxWidth = runtimeParams ? runtimeParams.maxWidthCm : MAX_WIDTH_CM;
+      if (product !== "family-fitted-sheet" && w > maxWidth) {
+        const result = runtimeParams
+          ? calculateFittedSheetPriceRuntime(w, l, d, fabric, runtimeParams.marginStandard, runtimeParams)
+          : calculateFittedSheetPrice(w, l, d, fabric);
         return {
           price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
           breakdown: { ...result.breakdown!, roundedThb: -1 }, // -1 signals "requires family sheet"
         };
       }
 
-      const marginRate = product === "family-fitted-sheet"
-        ? FAMILY_MARGIN_RATE
-        : product === "custom-waterproof-cushion-protector"
-          ? CUSHION_PROTECTOR_MARGIN_RATE
-          : MARGIN_RATE;
-      const result = calculateFittedSheetPrice(w, l, d, fabric, marginRate);
+      const marginRate = runtimeParams
+        ? (
+          product === "family-fitted-sheet"
+            ? runtimeParams.marginFamily
+            : product === "custom-waterproof-cushion-protector"
+              ? runtimeParams.marginCushionProtector
+              : runtimeParams.marginStandard
+        )
+        : (
+          product === "family-fitted-sheet"
+            ? FAMILY_MARGIN_RATE
+            : product === "custom-waterproof-cushion-protector"
+              ? CUSHION_PROTECTOR_MARGIN_RATE
+              : MARGIN_RATE
+        );
+      const result = runtimeParams
+        ? calculateFittedSheetPriceRuntime(w, l, d, fabric, marginRate, runtimeParams)
+        : calculateFittedSheetPrice(w, l, d, fabric, marginRate);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown,
@@ -799,8 +1186,9 @@ export async function handlePricing(request: Request, env: any): Promise<Respons
       }
 
       const derivedMarkupMap = await loadDerivedMarkupMap(env);
-      const resultUsd = calculatePrice(body, "USD", derivedMarkupMap);
-      const resultThb = calculatePrice(body, "THB", derivedMarkupMap);
+      const runtimeParams = await loadRuntimePricingParams(env);
+      const resultUsd = calculatePrice(body, "USD", derivedMarkupMap, runtimeParams);
+      const resultThb = calculatePrice(body, "THB", derivedMarkupMap, runtimeParams);
 
       let formulaType = "legacy";
       const pc = isPillowcaseProduct(body.product || "");
@@ -825,6 +1213,7 @@ export async function handlePricing(request: Request, env: any): Promise<Respons
         unit: body.unit || "cm",
         formula: formulaType,
         derived_markup_pct: body.product ? (derivedMarkupMap[body.product] || 0) : 0,
+        pricing_version: runtimeParams.version,
       };
 
       if (resultUsd.breakdown) {

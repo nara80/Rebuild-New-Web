@@ -349,6 +349,44 @@ function renderPage(name) {
   }
 }
 
+// ── renderDashboard (Super Admin) ──
+// Ported from admin/index.html: renderPage('dashboard') referenced this
+// function but it was never defined here, throwing "renderDashboard is not
+// defined" on the Dashboard tab.
+async function renderDashboard() {
+  var html = '<div class="stats-grid">'+
+    '<div class="stat-card"><div class="stat-label">Pricing Params</div><div class="stat-value">37</div><div class="stat-sub">Active parameters</div></div>'+
+    '<div class="stat-card"><div class="stat-label">DIY Prices</div><div class="stat-value">8</div><div class="stat-sub">Marine shape entries</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Currencies</div><div class="stat-value">8</div><div class="stat-sub">Exchange rates tracked</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Products</div><div class="stat-value">27</div><div class="stat-sub">All configurators live</div></div>'+
+  '</div>';
+
+  try {
+    var resp = await fetch('/api/admin/favorites/stats?limit=5', { headers: await getAdminAuthHeaders(false) });
+    if (resp.ok) {
+      var data = await resp.json();
+      var top = data.topProducts || [];
+      html += '<div class="card"><div class="card-header"><span>Top Wishlisted Products</span><span style="font-size:0.75rem;color:var(--c-muted)">' + Number((data.totals && data.totals.total_favorites) || 0) + ' total saves</span></div><div class="card-body">';
+      if (!top.length) {
+        html += '<p style="color:var(--c-muted);text-align:center;padding:24px">No favorites yet.</p>';
+      } else {
+        html += '<table><thead><tr><th>Product</th><th>Saves</th><th>Unique Users</th></tr></thead><tbody>';
+        top.forEach(function(p) {
+          html += '<tr><td><a href="/product/' + escHtml(p.slug || '') + '/" target="_blank" rel="noopener">' + escHtml(p.title_en || p.slug || 'Product') + '</a></td><td><strong>' + Number(p.favorite_count || 0) + '</strong></td><td>' + Number(p.unique_users || 0) + '</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+      html += '</div></div>';
+    } else {
+      html += '<div class="card"><div class="card-header">Top Wishlisted Products</div><div class="card-body"><p style="color:var(--c-muted)">Favorites stats unavailable right now.</p></div></div>';
+    }
+  } catch(e) {
+    html += '<div class="card"><div class="card-header">Top Wishlisted Products</div><div class="card-body"><p style="color:var(--c-muted)">Favorites stats unavailable right now.</p></div></div>';
+  }
+
+  return html;
+}
+
 // ── renderSubscribers (Newsletter view — uses contacts API with ?subscribed=1) ──
 async function renderSubscribers() {
   try {
@@ -722,6 +760,14 @@ async function renderPricingParams() {
   };
 
   var sample = [];
+  var pricingVersion = '';
+  try {
+    var vresp = await fetch('/api/pricing-params');
+    if (vresp.ok) {
+      var vjson = await vresp.json();
+      pricingVersion = String(vjson && vjson.pricing_version ? vjson.pricing_version : '');
+    }
+  } catch(eVer) { /* non-blocking */ }
   try {
     sample = await loadPricingParamsFromD1(false);
   } catch (e) {
@@ -736,7 +782,9 @@ async function renderPricingParams() {
   }
 
   var catKeys = Object.keys(categories);
-  var html = "";
+  var html = pricingVersion
+    ? '<div class="card"><div class="card-body" style="font-size:0.8125rem;color:var(--c-muted)">Pricing version: <code>' + escHtml(pricingVersion) + '</code></div></div>'
+    : "";
   for(var c = 0; c < catKeys.length; c++) {
     var cat = catKeys[c];
     var items = sample.filter(function(r){ return r.category === cat; });
