@@ -103,7 +103,8 @@ No auth-bypass or boundary regression observed in automated checks.
 
 ## 6) Git commit/push status
 
-- Repository finalization pending at report creation time.
+- Verified Clerk recovery fix commit: `e91514c9`
+- Branch: `security/admin-api-remediation-r1`
 - Deployment was executed from isolated local workspace only.
 
 ---
