@@ -73,7 +73,7 @@ export const onRequest: PagesFunction<{
   // Dev mode: Clerk uses IndexedDB (not cookies), so cookie-based middleware
   // cannot detect auth. Rely on client-side gate instead.
   if (isDevelopmentAuthHost(context.request.url)) {
-    return context.next();
+    return nextWithDevClerkCsp(context);
   }
 
   // Clerk delivers refreshed session cookies as a signed __clerk_handshake
@@ -234,4 +234,37 @@ function isDevelopmentAuthHost(url: string): boolean {
   if (hostname === "localhost") return true;
   if ((hostname === "127.0.0.1" || hostname === "::1") && parsed.protocol === "http:") return true;
   return false;
+}
+
+async function nextWithDevClerkCsp(context: any): Promise<Response> {
+  const response = await context.next();
+  const csp = response.headers.get("Content-Security-Policy");
+  if (!csp) return response;
+  const patched = allowDevClerkOrigins(csp);
+  if (patched === csp) return response;
+  const headers = new Headers(response.headers);
+  headers.set("Content-Security-Policy", patched);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+function allowDevClerkOrigins(csp: string): string {
+  if (!csp) return csp;
+  const devOrigins = [
+    "https://kind-joey-29.clerk.accounts.dev",
+    "https://clerk.kind-joey-29.clerk.accounts.dev",
+    "https://kind-joey-29.accounts.dev",
+  ];
+  let out = csp;
+  for (const origin of devOrigins) {
+    if (out.includes(origin)) continue;
+    out = out
+      .replace("script-src ", `script-src ${origin} `)
+      .replace("connect-src ", `connect-src ${origin} `)
+      .replace("frame-src ", `frame-src ${origin} `);
+  }
+  return out;
 }

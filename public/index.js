@@ -5795,6 +5795,28 @@ function isProductionHostname(hostname) {
   return h === "www.mildmate.com" || h === "mildmate.com";
 }
 __name(isProductionHostname, "isProductionHostname");
+function isAllowedBrowserOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+    const host = url.hostname.toLowerCase();
+    if (host === "www.mildmate.com" || host === "mildmate.com") return true;
+    if (host === "mildmate-new.pages.dev") return true;
+    if (host.endsWith(".mildmate-new.pages.dev")) return true;
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1") return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+__name(isAllowedBrowserOrigin, "isAllowedBrowserOrigin");
+function isPreviewLikeHost(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  if (h.endsWith(".pages.dev")) return true;
+  if (h === "localhost" || h === "127.0.0.1" || h === "::1") return true;
+  return false;
+}
+__name(isPreviewLikeHost, "isPreviewLikeHost");
 // Cache JWKS keys per-URL so dev and prod keys don't collide.
 var jwksCache = /* @__PURE__ */ new Map();
 var RATE_WINDOW_MS = 60 * 1e3;
@@ -5860,27 +5882,27 @@ async function importRsaKey(jwk) {
 }
 __name(importRsaKey, "importRsaKey");
 async function verifyClerkJwt(request, env) {
+  let requestHost = "";
+  try {
+    requestHost = new URL(request.url).hostname.toLowerCase();
+  } catch {
+  }
   const origin = request.headers.get("Origin") || "";
-  const host = request.headers.get("Host") || "";
-  const allowedOrigins = [
-    "https://mildmate-new.pages.dev",
-    "https://www.mildmate.com"
-  ];
-  if (origin && !allowedOrigins.includes(origin) && host !== "localhost" && !host.startsWith("127.0.0.1")) {
+  if (origin && !isAllowedBrowserOrigin(origin)) {
     return { valid: false, error: "Invalid origin", status: 403 };
   }
   try {
-    const requestHost = new URL(request.url).hostname.toLowerCase();
     if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
       return { valid: false, error: "Auth service unavailable", status: 503 };
     }
   } catch {
   }
+  const applyRateLimit = !isPreviewLikeHost(requestHost);
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  if (await checkAuthRateLimit(env, ip)) {
+  if (applyRateLimit && await checkAuthRateLimit(env, ip)) {
     return { valid: false, error: "Too many requests", status: 429 };
   }
-  await recordRateLimit(env, ip);
+  if (applyRateLimit) await recordRateLimit(env, ip);
   const authHeader = request.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
   if (!token) {

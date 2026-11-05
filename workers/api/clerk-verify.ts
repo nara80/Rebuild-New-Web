@@ -49,6 +49,28 @@ function isProductionHostname(hostname: string): boolean {
   return h === "www.mildmate.com" || h === "mildmate.com";
 }
 
+function isAllowedBrowserOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+    const host = url.hostname.toLowerCase();
+    if (host === "www.mildmate.com" || host === "mildmate.com") return true;
+    if (host === "mildmate-new.pages.dev") return true;
+    if (host.endsWith(".mildmate-new.pages.dev")) return true;
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1") return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function isPreviewLikeHost(hostname: string): boolean {
+  const h = String(hostname || "").toLowerCase();
+  if (h.endsWith(".pages.dev")) return true;
+  if (h === "localhost" || h === "127.0.0.1" || h === "::1") return true;
+  return false;
+}
+
 // Cache JWKS keys per-URL so dev and prod keys don't collide.
 let jwksCache: Map<string, { keys: JwksKey[]; fetchedAt: number }> = new Map();
 
@@ -130,17 +152,12 @@ export async function verifyClerkJwt(
   request: Request,
   env: any
 ): Promise<{ valid: true; payload: ClerkJwtPayload } | { valid: false; error: string; status: number }> {
+  let requestHost = "";
+  try { requestHost = new URL(request.url).hostname.toLowerCase(); } catch {}
 
   // ── Origin validation ──
   const origin = request.headers.get("Origin") || "";
-  const host = request.headers.get("Host") || "";
-  const allowedOrigins = [
-    "https://mildmate-new.pages.dev",
-    "https://www.mildmate.com",
-    "https://mildmate.com",
-  ];
-  if (origin && !allowedOrigins.includes(origin) &&
-      host !== "localhost" && !host.startsWith("127.0.0.1")) {
+  if (origin && !isAllowedBrowserOrigin(origin)) {
     return { valid: false, error: "Invalid origin", status: 403 };
   }
 
@@ -150,18 +167,18 @@ export async function verifyClerkJwt(
   // token instead of falling back to the Development instance. Production
   // must never silently trust Development-instance JWTs.
   try {
-    const requestHost = new URL(request.url).hostname.toLowerCase();
     if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
       return { valid: false, error: "Auth service unavailable", status: 503 };
     }
   } catch {}
 
   // ── Rate limiting ──
+  const applyRateLimit = !isPreviewLikeHost(requestHost);
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  if (await checkAuthRateLimit(env, ip)) {
+  if (applyRateLimit && await checkAuthRateLimit(env, ip)) {
     return { valid: false, error: "Too many requests", status: 429 };
   }
-  await recordRateLimit(env, ip);
+  if (applyRateLimit) await recordRateLimit(env, ip);
 
   // ── Extract token ──
   const authHeader = request.headers.get("Authorization") || "";

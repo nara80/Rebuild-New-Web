@@ -426,6 +426,17 @@ async function getAdminBearerToken(){
   return authTokenCache.inflight;
 }
 
+async function waitForAdminBearerToken(maxWaitMs){
+  var deadline = Date.now() + (maxWaitMs || 8000);
+  while (Date.now() < deadline) {
+    var token = '';
+    try { token = await getAdminBearerToken(); } catch(e) { token = ''; }
+    if (token) return true;
+    await new Promise(function(r){ setTimeout(r, 250); });
+  }
+  return false;
+}
+
 window.addEventListener('clerk:signed-in', function(){
   authTokenCache.token = '';
   authTokenCache.expiresAt = 0;
@@ -449,7 +460,14 @@ async function authHeaders(){
 }
 
 async function api(path){
-  var res = await fetch(API + path, { headers: await authHeaders() });
+  var headers = await authHeaders();
+  var res = await fetch(API + path, { headers: headers });
+  if ((res.status === 401 || res.status === 403) && window.clerk) {
+    authTokenCache.token = '';
+    authTokenCache.expiresAt = 0;
+    headers = await authHeaders();
+    res = await fetch(API + path, { headers: headers });
+  }
   var body = null;
   try { body = await res.json(); } catch(e) {}
   if (!res.ok || !body || body.success === false) {
@@ -2230,6 +2248,12 @@ async function boot(){
     }
     if (!(window.clerk && window.clerk.session)) {
       document.getElementById('gate-msg').textContent = 'You are not signed in. Sign in through Super Admin first, then return here.';
+      document.getElementById('gate-signin').style.display = 'inline-flex';
+      return;
+    }
+    var tokenReady = await waitForAdminBearerToken(8000);
+    if (!tokenReady) {
+      document.getElementById('gate-msg').textContent = 'Signed in, but admin token is not ready yet. Please wait a moment and reload this page.';
       document.getElementById('gate-signin').style.display = 'inline-flex';
       return;
     }

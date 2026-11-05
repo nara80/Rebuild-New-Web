@@ -2872,6 +2872,28 @@ function isProductionHostname(hostname) {
   return h === "www.mildmate.com" || h === "mildmate.com";
 }
 __name(isProductionHostname, "isProductionHostname");
+function isAllowedBrowserOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+    const host = url.hostname.toLowerCase();
+    if (host === "www.mildmate.com" || host === "mildmate.com") return true;
+    if (host === "mildmate-new.pages.dev") return true;
+    if (host.endsWith(".mildmate-new.pages.dev")) return true;
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1") return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+__name(isAllowedBrowserOrigin, "isAllowedBrowserOrigin");
+function isPreviewLikeHost(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  if (h.endsWith(".pages.dev")) return true;
+  if (h === "localhost" || h === "127.0.0.1" || h === "::1") return true;
+  return false;
+}
+__name(isPreviewLikeHost, "isPreviewLikeHost");
 var jwksCache = /* @__PURE__ */ new Map();
 var RATE_WINDOW_MS = 60 * 1e3;
 var MAX_AUTH_REQUESTS = 30;
@@ -2936,28 +2958,27 @@ async function importRsaKey(jwk) {
 }
 __name(importRsaKey, "importRsaKey");
 async function verifyClerkJwt(request, env) {
+  let requestHost = "";
+  try {
+    requestHost = new URL(request.url).hostname.toLowerCase();
+  } catch {
+  }
   const origin = request.headers.get("Origin") || "";
-  const host = request.headers.get("Host") || "";
-  const allowedOrigins = [
-    "https://mildmate-new.pages.dev",
-    "https://www.mildmate.com",
-    "https://mildmate.com"
-  ];
-  if (origin && !allowedOrigins.includes(origin) && host !== "localhost" && !host.startsWith("127.0.0.1")) {
+  if (origin && !isAllowedBrowserOrigin(origin)) {
     return { valid: false, error: "Invalid origin", status: 403 };
   }
   try {
-    const requestHost = new URL(request.url).hostname.toLowerCase();
     if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
       return { valid: false, error: "Auth service unavailable", status: 503 };
     }
   } catch {
   }
+  const applyRateLimit = !isPreviewLikeHost(requestHost);
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  if (await checkAuthRateLimit(env, ip)) {
+  if (applyRateLimit && await checkAuthRateLimit(env, ip)) {
     return { valid: false, error: "Too many requests", status: 429 };
   }
-  await recordRateLimit(env, ip);
+  if (applyRateLimit) await recordRateLimit(env, ip);
   const authHeader = request.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
   if (!token) {
@@ -22015,7 +22036,7 @@ async function enrichAdminFromClerk(sub, env) {
 __name(enrichAdminFromClerk, "enrichAdminFromClerk");
 var onRequest12 = /* @__PURE__ */ __name(async (context) => {
   if (isDevelopmentAuthHost2(context.request.url)) {
-    return context.next();
+    return nextWithDevClerkCsp(context);
   }
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
@@ -22132,6 +22153,36 @@ function isDevelopmentAuthHost2(url) {
   return false;
 }
 __name(isDevelopmentAuthHost2, "isDevelopmentAuthHost");
+async function nextWithDevClerkCsp(context) {
+  const response6 = await context.next();
+  const csp = response6.headers.get("Content-Security-Policy");
+  if (!csp) return response6;
+  const patched = allowDevClerkOrigins(csp);
+  if (patched === csp) return response6;
+  const headers = new Headers(response6.headers);
+  headers.set("Content-Security-Policy", patched);
+  return new Response(response6.body, {
+    status: response6.status,
+    statusText: response6.statusText,
+    headers
+  });
+}
+__name(nextWithDevClerkCsp, "nextWithDevClerkCsp");
+function allowDevClerkOrigins(csp) {
+  if (!csp) return csp;
+  const devOrigins = [
+    "https://kind-joey-29.clerk.accounts.dev",
+    "https://clerk.kind-joey-29.clerk.accounts.dev",
+    "https://kind-joey-29.accounts.dev"
+  ];
+  let out = csp;
+  for (const origin of devOrigins) {
+    if (out.includes(origin)) continue;
+    out = out.replace("script-src ", `script-src ${origin} `).replace("connect-src ", `connect-src ${origin} `).replace("frame-src ", `frame-src ${origin} `);
+  }
+  return out;
+}
+__name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
 // _middleware.ts
 var CACHE_TTL2 = 5 * 60 * 1e3;
@@ -23051,7 +23102,7 @@ ${JSON_LD_WEBSITE}
     const csp = response6.headers.get("Content-Security-Policy");
     if (csp) {
       finalHeaders = new Headers(response6.headers);
-      finalHeaders.set("Content-Security-Policy", allowDevClerkOrigins(csp));
+      finalHeaders.set("Content-Security-Policy", allowDevClerkOrigins2(csp));
     }
   }
   return new Response(html, { status: response6.status, headers: finalHeaders });
@@ -23068,14 +23119,14 @@ function isDevCspHost(requestUrl) {
   }
 }
 __name(isDevCspHost, "isDevCspHost");
-function allowDevClerkOrigins(csp) {
+function allowDevClerkOrigins2(csp) {
   const DEV_ORIGIN = "https://kind-joey-29.clerk.accounts.dev";
   if (!csp || csp.includes(DEV_ORIGIN)) return csp;
   return csp.replace("script-src ", `script-src ${DEV_ORIGIN} `).replace("connect-src ", `connect-src ${DEV_ORIGIN} `).replace("frame-src ", `frame-src ${DEV_ORIGIN} `);
 }
-__name(allowDevClerkOrigins, "allowDevClerkOrigins");
+__name(allowDevClerkOrigins2, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-u89G4d/functionsRoutes-0.7861905208392386.mjs
+// ../.wrangler/tmp/pages-1JRH5R/functionsRoutes-0.20546370602734665.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
