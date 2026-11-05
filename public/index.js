@@ -1592,7 +1592,7 @@ async function handleRowsUpsert2(request, env) {
   }
   const source = trimTo3(body.sync_source, 80) || "ga4-manual-collector";
   const scenario = trimTo3(body.scenario, 200) || "phase10-ga4-collector";
-  const defaultPropertyId = trimTo3(body.property_id ?? body.propertyId, 40) || "366290587";
+  const defaultPropertyId = trimTo3(body.property_id ?? body.propertyId, 40) || "308922589";
   const defaultPropertyScope = (trimTo3(body.property_scope ?? body.propertyScope, 20) || "website").toLowerCase();
   if (!/^\d{4,20}$/.test(defaultPropertyId)) {
     return response3({ success: false, error_code: "INVALID_PROPERTY", message: "property_id must be a numeric GA4 property id." }, 400);
@@ -9393,7 +9393,7 @@ async function getGsc(env, f) {
 }
 __name(getGsc, "getGsc");
 async function getGa4(env, f) {
-  const GA4_SCOPE_WHERE = " AND g.property_scope = 'website' AND g.landing_page_path NOT LIKE '%/listing/%'";
+  const GA4_SCOPE_WHERE = " AND g.property_scope = 'website' AND g.property_id = '308922589' AND g.landing_page_path NOT LIKE '%/listing/%'";
   const range = dayRangeWhere(f, "g.report_date");
   const binds = [...range.binds];
   let productSql = "";
@@ -10145,6 +10145,7 @@ async function getGrowthSignals(env, f) {
        COALESCE(SUM(purchases), 0) AS purchases
      FROM ga4_funnel_daily
      WHERE property_scope = 'website'
+       AND property_id = '308922589'
        AND report_date >= ? AND report_date <= ?${productSql}`,
     [currentStart, anchorDate, ...productBind]
   );
@@ -10152,6 +10153,7 @@ async function getGrowthSignals(env, f) {
     `SELECT COALESCE(SUM(sessions), 0) AS sessions
      FROM ga4_funnel_daily
      WHERE property_scope = 'website'
+       AND property_id = '308922589'
        AND report_date >= ? AND report_date <= ?${productSql}`,
     [previousStart, previousEnd, ...productBind]
   );
@@ -10161,6 +10163,7 @@ async function getGrowthSignals(env, f) {
        COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN sessions ELSE 0 END), 0) AS mapped_sessions
      FROM ga4_funnel_daily
      WHERE property_scope = 'website'
+       AND property_id = '308922589'
        AND report_date >= ? AND report_date <= ?`,
     [currentStart, anchorDate]
   );

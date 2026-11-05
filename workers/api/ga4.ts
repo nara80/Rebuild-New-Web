@@ -2,7 +2,7 @@
 // POST /api/v1/ga4/rows/upsert — Bearer-token GA4 fact upserts.
 // POST /api/v1/ga4/leads/upsert — Bearer-token GA4 lead-acquisition upserts.
 //   Multi-property (migration 055): rows carry property_id + property_scope
-//   ('website' 366290587 | 'etsy' 533944293); the match/upsert key includes
+//   ('website' 308922589 | 'etsy' 533944293); the match/upsert key includes
 //   property_id so properties can never overwrite each other. Etsy rows get
 //   deterministic listing_id extraction + master/alias product mapping
 //   (never guessed); Etsy GA4 contributes traffic/demand only — the Etsy API
@@ -291,8 +291,8 @@ async function handleRowsUpsert(request: Request, env: any): Promise<Response> {
   const scenario = trimTo(body.scenario, 200) || "phase10-ga4-collector";
 
   // Multi-property GA4 (migration 055): body-level default, per-row override.
-  // Default keeps the original single-property behavior (website 366290587).
-  const defaultPropertyId = trimTo(body.property_id ?? body.propertyId, 40) || "366290587";
+  // Default keeps canonical website property behavior (308922589).
+  const defaultPropertyId = trimTo(body.property_id ?? body.propertyId, 40) || "308922589";
   const defaultPropertyScope = (trimTo(body.property_scope ?? body.propertyScope, 20) || "website").toLowerCase();
   if (!/^\d{4,20}$/.test(defaultPropertyId)) {
     return response({ success: false, error_code: "INVALID_PROPERTY", message: "property_id must be a numeric GA4 property id." }, 400);

@@ -93,14 +93,14 @@ const GA4_MAX_WINDOW_DAYS = 90;
 const GA4_MAX_PAGES_PER_REPORT = 200;
 
 // Multi-property GA4 (owner-approved 2026-10-02):
-//   366290587 = MildMate website → property_scope 'website'
-//   533944293 = Etsy Shop        → property_scope 'etsy'
+//   308922589 = MildMate website (canonical) → property_scope 'website'
+//   533944293 = Etsy Shop                    → property_scope 'etsy'
 // Properties stay logically separate: property-aware uniqueness, per-property
 // locks, per-property sync/freshness telemetry. Etsy GA4 contributes
 // traffic/demand only — the Etsy API stays authoritative for Etsy
 // orders/revenue. GA4_PROPERTIES_JSON overrides this default.
 const GA4_PROPERTIES_DEFAULT = [
-  { property_id: "366290587", scope: "website" },
+  { property_id: "308922589", scope: "website" },
   { property_id: "533944293", scope: "etsy" },
 ];
 

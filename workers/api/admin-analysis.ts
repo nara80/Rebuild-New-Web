@@ -163,6 +163,7 @@ const REVENUE_STATUSES = new Set(["EXACT", "UNALLOCATED"]);
 const MAPPING_STATUSES = new Set(["Mapped", "Partial", "Unmapped", "Itemless"]);
 const MAX_LIMIT = 200;
 const DEFAULT_LIMIT = 50;
+const GA4_WEBSITE_CANONICAL_PROPERTY_ID = "308922589";
 const GA4_LEAD_CANONICAL_PROPERTY_ID = "308922589";
 
 type Filters = {
@@ -1692,7 +1693,7 @@ async function getGsc(env: any, f: Filters): Promise<Response> {
 }
 
 async function getGa4(env: any, f: Filters): Promise<Response> {
-  const GA4_SCOPE_WHERE = " AND g.property_scope = 'website' AND g.landing_page_path NOT LIKE '%/listing/%'";
+  const GA4_SCOPE_WHERE = ` AND g.property_scope = 'website' AND g.property_id = '${GA4_WEBSITE_CANONICAL_PROPERTY_ID}' AND g.landing_page_path NOT LIKE '%/listing/%'`;
   const range = dayRangeWhere(f, "g.report_date");
   const binds: any[] = [...range.binds];
   let productSql = "";
@@ -2829,6 +2830,7 @@ async function getGrowthSignals(env: any, f: Filters): Promise<Response> {
        COALESCE(SUM(purchases), 0) AS purchases
      FROM ga4_funnel_daily
      WHERE property_scope = 'website'
+       AND property_id = '${GA4_WEBSITE_CANONICAL_PROPERTY_ID}'
        AND report_date >= ? AND report_date <= ?${productSql}`,
     [currentStart, anchorDate, ...productBind]
   );
@@ -2836,6 +2838,7 @@ async function getGrowthSignals(env: any, f: Filters): Promise<Response> {
     `SELECT COALESCE(SUM(sessions), 0) AS sessions
      FROM ga4_funnel_daily
      WHERE property_scope = 'website'
+       AND property_id = '${GA4_WEBSITE_CANONICAL_PROPERTY_ID}'
        AND report_date >= ? AND report_date <= ?${productSql}`,
     [previousStart, previousEnd, ...productBind]
   );
@@ -2845,6 +2848,7 @@ async function getGrowthSignals(env: any, f: Filters): Promise<Response> {
        COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN sessions ELSE 0 END), 0) AS mapped_sessions
      FROM ga4_funnel_daily
      WHERE property_scope = 'website'
+       AND property_id = '${GA4_WEBSITE_CANONICAL_PROPERTY_ID}'
        AND report_date >= ? AND report_date <= ?`,
     [currentStart, anchorDate]
   );
