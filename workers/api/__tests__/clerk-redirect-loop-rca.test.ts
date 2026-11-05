@@ -274,19 +274,27 @@ describe("RCA: Clerk redirect loop after hardening (20aacf5)", () => {
     expect(terminal!.status, trace.join(" | ")).toBe(200);
   });
 
-  it("T5 stale handshake cookie + fresh query handshake (mismatch): BOTH middlewares fall through to sign-in (not the regression)", async () => {
+  it("T5 stale handshake cookie + fresh query handshake (mismatch): hardened path clears stale handshake state before sign-in", async () => {
     const staleHandshake = await signJwt(staleKp, "stale-kid", { alg: "RS256", kid: "stale-kid", typ: "JWT" }, {
       iss: PROD_ISSUER, exp: now + 120, handshake: [`__session=x; Path=/`],
     });
-    for (const [label, mw] of [["old", oldMw], ["hardened", hardenedMw]] as const) {
-      const jar = new CookieJar();
-      jar.entries.push({ scope: "host", name: "__clerk_handshake", value: staleHandshake });
-      const url = `${ADMIN_URL}?__clerk_handshake=${await makeHandshakeJwt()}`;
-      const resp = await mw(makeContext(url, jar.header(), env));
-      // Ambiguity → token rejected → no session → sign-in redirect (both).
-      expect(resp.status, label).toBe(302);
-      expect(isSignInRedirect(resp), label).toBe(true);
-    }
+    const jarOld = new CookieJar();
+    jarOld.entries.push({ scope: "host", name: "__clerk_handshake", value: staleHandshake });
+    const oldResp = await oldMw(makeContext(`${ADMIN_URL}?__clerk_handshake=${await makeHandshakeJwt()}`, jarOld.header(), env));
+    expect(oldResp.status, "old").toBe(302);
+    expect(isSignInRedirect(oldResp), "old").toBe(true);
+
+    const jar = new CookieJar();
+    jar.entries.push({ scope: "host", name: "__clerk_handshake", value: staleHandshake });
+    const url = `${ADMIN_URL}?__clerk_handshake=${await makeHandshakeJwt()}`;
+    const resp = await hardenedMw(makeContext(url, jar.header(), env));
+    expect(resp.status, "hardened").toBe(302);
+    expect(isSignInRedirect(resp), "hardened").toBe(true);
+    const setCookies = (resp.headers as any).getSetCookie ? (resp.headers as any).getSetCookie() : [];
+    const handshakeClears = (setCookies as string[]).filter((c) =>
+      /^__clerk_handshake(?:_|=)/i.test(c) && /expires=thu, 01 jan 1970/i.test(c)
+    );
+    expect(handshakeClears.length, "hardened must clear stale handshake").toBeGreaterThan(0);
   });
 
   it("T6 conflicting credentials, ALL invalid: rejected up front, then safe handshake recovery (no loop)", async () => {
@@ -465,6 +473,84 @@ describe("RCA: Clerk redirect loop after hardening (20aacf5)", () => {
       .map((c) => c.split("=")[0].trim()));
     expect(clearedNames.has("__session")).toBe(true);
     expect(clearedNames.has("__session_whv9OBe3")).toBe(true);
+  });
+
+  it("T10b clerk-return: single invalid session cookie on www is cleared in both scopes before sign-in", async () => {
+    const invalid = await signJwt(staleKp, "stale-kid", { alg: "RS256", kid: "stale-kid" }, {
+      sub: "user_owner", iss: PROD_ISSUER, exp: now + 300, email: OWNER_EMAIL, role: "admin",
+    });
+    const jar = new CookieJar();
+    jar.entries.push({ scope: "host", name: "__session", value: invalid });
+    const resp = await clerkReturn(makeContext(
+      "https://www.mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F", jar.header(), env));
+    expect(resp.status).toBe(302);
+    expect(isSignInRedirect(resp)).toBe(true);
+    const setCookies = (resp.headers as any).getSetCookie ? (resp.headers as any).getSetCookie() : [];
+    const sessionClears = (setCookies as string[]).filter((c) =>
+      /^__session(?:_|=)/i.test(c) && /expires=thu, 01 jan 1970/i.test(c)
+    );
+    expect(sessionClears.some((c) => !/domain=/i.test(c))).toBe(true); // host-scope clear
+    expect(sessionClears.some((c) => /domain=mildmate\.com/i.test(c))).toBe(true); // trusted-domain clear
+  });
+
+  it("T10c clerk-return: single invalid session cookie on apex is cleared in both scopes before sign-in", async () => {
+    const invalid = await signJwt(staleKp, "stale-kid", { alg: "RS256", kid: "stale-kid" }, {
+      sub: "user_owner", iss: PROD_ISSUER, exp: now + 300, email: OWNER_EMAIL, role: "admin",
+    });
+    const jar = new CookieJar();
+    jar.entries.push({ scope: "domain", name: "__session", value: invalid });
+    const resp = await clerkReturn(makeContext(
+      "https://mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F", jar.header(), env));
+    expect(resp.status).toBe(302);
+    expect(isSignInRedirect(resp)).toBe(true);
+    const setCookies = (resp.headers as any).getSetCookie ? (resp.headers as any).getSetCookie() : [];
+    const sessionClears = (setCookies as string[]).filter((c) =>
+      /^__session(?:_|=)/i.test(c) && /expires=thu, 01 jan 1970/i.test(c)
+    );
+    expect(sessionClears.some((c) => !/domain=/i.test(c))).toBe(true); // host-scope clear
+    expect(sessionClears.some((c) => /domain=mildmate\.com/i.test(c))).toBe(true); // trusted-domain clear
+  });
+
+  it("T10d clerk-return: stale handshake mismatch on www clears only handshake cookies", async () => {
+    const staleHandshake = await signJwt(staleKp, "stale-kid", { alg: "RS256", kid: "stale-kid", typ: "JWT" }, {
+      iss: PROD_ISSUER, exp: now + 120, handshake: [`__session=x; Path=/`],
+    });
+    const jar = new CookieJar();
+    jar.entries.push({ scope: "host", name: "__clerk_handshake", value: staleHandshake });
+    const resp = await clerkReturn(makeContext(
+      `https://www.mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F&__clerk_handshake=${await makeHandshakeJwt()}`,
+      jar.header(),
+      env
+    ));
+    expect(resp.status).toBe(302);
+    expect(isSignInRedirect(resp)).toBe(true);
+    const setCookies = (resp.headers as any).getSetCookie ? (resp.headers as any).getSetCookie() : [];
+    const clearedNames = new Set((setCookies as string[])
+      .filter((c) => /expires=thu, 01 jan 1970/i.test(c))
+      .map((c) => c.split("=")[0].trim()));
+    expect(clearedNames.has("__clerk_handshake")).toBe(true);
+    expect(clearedNames.has("__session")).toBe(false);
+  });
+
+  it("T10e clerk-return: stale handshake mismatch on apex clears only handshake cookies", async () => {
+    const staleHandshake = await signJwt(staleKp, "stale-kid", { alg: "RS256", kid: "stale-kid", typ: "JWT" }, {
+      iss: PROD_ISSUER, exp: now + 120, handshake: [`__session=x; Path=/`],
+    });
+    const jar = new CookieJar();
+    jar.entries.push({ scope: "domain", name: "__clerk_handshake", value: staleHandshake });
+    const resp = await clerkReturn(makeContext(
+      `https://mildmate.com/auth/clerk-return/?next=%2Fsuper-admin%2F&__clerk_handshake=${await makeHandshakeJwt()}`,
+      jar.header(),
+      env
+    ));
+    expect(resp.status).toBe(302);
+    expect(isSignInRedirect(resp)).toBe(true);
+    const setCookies = (resp.headers as any).getSetCookie ? (resp.headers as any).getSetCookie() : [];
+    const clearedNames = new Set((setCookies as string[])
+      .filter((c) => /expires=thu, 01 jan 1970/i.test(c))
+      .map((c) => c.split("=")[0].trim()));
+    expect(clearedNames.has("__clerk_handshake")).toBe(true);
+    expect(clearedNames.has("__session")).toBe(false);
   });
 
   // ── Nov-3 PM regression guard: explicit trusted cookie-domain clears ───────

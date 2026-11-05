@@ -167,7 +167,8 @@ export function buildSessionCookieClears(
 export async function verifySessionCandidates(
   session: ClerkSessionTokenResult,
   request: Request,
-  env: any
+  env: any,
+  options: { clearInvalidCookieCandidates?: boolean } = {}
 ): Promise<SessionVerification> {
   if (!session.candidates.length) return { state: "none" };
 
@@ -200,10 +201,14 @@ export async function verifySessionCandidates(
   }
 
   // Conflict (≥2 valid, or truncated cap) or zero-valid ambiguity: attach
-  // clears so the caller's sign-in redirect removes every conflicting cookie
+  // clears so the caller's sign-in redirect removes conflicting stale cookie
   // scope and Clerk's next handshake starts from a clean jar.
   const trustedDomain = resolveTrustedSessionCookieDomain(request, env);
-  const clears = session.ambiguous || !session.candidatesComplete
+  const shouldClearInvalidCookieCandidates =
+    options.clearInvalidCookieCandidates === true &&
+    validCount === 0 &&
+    session.candidateCookieNames.length > 0;
+  const clears = session.ambiguous || !session.candidatesComplete || shouldClearInvalidCookieCandidates
     ? buildSessionCookieClears(request, session.candidateCookieNames, trustedDomain)
     : [];
   return { state: "invalid", clears };

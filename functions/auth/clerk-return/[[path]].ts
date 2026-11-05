@@ -33,6 +33,16 @@ function redirectToSignIn(url: URL, env: any, nextPath: string): Response {
   return Response.redirect(signInUrl.toString(), 302);
 }
 
+// Development hosts (pages.dev previews, localhost). Mirrors the dev-host
+// split in functions/admin/_middleware.ts.
+function isDevelopmentAuthHost(url: URL): boolean {
+  const hostname = url.hostname.toLowerCase();
+  if (hostname.endsWith(".pages.dev")) return true;
+  if (hostname === "localhost") return true;
+  if ((hostname === "127.0.0.1" || hostname === "::1") && url.protocol === "http:") return true;
+  return false;
+}
+
 export const onRequest: PagesFunction<{
   CLERK_ACCOUNTS_DOMAIN?: string;
   CLERK_ISSUER?: string;
@@ -41,6 +51,21 @@ export const onRequest: PagesFunction<{
 }> = async (context) => {
   const url = new URL(context.request.url);
   const nextPath = normalizeNextPath(url.searchParams.get("next"));
+
+  // Development instances sync sessions via __clerk_db_jwt consumed by
+  // clerk-js in the browser — no server-verifiable cookie or handshake ever
+  // reaches this callback on dev hosts, so demanding one loops forever
+  // against the hosted sign-in page. Forward to the sanitized same-origin
+  // destination, preserving the Clerk bootstrap params so the page's
+  // clerk-js can establish the session client-side (the admin middleware
+  // dev-bypasses on these hosts and the pages gate client-side).
+  if (isDevelopmentAuthHost(url)) {
+    const dest = new URL(nextPath, url.origin);
+    url.searchParams.forEach((value, key) => {
+      if (key.startsWith("__clerk_") && value) dest.searchParams.set(key, value);
+    });
+    return Response.redirect(dest.toString(), 302);
+  }
 
   // If handshake payload is present, consume it first to set the refreshed
   // Clerk cookies (including __session). consumeClerkHandshake handles
@@ -55,7 +80,9 @@ export const onRequest: PagesFunction<{
   // conflicting cookie name in both host and domain scopes, so Clerk's next
   // bounce starts from a clean jar instead of regenerating the loop.
   const session = extractClerkSessionToken(context.request, { allowQueryToken: true });
-  const verified = await verifySessionCandidates(session, context.request, context.env);
+  const verified = await verifySessionCandidates(session, context.request, context.env, {
+    clearInvalidCookieCandidates: true,
+  });
 
   if (verified.state !== "valid") {
     return redirectWithCookieClears(redirectToSignIn(url, context.env, nextPath), verified.clears || []);

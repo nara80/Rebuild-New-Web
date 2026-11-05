@@ -71,14 +71,21 @@ function parseCookieHeader(cookieHeader: string): Array<{ name: string; value: s
     .filter((entry) => entry.name && entry.value);
 }
 
-function getHandshakeToken(request: Request): string | null {
+type HandshakeTokenState = {
+  token: string | null;
+  mismatch: boolean;
+  cookieNames: string[];
+};
+
+function getHandshakeTokenState(request: Request): HandshakeTokenState {
   const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieTokens = parseCookieHeader(cookieHeader)
-    .filter((entry) => HANDSHAKE_COOKIE_NAME.test(entry.name))
+  const cookieEntries = parseCookieHeader(cookieHeader).filter((entry) => HANDSHAKE_COOKIE_NAME.test(entry.name));
+  const cookieNames = Array.from(new Set(cookieEntries.map((entry) => entry.name)));
+  const cookieTokens = cookieEntries
     .map((entry) => entry.value.trim())
     .filter(Boolean);
   const uniqueCookieTokens = Array.from(new Set(cookieTokens));
-  if (uniqueCookieTokens.length > 1) return null;
+  if (uniqueCookieTokens.length > 1) return { token: null, mismatch: true, cookieNames };
 
   const queryTokens: string[] = [];
   try {
@@ -89,14 +96,45 @@ function getHandshakeToken(request: Request): string | null {
     }
   } catch {}
   const uniqueQueryTokens = Array.from(new Set(queryTokens.filter(Boolean)));
-  if (uniqueQueryTokens.length > 1) return null;
+  if (uniqueQueryTokens.length > 1) return { token: null, mismatch: true, cookieNames };
 
   if (uniqueCookieTokens.length === 1 && uniqueQueryTokens.length === 1) {
-    return uniqueCookieTokens[0] === uniqueQueryTokens[0] ? uniqueCookieTokens[0] : null;
+    return uniqueCookieTokens[0] === uniqueQueryTokens[0]
+      ? { token: uniqueCookieTokens[0], mismatch: false, cookieNames }
+      : { token: null, mismatch: true, cookieNames };
   }
-  if (uniqueCookieTokens.length === 1) return uniqueCookieTokens[0];
-  if (uniqueQueryTokens.length === 1) return uniqueQueryTokens[0];
+  if (uniqueCookieTokens.length === 1) return { token: uniqueCookieTokens[0], mismatch: false, cookieNames };
+  if (uniqueQueryTokens.length === 1) return { token: uniqueQueryTokens[0], mismatch: false, cookieNames };
+  return { token: null, mismatch: false, cookieNames };
+}
+
+function sanitizeCookieDomain(raw: string): string | null {
+  const trimmed = String(raw || "").trim().toLowerCase().replace(/^\.+/, "");
+  if (!trimmed) return null;
+  if (!/^[a-z0-9.-]+$/.test(trimmed)) return null;
+  if (!/[a-z0-9]$/.test(trimmed)) return null;
+  return trimmed;
+}
+
+function resolveTrustedSessionCookieDomain(request: Request, env: any): string | null {
+  const host = new URL(request.url).hostname.toLowerCase();
+  const configured = sanitizeCookieDomain(String(env?.CLERK_SESSION_COOKIE_DOMAIN || ""));
+  const trusted = configured || "mildmate.com";
+  if (host === trusted || host.endsWith("." + trusted)) return trusted;
   return null;
+}
+
+function buildHandshakeCookieClears(request: Request, names: string[], env: any): string[] {
+  const trustedDomain = resolveTrustedSessionCookieDomain(request, env);
+  const uniqueNames = Array.from(new Set(names.filter((name) => HANDSHAKE_COOKIE_NAME.test(name))));
+  if (!uniqueNames.length) uniqueNames.push("__clerk_handshake");
+  const past = "Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  const out: string[] = [];
+  for (const name of uniqueNames) {
+    out.push(`${name}=; Path=/; ${past}; Secure; HttpOnly`);
+    if (trustedDomain) out.push(`${name}=; Domain=${trustedDomain}; Path=/; ${past}; Secure; HttpOnly`);
+  }
+  return out;
 }
 
 function isNonSessionJwtCategory(cat: unknown): boolean {
@@ -274,13 +312,18 @@ function signInUrl(url: URL, env: any): string {
  * the existing one-shot __mm_hs marker remains the backstop).
  */
 export async function consumeClerkHandshake(request: Request, env: any): Promise<Response | null> {
-  const token = getHandshakeToken(request);
+  const tokenState = getHandshakeTokenState(request);
+  const url = new URL(request.url);
+  if (tokenState.mismatch) {
+    const clears = buildHandshakeCookieClears(request, tokenState.cookieNames, env);
+    return redirectWithCookies(signInUrl(url, env), clears);
+  }
+  const token = tokenState.token;
   if (!token) return null;
 
   const directives = await verifyHandshakeJwt(token, env);
   if (!directives) return null;
 
-  const url = new URL(request.url);
   const host = url.hostname.toLowerCase();
 
   const parsed: ParsedDirective[] = [];
