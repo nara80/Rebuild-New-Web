@@ -73,6 +73,39 @@ function fakeEnv(over: Record<string, any> = {}) {
   return { ...over }; // no DB â€” rate-limit paths swallow errors
 }
 
+function fakeEnvWithRateLimitCount(initialCount = 0) {
+  const state = { count: initialCount, inserts: 0 };
+  const env = {
+    DB: {
+      prepare(sql: string) {
+        if (sql.includes("SELECT COUNT(*) as cnt FROM rate_limits")) {
+          return {
+            bind() {
+              return {
+                first: async () => ({ cnt: state.count }),
+              };
+            },
+          };
+        }
+        if (sql.includes("INSERT INTO rate_limits")) {
+          return {
+            bind() {
+              return {
+                run: async () => {
+                  state.count += 1;
+                  state.inserts += 1;
+                },
+              };
+            },
+          };
+        }
+        throw new Error("Unexpected SQL in test DB mock");
+      },
+    },
+  };
+  return { env, state };
+}
+
 describe("clerk-verify issuer validation", () => {
   let devKp: CryptoKeyPair;
   let prodKp: CryptoKeyPair;
@@ -244,5 +277,33 @@ describe("clerk-verify issuer validation", () => {
     );
     expect(res.valid).toBe(false);
     if (!res.valid) expect(res.status).toBe(503);
+  });
+
+  it("does not consume auth failure quota for valid production JWTs", async () => {
+    const prodJwk = await jwkFromSpki(prodKp.publicKey);
+    const prodJwks = { keys: [{ kid: "prod-kid", kty: "RSA", alg: "RS256", n: prodJwk.n, e: prodJwk.e, use: "sig" }] };
+    vi.stubGlobal("fetch", stubFetch({ [PROD_JWKS]: prodJwks }));
+
+    const db = fakeEnvWithRateLimitCount(0);
+    const env = { ...db.env, CLERK_ISSUER: PROD_ISSUER, CLERK_JWKS_URL: PROD_JWKS };
+    const token = await signJwt(prodKp, "prod-kid", { sub: "user_prod_2", iss: PROD_ISSUER, exp: now + 300 });
+
+    const ok = await verifyClerkJwt(makeRequest(token), env);
+    expect(ok.valid).toBe(true);
+    expect(db.state.inserts).toBe(0);
+
+    const fail = await verifyClerkJwt(new Request("https://www.mildmate.com/api/auth/me"), env);
+    expect(fail.valid).toBe(false);
+    if (!fail.valid) expect(fail.status).toBe(401);
+    expect(db.state.inserts).toBe(1);
+  });
+
+  it("blocks repeated auth failures at the configured threshold", async () => {
+    const db = fakeEnvWithRateLimitCount(30);
+    const env = { ...db.env, CLERK_ISSUER: PROD_ISSUER, CLERK_JWKS_URL: PROD_JWKS };
+    const res = await verifyClerkJwt(new Request("https://www.mildmate.com/api/auth/me"), env);
+    expect(res.valid).toBe(false);
+    if (!res.valid) expect(res.status).toBe(429);
+    expect(db.state.inserts).toBe(0);
   });
 });

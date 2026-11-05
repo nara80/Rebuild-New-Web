@@ -381,6 +381,7 @@ td.num,th.num{text-align:right}
 var API = '/api/admin/analysis';
 var salesOffset = 0, salesLimit = 25, salesTotal = 0;
 var authTokenCache = { token: '', expiresAt: 0, inflight: null };
+var authRecoveryInflight = null;
 var productFilterLoaded = false;
 var productFilterLoading = null;
 
@@ -459,12 +460,23 @@ async function authHeaders(){
   return headers;
 }
 
+async function recoverAdminToken(){
+  if (authRecoveryInflight) return authRecoveryInflight;
+  authRecoveryInflight = (async function(){
+    authTokenCache.token = '';
+    authTokenCache.expiresAt = 0;
+    await waitForAdminBearerToken(2500);
+  })().finally(function(){
+    authRecoveryInflight = null;
+  });
+  return authRecoveryInflight;
+}
+
 async function api(path){
   var headers = await authHeaders();
   var res = await fetch(API + path, { headers: headers });
-  if ((res.status === 401 || res.status === 403) && window.clerk) {
-    authTokenCache.token = '';
-    authTokenCache.expiresAt = 0;
+  if (res.status === 401 && window.clerk) {
+    await recoverAdminToken();
     headers = await authHeaders();
     res = await fetch(API + path, { headers: headers });
   }

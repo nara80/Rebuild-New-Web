@@ -99,6 +99,21 @@ async function recordRateLimit(env: any, ip: string): Promise<void> {
   } catch {}
 }
 
+async function authFailure(
+  env: any,
+  applyRateLimit: boolean,
+  ip: string,
+  error: string,
+  status: number,
+): Promise<{ valid: false; error: string; status: number }> {
+  if (!applyRateLimit) return { valid: false, error, status };
+  if (await checkAuthRateLimit(env, ip)) {
+    return { valid: false, error: "Too many requests", status: 429 };
+  }
+  await recordRateLimit(env, ip);
+  return { valid: false, error, status };
+}
+
 /** Fetch and cache JWKS keys (per-URL cache to support dev + prod simultaneously) */
 async function getJwks(jwksUrl: string): Promise<JwksKey[]> {
   const cached = jwksCache.get(jwksUrl);
@@ -155,10 +170,13 @@ export async function verifyClerkJwt(
   let requestHost = "";
   try { requestHost = new URL(request.url).hostname.toLowerCase(); } catch {}
 
+  const applyRateLimit = !isPreviewLikeHost(requestHost);
+  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+
   // ── Origin validation ──
   const origin = request.headers.get("Origin") || "";
   if (origin && !isAllowedBrowserOrigin(origin)) {
-    return { valid: false, error: "Invalid origin", status: 403 };
+    return authFailure(env, applyRateLimit, ip, "Invalid origin", 403);
   }
 
   // ── Fail-closed production guard ──
@@ -172,38 +190,30 @@ export async function verifyClerkJwt(
     }
   } catch {}
 
-  // ── Rate limiting ──
-  const applyRateLimit = !isPreviewLikeHost(requestHost);
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  if (applyRateLimit && await checkAuthRateLimit(env, ip)) {
-    return { valid: false, error: "Too many requests", status: 429 };
-  }
-  if (applyRateLimit) await recordRateLimit(env, ip);
-
   // ── Extract token ──
   const authHeader = request.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7)
     : authHeader;
   if (!token) {
-    return { valid: false, error: "Missing token", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Missing token", 401);
   }
 
   // ── Parse JWT header ──
   const parts = token.split(".");
   if (parts.length !== 3) {
-    return { valid: false, error: "Invalid token format", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Invalid token format", 401);
   }
 
   let header: { kid?: string; alg?: string };
   try {
     header = JSON.parse(new TextDecoder().decode(base64urlToBytes(parts[0])));
   } catch {
-    return { valid: false, error: "Invalid token header", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Invalid token header", 401);
   }
 
   if (header.alg !== "RS256") {
-    return { valid: false, error: "Unsupported algorithm", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Unsupported algorithm", 401);
   }
 
   // ── Find matching JWK ──
@@ -217,7 +227,7 @@ export async function verifyClerkJwt(
 
   const jwk = keys.find((k) => k.kid === header.kid && k.alg === "RS256");
   if (!jwk) {
-    return { valid: false, error: "Unknown signing key", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Unknown signing key", 401);
   }
 
   // ── Verify signature ──
@@ -228,7 +238,7 @@ export async function verifyClerkJwt(
   try {
     cryptoKey = await importRsaKey(jwk);
   } catch {
-    return { valid: false, error: "Invalid key", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Invalid key", 401);
   }
 
   let validSig = false;
@@ -240,11 +250,11 @@ export async function verifyClerkJwt(
       signedData as unknown as BufferSource
     );
   } catch {
-    return { valid: false, error: "Signature verification failed", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Signature verification failed", 401);
   }
 
   if (!validSig) {
-    return { valid: false, error: "Invalid signature", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Invalid signature", 401);
   }
 
   // ── Parse payload ──
@@ -265,13 +275,13 @@ export async function verifyClerkJwt(
       sid: rawPayload.sid || "",
     };
   } catch {
-    return { valid: false, error: "Invalid token payload", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Invalid token payload", 401);
   }
 
   // ── Validate claims ──
   const now = Math.floor(Date.now() / 1000);
   if (payload.exp && payload.exp < now) {
-    return { valid: false, error: "Token expired", status: 401 };
+    return authFailure(env, applyRateLimit, ip, "Token expired", 401);
   }
 
   // ── Issuer validation ──
@@ -285,14 +295,14 @@ export async function verifyClerkJwt(
   if (payload.iss && payload.iss !== expectedIssuer) {
     if (isProdClerkConfigured(env)) {
       // Production mode: strict — no fallback patterns.
-      return { valid: false, error: "Invalid issuer", status: 401 };
+      return authFailure(env, applyRateLimit, ip, "Invalid issuer", 401);
     }
     // Dev mode: allow other dev Clerk issuers for test instances.
     if (
       !payload.iss.startsWith("https://clerk.") &&
       !payload.iss.includes(".clerk.accounts.dev")
     ) {
-      return { valid: false, error: "Invalid issuer", status: 401 };
+      return authFailure(env, applyRateLimit, ip, "Invalid issuer", 401);
     }
   }
 
