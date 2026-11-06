@@ -62,7 +62,12 @@
   function getAuthReturnUrl(inputUrl) {
     var cleanUrl = getCleanUrl(inputUrl || window.location.href);
     try {
-      var url = new URL(cleanUrl, window.location.origin);
+      var current = new URL(window.location.href, window.location.origin);
+      var url = new URL(cleanUrl, current.origin);
+      if (url.origin !== current.origin) {
+        url = current;
+        cleanUrl = current.toString();
+      }
       var path = (url.pathname || '/').toLowerCase();
       if (path.indexOf('/super-admin') !== 0) return cleanUrl;
       var callbackUrl = new URL('/auth/clerk-return/', url.origin);

@@ -20,6 +20,8 @@ describe("super-admin Clerk redirect handoff", () => {
 
   it("keeps super-admin callback wrapping via /auth/clerk-return/", () => {
     expect(clerkJs).toContain("if (path.indexOf('/super-admin') !== 0) return cleanUrl;");
+    expect(clerkJs).toContain("if (url.origin !== current.origin)");
+    expect(clerkJs).toContain("url = current;");
     expect(clerkJs).toContain("var callbackUrl = new URL('/auth/clerk-return/', url.origin);");
     expect(clerkJs).toContain("callbackUrl.searchParams.set('next', url.pathname + (url.search || ''));");
     expect(clerkJs).toContain("return callbackUrl.toString();");
