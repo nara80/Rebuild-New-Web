@@ -41,6 +41,7 @@ import { handleAdminOrders } from "../../workers/api/admin-orders";
 import { handleAdminCustomers } from "../../workers/api/admin-customers";
 import { handleAdminStats } from "../../workers/api/admin-stats";
 import { handleAdminAnalysis } from "../../workers/api/admin-analysis";
+import { handleAdminAiAnalyst } from "../../workers/api/admin-ai-analyst";
 import { handleAdminCostModel } from "../../workers/api/admin-cost-model";
 import { handleAdminShippingRates, handleAdminShippingProductTiers, handleAdminShippingAddRates } from "../../workers/api/admin-shipping";
 import { handleAdminQuotes } from "../../workers/api/admin-quotes";
@@ -238,6 +239,11 @@ export const onRequest: PagesFunction<{
   // Admin marketing analysis (read-only, Marketing Decision System)
   if (path.startsWith("/api/admin/analysis")) {
     return handleAdminAnalysis(request, env);
+  }
+
+  // Admin AI analyst + marketing actions (Phase 16; browser-admin gated)
+  if (path.startsWith("/api/admin/ai-analyst")) {
+    return handleAdminAiAnalyst(request, env);
   }
 
   // Admin profitability cost model (Phase 13)

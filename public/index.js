@@ -1,4 +1,4 @@
-﻿var __defProp = Object.defineProperty;
+var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // ../workers/api/sales.ts
@@ -11029,6 +11029,384 @@ async function getProfitability(env, f) {
   }
 }
 __name(getProfitability, "getProfitability");
+// ── Phase 16: AI Analyst & marketing actions (mirror of workers/api/admin-ai-analyst.ts) ──
+function aiJson(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    }
+  });
+}
+function aiErr(code, message, status = 400) {
+  return aiJson({ success: false, error_code: code, message }, status);
+}
+const VALID_RESULT_CLASSES = /* @__PURE__ */ new Set(["positive", "neutral", "negative", "inconclusive"]);
+async function buildAiInputContract(env) {
+  const contract = {
+    generated_at: new Date().toISOString(),
+    canonical_products: [],
+    opportunities: [],
+    data_confidence: { status: "unavailable", warnings: [], sources: {} },
+    unverified_signals: {
+      google_ads_purchase_attribution: "UNVERIFIED \u2014 paid-purchase attribution has not been validated; treat Ads conversions as monitoring data only."
+    },
+    past_outcomes: [],
+    schema_unavailable: []
+  };
+  try {
+    const products = await env.DB.prepare(
+      "SELECT id, slug, title_en FROM products WHERE is_active = 1 ORDER BY id"
+    ).all();
+    contract.canonical_products = products.results || [];
+  } catch {
+    contract.schema_unavailable.push("products");
+  }
+  try {
+    const latest = await env.DB.prepare(
+      "SELECT score_model_version, score_date FROM opportunity_scores ORDER BY score_date DESC LIMIT 1"
+    ).first();
+    if (latest) {
+      const rows = await env.DB.prepare(
+        "SELECT o.product_id, p.slug, p.title_en, o.channel, o.score, o.rank, o.tier, o.confidence FROM opportunity_scores o JOIN products p ON p.id = o.product_id WHERE o.score_model_version = ?1 AND o.score_date = ?2 AND o.score IS NOT NULL ORDER BY o.score DESC LIMIT 20"
+      ).bind(latest.score_model_version, latest.score_date).all();
+      contract.opportunities = rows.results || [];
+      contract.opportunity_snapshot = { score_date: latest.score_date, model_version: latest.score_model_version };
+    }
+  } catch {
+    contract.schema_unavailable.push("opportunity_scores");
+  }
+  const sources = [
+    ["ga4", "ga4"],
+    ["gsc", "gsc"],
+    ["etsy", "etsy"],
+    ["google-ads", "google-ads"],
+    ["notion", "notion-mapping-sync"]
+  ];
+  let anyMissing = false;
+  let anyStale = false;
+  for (const [label, prefix] of sources) {
+    try {
+      const row = await env.DB.prepare(
+        "SELECT source, status, COALESCE(finished_at, created_at) AS ran_at FROM sync_runs WHERE source LIKE ?1 ORDER BY COALESCE(finished_at, created_at) DESC LIMIT 1"
+      ).bind(prefix + "%").first();
+      if (!row) {
+        contract.data_confidence.sources[label] = { status: "unavailable" };
+        anyMissing = true;
+        continue;
+      }
+      const ageDays = Math.floor((Date.now() - new Date(row.ran_at + "Z").getTime()) / 864e5);
+      const ok = String(row.status || "").toLowerCase() === "success" && ageDays <= 3;
+      const srcStatus = ok ? "ok" : ageDays > 7 ? "stale" : "warning";
+      contract.data_confidence.sources[label] = { status: srcStatus, last_run_at: row.ran_at, last_status: row.status, age_days: ageDays };
+      if (srcStatus === "stale")
+        anyStale = true;
+      if (srcStatus === "warning")
+        anyStale = true;
+      if (!ok && srcStatus !== "unavailable")
+        contract.data_confidence.warnings.push(label + ": last run " + row.status + " (" + ageDays + "d ago)");
+    } catch {
+      contract.data_confidence.sources[label] = { status: "unavailable" };
+      anyMissing = true;
+    }
+  }
+  contract.data_confidence.status = anyMissing ? "low" : anyStale ? "medium" : "high";
+  try {
+    const outcomes = await env.DB.prepare(
+      "SELECT id, action_date, product_id, channel, action_type, title, result_class, lessons, reviewed_at FROM marketing_actions WHERE status = 'reviewed' ORDER BY reviewed_at DESC LIMIT 20"
+    ).all();
+    contract.past_outcomes = outcomes.results || [];
+  } catch {
+    contract.schema_unavailable.push("marketing_actions");
+  }
+  return contract;
+}
+function validateRecommendations(contract, rawList) {
+  const valid = [];
+  const rejected = [];
+  const productIds = new Set((contract.canonical_products || []).map((p) => Number(p.id)));
+  const confidenceStatus = contract.data_confidence && contract.data_confidence.status;
+  const list = Array.isArray(rawList) ? rawList.slice(0, 10) : [];
+  for (const raw of list) {
+    const r = raw || {};
+    const reasons = [];
+    const productId = r.product_id === null || r.product_id === void 0 || r.product_id === "" ? null : Number(r.product_id);
+    if (productId !== null && !productIds.has(productId)) {
+      reasons.push("invented or unknown product_id: " + String(r.product_id));
+    }
+    const action = String(r.action || "").trim();
+    if (!action)
+      reasons.push("missing action");
+    const why = String(r.why || "").trim();
+    if (!why)
+      reasons.push("missing why");
+    const confidence = r.confidence === void 0 || r.confidence === null ? null : Number(r.confidence);
+    if (confidence === null || isNaN(confidence) || confidence < 0 || confidence > 100) {
+      reasons.push("confidence must be a number 0-100");
+    }
+    if (reasons.length) {
+      rejected.push({ recommendation: r, reasons });
+      continue;
+    }
+    const caution = [];
+    if (confidenceStatus !== "high") {
+      caution.push("Data confidence is '" + confidenceStatus + "' \u2014 recommendation should be treated as exploratory until freshness and coverage improve.");
+    }
+    const channel = String(r.channel || "").trim();
+    if (channel === "google-ads" || channel === "google_ads" || /ads/i.test(action)) {
+      caution.push(contract.unverified_signals.google_ads_purchase_attribution);
+    }
+    valid.push({
+      product_id: productId,
+      channel,
+      action_type: String(r.action_type || "push_product").trim() || "push_product",
+      title: action,
+      detail: why,
+      budget_test: r.budget_test === void 0 || r.budget_test === null ? null : Number(r.budget_test),
+      budget: r.budget === void 0 || r.budget === null ? null : Number(r.budget),
+      budget_currency: String(r.budget_currency || "THB").trim() || "THB",
+      success_target: String(r.success_target || "").trim(),
+      confidence,
+      review_date: r.review_date ? String(r.review_date).slice(0, 10) : null,
+      caution: caution.length ? 1 : 0,
+      caution_note: caution.join(" ")
+    });
+  }
+  return { valid, rejected };
+}
+function buildAiPrompt(contract) {
+  const system = 'You are the MildMate marketing AI analyst. You are ADVISORY ONLY: you never execute actions, never spend budgets, and never write canonical data. Return STRICT JSON only, no prose, in the form {"recommendations":[{"product_id":<int|null>,"channel":"<string>","action":"<short imperative title>","action_type":"<push_product|campaign|content|monitor>","why":"<reasoning>","budget_test":<number|null>,"budget":<number|null>,"budget_currency":"THB","success_target":"<measurable target>","confidence":<0-100>,"review_date":"YYYY-MM-DD"}]} Hard rules: use ONLY product_id values from canonical_products (or null for non-product actions); cite ONLY metrics present in the contract; never invent revenue, conversions, or product IDs; treat google_ads_purchase_attribution as UNVERIFIED; when data_confidence is not high, be explicitly cautious.';
+  const user = JSON.stringify({
+    canonical_products: contract.canonical_products,
+    opportunities: contract.opportunities,
+    data_confidence: contract.data_confidence,
+    unverified_signals: contract.unverified_signals,
+    past_outcomes: contract.past_outcomes
+  });
+  return { system, user };
+}
+async function mmCallAiProvider(env, contract) {
+  const key = String(env.AI_API_KEY || "").trim();
+  if (!key)
+    return { available: false };
+  const base = String(env.AI_API_BASE || "https://api.deepseek.com").replace(/\/+$/, "");
+  const model = String(env.AI_MODEL || "deepseek-chat");
+  const prompt = buildAiPrompt(contract);
+  try {
+    const resp = await fetch(base + "/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: prompt.system },
+          { role: "user", content: prompt.user }
+        ],
+        temperature: 0.2
+      })
+    });
+    if (!resp.ok)
+      return { available: true, model, error: "provider HTTP " + resp.status };
+    const body = await resp.json();
+    const content = body && body.choices && body.choices[0] && body.choices[0].message ? String(body.choices[0].message.content || "") : "";
+    const cleaned = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      return { available: true, model, error: "provider returned non-JSON content" };
+    }
+    const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed.recommendations) ? parsed.recommendations : [];
+    return { available: true, model, list };
+  } catch (e) {
+    return { available: true, model, error: String(e?.message || e) };
+  }
+}
+function mmActorEmail(request) {
+  try {
+    const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+    const parts = token.split(".");
+    if (parts.length < 2)
+      return "";
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return String(payload.email || "").trim().toLowerCase();
+  } catch {
+    return "";
+  }
+}
+async function getContract(env) {
+  const contract = await buildAiInputContract(env);
+  return aiJson({ success: true, contract });
+}
+async function recommendHandler(request, env) {
+  let body = {};
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+  const dryRun = body && body.dry_run === true;
+  const contract = await buildAiInputContract(env);
+  const result = await mmCallAiProvider(env, contract);
+  if (!result.available) {
+    return aiJson({
+      success: true,
+      ai_available: false,
+      message: "AI provider not configured (set AI_API_KEY, optional AI_API_BASE / AI_MODEL). No recommendations were generated or stored \u2014 nothing is fabricated.",
+      contract_snapshot: { data_confidence: contract.data_confidence, opportunities: contract.opportunities.length }
+    });
+  }
+  if (result.error) {
+    return aiJson({ success: true, ai_available: true, stored: 0, error: result.error, rejected: [] }, 200);
+  }
+  const { valid, rejected } = validateRecommendations(contract, result.list || []);
+  if (dryRun) {
+    return aiJson({ success: true, ai_available: true, model: result.model, dry_run: true, valid, rejected, contract });
+  }
+  let stored = 0;
+  const today = new Date().toISOString().slice(0, 10);
+  for (const v of valid) {
+    await env.DB.prepare(
+      "INSERT INTO marketing_actions (action_date, source, ai_model, status, product_id, channel, action_type, title, detail, recommendation_json, approved_budget, budget_currency, success_target, confidence, caution, caution_note, review_date) VALUES (?1, 'ai', ?2, 'proposed', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)"
+    ).bind(
+      today,
+      result.model || null,
+      v.product_id,
+      v.channel,
+      v.action_type,
+      v.title,
+      v.detail,
+      JSON.stringify(v),
+      v.budget,
+      v.budget_currency,
+      v.success_target,
+      v.confidence,
+      v.caution,
+      v.caution_note,
+      v.review_date
+    ).run();
+    stored++;
+  }
+  return aiJson({
+    success: true,
+    ai_available: true,
+    model: result.model,
+    stored,
+    rejected,
+    grounding_note: "Only recommendations grounded in the contract were stored. Invented product IDs or missing fields are listed in rejected."
+  });
+}
+async function listActions(env, url) {
+  const status = String(url.searchParams.get("status") || "").trim();
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 50) || 50, 1), 200);
+  let rows = [];
+  try {
+    if (status && VALID_TRANSITIONS_INPUT.has(status)) {
+      const res = await env.DB.prepare(
+        "SELECT * FROM marketing_actions WHERE status = ?1 ORDER BY id DESC LIMIT ?2"
+      ).bind(status, limit).all();
+      rows = res.results || [];
+    } else {
+      const res = await env.DB.prepare(
+        "SELECT * FROM marketing_actions ORDER BY id DESC LIMIT ?1"
+      ).bind(limit).all();
+      rows = res.results || [];
+    }
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table")) {
+      return aiJson({ success: true, available: false, error_code: "MARKETING_ACTIONS_SCHEMA_UNAVAILABLE", message: "Apply migration 063_marketing_actions.sql first.", actions: [] });
+    }
+    throw e;
+  }
+  return aiJson({ success: true, available: true, actions: rows });
+}
+const VALID_TRANSITIONS_INPUT = /* @__PURE__ */ new Set(["proposed", "approved", "rejected", "reviewed"]);
+async function updateAction(request, env, idStr) {
+  const id = Number(idStr);
+  if (!id || isNaN(id))
+    return aiErr("BAD_ID", "Invalid action id", 400);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return aiErr("BAD_BODY", "JSON body required", 400);
+  }
+  const op = String(body.op || "").trim();
+  const row = await env.DB.prepare("SELECT * FROM marketing_actions WHERE id = ?1").bind(id).first();
+  if (!row)
+    return aiErr("NOT_FOUND", "Action not found", 404);
+  const email = mmActorEmail(request);
+  if (op === "approve") {
+    if (row.status !== "proposed")
+      return aiErr("INVALID_TRANSITION", "Only proposed actions can be approved (current: " + row.status + ")", 409);
+    let baseline = { snapshot_at: new Date().toISOString(), recommendation: JSON.parse(row.recommendation_json || "{}") };
+    try {
+      if (row.product_id) {
+        const opp = await env.DB.prepare(
+          "SELECT score_date, score, confidence, tier FROM opportunity_scores WHERE product_id = ?1 ORDER BY score_date DESC LIMIT 1"
+        ).bind(row.product_id).first();
+        if (opp)
+          baseline.opportunity_at_approval = opp;
+      }
+    } catch {
+    }
+    await env.DB.prepare(
+      "UPDATE marketing_actions SET status='approved', baseline_metrics_json=?2, approved_budget=COALESCE(?3, approved_budget), approved_by=?4, approved_at=?5, updated_at=CURRENT_TIMESTAMP WHERE id=?1"
+    ).bind(id, JSON.stringify(baseline), body.budget === void 0 || body.budget === null ? null : Number(body.budget), email, new Date().toISOString()).run();
+    return aiJson({ success: true, id, status: "approved", approved_by: email });
+  }
+  if (op === "reject") {
+    if (row.status !== "proposed")
+      return aiErr("INVALID_TRANSITION", "Only proposed actions can be rejected (current: " + row.status + ")", 409);
+    await env.DB.prepare(
+      "UPDATE marketing_actions SET status='rejected', rejected_by=?2, rejected_at=?3, updated_at=CURRENT_TIMESTAMP WHERE id=?1"
+    ).bind(id, email, new Date().toISOString()).run();
+    return aiJson({ success: true, id, status: "rejected", rejected_by: email });
+  }
+  if (op === "review") {
+    if (row.status !== "approved")
+      return aiErr("INVALID_TRANSITION", "Only approved actions can be reviewed (current: " + row.status + ")", 409);
+    const rc = String(body.result_class || "").trim();
+    if (!VALID_RESULT_CLASSES.has(rc)) {
+      return aiErr("BAD_RESULT_CLASS", "result_class must be one of positive|neutral|negative|inconclusive", 400);
+    }
+    await env.DB.prepare(
+      "UPDATE marketing_actions SET status='reviewed', result_class=?2, post_metrics_json=?3, lessons=?4, reviewed_by=?5, reviewed_at=?6, updated_at=CURRENT_TIMESTAMP WHERE id=?1"
+    ).bind(id, rc, JSON.stringify(body.post_metrics || null), String(body.lessons || "").trim() || null, email, new Date().toISOString()).run();
+    return aiJson({ success: true, id, status: "reviewed", result_class: rc, reviewed_by: email });
+  }
+  return aiErr("BAD_OP", "op must be approve|reject|review", 400);
+}
+async function handleAdminAiAnalyst(request, env) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+      }
+    });
+  }
+  const url = new URL(request.url);
+  const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/ai-analyst/, "") || "/";
+  const auth = await authorizeAdmin(request, env);
+  if (!auth.ok)
+    return aiErr("UNAUTHORIZED", auth.error, auth.status);
+  if (request.method === "GET" && sub === "/contract")
+    return getContract(env);
+  if (request.method === "POST" && sub === "/recommend")
+    return recommendHandler(request, env);
+  if (request.method === "GET" && sub === "/actions")
+    return listActions(env, url);
+  const actionMatch = sub.match(/^\/actions\/(\d+)$/);
+  if (request.method === "PUT" && actionMatch)
+    return updateAction(request, env, actionMatch[1]);
+  return aiErr("ROUTE_NOT_FOUND", "Unknown ai-analyst route: " + sub, 404);
+}
+// ── End Phase 16 mirror ──
+
 async function handleAdminAnalysis(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -19012,6 +19390,11 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   if (path.startsWith("/api/admin/analysis")) {
     return handleAdminAnalysis(request, env);
   }
+  // Admin AI analyst + marketing actions (Phase 16; browser-admin gated)
+  if (path.startsWith("/api/admin/ai-analyst")) {
+    return handleAdminAiAnalyst(request, env);
+  }
+
   if (path.startsWith("/api/admin/cost-model")) {
     return handleAdminCostModel(request, env);
   }

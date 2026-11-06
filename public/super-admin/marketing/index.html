@@ -152,6 +152,48 @@
         </div>
       </div>
 
+      <div class="card" style="margin-top:12px">
+        <div class="card-h">
+          <h2>AI Analyst (Phase 16) — Advisory Only</h2>
+          <span class="muted" style="font-size:.72rem">AI never executes actions or spends budgets. Human approval required.</span>
+        </div>
+        <div class="card-b">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+            <button id="ai-recommend-btn" class="btn primary" type="button">Generate AI recommendations</button>
+            <span id="ai-state" class="state">AI actions not loaded yet.</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px" id="ai-filters">
+            <button class="btn ai-filter" data-status="">All</button>
+            <button class="btn ai-filter" data-status="proposed">Proposed</button>
+            <button class="btn ai-filter" data-status="approved">Approved</button>
+            <button class="btn ai-filter" data-status="rejected">Rejected</button>
+            <button class="btn ai-filter" data-status="reviewed">Reviewed / Results</button>
+          </div>
+          <div id="ai-actions-table" class="state">Loading…</div>
+          <div id="ai-review-form" style="display:none;margin-top:12px;border-top:1px solid var(--c-border);padding-top:12px">
+            <h3 style="margin:0 0 8px;font-size:.85rem">Post-action review — action #<span id="ai-review-id"></span></h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+              <div>
+                <label style="font-size:.75rem;color:var(--c-muted);display:block;margin-bottom:4px">Result class</label>
+                <select id="ai-review-result" class="tracker-select">
+                  <option value="positive">Positive</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="negative">Negative</option>
+                  <option value="inconclusive">Inconclusive</option>
+                </select>
+              </div>
+              <div style="flex:1;min-width:220px">
+                <label style="font-size:.75rem;color:var(--c-muted);display:block;margin-bottom:4px">Lessons learned</label>
+                <input id="ai-review-lessons" style="width:100%;padding:8px 10px;border:1px solid var(--c-border);border-radius:8px;font-size:.8125rem" />
+              </div>
+              <button id="ai-review-submit" class="btn primary" type="button">Save review</button>
+              <button id="ai-review-cancel" class="btn" type="button">Cancel</button>
+            </div>
+          </div>
+          <p class="note" id="ai-audit-note">Audit trail: every row records whether it was AI-generated (with model) and which human approved, rejected, or reviewed it. Reviewed outcomes feed future AI context via the input contract.</p>
+        </div>
+      </div>
+
       <p class="note">
         Boundaries: Opportunity scoring logic remains Phase 14-owned and unchanged. Data confidence and freshness semantics remain Phase 13-owned.
         Google Ads paid-purchase attribution monitoring remains a separate business track.
@@ -538,6 +580,180 @@ function filterQS(){
   return p.length ? '?' + p.join('&') : '';
 }
 
+// ── Phase 16: AI Analyst panel ──────────────────────────────────────────────
+var AI_API = '/api/admin/ai-analyst';
+var aiFilterStatus = '';
+var aiReviewingId = null;
+
+async function apiAI(path, opts){
+  var headers = await authHeaders();
+  if (opts && opts.body) headers['Content-Type'] = 'application/json';
+  var res = await fetch(AI_API + path, Object.assign({ headers: headers }, opts || {}));
+  if (res.status === 401 && window.clerk) {
+    await recoverAdminToken();
+    headers = await authHeaders();
+    if (opts && opts.body) headers['Content-Type'] = 'application/json';
+    res = await fetch(AI_API + path, Object.assign({ headers: headers }, opts || {}));
+  }
+  var body = null;
+  try { body = await res.json(); } catch(e) {}
+  if (!res.ok || !body || body.success === false) {
+    var msg = (body && (body.message || body.error_code)) || ('HTTP ' + res.status);
+    throw new Error(msg);
+  }
+  return body;
+}
+
+function aiStatusPill(status){
+  var s = lower(status);
+  var cls = s === 'approved' ? 'ok' : s === 'proposed' ? 'insufficient' : s === 'rejected' ? 'critical' : s === 'reviewed' ? 'warning' : 'unavailable';
+  return '<span class="pill ' + cls + '">' + esc(status || 'unknown') + '</span>';
+}
+
+function escJson(v){
+  if (v === null || v === undefined) return '—';
+  try { return esc(JSON.stringify(v).slice(0, 220)); } catch(e) { return '—'; }
+}
+
+function aiActionRow(a){
+  var srcLabel = a.source === 'ai' ? ('AI · ' + esc(a.ai_model || 'model')) : 'Human';
+  var caution = a.caution ? '<div class="muted" style="font-size:.7rem;margin-top:4px">⚠ ' + esc(a.caution_note || 'Cautious recommendation (data confidence not high).') + '</div>' : '';
+  var h = '<tr>' +
+    '<td>#' + fmtNum(a.id) + '<div class="muted" style="font-size:.7rem">' + esc(srcLabel) + '</div></td>' +
+    '<td>' + aiStatusPill(a.status) + '</td>' +
+    '<td><strong>' + esc(a.title) + '</strong>' + caution + '<div class="muted" style="font-size:.72rem;margin-top:4px">' + esc(a.detail || '') + '</div></td>' +
+    '<td>' + (a.product_id ? esc('#' + a.product_id + ' ' + (a.product_title || '')) : '—') + '</td>' +
+    '<td>' + esc(a.channel || 'overall') + '</td>' +
+    '<td class="num">' + fmtNum(a.confidence) + '</td>' +
+    '<td class="num">' + (a.approved_budget !== null && a.approved_budget !== undefined ? fmtMoneyThb(a.approved_budget) : '—') + '</td>' +
+    '<td>' + esc(a.success_target || '—') + '</td>' +
+    '<td>' + fmtDate(a.review_date) + '</td>';
+  if (a.status === 'proposed') {
+    h += '<td>' +
+      '<button class="btn ai-approve" data-id="' + a.id + '" style="margin-bottom:4px">Approve</button><br/>' +
+      '<button class="btn ai-reject" data-id="' + a.id + '">Reject</button></td>';
+  } else if (a.status === 'approved') {
+    h += '<td><button class="btn ai-review-open" data-id="' + a.id + '">Record review</button>' +
+      '<div class="muted" style="font-size:.68rem;margin-top:4px">Baseline: ' + escJson(a.baseline_metrics_json) + '</div></td>';
+  } else if (a.status === 'reviewed') {
+    h += '<td><span class="pill ' + (lower(a.result_class) === 'positive' ? 'ok' : lower(a.result_class) === 'negative' ? 'critical' : 'insufficient') + '">' + esc(a.result_class || '—') + '</span>' +
+      '<div class="muted" style="font-size:.68rem;margin-top:4px">Post: ' + escJson(a.post_metrics_json) + '</div>' +
+      (a.lessons ? '<div class="muted" style="font-size:.68rem;margin-top:4px">Lessons: ' + esc(a.lessons) + '</div>' : '') + '</td>';
+  } else {
+    h += '<td>—</td>';
+  }
+  return h + '</tr>';
+}
+
+function renderAiActions(data){
+  var el = document.getElementById('ai-actions-table');
+  if (data && data.available === false) {
+    el.innerHTML = '<div class="state">Unavailable: ' + esc(data.message || 'marketing_actions schema missing (apply migration 063).') + '</div>';
+    return;
+  }
+  var actions = (data && data.actions) || [];
+  if (aiFilterStatus) actions = actions.filter(function(a){ return a.status === aiFilterStatus; });
+  if (!actions.length) {
+    el.innerHTML = '<div class="state">No ' + esc(aiFilterStatus || '') + ' actions yet. Use “Generate AI recommendations” or wait for human-authored actions.</div>';
+    return;
+  }
+  var h = '<table><thead><tr><th>ID / Source</th><th>Status</th><th>Recommendation</th><th>Product</th><th>Channel</th><th class="num">Confidence</th><th class="num">Approved budget</th><th>Success target</th><th>Review date</th><th>Human action</th></tr></thead><tbody>';
+  actions.forEach(function(a){ h += aiActionRow(a); });
+  el.innerHTML = h + '</tbody></table>';
+
+  var btns = el.querySelectorAll('.ai-approve, .ai-reject, .ai-review-open');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function(ev){
+      var b = ev.target;
+      var id = Number(b.getAttribute('data-id'));
+      if (b.classList.contains('ai-approve')) aiTransition(id, { op: 'approve' });
+      else if (b.classList.contains('ai-reject')) aiTransition(id, { op: 'reject' });
+      else openAiReview(id);
+    });
+  }
+}
+
+async function loadAiActions(){
+  var st = document.getElementById('ai-state');
+  st.textContent = 'Loading actions…';
+  try {
+    var data = await apiAI('/actions?limit=100');
+    renderAiActions(data);
+    st.textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    st.textContent = 'Failed to load actions: ' + e.message;
+    document.getElementById('ai-actions-table').innerHTML = '<div class="state">Unavailable: ' + esc(e.message) + '</div>';
+  }
+}
+
+async function aiTransition(id, body){
+  var st = document.getElementById('ai-state');
+  st.textContent = 'Saving…';
+  try {
+    var res = await apiAI('/actions/' + id, { method: 'PUT', body: JSON.stringify(body) });
+    st.textContent = 'Action #' + id + ' → ' + res.status + (res.approved_by ? ' by ' + res.approved_by : '');
+    await loadAiActions();
+  } catch(e) {
+    st.textContent = 'Failed: ' + e.message;
+  }
+}
+
+function openAiReview(id){
+  aiReviewingId = id;
+  document.getElementById('ai-review-id').textContent = String(id);
+  document.getElementById('ai-review-form').style.display = 'block';
+  document.getElementById('ai-review-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function generateAiRecommendations(){
+  var btn = document.getElementById('ai-recommend-btn');
+  var st = document.getElementById('ai-state');
+  btn.disabled = true;
+  st.textContent = 'Building trusted input contract and calling AI provider…';
+  try {
+    var res = await apiAI('/recommend', { method: 'POST', body: JSON.stringify({}) });
+    if (res.ai_available === false) {
+      st.textContent = 'AI provider not configured (set AI_API_KEY / AI_API_BASE / AI_MODEL). Nothing generated or stored — no fabricated output.';
+    } else if (res.error) {
+      st.textContent = 'AI provider error: ' + res.error;
+    } else {
+      st.textContent = 'Stored ' + res.stored + ' grounded recommendation(s)' + (res.rejected && res.rejected.length ? '; rejected ' + res.rejected.length + ' ungrounded.' : '.');
+    }
+    await loadAiActions();
+  } catch(e) {
+    st.textContent = 'Failed: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function initAiPanel(){
+  document.getElementById('ai-recommend-btn').addEventListener('click', generateAiRecommendations);
+  var filters = document.querySelectorAll('.ai-filter');
+  for (var i = 0; i < filters.length; i++) {
+    filters[i].addEventListener('click', function(ev){
+      aiFilterStatus = ev.target.getAttribute('data-status') || '';
+      loadAiActions();
+    });
+  }
+  document.getElementById('ai-review-cancel').addEventListener('click', function(){
+    aiReviewingId = null;
+    document.getElementById('ai-review-form').style.display = 'none';
+  });
+  document.getElementById('ai-review-submit').addEventListener('click', function(){
+    if (!aiReviewingId) return;
+    var body = {
+      op: 'review',
+      result_class: document.getElementById('ai-review-result').value,
+      lessons: document.getElementById('ai-review-lessons').value
+    };
+    aiTransition(aiReviewingId, body).then(function(){
+      aiReviewingId = null;
+      document.getElementById('ai-review-form').style.display = 'none';
+    });
+  });
+}
+
 async function loadCommandCenter(){
   var state = document.getElementById('refresh-state');
   state.textContent = 'Loading…';
@@ -560,6 +776,7 @@ async function loadCommandCenter(){
   renderRisks(data);
   renderChannelSummary(data);
   renderActions(buildActions(data));
+  await loadAiActions();
   state.textContent = 'Updated ' + new Date().toLocaleTimeString();
 }
 
@@ -576,6 +793,7 @@ function initFilters(){
 async function boot(){
   loadReviewState();
   initFilters();
+  initAiPanel();
 
   var hasLocalSecret = false;
   try { hasLocalSecret = !!localStorage.getItem('admin_secret'); } catch(e) {}

@@ -3904,8 +3904,8 @@ async function onRequest3(context) {
         "X-Robots-Tag": "index, follow"
       }
     });
-  } catch (err4) {
-    console.error("Blog post TH error:", err4);
+  } catch (err5) {
+    console.error("Blog post TH error:", err5);
     return new Response("Server error", { status: 500 });
   }
 }
@@ -4522,8 +4522,8 @@ async function onRequest4(context) {
       } catch (e) {
         try {
           images = JSON.parse(product.images.replace(/\\"/g, '"'));
-        } catch (err4) {
-          console.error("Failed to parse product.images:", err4);
+        } catch (err5) {
+          console.error("Failed to parse product.images:", err5);
         }
       }
     }
@@ -4678,8 +4678,8 @@ async function onRequest4(context) {
         "Content-Security-Policy": securityCsp(context.request.url)
       }
     });
-  } catch (err4) {
-    console.error("Product SSR error:", err4);
+  } catch (err5) {
+    console.error("Product SSR error:", err5);
     return context.next();
   }
 }
@@ -6092,9 +6092,9 @@ async function sendEmail(env, options) {
       return { success: false, error: body?.message || `HTTP ${resp.status}` };
     }
     return { success: true, id: body?.id };
-  } catch (err4) {
-    console.error("Resend fetch failed:", err4.message || err4);
-    return { success: false, error: err4.message || "Network error" };
+  } catch (err5) {
+    console.error("Resend fetch failed:", err5.message || err5);
+    return { success: false, error: err5.message || "Network error" };
   }
 }
 __name(sendEmail, "sendEmail");
@@ -6289,8 +6289,8 @@ async function handleUnsubscribe(request, env) {
         }
       }
     );
-  } catch (err4) {
-    console.error("Unsubscribe error:", err4);
+  } catch (err5) {
+    console.error("Unsubscribe error:", err5);
     return new Response(
       JSON.stringify({ message: "Database error. Please try again later." }),
       {
@@ -7008,8 +7008,8 @@ async function handleQuote(request, env) {
       status: 201,
       headers: { "Content-Type": "application/json" }
     });
-  } catch (err4) {
-    console.error("Quote API error:", err4);
+  } catch (err5) {
+    console.error("Quote API error:", err5);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
@@ -13162,7 +13162,7 @@ async function handleAdminAnalysis(request, env) {
 }
 __name(handleAdminAnalysis, "handleAdminAnalysis");
 
-// ../workers/api/admin-cost-model.ts
+// ../workers/api/admin-ai-analyst.ts
 function json7(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -13177,6 +13177,376 @@ function err3(code, message, status = 400) {
   return json7({ success: false, error_code: code, message }, status);
 }
 __name(err3, "err");
+var VALID_RESULT_CLASSES = /* @__PURE__ */ new Set(["positive", "neutral", "negative", "inconclusive"]);
+async function buildAiInputContract(env) {
+  const contract = {
+    generated_at: (/* @__PURE__ */ new Date()).toISOString(),
+    canonical_products: [],
+    opportunities: [],
+    data_confidence: { status: "unavailable", warnings: [], sources: {} },
+    unverified_signals: {
+      google_ads_purchase_attribution: "UNVERIFIED \u2014 paid-purchase attribution has not been validated; treat Ads conversions as monitoring data only."
+    },
+    past_outcomes: [],
+    schema_unavailable: []
+  };
+  try {
+    const products = await env.DB.prepare(
+      "SELECT id, slug, title_en FROM products WHERE is_active = 1 ORDER BY id"
+    ).all();
+    contract.canonical_products = products.results || [];
+  } catch {
+    contract.schema_unavailable.push("products");
+  }
+  try {
+    const latest = await env.DB.prepare(
+      "SELECT score_model_version, score_date FROM opportunity_scores ORDER BY score_date DESC LIMIT 1"
+    ).first();
+    if (latest) {
+      const rows = await env.DB.prepare(
+        "SELECT o.product_id, p.slug, p.title_en, o.channel, o.score, o.rank, o.tier, o.confidence FROM opportunity_scores o JOIN products p ON p.id = o.product_id WHERE o.score_model_version = ?1 AND o.score_date = ?2 AND o.score IS NOT NULL ORDER BY o.score DESC LIMIT 20"
+      ).bind(latest.score_model_version, latest.score_date).all();
+      contract.opportunities = rows.results || [];
+      contract.opportunity_snapshot = { score_date: latest.score_date, model_version: latest.score_model_version };
+    }
+  } catch {
+    contract.schema_unavailable.push("opportunity_scores");
+  }
+  const sources = [
+    ["ga4", "ga4"],
+    ["gsc", "gsc"],
+    ["etsy", "etsy"],
+    ["google-ads", "google-ads"],
+    ["notion", "notion-mapping-sync"]
+  ];
+  let anyMissing = false;
+  let anyStale = false;
+  for (const [label, prefix] of sources) {
+    try {
+      const row = await env.DB.prepare(
+        "SELECT source, status, COALESCE(finished_at, created_at) AS ran_at FROM sync_runs WHERE source LIKE ?1 ORDER BY COALESCE(finished_at, created_at) DESC LIMIT 1"
+      ).bind(prefix + "%").first();
+      if (!row) {
+        contract.data_confidence.sources[label] = { status: "unavailable" };
+        anyMissing = true;
+        continue;
+      }
+      const ageDays = Math.floor((Date.now() - (/* @__PURE__ */ new Date(row.ran_at + "Z")).getTime()) / 864e5);
+      const ok = String(row.status || "").toLowerCase() === "success" && ageDays <= 3;
+      const srcStatus = ok ? "ok" : ageDays > 7 ? "stale" : "warning";
+      contract.data_confidence.sources[label] = { status: srcStatus, last_run_at: row.ran_at, last_status: row.status, age_days: ageDays };
+      if (srcStatus === "stale") anyStale = true;
+      if (srcStatus === "warning") anyStale = true;
+      if (!ok && srcStatus !== "unavailable") contract.data_confidence.warnings.push(label + ": last run " + row.status + " (" + ageDays + "d ago)");
+    } catch {
+      contract.data_confidence.sources[label] = { status: "unavailable" };
+      anyMissing = true;
+    }
+  }
+  contract.data_confidence.status = anyMissing ? "low" : anyStale ? "medium" : "high";
+  try {
+    const outcomes = await env.DB.prepare(
+      "SELECT id, action_date, product_id, channel, action_type, title, result_class, lessons, reviewed_at FROM marketing_actions WHERE status = 'reviewed' ORDER BY reviewed_at DESC LIMIT 20"
+    ).all();
+    contract.past_outcomes = outcomes.results || [];
+  } catch {
+    contract.schema_unavailable.push("marketing_actions");
+  }
+  return contract;
+}
+__name(buildAiInputContract, "buildAiInputContract");
+function validateRecommendations(contract, rawList) {
+  const valid = [];
+  const rejected = [];
+  const productIds = new Set((contract.canonical_products || []).map((p) => Number(p.id)));
+  const confidenceStatus = contract.data_confidence && contract.data_confidence.status;
+  const list = Array.isArray(rawList) ? rawList.slice(0, 10) : [];
+  for (const raw of list) {
+    const r = raw || {};
+    const reasons = [];
+    const productId = r.product_id === null || r.product_id === void 0 || r.product_id === "" ? null : Number(r.product_id);
+    if (productId !== null && !productIds.has(productId)) {
+      reasons.push("invented or unknown product_id: " + String(r.product_id));
+    }
+    const action = String(r.action || "").trim();
+    if (!action) reasons.push("missing action");
+    const why = String(r.why || "").trim();
+    if (!why) reasons.push("missing why");
+    const confidence = r.confidence === void 0 || r.confidence === null ? null : Number(r.confidence);
+    if (confidence === null || isNaN(confidence) || confidence < 0 || confidence > 100) {
+      reasons.push("confidence must be a number 0-100");
+    }
+    if (reasons.length) {
+      rejected.push({ recommendation: r, reasons });
+      continue;
+    }
+    const caution = [];
+    if (confidenceStatus !== "high") {
+      caution.push("Data confidence is '" + confidenceStatus + "' \u2014 recommendation should be treated as exploratory until freshness and coverage improve.");
+    }
+    const channel = String(r.channel || "").trim();
+    if (channel === "google-ads" || channel === "google_ads" || /ads/i.test(action)) {
+      caution.push(contract.unverified_signals.google_ads_purchase_attribution);
+    }
+    valid.push({
+      product_id: productId,
+      channel,
+      action_type: String(r.action_type || "push_product").trim() || "push_product",
+      title: action,
+      detail: why,
+      budget_test: r.budget_test === void 0 || r.budget_test === null ? null : Number(r.budget_test),
+      budget: r.budget === void 0 || r.budget === null ? null : Number(r.budget),
+      budget_currency: String(r.budget_currency || "THB").trim() || "THB",
+      success_target: String(r.success_target || "").trim(),
+      confidence,
+      review_date: r.review_date ? String(r.review_date).slice(0, 10) : null,
+      caution: caution.length ? 1 : 0,
+      caution_note: caution.join(" ")
+    });
+  }
+  return { valid, rejected };
+}
+__name(validateRecommendations, "validateRecommendations");
+function buildAiPrompt(contract) {
+  const system = 'You are the MildMate marketing AI analyst. You are ADVISORY ONLY: you never execute actions, never spend budgets, and never write canonical data. Return STRICT JSON only, no prose, in the form {"recommendations":[{"product_id":<int|null>,"channel":"<string>","action":"<short imperative title>","action_type":"<push_product|campaign|content|monitor>","why":"<reasoning>","budget_test":<number|null>,"budget":<number|null>,"budget_currency":"THB","success_target":"<measurable target>","confidence":<0-100>,"review_date":"YYYY-MM-DD"}]} Hard rules: use ONLY product_id values from canonical_products (or null for non-product actions); cite ONLY metrics present in the contract; never invent revenue, conversions, or product IDs; treat google_ads_purchase_attribution as UNVERIFIED; when data_confidence is not high, be explicitly cautious.';
+  const user = JSON.stringify({
+    canonical_products: contract.canonical_products,
+    opportunities: contract.opportunities,
+    data_confidence: contract.data_confidence,
+    unverified_signals: contract.unverified_signals,
+    past_outcomes: contract.past_outcomes
+  });
+  return { system, user };
+}
+__name(buildAiPrompt, "buildAiPrompt");
+async function callAiProvider(env, contract) {
+  const key = String(env.AI_API_KEY || "").trim();
+  if (!key) return { available: false };
+  const base = String(env.AI_API_BASE || "https://api.deepseek.com").replace(/\/+$/, "");
+  const model = String(env.AI_MODEL || "deepseek-chat");
+  const prompt = buildAiPrompt(contract);
+  try {
+    const resp = await fetch(base + "/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: prompt.system },
+          { role: "user", content: prompt.user }
+        ],
+        temperature: 0.2
+      })
+    });
+    if (!resp.ok) return { available: true, model, error: "provider HTTP " + resp.status };
+    const body = await resp.json();
+    const content = body && body.choices && body.choices[0] && body.choices[0].message ? String(body.choices[0].message.content || "") : "";
+    const cleaned = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      return { available: true, model, error: "provider returned non-JSON content" };
+    }
+    const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed.recommendations) ? parsed.recommendations : [];
+    return { available: true, model, list };
+  } catch (e) {
+    return { available: true, model, error: String(e?.message || e) };
+  }
+}
+__name(callAiProvider, "callAiProvider");
+function actorEmail(request) {
+  try {
+    const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+    const parts = token.split(".");
+    if (parts.length < 2) return "";
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return String(payload.email || "").trim().toLowerCase();
+  } catch {
+    return "";
+  }
+}
+__name(actorEmail, "actorEmail");
+async function getContract(env) {
+  const contract = await buildAiInputContract(env);
+  return json7({ success: true, contract });
+}
+__name(getContract, "getContract");
+async function recommendHandler(request, env) {
+  let body = {};
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+  const dryRun = body && body.dry_run === true;
+  const contract = await buildAiInputContract(env);
+  const result = await callAiProvider(env, contract);
+  if (!result.available) {
+    return json7({
+      success: true,
+      ai_available: false,
+      message: "AI provider not configured (set AI_API_KEY, optional AI_API_BASE / AI_MODEL). No recommendations were generated or stored \u2014 nothing is fabricated.",
+      contract_snapshot: { data_confidence: contract.data_confidence, opportunities: contract.opportunities.length }
+    });
+  }
+  if (result.error) {
+    return json7({ success: true, ai_available: true, stored: 0, error: result.error, rejected: [] }, 200);
+  }
+  const { valid, rejected } = validateRecommendations(contract, result.list || []);
+  if (dryRun) {
+    return json7({ success: true, ai_available: true, model: result.model, dry_run: true, valid, rejected, contract });
+  }
+  let stored = 0;
+  const today2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  for (const v of valid) {
+    await env.DB.prepare(
+      "INSERT INTO marketing_actions (action_date, source, ai_model, status, product_id, channel, action_type, title, detail, recommendation_json, approved_budget, budget_currency, success_target, confidence, caution, caution_note, review_date) VALUES (?1, 'ai', ?2, 'proposed', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)"
+    ).bind(
+      today2,
+      result.model || null,
+      v.product_id,
+      v.channel,
+      v.action_type,
+      v.title,
+      v.detail,
+      JSON.stringify(v),
+      v.budget,
+      v.budget_currency,
+      v.success_target,
+      v.confidence,
+      v.caution,
+      v.caution_note,
+      v.review_date
+    ).run();
+    stored++;
+  }
+  return json7({
+    success: true,
+    ai_available: true,
+    model: result.model,
+    stored,
+    rejected,
+    grounding_note: "Only recommendations grounded in the contract were stored. Invented product IDs or missing fields are listed in rejected."
+  });
+}
+__name(recommendHandler, "recommendHandler");
+async function listActions(env, url) {
+  const status = String(url.searchParams.get("status") || "").trim();
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 50) || 50, 1), 200);
+  let rows = [];
+  try {
+    if (status && VALID_TRANSITIONS_INPUT.has(status)) {
+      const res = await env.DB.prepare(
+        "SELECT * FROM marketing_actions WHERE status = ?1 ORDER BY id DESC LIMIT ?2"
+      ).bind(status, limit).all();
+      rows = res.results || [];
+    } else {
+      const res = await env.DB.prepare(
+        "SELECT * FROM marketing_actions ORDER BY id DESC LIMIT ?1"
+      ).bind(limit).all();
+      rows = res.results || [];
+    }
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table")) {
+      return json7({ success: true, available: false, error_code: "MARKETING_ACTIONS_SCHEMA_UNAVAILABLE", message: "Apply migration 063_marketing_actions.sql first.", actions: [] });
+    }
+    throw e;
+  }
+  return json7({ success: true, available: true, actions: rows });
+}
+__name(listActions, "listActions");
+var VALID_TRANSITIONS_INPUT = /* @__PURE__ */ new Set(["proposed", "approved", "rejected", "reviewed"]);
+async function updateAction(request, env, idStr) {
+  const id = Number(idStr);
+  if (!id || isNaN(id)) return err3("BAD_ID", "Invalid action id", 400);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return err3("BAD_BODY", "JSON body required", 400);
+  }
+  const op = String(body.op || "").trim();
+  const row = await env.DB.prepare("SELECT * FROM marketing_actions WHERE id = ?1").bind(id).first();
+  if (!row) return err3("NOT_FOUND", "Action not found", 404);
+  const email = actorEmail(request);
+  if (op === "approve") {
+    if (row.status !== "proposed") return err3("INVALID_TRANSITION", "Only proposed actions can be approved (current: " + row.status + ")", 409);
+    let baseline = { snapshot_at: (/* @__PURE__ */ new Date()).toISOString(), recommendation: JSON.parse(row.recommendation_json || "{}") };
+    try {
+      if (row.product_id) {
+        const opp = await env.DB.prepare(
+          "SELECT score_date, score, confidence, tier FROM opportunity_scores WHERE product_id = ?1 ORDER BY score_date DESC LIMIT 1"
+        ).bind(row.product_id).first();
+        if (opp) baseline.opportunity_at_approval = opp;
+      }
+    } catch {
+    }
+    await env.DB.prepare(
+      "UPDATE marketing_actions SET status='approved', baseline_metrics_json=?2, approved_budget=COALESCE(?3, approved_budget), approved_by=?4, approved_at=?5, updated_at=CURRENT_TIMESTAMP WHERE id=?1"
+    ).bind(id, JSON.stringify(baseline), body.budget === void 0 || body.budget === null ? null : Number(body.budget), email, (/* @__PURE__ */ new Date()).toISOString()).run();
+    return json7({ success: true, id, status: "approved", approved_by: email });
+  }
+  if (op === "reject") {
+    if (row.status !== "proposed") return err3("INVALID_TRANSITION", "Only proposed actions can be rejected (current: " + row.status + ")", 409);
+    await env.DB.prepare(
+      "UPDATE marketing_actions SET status='rejected', rejected_by=?2, rejected_at=?3, updated_at=CURRENT_TIMESTAMP WHERE id=?1"
+    ).bind(id, email, (/* @__PURE__ */ new Date()).toISOString()).run();
+    return json7({ success: true, id, status: "rejected", rejected_by: email });
+  }
+  if (op === "review") {
+    if (row.status !== "approved") return err3("INVALID_TRANSITION", "Only approved actions can be reviewed (current: " + row.status + ")", 409);
+    const rc = String(body.result_class || "").trim();
+    if (!VALID_RESULT_CLASSES.has(rc)) {
+      return err3("BAD_RESULT_CLASS", "result_class must be one of positive|neutral|negative|inconclusive", 400);
+    }
+    await env.DB.prepare(
+      "UPDATE marketing_actions SET status='reviewed', result_class=?2, post_metrics_json=?3, lessons=?4, reviewed_by=?5, reviewed_at=?6, updated_at=CURRENT_TIMESTAMP WHERE id=?1"
+    ).bind(id, rc, JSON.stringify(body.post_metrics || null), String(body.lessons || "").trim() || null, email, (/* @__PURE__ */ new Date()).toISOString()).run();
+    return json7({ success: true, id, status: "reviewed", result_class: rc, reviewed_by: email });
+  }
+  return err3("BAD_OP", "op must be approve|reject|review", 400);
+}
+__name(updateAction, "updateAction");
+async function handleAdminAiAnalyst(request, env) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+      }
+    });
+  }
+  const url = new URL(request.url);
+  const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/ai-analyst/, "") || "/";
+  const auth = await authorizeAdmin(request, env);
+  if (!auth.ok) return err3("UNAUTHORIZED", auth.error, auth.status);
+  if (request.method === "GET" && sub === "/contract") return getContract(env);
+  if (request.method === "POST" && sub === "/recommend") return recommendHandler(request, env);
+  if (request.method === "GET" && sub === "/actions") return listActions(env, url);
+  const actionMatch = sub.match(/^\/actions\/(\d+)$/);
+  if (request.method === "PUT" && actionMatch) return updateAction(request, env, actionMatch[1]);
+  return err3("ROUTE_NOT_FOUND", "Unknown ai-analyst route: " + sub, 404);
+}
+__name(handleAdminAiAnalyst, "handleAdminAiAnalyst");
+
+// ../workers/api/admin-cost-model.ts
+function json8(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    }
+  });
+}
+__name(json8, "json");
+function err4(code, message, status = 400) {
+  return json8({ success: false, error_code: code, message }, status);
+}
+__name(err4, "err");
 function isProductionHost7(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -13668,7 +14038,7 @@ async function getCostModel(env) {
     coverage = await env.DB.prepare("SELECT * FROM analysis_profit_coverage").first();
   } catch {
   }
-  return json7({
+  return json8({
     success: true,
     products: products.results || [],
     cost_rows: costRows.results || [],
@@ -13681,36 +14051,36 @@ __name(getCostModel, "getCostModel");
 async function putProductCost(env, body) {
   await ensureTables(env);
   const productId = Number(body?.product_id);
-  if (!Number.isInteger(productId) || productId < 1) return err3("INVALID_PRODUCT_ID", "product_id must be a positive integer.");
+  if (!Number.isInteger(productId) || productId < 1) return err4("INVALID_PRODUCT_ID", "product_id must be a positive integer.");
   const cost = parseMoney(body?.production_cost_thb, 0.01, 1e6);
-  if (cost === null) return err3("INVALID_COST", "production_cost_thb must be a positive THB amount.");
+  if (cost === null) return err4("INVALID_COST", "production_cost_thb must be a positive THB amount.");
   const effectiveFrom = parseDateOrToday(body?.effective_from);
-  if (!effectiveFrom) return err3("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
+  if (!effectiveFrom) return err4("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
   const note = String(body?.note || "").trim().slice(0, 500) || null;
   const isEstimate = body?.is_estimate === void 0 ? 0 : body.is_estimate ? 1 : 0;
   const product = await env.DB.prepare("SELECT id, slug FROM products WHERE id = ?1").bind(productId).first();
-  if (!product) return err3("UNKNOWN_PRODUCT", "No product with id " + productId, 404);
+  if (!product) return err4("UNKNOWN_PRODUCT", "No product with id " + productId, 404);
   await env.DB.prepare(`
     INSERT INTO cost_model_products (product_id, production_cost_thb, cost_source, is_estimate, effective_from, note)
     VALUES (?1, ?2, 'verified', ?3, ?4, ?5)
     ON CONFLICT(product_id, effective_from, cost_source)
     DO UPDATE SET production_cost_thb = ?2, is_estimate = ?3, note = ?5, updated_at = CURRENT_TIMESTAMP
   `).bind(productId, cost, isEstimate, effectiveFrom, note).run();
-  return json7({ success: true, product_id: productId, slug: product.slug, production_cost_thb: cost, effective_from: effectiveFrom, cost_source: "verified", is_estimate: isEstimate });
+  return json8({ success: true, product_id: productId, slug: product.slug, production_cost_thb: cost, effective_from: effectiveFrom, cost_source: "verified", is_estimate: isEstimate });
 }
 __name(putProductCost, "putProductCost");
 async function putChannelFees(env, body) {
   await ensureTables(env);
   const channel = String(body?.channel || "").trim().toLowerCase();
-  if (!CHANNEL_RE2.test(channel)) return err3("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
+  if (!CHANNEL_RE2.test(channel)) return err4("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
   const marketplacePct = parseMoney(body?.marketplace_fee_pct ?? 0, 0, 50);
   const paymentPct = parseMoney(body?.payment_fee_pct ?? 0, 0, 50);
   const paymentFixed = parseMoney(body?.payment_fee_fixed_thb ?? 0, 0, 1e4);
   const otherFee = parseMoney(body?.other_fee_thb_per_order ?? 0, 0, 1e4);
-  if (marketplacePct === null || paymentPct === null) return err3("INVALID_FEE_PCT", "Fee percentages must be between 0 and 50.");
-  if (paymentFixed === null || otherFee === null) return err3("INVALID_FEE_THB", "Fixed fees must be between 0 and 10000 THB.");
+  if (marketplacePct === null || paymentPct === null) return err4("INVALID_FEE_PCT", "Fee percentages must be between 0 and 50.");
+  if (paymentFixed === null || otherFee === null) return err4("INVALID_FEE_THB", "Fixed fees must be between 0 and 10000 THB.");
   const effectiveFrom = parseDateOrToday(body?.effective_from);
-  if (!effectiveFrom) return err3("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
+  if (!effectiveFrom) return err4("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
   const note = String(body?.note || "").trim().slice(0, 500) || null;
   const isEstimate = body?.is_estimate === void 0 ? 1 : body.is_estimate ? 1 : 0;
   await env.DB.prepare(`
@@ -13721,17 +14091,17 @@ async function putChannelFees(env, body) {
     DO UPDATE SET marketplace_fee_pct = ?2, payment_fee_pct = ?3, payment_fee_fixed_thb = ?4,
                   other_fee_thb_per_order = ?5, is_estimate = ?6, note = ?8, updated_at = CURRENT_TIMESTAMP
   `).bind(channel, marketplacePct, paymentPct, paymentFixed, otherFee, isEstimate, effectiveFrom, note).run();
-  return json7({ success: true, channel, effective_from: effectiveFrom });
+  return json8({ success: true, channel, effective_from: effectiveFrom });
 }
 __name(putChannelFees, "putChannelFees");
 async function putShipping(env, body) {
   await ensureTables(env);
   const channel = String(body?.channel || "").trim().toLowerCase();
-  if (!CHANNEL_RE2.test(channel)) return err3("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
+  if (!CHANNEL_RE2.test(channel)) return err4("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
   const cost = parseMoney(body?.avg_shipping_cost_thb, 0, 1e5);
-  if (cost === null) return err3("INVALID_SHIPPING_COST", "avg_shipping_cost_thb must be between 0 and 100000 THB.");
+  if (cost === null) return err4("INVALID_SHIPPING_COST", "avg_shipping_cost_thb must be between 0 and 100000 THB.");
   const effectiveFrom = parseDateOrToday(body?.effective_from);
-  if (!effectiveFrom) return err3("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
+  if (!effectiveFrom) return err4("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
   const note = String(body?.note || "").trim().slice(0, 500) || null;
   const isEstimate = body?.is_estimate === void 0 ? 1 : body.is_estimate ? 1 : 0;
   await env.DB.prepare(`
@@ -13740,7 +14110,7 @@ async function putShipping(env, body) {
     ON CONFLICT(channel, effective_from)
     DO UPDATE SET avg_shipping_cost_thb = ?2, is_estimate = ?3, note = ?5, updated_at = CURRENT_TIMESTAMP
   `).bind(channel, cost, isEstimate, effectiveFrom, note).run();
-  return json7({ success: true, channel, avg_shipping_cost_thb: cost, effective_from: effectiveFrom });
+  return json8({ success: true, channel, avg_shipping_cost_thb: cost, effective_from: effectiveFrom });
 }
 __name(putShipping, "putShipping");
 async function recalculateFormulaCosts(env) {
@@ -13773,7 +14143,7 @@ async function recalculateFormulaCosts(env) {
       modeled_price_thb: derived.modeledPrice
     });
   }
-  return json7({
+  return json8({
     success: true,
     effective_from: FORMULA_EFFECTIVE_FROM,
     params_source: "live D1 pricing_params (+ configurator constants where D1 lacks the key)",
@@ -13793,10 +14163,10 @@ async function deleteRow(env, url) {
     fees: "cost_model_channel_fees",
     shipping: "cost_model_shipping"
   };
-  if (!tables[table]) return err3("INVALID_TABLE", "table must be products, fees, or shipping.");
-  if (!Number.isInteger(id) || id < 1) return err3("INVALID_ID", "id must be a positive integer.");
+  if (!tables[table]) return err4("INVALID_TABLE", "table must be products, fees, or shipping.");
+  if (!Number.isInteger(id) || id < 1) return err4("INVALID_ID", "id must be a positive integer.");
   const result = await env.DB.prepare("DELETE FROM " + tables[table] + " WHERE id = ?1").bind(id).run();
-  return json7({ success: true, table: tables[table], id, deleted: result?.meta?.changes ?? null });
+  return json8({ success: true, table: tables[table], id, deleted: result?.meta?.changes ?? null });
 }
 __name(deleteRow, "deleteRow");
 async function handleAdminCostModel(request, env) {
@@ -13810,7 +14180,7 @@ async function handleAdminCostModel(request, env) {
     });
   }
   const auth = await authorizeAdmin6(request, env);
-  if (!auth.ok) return err3("UNAUTHORIZED", auth.error, auth.status);
+  if (!auth.ok) return err4("UNAUTHORIZED", auth.error, auth.status);
   const url = new URL(request.url);
   const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/cost-model/, "") || "/";
   let body = null;
@@ -13818,7 +14188,7 @@ async function handleAdminCostModel(request, env) {
     try {
       body = await request.json();
     } catch {
-      return err3("INVALID_JSON", "Request body must be valid JSON.");
+      return err4("INVALID_JSON", "Request body must be valid JSON.");
     }
   }
   if (request.method === "GET" && sub === "/") return getCostModel(env);
@@ -13827,14 +14197,14 @@ async function handleAdminCostModel(request, env) {
   if (request.method === "PUT" && sub === "/shipping") return putShipping(env, body);
   if (request.method === "POST" && sub === "/recalculate") return recalculateFormulaCosts(env);
   if (request.method === "DELETE" && sub === "/row") return deleteRow(env, url);
-  return err3("ROUTE_NOT_FOUND", "Unknown cost-model route: " + request.method + " " + sub, 404);
+  return err4("ROUTE_NOT_FOUND", "Unknown cost-model route: " + request.method + " " + sub, 404);
 }
 __name(handleAdminCostModel, "handleAdminCostModel");
 
 // ../workers/api/shipping.ts
 var shippingSchemaReady = false;
 var shippingSchemaPromise = null;
-function json8(body, status = 200) {
+function json9(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -13843,7 +14213,7 @@ function json8(body, status = 200) {
     }
   });
 }
-__name(json8, "json");
+__name(json9, "json");
 function toAmount(v) {
   const n = Number(v);
   if (!Number.isFinite(n) || n < 0) return 0;
@@ -14184,7 +14554,7 @@ async function handleShippingCalculate(request, env) {
     });
   }
   if (request.method !== "GET" && request.method !== "POST") {
-    return json8({ error: "Method not allowed" }, 405);
+    return json9({ error: "Method not allowed" }, 405);
   }
   try {
     let country = "";
@@ -14220,15 +14590,15 @@ async function handleShippingCalculate(request, env) {
       totalQty: qty,
       items
     });
-    return json8({ ok: true, ...quote });
+    return json9({ ok: true, ...quote });
   } catch (e) {
-    return json8({ error: e?.message || "Shipping quote unavailable" }, 500);
+    return json9({ error: e?.message || "Shipping quote unavailable" }, 500);
   }
 }
 __name(handleShippingCalculate, "handleShippingCalculate");
 
 // ../workers/api/admin-shipping.ts
-function json9(body, status = 200) {
+function json10(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -14237,7 +14607,7 @@ function json9(body, status = 200) {
     }
   });
 }
-__name(json9, "json");
+__name(json10, "json");
 function toAmount2(v) {
   return toAmount(v);
 }
@@ -14359,7 +14729,7 @@ async function getUsdRatePerThb(env) {
 __name(getUsdRatePerThb, "getUsdRatePerThb");
 async function handleAdminShippingRates(request, env) {
   const auth = await authorizeAdmin7(request, env);
-  if (!auth.ok) return json9({ error: auth.error }, auth.status);
+  if (!auth.ok) return json10({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -14403,19 +14773,19 @@ async function handleAdminShippingRates(request, env) {
         updated_at: r.updated_at
       };
     });
-    return json9({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
+    return json10({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "POST" || request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json9({ error: "Invalid JSON body" }, 400);
+      return json10({ error: "Invalid JSON body" }, 400);
     }
     const countryCode = normalizeCountryCode(body.country_code || body.country || "");
     const serviceLevel = normalizeServiceLevel(body.service_level || "express");
     if (!countryCode) {
-      return json9({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
+      return json10({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
     }
     const countryName = normalizeCountryName(body.country_name, countryCode);
     const t1f = toAmount2(body.tier1_first_thb || body.tier1_first || 0);
@@ -14443,7 +14813,7 @@ async function handleAdminShippingRates(request, env) {
         is_active = excluded.is_active,
         updated_at = datetime('now')`
     ).bind(countryCode, serviceLevel, countryName, t1f, t2f, t3f, etaMinDays, etaMaxDays, etaNote, isActive).run();
-    return json9({
+    return json10({
       success: true,
       rate: {
         service_level: serviceLevel,
@@ -14463,17 +14833,17 @@ async function handleAdminShippingRates(request, env) {
     const url = new URL(request.url);
     const countryCode = normalizeCountryCode(url.searchParams.get("country") || "");
     const serviceLevel = normalizeServiceLevel(url.searchParams.get("service_level") || "express");
-    if (!countryCode) return json9({ error: "country query param is required" }, 400);
-    if (countryCode === "OTHER") return json9({ error: "OTHER cannot be deleted" }, 400);
+    if (!countryCode) return json10({ error: "country query param is required" }, 400);
+    if (countryCode === "OTHER") return json10({ error: "OTHER cannot be deleted" }, 400);
     await env.DB.prepare("DELETE FROM shipping_service_rates WHERE country_code = ?1 AND service_level = ?2").bind(countryCode, serviceLevel).run();
-    return json9({ success: true, country_code: countryCode, service_level: serviceLevel });
+    return json10({ success: true, country_code: countryCode, service_level: serviceLevel });
   }
-  return json9({ error: "Method not allowed" }, 405);
+  return json10({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingRates, "handleAdminShippingRates");
 async function handleAdminShippingProductTiers(request, env) {
   const auth = await authorizeAdmin7(request, env);
-  if (!auth.ok) return json9({ error: auth.error }, auth.status);
+  if (!auth.ok) return json10({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -14497,19 +14867,19 @@ async function handleAdminShippingProductTiers(request, env) {
       category: String(r.category || ""),
       tier: Number(r.tier || 2)
     }));
-    return json9({ product_tiers: tiers });
+    return json10({ product_tiers: tiers });
   }
   if (request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json9({ error: "Invalid JSON" }, 400);
+      return json10({ error: "Invalid JSON" }, 400);
     }
     const slug = String(body.product_slug || "").trim();
     const tier = Number(body.tier);
-    if (!slug) return json9({ error: "product_slug required" }, 400);
-    if (![1, 2, 3].includes(tier)) return json9({ error: "tier must be 1, 2, or 3" }, 400);
+    if (!slug) return json10({ error: "product_slug required" }, 400);
+    if (![1, 2, 3].includes(tier)) return json10({ error: "tier must be 1, 2, or 3" }, 400);
     await env.DB.prepare(
       `INSERT INTO shipping_product_tiers (product_slug, tier, updated_at)
        VALUES (?1, ?2, datetime('now'))
@@ -14517,14 +14887,14 @@ async function handleAdminShippingProductTiers(request, env) {
          tier = excluded.tier,
          updated_at = datetime('now')`
     ).bind(slug, tier).run();
-    return json9({ success: true, product_slug: slug, tier });
+    return json10({ success: true, product_slug: slug, tier });
   }
-  return json9({ error: "Method not allowed" }, 405);
+  return json10({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
 async function handleAdminShippingAddRates(request, env) {
   const auth = await authorizeAdmin7(request, env);
-  if (!auth.ok) return json9({ error: auth.error }, auth.status);
+  if (!auth.ok) return json10({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -14552,34 +14922,34 @@ async function handleAdminShippingAddRates(request, env) {
       const thb = toAmount2(r.add_thb);
       addRates[t] = { add_thb: thb, add_usd: toAmount2(thb * usdRate) };
     }
-    return json9({ add_rates: addRates, usd_rate_per_thb: usdRate });
+    return json10({ add_rates: addRates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json9({ error: "Invalid JSON" }, 400);
+      return json10({ error: "Invalid JSON" }, 400);
     }
     const tier = Number(body.tier);
     const addThb = toAmount2(body.add_thb);
-    if (![1, 2, 3].includes(tier)) return json9({ error: "tier must be 1, 2, or 3" }, 400);
+    if (![1, 2, 3].includes(tier)) return json10({ error: "tier must be 1, 2, or 3" }, 400);
     await env.DB.prepare(
       `INSERT INTO shipping_add_rates (tier, add_thb, updated_at)
        VALUES (?1, ?2, datetime('now'))
        ON CONFLICT(tier) DO UPDATE SET
          add_thb = excluded.add_thb, updated_at = datetime('now')`
     ).bind(tier, addThb).run();
-    return json9({ success: true, tier, add_thb: addThb });
+    return json10({ success: true, tier, add_thb: addThb });
   }
-  return json9({ error: "Method not allowed" }, 405);
+  return json10({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingAddRates, "handleAdminShippingAddRates");
 
 // ../workers/api/admin-quotes.ts
 var quoteSchemaReady = false;
 var quoteSchemaPromise = null;
-function json10(body, status = 200) {
+function json11(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -14590,7 +14960,7 @@ function json10(body, status = 200) {
     }
   });
 }
-__name(json10, "json");
+__name(json11, "json");
 function isProductionHost9(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -14927,9 +15297,9 @@ Need help or have a measurement question? Simply reply to this email \u2014 we'r
 }
 __name(sendMagicLinkEmail, "sendMagicLinkEmail");
 async function handleAdminQuotes(request, env) {
-  if (request.method === "OPTIONS") return json10({ ok: true });
+  if (request.method === "OPTIONS") return json11({ ok: true });
   const auth = await authorizeAdmin8(request, env);
-  if (!auth.ok) return json10({ error: auth.error }, auth.status);
+  if (!auth.ok) return json11({ error: auth.error }, auth.status);
   await ensureQuoteSchema(env);
   const db = env.DB;
   const url = new URL(request.url);
@@ -15029,7 +15399,7 @@ async function handleAdminQuotes(request, env) {
         quote_url: buildQuoteLink(request, r.quote_id)
       };
     });
-    return json10({
+    return json11({
       quotes,
       pagination: {
         page,
@@ -15050,7 +15420,7 @@ async function handleAdminQuotes(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json10({ error: "Invalid JSON" }, 400);
+      return json11({ error: "Invalid JSON" }, 400);
     }
     const customerName = String(body.customer_name || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
@@ -15086,15 +15456,15 @@ async function handleAdminQuotes(request, env) {
     }
     const expiresAt = normalizeDateInput(body.expires_at);
     const sendEmailNow = !!body.send_email;
-    if (!customerName) return json10({ error: "customer_name is required" }, 400);
-    if (!email || !email.includes("@")) return json10({ error: "Valid email is required" }, 400);
-    if (!productSlug) return json10({ error: "product_slug is required" }, 400);
-    if (!dimensions) return json10({ error: "dimensions or size_text is required" }, 400);
+    if (!customerName) return json11({ error: "customer_name is required" }, 400);
+    if (!email || !email.includes("@")) return json11({ error: "Valid email is required" }, 400);
+    if (!productSlug) return json11({ error: "product_slug is required" }, 400);
+    if (!dimensions) return json11({ error: "dimensions or size_text is required" }, 400);
     if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) {
-      return json10({ error: "Invalid status" }, 400);
+      return json11({ error: "Invalid status" }, 400);
     }
     if (status === "approved" && (!quotedPriceThb || quotedPriceThb <= 0)) {
-      return json10({ error: "A price (THB or USD) is required for approved status" }, 400);
+      return json11({ error: "A price (THB or USD) is required for approved status" }, 400);
     }
     const quoteId = await generateQuoteId(db);
     await db.prepare(
@@ -15131,7 +15501,7 @@ async function handleAdminQuotes(request, env) {
         expires_at: expiresAt
       });
     }
-    return json10({
+    return json11({
       success: true,
       quote_id: quoteId,
       quote_url: buildQuoteLink(request, quoteId),
@@ -15144,21 +15514,21 @@ async function handleAdminQuotes(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json10({ error: "Invalid JSON" }, 400);
+      return json11({ error: "Invalid JSON" }, 400);
     }
     const quoteId = String(body.quote_id || "").trim();
-    if (!quoteId) return json10({ error: "quote_id is required" }, 400);
+    if (!quoteId) return json11({ error: "quote_id is required" }, 400);
     const current = await db.prepare(
       `SELECT quote_id, dimensions, status, quoted_price, quoted_price_usd
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
-    if (!current) return json10({ error: "Quote not found" }, 404);
+    if (!current) return json11({ error: "Quote not found" }, 404);
     const updates = [];
     const binds = [];
     const status = body.status != null ? String(body.status).trim().toLowerCase() : null;
     if (status != null) {
-      if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) return json10({ error: "Invalid status" }, 400);
+      if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) return json11({ error: "Invalid status" }, 400);
       updates.push("status = ?");
       binds.push(status);
     }
@@ -15168,7 +15538,7 @@ async function handleAdminQuotes(request, env) {
     const isUsdUpdate = quoteCurrency === "USD";
     if (isUsdUpdate && body.quoted_price_usd != null && body.quoted_price_usd !== "") {
       priceUsd = Math.round(Number(body.quoted_price_usd));
-      if (!priceUsd || priceUsd <= 0) return json10({ error: "quoted_price_usd must be a positive number" }, 400);
+      if (!priceUsd || priceUsd <= 0) return json11({ error: "quoted_price_usd must be a positive number" }, 400);
       const rate = await getUsdRate(db);
       priceThb = Math.round(priceUsd * rate);
       updates.push("quoted_price = ?");
@@ -15177,7 +15547,7 @@ async function handleAdminQuotes(request, env) {
       binds.push(priceUsd);
     } else if (body.quoted_price_thb != null && body.quoted_price_thb !== "") {
       priceThb = Math.round(Number(body.quoted_price_thb));
-      if (!priceThb || priceThb <= 0) return json10({ error: "quoted_price_thb must be a positive number" }, 400);
+      if (!priceThb || priceThb <= 0) return json11({ error: "quoted_price_thb must be a positive number" }, 400);
       updates.push("quoted_price = ?");
       binds.push(priceThb);
       updates.push("quoted_price_usd = NULL");
@@ -15207,7 +15577,7 @@ async function handleAdminQuotes(request, env) {
           try {
             dims = JSON.parse(body.dimensions);
           } catch {
-            return json10({ error: "Invalid dimensions JSON" }, 400);
+            return json11({ error: "Invalid dimensions JSON" }, 400);
           }
         } else if (body.dimensions && typeof body.dimensions === "object") {
           dims = body.dimensions;
@@ -15232,9 +15602,9 @@ async function handleAdminQuotes(request, env) {
     const targetStatus = status || String(current.status || "pending").toLowerCase();
     const finalPriceThb = priceThb != null ? priceThb : Number(current.quoted_price || 0);
     if (targetStatus === "approved" && (!finalPriceThb || finalPriceThb <= 0)) {
-      return json10({ error: "A price (THB or USD) is required for approved status" }, 400);
+      return json11({ error: "A price (THB or USD) is required for approved status" }, 400);
     }
-    if (!updates.length && !body.send_email) return json10({ error: "No update fields provided" }, 400);
+    if (!updates.length && !body.send_email) return json11({ error: "No update fields provided" }, 400);
     if (updates.length) {
       await db.prepare(`UPDATE custom_quotes SET ${updates.join(", ")} WHERE quote_id = ?`).bind(...binds, quoteId).run();
     }
@@ -15243,25 +15613,25 @@ async function handleAdminQuotes(request, env) {
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
-    if (!row) return json10({ error: "Quote not found" }, 404);
+    if (!row) return json11({ error: "Quote not found" }, 404);
     let emailStatus = { success: false, skipped: true };
     if (body.send_email) {
       emailStatus = await sendMagicLinkEmail(env, request, row);
       if (!emailStatus.success) {
-        return json10({
+        return json11({
           error: emailStatus.error || "Failed to send quote email",
           quote_id: quoteId
         }, 400);
       }
     }
-    return json10({
+    return json11({
       success: true,
       quote_id: quoteId,
       quote_url: buildQuoteLink(request, quoteId),
       email_sent: !!emailStatus.success
     });
   }
-  return json10({ error: "Method not allowed" }, 405);
+  return json11({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminQuotes, "handleAdminQuotes");
 
@@ -15423,7 +15793,7 @@ async function handleDiscountClaim(request, env) {
 __name(handleDiscountClaim, "handleDiscountClaim");
 
 // ../workers/api/admin-contacts.ts
-function json11(body, status = 200) {
+function json12(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -15432,7 +15802,7 @@ function json11(body, status = 200) {
     }
   });
 }
-__name(json11, "json");
+__name(json12, "json");
 function collectRoles12(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -15521,7 +15891,7 @@ async function authorizeAdmin9(request, env) {
 __name(authorizeAdmin9, "authorizeAdmin");
 async function handleAdminContacts(request, env) {
   const auth = await authorizeAdmin9(request, env);
-  if (!auth.ok) return json11({ error: auth.error }, auth.status);
+  if (!auth.ok) return json12({ error: auth.error }, auth.status);
   const url = new URL(request.url);
   const method = request.method;
   const db = env.DB;
@@ -15537,7 +15907,7 @@ async function handleAdminContacts(request, env) {
     const totalRow = await db.prepare(
       "SELECT COUNT(*) as cnt FROM contacts" + (onlySubscribed ? " WHERE is_subscribed = 1" : "")
     ).first();
-    return json11({
+    return json12({
       contacts: results,
       total: totalRow?.cnt || 0,
       page,
@@ -15549,21 +15919,21 @@ async function handleAdminContacts(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json11({ error: "Invalid JSON" }, 400);
+      return json12({ error: "Invalid JSON" }, 400);
     }
     const email = (body.email || "").trim().toLowerCase();
-    if (!email) return json11({ error: "Email required" }, 400);
+    if (!email) return json12({ error: "Email required" }, 400);
     if (body.unsubscribe !== void 0 && body.unsubscribe) {
       await db.prepare("UPDATE contacts SET is_subscribed = 0, sources = TRIM(REPLACE(REPLACE(REPLACE(sources, ',subscribe', ''), 'subscribe,', ''), 'subscribe', ''), ','), last_seen = datetime('now') WHERE email = ?").bind(email).run();
-      return json11({ success: true, message: "Unsubscribed" });
+      return json12({ success: true, message: "Unsubscribed" });
     }
     if (body.name) {
       await db.prepare("UPDATE contacts SET name = ?, last_seen = datetime('now') WHERE email = ?").bind(body.name, email).run();
-      return json11({ success: true });
+      return json12({ success: true });
     }
-    return json11({ error: "No valid update field" }, 400);
+    return json12({ error: "No valid update field" }, 400);
   }
-  return json11({ error: "Method not allowed" }, 405);
+  return json12({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminContacts, "handleAdminContacts");
 
@@ -17186,11 +17556,11 @@ async function handleAdminThankyouDispatch(request, env) {
       if (sentItems.length < 30) sentItems.push({ id: queueId, order_id: orderId, email, code, discount_pct: pct });
     } else {
       failed++;
-      const err4 = rs.error || "unknown error";
+      const err5 = rs.error || "unknown error";
       failedEmails.push(email);
-      await env.DB.prepare("UPDATE thankyou_queue SET last_error = ?1 WHERE id = ?2").bind(err4.slice(0, 500), queueId).run();
-      if (failedItems.length < 30) failedItems.push({ id: queueId, order_id: orderId, email, code, error: err4 });
-      if (errors.length < 10) errors.push(`id ${queueId}: ${err4}`);
+      await env.DB.prepare("UPDATE thankyou_queue SET last_error = ?1 WHERE id = ?2").bind(err5.slice(0, 500), queueId).run();
+      if (failedItems.length < 30) failedItems.push({ id: queueId, order_id: orderId, email, code, error: err5 });
+      if (errors.length < 10) errors.push(`id ${queueId}: ${err5}`);
     }
   }
   return new Response(JSON.stringify({
@@ -18005,7 +18375,7 @@ __name(handleAdminTemplates, "handleAdminTemplates");
 // ../workers/api/favorites.ts
 var favoritesSchemaReady = false;
 var favoritesSchemaPromise = null;
-function json12(body, status = 200) {
+function json13(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -18014,7 +18384,7 @@ function json12(body, status = 200) {
     }
   });
 }
-__name(json12, "json");
+__name(json13, "json");
 async function ensureFavoritesSchema(env) {
   if (favoritesSchemaReady) return;
   if (!favoritesSchemaPromise) {
@@ -18166,10 +18536,10 @@ async function handleFavorites(request, env) {
       await ensureFavoritesSchema(env);
     } catch (e) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
-      return json12({ error: "Favorites storage unavailable" }, 500);
+      return json13({ error: "Favorites storage unavailable" }, 500);
     }
     const auth = await authorizeAdmin17(request, env);
-    if (!auth.ok) return json12({ error: auth.error }, auth.status);
+    if (!auth.ok) return json13({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
       `SELECT 
@@ -18203,22 +18573,22 @@ async function handleFavorites(request, env) {
        ORDER BY favorite_count DESC, last_favorited_at DESC
        LIMIT ?1`
     ).bind(limit).all();
-    return json12({
+    return json13({
       totals: totals || { total_favorites: 0, total_users: 0, total_products: 0 },
       topProducts: topProducts.results || [],
       topUsers: topUsers.results || []
     });
   }
   if (path !== "/api/favorites") {
-    return json12({ error: "Not found" }, 404);
+    return json13({ error: "Not found" }, 404);
   }
   const user = await getUserContext(request, env);
-  if (!user.ok) return json12({ error: user.error }, user.status);
+  if (!user.ok) return json13({ error: user.error }, user.status);
   try {
     await ensureFavoritesSchema(env);
   } catch (e) {
     console.error("favorites schema init failed:", e?.message || e);
-    return json12({ error: "Favorites storage unavailable" }, 500);
+    return json13({ error: "Favorites storage unavailable" }, 500);
   }
   if (method === "GET") {
     const rows = await env.DB.prepare(
@@ -18241,31 +18611,31 @@ async function handleFavorites(request, env) {
        ORDER BY MAX(f.created_at) DESC
        LIMIT 100`
     ).bind(user.userId, user.email).all();
-    return json12({ favorites: rows.results || [] });
+    return json13({ favorites: rows.results || [] });
   }
   if (method === "POST") {
     let body = {};
     try {
       body = await request.json();
     } catch {
-      return json12({ error: "Invalid JSON body" }, 400);
+      return json13({ error: "Invalid JSON body" }, 400);
     }
     const productSlug = String(body.productSlug || body.slug || "").trim();
-    if (!productSlug) return json12({ error: "productSlug is required" }, 400);
+    if (!productSlug) return json13({ error: "productSlug is required" }, 400);
     const product = await env.DB.prepare(
       `SELECT id, slug, title_en, image_url, base_price_usd AS price_usd, base_price_thb AS price_thb
        FROM products
        WHERE slug = ?1
        LIMIT 1`
     ).bind(productSlug).first();
-    if (!product) return json12({ error: "Product not found" }, 404);
+    if (!product) return json13({ error: "Product not found" }, 404);
     const existing = await env.DB.prepare(
       `SELECT id FROM favorites
        WHERE product_id = ?1 AND (user_id = ?2 OR LOWER(email) = ?3)
        LIMIT 1`
     ).bind(product.id, user.userId, user.email).first();
     if (existing) {
-      return json12({
+      return json13({
         success: true,
         isFavorite: true,
         created: false,
@@ -18276,7 +18646,7 @@ async function handleFavorites(request, env) {
       `INSERT OR IGNORE INTO favorites (user_id, email, product_id, created_at)
        VALUES (?1, ?2, ?3, datetime('now'))`
     ).bind(user.userId, user.email, product.id).run();
-    return json12({
+    return json13({
       success: true,
       isFavorite: true,
       created: Number(result.meta?.changes || 0) > 0,
@@ -18292,23 +18662,23 @@ async function handleFavorites(request, env) {
       } catch {
       }
     }
-    if (!productSlug) return json12({ error: "productSlug is required" }, 400);
+    if (!productSlug) return json13({ error: "productSlug is required" }, 400);
     const product = await env.DB.prepare(
       `SELECT id FROM products WHERE slug = ?1 LIMIT 1`
     ).bind(productSlug).first();
-    if (!product) return json12({ success: true, isFavorite: false, removed: false });
+    if (!product) return json13({ success: true, isFavorite: false, removed: false });
     const result = await env.DB.prepare(
       `DELETE FROM favorites
        WHERE product_id = ?1
          AND (user_id = ?2 OR LOWER(email) = ?3)`
     ).bind(product.id, user.userId, user.email).run();
-    return json12({
+    return json13({
       success: true,
       isFavorite: false,
       removed: Number(result.meta?.changes || 0) > 0
     });
   }
-  return json12({ error: "Method not allowed" }, 405);
+  return json13({ error: "Method not allowed" }, 405);
 }
 __name(handleFavorites, "handleFavorites");
 
@@ -19289,14 +19659,14 @@ async function markStripeWebhookEventProcessed(env, eventId, token, processResul
   ).bind(eventId, token, processResult).run();
 }
 __name(markStripeWebhookEventProcessed, "markStripeWebhookEventProcessed");
-async function markStripeWebhookEventFailed(env, eventId, token, err4) {
+async function markStripeWebhookEventFailed(env, eventId, token, err5) {
   await env.DB.prepare(
     `UPDATE stripe_webhook_events
      SET last_error = ?3,
          processing_token = NULL,
          updated_at = datetime('now')
      WHERE event_id = ?1 AND processing_token = ?2`
-  ).bind(eventId, token, String(err4?.message || err4 || "unknown")).run();
+  ).bind(eventId, token, String(err5?.message || err5 || "unknown")).run();
 }
 __name(markStripeWebhookEventFailed, "markStripeWebhookEventFailed");
 async function handleStripeWebhook(request, env) {
@@ -19397,8 +19767,8 @@ async function handleStripeWebhook(request, env) {
       if (!teamMail.success) {
         console.error("Refund alert email failed:", teamMail.error || "unknown error");
       }
-    } catch (err4) {
-      console.error("Refund alert exception:", err4?.message || err4);
+    } catch (err5) {
+      console.error("Refund alert exception:", err5?.message || err5);
     }
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" }
@@ -19435,8 +19805,8 @@ async function handleStripeWebhook(request, env) {
       if (!teamMail.success) {
         console.error("Dispute alert email failed:", teamMail.error || "unknown error");
       }
-    } catch (err4) {
-      console.error("Dispute alert exception:", err4?.message || err4);
+    } catch (err5) {
+      console.error("Dispute alert exception:", err5?.message || err5);
     }
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" }
@@ -19766,8 +20136,8 @@ async function handleStripeWebhook(request, env) {
             "UPDATE discount_claims SET status = 'used', address_hash = ?, order_id = last_insert_rowid(), claimed_at = datetime('now') WHERE code = ? AND status = 'issued'"
           ).bind(addrHash, metadata.discount_code).run();
         }
-      } catch (err4) {
-        console.error("Discount claim failed:", err4?.message || err4);
+      } catch (err5) {
+        console.error("Discount claim failed:", err5?.message || err5);
       }
     }
     const email = metadata.email || session.customer_email;
@@ -19847,8 +20217,8 @@ We'll notify you when your order ships.
 \u2014 MildMate`
           });
           if (!customerMail.success) console.error("Customer email failed:", customerMail.error || "unknown error", "to:", email);
-        } catch (err4) {
-          console.error("Customer email exception:", err4?.message || err4, "to:", email);
+        } catch (err5) {
+          console.error("Customer email exception:", err5?.message || err5, "to:", email);
         }
         const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
         try {
@@ -19872,8 +20242,8 @@ ${itemList}
 Total: ${total}${dutyTaxTeamLine}`
           });
           if (!teamMail.success) console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
-        } catch (err4) {
-          console.error("Team email exception:", err4?.message || err4, "to:", teamEmail);
+        } catch (err5) {
+          console.error("Team email exception:", err5?.message || err5, "to:", teamEmail);
         }
       }
       try {
@@ -21007,10 +21377,10 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     const res = await handleProducts(request, env);
     const body = await res.text();
     try {
-      const json13 = JSON.parse(body);
-      if (json13.product) json13.product = r2Product3(json13.product);
-      if (Array.isArray(json13.products)) json13.products = json13.products.map(r2Product3);
-      return new Response(JSON.stringify(json13), {
+      const json14 = JSON.parse(body);
+      if (json14.product) json14.product = r2Product3(json14.product);
+      if (Array.isArray(json14.products)) json14.products = json14.products.map(r2Product3);
+      return new Response(JSON.stringify(json14), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (_) {
@@ -21061,6 +21431,9 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   }
   if (path.startsWith("/api/admin/analysis")) {
     return handleAdminAnalysis(request, env);
+  }
+  if (path.startsWith("/api/admin/ai-analyst")) {
+    return handleAdminAiAnalyst(request, env);
   }
   if (path.startsWith("/api/admin/cost-model")) {
     return handleAdminCostModel(request, env);
@@ -21237,8 +21610,8 @@ async function onRequest6(context) {
         "X-Robots-Tag": "index, follow"
       }
     });
-  } catch (err4) {
-    console.error("Blog post error:", err4);
+  } catch (err5) {
+    console.error("Blog post error:", err5);
     return new Response("Server error", { status: 500 });
   }
 }
@@ -22757,8 +23130,8 @@ function buildAnalyticsRuntimeConfigScript(request, env) {
       cfg.enabled = true;
     }
   }
-  const json13 = JSON.stringify(cfg);
-  return `<script id="runtime-analytics-config">window.__MILDMATE_ANALYTICS_CONFIG = ${json13};<\/script>`;
+  const json14 = JSON.stringify(cfg);
+  return `<script id="runtime-analytics-config">window.__MILDMATE_ANALYTICS_CONFIG = ${json14};<\/script>`;
 }
 __name(buildAnalyticsRuntimeConfigScript, "buildAnalyticsRuntimeConfigScript");
 async function ensureCache(db) {
@@ -23201,7 +23574,7 @@ function allowDevClerkOrigins2(csp) {
 }
 __name(allowDevClerkOrigins2, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-HnK8Jz/functionsRoutes-0.018201014658630776.mjs
+// ../.wrangler/tmp/pages-hBFM5Q/functionsRoutes-0.8401611774500993.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
