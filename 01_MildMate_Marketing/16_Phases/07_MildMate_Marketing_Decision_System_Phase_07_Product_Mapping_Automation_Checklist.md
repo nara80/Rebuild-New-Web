@@ -1,4 +1,4 @@
-> **DOC RECONCILIATION (2026-11-01).** Authoritative phase-status matrix: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`.
+> **DOC RECONCILIATION (2026-11-06).** Authoritative phase-status matrix: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-06.md`.
 
 > **⚠️ SUPERSEDED (2026-09-11).** This v1 plan (Make.com as the mapping engine) was replaced twice: first by the Direct Notion API v2 checklist (`07_Phase/`), then by the approved v3 **confirmed-mapping sync** design (Make.com = mapping authority; Droid syncs only `Mapped` + signature-changed records into D1). The Worker `/api/v1/mapping/*` endpoints and migration 043 built under this checklist remain valid. See `09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`.
 

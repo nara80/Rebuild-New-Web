@@ -1,4 +1,4 @@
-> **DOC RECONCILIATION (2026-11-01).** Authoritative phase-status matrix: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`.
+> **DOC RECONCILIATION (2026-11-06).** Authoritative phase-status matrix: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-06.md`.
 
 # MildMate Marketing Decision System — Phase 16
 ## AI Analyst & Marketing Action Feedback Loop
@@ -24,7 +24,7 @@ Use AI to interpret trusted analytics, record approved actions, and measure whet
 
 ## Prerequisites / Confirmed Baseline
 
-- [ ] Marketing Command Center and Opportunity Engine working. *(requires Phases 14-15 implementation)*
+- [x] Marketing Command Center and Opportunity Engine working. *(Phases 14 and 15 are implemented for current owner-approved scope.)*
 - [x] Data Confidence available.
 - [ ] Canonical multi-source metrics/history available in D1. *(full dependency set requires Phases 10-15 implementation)*
 
@@ -108,15 +108,11 @@ Use AI to interpret trusted analytics, record approved actions, and measure whet
 > Work on **Phase 16 only**. Inspect existing code before changing it. Reuse existing MildMate conventions. Do not build later phases early. Stop after this phase is implemented, tested, documented, and ready for review.
 
 ---
+## Reconciliation Pass 4 (2026-11-06)
 
-## Reconciliation Note (2026-10-22)
+Status verified: **NOT STARTED** for Phase 16 deliverables (AI recommendation layer, `marketing_actions` persistence, closed-loop action feedback workflow).
 
-Status verified: **NOT STARTED** for Phase 16 deliverables (AI recommendation layer, `marketing_actions` persistence, closed-loop feedback workflow).
+Baseline correction:
 
-Baseline correction: prerequisites are now partially advanced compared with the prior note. **Phases 13 and 14 are implemented/operational**, while **Phase 15 remains pending**, so Phase 16 remains pending.
-
----
-
-## Update Note (2026-10-28)
-
-- Phase 16 remains NOT STARTED (Phase 15 pending). For the future AI input contract: quote-funnel metrics (exact quote_id-attributed conversion, quote demand by product, at-risk expiring value) are now available as canonical analytical inputs via `GET /api/admin/analysis/quotes` + `orders.quote_id` (Tier 1, deployed 2026-10-28).
+- **Phase 15 is now complete** for the current owner-approved command-center/auth scope (production source `45a436f`).
+- Phase 16 remains pending implementation and should proceed only after explicit scope approval.

@@ -150,3 +150,54 @@ Interpretation guide:
 - Auto-tagging OFF → that is the root cause of the attribution gap; enabling it (RA-1) is the fix.
 
 **Report only. No changes made to production, GTM, GA4, Ads, or D1 during this verification.**
+
+---
+
+## Update — Phase 12 Technical Closure Approved (2026-11-05)
+
+Owner-approved final status:
+
+- **Phase 12 technical implementation + production acceptance: CLOSED / PASS**
+- Google Ads paid-purchase attribution validation remains a **separate OPEN business monitoring track**.
+
+Production closure records:
+
+1. **Production deployment (auth/rate-limit remediation)**
+   - Deployment: `f7b1eb1e-c187-46c0-ad4c-d5d867ee2692`
+   - Source commit: `48c5317`
+   - Rollback reference: `8ad6a458-4dd5-440b-893c-e19304f59a45`
+
+2. **Canonical GA4 property fixed and verified**
+   - Canonical website property: `308922589`
+   - Accepted owner-authenticated API pass (single dashboard load):  
+     `/api/admin/analysis/ga4` = 200,  
+     `/api/admin/analysis/data-quality` = 200,  
+     `/api/admin/analysis/ga4-leads` = 200
+
+3. **Controlled website-only GA4 sync completed**
+   - Dry run confirmed canonical property targeting and retrievable post-2026-10-24 dates without writes.
+   - One authorized production website-only sync executed via existing worker path.
+   - Canonical website dataset advanced:
+     - `ga4_funnel_daily` (`property_id='308922589'`) rows: **924 → 1522**
+     - `MAX(report_date)`: **2026-10-24 → 2026-11-03**
+   - Freshness recovered:
+     - `analysis_ga4_freshness.latest_report_date = 2026-11-03`
+     - `days_since_latest_report = 2`
+
+4. **Non-blocking exception documented**
+   - `sync_runs.id=825`: `records_received=400`, `records_created=399`, `records_rejected=1`, status `partial`
+   - Followed by successful completion (`sync_runs.id=826`) and recovered freshness.
+   - Exact rejected-row cause remains unconfirmed (row-level reject details not persisted).
+   - Classified as **non-blocking**.
+
+5. **Historical warning retained naturally**
+   - `sync_errors_7d=1` remains expected until window expiry because freshness view counts `partial/failed/error` runs over 7 days.
+   - No manual counter reset performed.
+
+6. **No unauthorized scope changes**
+   - Weekly GA4 synchronization schedule preserved (`0 1 * * *` dispatcher, Monday GA4 routing unchanged).
+   - No code/config/migration/campaign/scheduler edits were made as part of sync closure documentation.
+
+Business monitoring still open:
+
+- **Google Ads paid-purchase attribution** is still OPEN (no genuine paid purchase yet accepted as attributed to Google Ads).

@@ -1,9 +1,9 @@
 # MildMate Web Rebuild — Full Framework Plan
 
-## Documentation Reconciliation Snapshot (2026-11-01)
+## Documentation Reconciliation Snapshot (2026-11-06)
 - Marketing phase docs were reconciled to actual implementation and production evidence.
-- Canonical phase-status reference: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`.
-- Superseded/duplicate docs were moved to `01_MildMate_Marketing/Archive/2026-11-01/` to keep active guidance clean.
+- Canonical phase-status reference: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-06.md`.
+- Superseded/duplicate docs were moved to `01_MildMate_Marketing/Archive/2026-11-01/` and `01_MildMate_Marketing/Archive/2026-11-06/` to keep active guidance clean.
 - Reconciliation changed documentation only, not runtime or production state.
 
 ## Stack Confirmed
@@ -16,7 +16,7 @@
 - **Admin auth:** Clerk (Google / Facebook / Email login)
 - **Order tracking:** Option A — carrier code + tracking number entered by admin on shipped, URL auto-generated from templates (thaipost, flash, dhl, ups, fedex, usps). No external API needed. Tracking shown inline in `/account` Orders panel.
 
-## Operational Reconciliation Snapshot (updated 2026-10-28)
+## Operational Reconciliation Snapshot (updated 2026-11-06)
 - Checkout/webhook dimension durability is now snapshot-based: `workers/api/checkout.ts` writes full `checkout_session_snapshots`, `workers/api/webhook.ts` reads snapshot first and metadata second.
 - Super Admin orders now include missing-dimension guardrails: API summary (`missing_configurable_rows`, `affected_orders`) + UI warning and per-row **Missing Dims** badges.
 - Production order repair was completed for `#LuQpJi23` using Stripe evidence for configurable items; fixed-size accessories remain without dimensions by design.
@@ -35,6 +35,7 @@
 - Collector scheduling (supersession): `marketing-sync-worker` runs a single daily cron (`0 1 * * *` UTC) with weekday dispatch (Mon GA4 / Tue Etsy / Wed Google Ads / Thu GSC) since the 2026-10-08 handoff — older per-source "weekly Monday" schedule wording is historical.
 - **Data Quality sync-runs grouping release (deployed 2026-11-01):** Pages production deployment `f93e5301-251e-45e6-b636-aeeb0c940411` — Data Quality tab renders recent sync runs grouped per collector (`recent_run_groups`) with inferred-group / incomplete-window badges; grouping logic in `workers/api/admin-analysis.ts` + dashboard renderer.
 - **GA4 Lead Acquisition release (deployed 2026-11-01):** migration `061_ga4_lead_acquisition.sql` applied to prod D1 (`ga4_lead_acquisition_daily` + indexes + `analysis_ga4_lead_freshness` view, verified). Pages deployment `c023f9fd-7617-475c-8534-76742ac5e738` (rollback target `f93e5301`); collector `mildmate-marketing-sync` version `9a093445-2457-4849-9a3b-79454b260307` (prior `91421d42-3903-4a07-895b-2d663d7f3b5b`). New: `POST /api/v1/ga4/leads/upsert` (bearer), `GET /api/admin/analysis/ga4-leads` (admin), Data Analyst SEO-tab "GA4 Lead Acquisition" card. Lead events `generate_lead` + `quote_request`; canonical property `308922589` only. Cron schedule and weekday routing unchanged; no sync triggered at release (0 lead `sync_runs` rows post-check). First lead data arrives with the next scheduled Monday GA4 run; closure requires owner's authenticated browser acceptance. Evidence: `00_Issue/ga4-lead-acquisition-20261101/`.
+- **Phase 15 closure (owner-approved 2026-11-06):** Super Admin access + permissions and Marketing Command Center KPI load verified PASS by owner. Final production deployment `a2b2f872-f0a3-40b6-afa9-569dd049de44` from source `45a436f` resolved the Clerk hosted redirect loop via forced hosted redirect params + same-origin clamp. Rollback anchor `430d2918` (`1d6d70d`) retained; reconciled to `main` at `652480de`.
 
 ---
 

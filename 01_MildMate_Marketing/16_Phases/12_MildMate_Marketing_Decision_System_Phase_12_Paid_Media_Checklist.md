@@ -1,4 +1,4 @@
-> **DOC RECONCILIATION (2026-11-01).** Authoritative phase-status matrix: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-01.md`.
+> **DOC RECONCILIATION (2026-11-06).** Authoritative phase-status matrix: `01_MildMate_Marketing/09_Handoffs/Phase_Documentation_Systematic_Reconciliation_2026-11-06.md`.
 
 # MildMate Marketing Decision System — Phase 12
 ## Paid Media Analytics — Google Ads (Meta Ads Deferred)
@@ -118,3 +118,21 @@ Supersedes the "zero rows / no active campaigns" wording in the 2026-09-29 note:
 - **Collector recovered (2026-10-21):** campaign `24321425466` (5-country demand-discovery test: US/CA/MX/PA/CO) is live; prod D1 has click/cost rows through 2026-10-19 (e.g. Oct 13: 5 clicks / 102 impressions / THB 148.00). Ads collector freshness PASS.
 - **Phase 12 remains OPEN.** Closure criteria (from the 2026-10-08 handoff, still unmet): live rows verified (done), freshness verified (done), source↔D1↔Analyst reconciliation recorded, zero-conversions distinguishable from failure, and the first genuine purchase conversion validated end-to-end. GA4↔Ads attribution is on HOLD per the 2026-10-21 audits (auto-tagging state, Ads link, timezone, final URL/tracking template unverified; 5 Ads clicks Oct 18–19 permanently lost in GA4). Do not trust/scale based on "Purchase - GTM" until the first genuine order reconciles end-to-end.
 - Meta Ads: deferred permanently by owner decision (2026-09-29) — unchanged.
+
+---
+
+## Update — Technical Closure Approved, Business Attribution Monitoring Open (2026-11-05)
+
+- **Phase 12 technical implementation and production acceptance: CLOSED / PASS.**
+- Canonical GA4 website property confirmed as `308922589`.
+- Authorized controlled website-only GA4 sync completed; canonical freshness recovered to `MAX(report_date)=2026-11-03` with canonical rows `924 → 1522`.
+- Final sync exception documented as non-blocking:
+  - `sync_runs.id=825` (`partial`, 1 rejected row of 599 total fetched across the authorized run pair), followed by successful completion and freshness recovery.
+  - Exact row-level reject cause remains unconfirmed; no manual D1 counter edits.
+- Historical warning handling:
+  - Keep `sync_errors_7d` historical warning until natural 7-day expiry; do not reset manually.
+- Scheduler policy unchanged:
+  - Preserve existing daily dispatcher cron `0 1 * * *` with Monday GA4 routing.
+
+**Separate open item (business monitoring, not a technical closure blocker):**
+- Google Ads paid-purchase attribution validation remains **OPEN** until a genuine paid purchase is observed and accepted as attributed to Google Ads end-to-end.

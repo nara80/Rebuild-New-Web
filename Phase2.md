@@ -1,4 +1,4 @@
-> **DOC RECONCILIATION (2026-11-01).** Historical phase summary. Canonical current runtime state is maintained in `AGENTS.md` and `Framework.md`.
+> **DOC RECONCILIATION (2026-11-06).** Historical phase summary. Canonical current runtime state is maintained in `AGENTS.md` and `Framework.md`.
 
 ﻿# Phase 2 — SEO URL Preservation
 **Status (2026-10-22 reconciliation): ✅ DEPLOYED — implemented and live via `public/_redirects` + `functions/product/` redirect handling (deployed 2026-06-14; re-verified in current production reconciliation).**

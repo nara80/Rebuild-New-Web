@@ -1,4 +1,4 @@
-> **DOC RECONCILIATION (2026-11-01).** Historical phase summary. Canonical current runtime state is maintained in `AGENTS.md` and `Framework.md`.
+> **DOC RECONCILIATION (2026-11-06).** Historical phase summary. Canonical current runtime state is maintained in `AGENTS.md` and `Framework.md`.
 
 # Phase 9 — Testing (Vitest + Worker Testing)
 **Status (2026-10-22 reconciliation): ❌ OUT OF SCOPE AS A ROADMAP PHASE — Not active as a standalone delivery phase unless explicitly re-opened. Practical reality: targeted regression suites now exist in-repo (including Stripe hardening, analytics isolation, and email safety); one known stale GTM assertion is currently failing in `stripe-purchase-hardening.test.ts`.**
