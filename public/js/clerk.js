@@ -62,7 +62,12 @@
   function getAuthReturnUrl(inputUrl) {
     var cleanUrl = getCleanUrl(inputUrl || window.location.href);
     try {
-      var url = new URL(cleanUrl, window.location.origin);
+      var current = new URL(window.location.href, window.location.origin);
+      var url = new URL(cleanUrl, current.origin);
+      if (url.origin !== current.origin) {
+        url = current;
+        cleanUrl = current.toString();
+      }
       var path = (url.pathname || '/').toLowerCase();
       if (path.indexOf('/super-admin') !== 0) return cleanUrl;
       var callbackUrl = new URL('/auth/clerk-return/', url.origin);
@@ -71,6 +76,26 @@
     } catch (e) {
       return cleanUrl;
     }
+  }
+
+  function buildHostedAuthUrl(path, redirectUrl) {
+    var target = new URL('https://' + hostedAccountsDomain + path);
+    target.searchParams.set('redirect_url', redirectUrl);
+    target.searchParams.set('sign_in_force_redirect_url', redirectUrl);
+    target.searchParams.set('sign_in_fallback_redirect_url', redirectUrl);
+    target.searchParams.set('sign_up_force_redirect_url', redirectUrl);
+    target.searchParams.set('sign_up_fallback_redirect_url', redirectUrl);
+    return target.toString();
+  }
+
+  function buildForceRedirectOptions(redirectUrl) {
+    return {
+      redirectUrl: redirectUrl,
+      signInForceRedirectUrl: redirectUrl,
+      signInFallbackRedirectUrl: redirectUrl,
+      signUpForceRedirectUrl: redirectUrl,
+      signUpFallbackRedirectUrl: redirectUrl
+    };
   }
 
   function cleanupClerkQueryParamsInAddressBar() {
@@ -215,11 +240,7 @@
     var initialText = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
     var redirectUrl = getAuthReturnUrl(returnTo || window.location.href);
-    var fallbackUrl =
-      'https://' +
-      hostedAccountsDomain +
-      '/sign-in?redirect_url=' +
-      encodeURIComponent(redirectUrl);
+    var fallbackUrl = buildHostedAuthUrl('/sign-in', redirectUrl);
 
     function resetButton() {
       if (!btn) return;
@@ -229,7 +250,7 @@
 
     function doRedirect() {
       if (clerkInstance) {
-        clerkInstance.redirectToSignIn({ redirectUrl: redirectUrl, signUpForceRedirectUrl: redirectUrl });
+        clerkInstance.redirectToSignIn(buildForceRedirectOptions(redirectUrl));
       } else {
         resetButton();
         window.location.href = fallbackUrl;
@@ -254,11 +275,7 @@
     var initialText = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
     var redirectUrl = getAuthReturnUrl(returnTo || window.location.href);
-    var fallbackUrl =
-      'https://' +
-      hostedAccountsDomain +
-      '/sign-up?redirect_url=' +
-      encodeURIComponent(redirectUrl);
+    var fallbackUrl = buildHostedAuthUrl('/sign-up', redirectUrl);
 
     function resetButton() {
       if (!btn) return;
@@ -268,7 +285,7 @@
 
     function doRedirect() {
       if (clerkInstance) {
-        clerkInstance.redirectToSignUp({ redirectUrl: redirectUrl, signInForceRedirectUrl: redirectUrl });
+        clerkInstance.redirectToSignUp(buildForceRedirectOptions(redirectUrl));
       } else {
         resetButton();
         window.location.href = fallbackUrl;
