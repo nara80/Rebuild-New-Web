@@ -31,10 +31,36 @@ function err(code: string, message: string, status = 400): Response {
   return json({ success: false, error_code: code, message }, status);
 }
 
+function isSchemaMissingError(message: string): boolean {
+  const msg = String(message || "").toLowerCase();
+  return msg.includes("no such table") || msg.includes("no such view") || msg.includes("no such column");
+}
+
 // ── GET: latest stored snapshot ─────────────────────────────────────────────
 
 export async function getOpportunity(env: any): Promise<Response> {
-  const model = await loadModel(env);
+  let model: any;
+  try {
+    model = await loadModel(env);
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    if (isSchemaMissingError(msg)) {
+      return json({
+        success: true,
+        available: false,
+        error_code: "OPPORTUNITY_SCHEMA_UNAVAILABLE",
+        message: "Opportunity schema is not available in this environment yet. Apply migration 054_opportunity_engine.sql.",
+        model_version: null,
+        weights: null,
+        latest_score_date: null,
+        computed_at: null,
+        row_counts: null,
+        overall: [],
+        by_channel: [],
+      });
+    }
+    throw e;
+  }
 
   let latest: any = null;
   try {
@@ -66,6 +92,7 @@ export async function getOpportunity(env: any): Promise<Response> {
 
   return json({
     success: true,
+    available: true,
     model_version: model.model_version,
     weights: model.weights,
     latest_score_date: latest ? latest.score_date : null,

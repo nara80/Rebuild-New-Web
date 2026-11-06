@@ -47,6 +47,11 @@ function err(code: string, message: string, status = 400): Response {
   return json({ success: false, error_code: code, message }, status);
 }
 
+function isSchemaMissingError(message: string): boolean {
+  const msg = String(message || "").toLowerCase();
+  return msg.includes("no such table") || msg.includes("no such view") || msg.includes("no such column");
+}
+
 // ── Auth (same pattern as admin-stats.ts) ─────────────────────────────────
 
 function isProductionHost(hostname: string): boolean {
@@ -782,142 +787,166 @@ async function getChannels(env: any, f: Filters): Promise<Response> {
 async function getQuotes(env: any, f: Filters): Promise<Response> {
   const range = createdRangeWhere(f, "q.created_at");
   const baseSql = `FROM custom_quotes q WHERE 1=1${range.sql}`;
+  try {
+    const summaryRow: any = await env.DB.prepare(
+      `SELECT
+         COUNT(*) AS total_quotes,
+         SUM(CASE WHEN q.created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS new_quotes_7d,
+         SUM(CASE WHEN q.created_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS new_quotes_30d,
+         SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) != 'archived'
+                   AND (q.expires_at IS NULL OR q.expires_at > datetime('now'))
+                  THEN 1 ELSE 0 END) AS active_quotes,
+         SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved' THEN 1 ELSE 0 END) AS approved_quotes,
+         SUM(CASE WHEN q.expires_at IS NOT NULL AND q.expires_at <= datetime('now')
+                   AND LOWER(COALESCE(q.status, 'pending')) != 'archived'
+                  THEN 1 ELSE 0 END) AS expired_quotes,
+         SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
+                   AND q.expires_at IS NOT NULL
+                   AND q.expires_at > datetime('now')
+                   AND q.expires_at <= datetime('now', '+7 days')
+                  THEN 1 ELSE 0 END) AS expiring_7d,
+         SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
+                   AND NOT EXISTS (
+                     SELECT 1 FROM orders o
+                     WHERE o.quote_id = q.quote_id
+                   )
+                  THEN 1 ELSE 0 END) AS approved_unconverted
+       ${baseSql}`
+    ).bind(...range.binds).first();
 
-  const summaryRow: any = await env.DB.prepare(
-    `SELECT
-       COUNT(*) AS total_quotes,
-       SUM(CASE WHEN q.created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS new_quotes_7d,
-       SUM(CASE WHEN q.created_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS new_quotes_30d,
-       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) != 'archived'
-                 AND (q.expires_at IS NULL OR q.expires_at > datetime('now'))
-                THEN 1 ELSE 0 END) AS active_quotes,
-       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved' THEN 1 ELSE 0 END) AS approved_quotes,
-       SUM(CASE WHEN q.expires_at IS NOT NULL AND q.expires_at <= datetime('now')
-                 AND LOWER(COALESCE(q.status, 'pending')) != 'archived'
-                THEN 1 ELSE 0 END) AS expired_quotes,
-       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
-                 AND q.expires_at IS NOT NULL
-                 AND q.expires_at > datetime('now')
-                 AND q.expires_at <= datetime('now', '+7 days')
-                THEN 1 ELSE 0 END) AS expiring_7d,
-       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
-                 AND NOT EXISTS (
-                   SELECT 1 FROM orders o
-                   WHERE o.quote_id = q.quote_id
-                 )
-                THEN 1 ELSE 0 END) AS approved_unconverted
-     ${baseSql}`
-  ).bind(...range.binds).first();
+    const exactRow: any = await env.DB.prepare(
+      `SELECT COUNT(DISTINCT q.quote_id) AS exact_converted
+       ${baseSql}
+         AND EXISTS (
+           SELECT 1 FROM orders o
+           WHERE o.quote_id = q.quote_id
+         )`
+    ).bind(...range.binds).first();
 
-  const exactRow: any = await env.DB.prepare(
-    `SELECT COUNT(DISTINCT q.quote_id) AS exact_converted
-     ${baseSql}
-       AND EXISTS (
-         SELECT 1 FROM orders o
-         WHERE o.quote_id = q.quote_id
-       )`
-  ).bind(...range.binds).first();
+    const legacyRow: any = await env.DB.prepare(
+      `SELECT COUNT(DISTINCT q.quote_id) AS legacy_email_matched
+       ${baseSql}
+         AND NOT EXISTS (
+           SELECT 1 FROM orders o
+           WHERE o.quote_id = q.quote_id
+         )
+         AND EXISTS (
+           SELECT 1 FROM orders o2
+           WHERE LOWER(COALESCE(o2.email, '')) = LOWER(COALESCE(q.email, ''))
+         )`
+    ).bind(...range.binds).first();
 
-  const legacyRow: any = await env.DB.prepare(
-    `SELECT COUNT(DISTINCT q.quote_id) AS legacy_email_matched
-     ${baseSql}
-       AND NOT EXISTS (
-         SELECT 1 FROM orders o
-         WHERE o.quote_id = q.quote_id
-       )
-       AND EXISTS (
-         SELECT 1 FROM orders o2
-         WHERE LOWER(COALESCE(o2.email, '')) = LOWER(COALESCE(q.email, ''))
-       )`
-  ).bind(...range.binds).first();
+    const topProducts = await env.DB.prepare(
+      `SELECT
+         q.product_slug,
+         COUNT(*) AS quote_count,
+         SUM(CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.quote_id = q.quote_id) THEN 1 ELSE 0 END) AS exact_converted
+       ${baseSql}
+       GROUP BY q.product_slug
+       ORDER BY quote_count DESC, exact_converted DESC, q.product_slug
+       LIMIT 12`
+    ).bind(...range.binds).all();
 
-  const topProducts = await env.DB.prepare(
-    `SELECT
-       q.product_slug,
-       COUNT(*) AS quote_count,
-       SUM(CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.quote_id = q.quote_id) THEN 1 ELSE 0 END) AS exact_converted
-     ${baseSql}
-     GROUP BY q.product_slug
-     ORDER BY quote_count DESC, exact_converted DESC, q.product_slug
-     LIMIT 12`
-  ).bind(...range.binds).all();
+    const atRisk = await env.DB.prepare(
+      `SELECT
+         q.quote_id,
+         q.product_slug,
+         q.created_at,
+         q.expires_at,
+         q.quoted_price_usd,
+         q.quoted_price
+       ${baseSql}
+         AND LOWER(COALESCE(q.status, 'pending')) = 'approved'
+         AND q.expires_at IS NOT NULL
+         AND q.expires_at > datetime('now')
+         AND q.expires_at <= datetime('now', '+7 days')
+         AND NOT EXISTS (
+           SELECT 1 FROM orders o
+           WHERE o.quote_id = q.quote_id
+         )
+       ORDER BY q.expires_at ASC, q.created_at ASC
+       LIMIT 25`
+    ).bind(...range.binds).all();
 
-  const atRisk = await env.DB.prepare(
-    `SELECT
-       q.quote_id,
-       q.product_slug,
-       q.created_at,
-       q.expires_at,
-       q.quoted_price_usd,
-       q.quoted_price
-     ${baseSql}
-       AND LOWER(COALESCE(q.status, 'pending')) = 'approved'
-       AND q.expires_at IS NOT NULL
-       AND q.expires_at > datetime('now')
-       AND q.expires_at <= datetime('now', '+7 days')
-       AND NOT EXISTS (
-         SELECT 1 FROM orders o
-         WHERE o.quote_id = q.quote_id
-       )
-     ORDER BY q.expires_at ASC, q.created_at ASC
-     LIMIT 25`
-  ).bind(...range.binds).all();
+    const approvedQuotes = Number(summaryRow?.approved_quotes || 0);
+    const exactConverted = Number(exactRow?.exact_converted || 0);
 
-  const approvedQuotes = Number(summaryRow?.approved_quotes || 0);
-  const exactConverted = Number(exactRow?.exact_converted || 0);
-
-  // ── Phase 5 — Custom Quote Funnel extension (additive-only) ──────────────
-  // Contract (00_Issue/MildMate_Phase5_Quote_Funnel_Dashboard_Audit_2026-10-30.md):
-  // - The legacy summary/conversion/top_products/at_risk blocks above keep their
-  //   original definitions unchanged (they still include test quotes).
-  // - The new `phase5` blocks exclude test quotes and NEVER emit PII (emails are
-  //   aggregated server-side into distinct counts only).
-  // - First-touch and quote-session channels are reported separately, never merged.
-  // - Missing attribution is labelled "unavailable", never Direct.
-  // - Revenue = orders line totals (unit price × quantity) for paid statuses only
-  //   (confirmed/processing/shipped/delivered). Shipping lines are never written
-  //   to orders (webhook/reconcile exclude them). quoted_price is never revenue.
-  // - Google Ads: a quote is Ads-attributable ONLY when a paid click id
-  //   (gclid/gbraid/wbraid) is recorded in its attribution JSON. Direct/Unknown
-  //   quotes are never assigned to Ads. Cost per quote is null (N/A) when the
-  //   attributable denominator is zero. Cost scope + freshness are explicit.
-  const phase5 = await buildPhase5QuoteFunnel(env, f, baseSql, range.binds);
-  return json({
-    success: true,
-    filters: { start: f.start, end: f.end },
-    phase5,
-    summary: {
-      total_quotes: Number(summaryRow?.total_quotes || 0),
-      new_quotes_7d: Number(summaryRow?.new_quotes_7d || 0),
-      new_quotes_30d: Number(summaryRow?.new_quotes_30d || 0),
-      active_quotes: Number(summaryRow?.active_quotes || 0),
-      approved_quotes: approvedQuotes,
-      approved_unconverted: Number(summaryRow?.approved_unconverted || 0),
-      expiring_7d: Number(summaryRow?.expiring_7d || 0),
-      expired_quotes: Number(summaryRow?.expired_quotes || 0),
-    },
-    conversion: {
-      exact_converted_quotes: exactConverted,
-      exact_conversion_pct: approvedQuotes > 0 ? Math.round((exactConverted / approvedQuotes) * 1000) / 10 : null,
-      legacy_email_matched_quotes: Number(legacyRow?.legacy_email_matched || 0),
-    },
-    top_products: (topProducts.results || []).map((r: any) => ({
-      product_slug: r.product_slug || "(unknown)",
-      quote_count: Number(r.quote_count || 0),
-      exact_converted: Number(r.exact_converted || 0),
-      exact_conversion_pct: Number(r.quote_count || 0) > 0
-        ? Math.round((Number(r.exact_converted || 0) / Number(r.quote_count || 0)) * 1000) / 10
-        : null,
-    })),
-    at_risk: (atRisk.results || []).map((r: any) => ({
-      quote_id: r.quote_id,
-      product_slug: r.product_slug,
-      created_at: r.created_at,
-      expires_at: r.expires_at,
-      quoted_price_usd: r.quoted_price_usd,
-      quoted_price_thb: r.quoted_price,
-    })),
-  });
+    // ── Phase 5 — Custom Quote Funnel extension (additive-only) ──────────────
+    // Contract (00_Issue/MildMate_Phase5_Quote_Funnel_Dashboard_Audit_2026-10-30.md):
+    // - The legacy summary/conversion/top_products/at_risk blocks above keep their
+    //   original definitions unchanged (they still include test quotes).
+    // - The new `phase5` blocks exclude test quotes and NEVER emit PII (emails are
+    //   aggregated server-side into distinct counts only).
+    // - First-touch and quote-session channels are reported separately, never merged.
+    // - Missing attribution is labelled "unavailable", never Direct.
+    // - Revenue = orders line totals (unit price × quantity) for paid statuses only
+    //   (confirmed/processing/shipped/delivered). Shipping lines are never written
+    //   to orders (webhook/reconcile exclude them). quoted_price is never revenue.
+    // - Google Ads: a quote is Ads-attributable ONLY when a paid click id
+    //   (gclid/gbraid/wbraid) is recorded in its attribution JSON. Direct/Unknown
+    //   quotes are never assigned to Ads. Cost per quote is null (N/A) when the
+    //   attributable denominator is zero. Cost scope + freshness are explicit.
+    const phase5 = await buildPhase5QuoteFunnel(env, f, baseSql, range.binds);
+    return json({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end },
+      phase5,
+      summary: {
+        total_quotes: Number(summaryRow?.total_quotes || 0),
+        new_quotes_7d: Number(summaryRow?.new_quotes_7d || 0),
+        new_quotes_30d: Number(summaryRow?.new_quotes_30d || 0),
+        active_quotes: Number(summaryRow?.active_quotes || 0),
+        approved_quotes: approvedQuotes,
+        approved_unconverted: Number(summaryRow?.approved_unconverted || 0),
+        expiring_7d: Number(summaryRow?.expiring_7d || 0),
+        expired_quotes: Number(summaryRow?.expired_quotes || 0),
+      },
+      conversion: {
+        exact_converted_quotes: exactConverted,
+        exact_conversion_pct: approvedQuotes > 0 ? Math.round((exactConverted / approvedQuotes) * 1000) / 10 : null,
+        legacy_email_matched_quotes: Number(legacyRow?.legacy_email_matched || 0),
+      },
+      top_products: (topProducts.results || []).map((r: any) => ({
+        product_slug: r.product_slug || "(unknown)",
+        quote_count: Number(r.quote_count || 0),
+        exact_converted: Number(r.exact_converted || 0),
+        exact_conversion_pct: Number(r.quote_count || 0) > 0
+          ? Math.round((Number(r.exact_converted || 0) / Number(r.quote_count || 0)) * 1000) / 10
+          : null,
+      })),
+      at_risk: (atRisk.results || []).map((r: any) => ({
+        quote_id: r.quote_id,
+        product_slug: r.product_slug,
+        created_at: r.created_at,
+        expires_at: r.expires_at,
+        quoted_price_usd: r.quoted_price_usd,
+        quoted_price_thb: r.quoted_price,
+      })),
+    });
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    if (isSchemaMissingError(msg)) {
+      return json({
+        success: true,
+        available: false,
+        error_code: "QUOTES_SCHEMA_UNAVAILABLE",
+        message:
+          "Quote funnel schema is not available in this environment yet. Apply migrations 059_quote_tier1_pipeline.sql and 060_quote_acquisition_attribution.sql.",
+        filters: { start: f.start, end: f.end },
+        phase5: {
+          available: false,
+          error_code: "PHASE5_FUNNEL_UNAVAILABLE",
+          message: "Quote attribution schema is unavailable in this environment.",
+        },
+        summary: null,
+        conversion: null,
+        top_products: [],
+        at_risk: [],
+      });
+    }
+    throw e;
+  }
 }
 
 // ── Phase 5 — Quote funnel extension builder (additive, PII-free) ────────
@@ -3791,6 +3820,7 @@ async function getProfitability(env: any, f: Filters): Promise<Response> {
 
     return json({
       success: true,
+      available: true,
       filters: { start: f.start, end: f.end, channel: f.channel },
       currency: "THB",
       note: "Margins are computed only over covered orders; percentages use each metric's own covered-revenue base. Estimates are labelled. Ad spend is month-aggregate only (never per order).",
@@ -3808,8 +3838,21 @@ async function getProfitability(env: any, f: Filters): Promise<Response> {
     });
   } catch (e: any) {
     const msg = String(e?.message || e);
-    if (msg.includes("no such table") || msg.includes("no such view")) {
-      return err("PROFIT_VIEWS_MISSING", "Profitability views not found — apply migration 053_profitability_layer.sql first.", 500);
+    if (isSchemaMissingError(msg)) {
+      return json({
+        success: true,
+        available: false,
+        error_code: "PROFIT_VIEWS_MISSING",
+        message: "Profitability views are not available in this environment yet. Apply migration 053_profitability_layer.sql.",
+        filters: { start: f.start, end: f.end, channel: f.channel },
+        currency: "THB",
+        summary: null,
+        channels: [],
+        monthly: [],
+        products: [],
+        after_ads: [],
+        coverage: null,
+      });
     }
     throw e;
   }

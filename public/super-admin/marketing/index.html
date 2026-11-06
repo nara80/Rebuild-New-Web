@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketing Command Center | MildMate Super Admin</title>
+  <link rel="stylesheet" href="/css/fonts.css" />
+  <link rel="stylesheet" href="/css/main.min.css" />
+  <script>if(location.search.indexOf('dev=1')>=0){window.__SKIP_CLERK=1;}</script>
+  <script src="/js/clerk.js"></script>
+  <style>
+    :root{
+      --c-bg:#f8fafc; --c-surface:#fff; --c-border:#e2e8f0; --c-text:#1e293b; --c-muted:#64748b;
+      --c-blue:#2c96f4; --c-green:#16a34a; --c-red:#dc2626; --c-amber:#d97706; --c-gray:#475569;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--c-bg);color:var(--c-text);font-family:Quicksand,sans-serif}
+    .wrap{max-width:1320px;margin:0 auto;padding:20px}
+    .topbar{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+    .topbar h1{margin:0;font-size:1.5rem}
+    .sub{margin:4px 0 0;color:var(--c-muted);font-size:.875rem;line-height:1.5}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{border:1px solid var(--c-border);background:#fff;color:var(--c-text);padding:8px 12px;border-radius:8px;font-size:.8125rem;font-weight:700;cursor:pointer;text-decoration:none}
+    .btn:hover{border-color:var(--c-blue);color:var(--c-blue)}
+    .btn.primary{background:var(--c-blue);border-color:var(--c-blue);color:#fff}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+    .filters label{font-size:.75rem;color:var(--c-muted);display:block;margin-bottom:4px}
+    .filters input{padding:8px 10px;border:1px solid var(--c-border);border-radius:8px;background:#fff;font-size:.8125rem;min-width:150px}
+    .grid{display:grid;gap:12px}
+    .kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+    .split{grid-template-columns:2fr 1fr}
+    .channels{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .card{background:var(--c-surface);border:1px solid var(--c-border);border-radius:12px;overflow:hidden}
+    .card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--c-border)}
+    .card-h h2,.card-h h3{margin:0;font-size:.95rem}
+    .card-b{padding:12px}
+    .kpi-v{font-size:1.4rem;font-weight:700;line-height:1.2}
+    .kpi-l{color:var(--c-muted);font-size:.75rem;margin-top:4px}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;font-size:.6875rem;font-weight:700;border:1px solid transparent;text-transform:uppercase;letter-spacing:.02em}
+    .pill.ok{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+    .pill.warning{background:#fff7ed;color:#9a3412;border-color:#fdba74}
+    .pill.critical{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+    .pill.unavailable{background:#f1f5f9;color:#334155;border-color:#cbd5e1}
+    .pill.insufficient{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+    .pill.zero{background:#f8fafc;color:#334155;border-color:#e2e8f0}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #edf2f7;font-size:.78rem;text-align:left;vertical-align:top}
+    th{background:#f8fafc;color:var(--c-muted);font-weight:700}
+    td.num,th.num{text-align:right}
+    .muted{color:var(--c-muted)}
+    .risk{margin:0;padding-left:18px}
+    .risk li{margin:0 0 7px;line-height:1.45}
+    .metric{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed #eef2f7}
+    .metric:last-child{border-bottom:0}
+    .metric .label{color:var(--c-muted);font-size:.75rem}
+    .metric .val{font-weight:700;font-size:.85rem;text-align:right}
+    .state{color:var(--c-muted);font-size:.8125rem}
+    .tracker-select,.tracker-date{padding:6px 8px;border:1px solid var(--c-border);border-radius:8px;background:#fff;font-size:.75rem}
+    .note{margin-top:12px;font-size:.74rem;color:var(--c-muted);line-height:1.5}
+    .auth-gate{padding:36px 18px;text-align:center}
+    .auth-card{max-width:560px;margin:48px auto;background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:22px}
+    @media (max-width:980px){.split{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div id="auth-gate" class="auth-gate">
+    <div class="auth-card">
+      <h2 style="margin:0 0 8px">Marketing Command Center</h2>
+      <p id="gate-msg" class="muted">Checking admin access…</p>
+      <a id="gate-signin" href="#" class="btn primary" style="display:none"
+         onclick="if(typeof signInWithClerk==='function'){signInWithClerk(window.location.href);return false;}window.location.href='/super-admin/';return false;">Sign In</a>
+    </div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="wrap">
+      <div class="topbar">
+        <div>
+          <h1>Marketing Command Center</h1>
+          <p class="sub">Executive view for WHAT, WHERE, WHY, HOW MUCH, and WHAT NEXT. Large tables stay in Data Analyst details.</p>
+        </div>
+        <div class="actions">
+          <a class="btn" href="/super-admin/">← Super Admin</a>
+          <a class="btn primary" href="/super-admin/marketing/data-analyst/">Open Data Analyst</a>
+        </div>
+      </div>
+
+      <div class="filters">
+        <div>
+          <label for="f-start">Start date</label>
+          <input id="f-start" type="date" />
+        </div>
+        <div>
+          <label for="f-end">End date</label>
+          <input id="f-end" type="date" />
+        </div>
+        <button id="refresh-btn" class="btn primary" type="button">Refresh</button>
+        <span id="refresh-state" class="state">Ready.</span>
+      </div>
+
+      <div id="kpi-grid" class="grid kpis"></div>
+
+      <div class="grid split" style="margin-top:12px">
+        <div class="card">
+          <div class="card-h">
+            <h2>Top Opportunities (Phase 14)</h2>
+            <a class="btn" href="/super-admin/marketing/data-analyst/?tab=growth">Details</a>
+          </div>
+          <div class="card-b">
+            <div style="margin-bottom:10px;font-size:.74rem" class="muted">Overall ranking and product × channel ranking from current model snapshot.</div>
+            <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <h3 style="margin:0 0 8px;font-size:.85rem">Overall</h3>
+                <div class="table-wrap"><div id="opp-overall" class="state">Loading…</div></div>
+              </div>
+              <div>
+                <h3 style="margin:0 0 8px;font-size:.85rem">Product × Channel</h3>
+                <div class="table-wrap"><div id="opp-channel" class="state">Loading…</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h">
+            <h2>Key Risks & Alerts</h2>
+            <a class="btn" href="/super-admin/marketing/data-analyst/?tab=data-quality">Details</a>
+          </div>
+          <div class="card-b">
+            <ul id="risk-list" class="risk">
+              <li class="muted">Loading risk profile…</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="card-h">
+          <h2>Channel and Domain Executive Summary</h2>
+          <span class="muted" style="font-size:.72rem">Unavailable / Insufficient / Stale / Zero are shown explicitly</span>
+        </div>
+        <div class="card-b">
+          <div id="channel-grid" class="grid channels"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="card-h">
+          <h2>Next Actions with Human Review</h2>
+          <span class="muted" style="font-size:.72rem">Local tracker (this browser) for approval, action status, and result-review date</span>
+        </div>
+        <div class="card-b">
+          <div id="actions-table" class="state">Loading actions…</div>
+        </div>
+      </div>
+
+      <p class="note">
+        Boundaries: Opportunity scoring logic remains Phase 14-owned and unchanged. Data confidence and freshness semantics remain Phase 13-owned.
+        Google Ads paid-purchase attribution monitoring remains a separate business track.
+      </p>
+    </div>
+  </div>
+
+<script>
+'use strict';
+var API = '/api/admin/analysis';
+var REVIEW_KEY = 'mm_phase15_command_center_review_v1';
+var authTokenCache = { token: '', expiresAt: 0, inflight: null };
+var authRecoveryInflight = null;
+var reviewState = {};
+
+function esc(s){ return String(s === null || s === undefined ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtNum(n){ return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('en-US'); }
+function fmtPct(n){ return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('en-US',{maximumFractionDigits:1}) + '%'; }
+function fmtDate(s){ if(!s) return '—'; return esc(String(s).slice(0,10)); }
+function fmtMoneyThb(n){ return (n === null || n === undefined) ? '—' : '฿' + Number(n).toLocaleString('en-US',{maximumFractionDigits:2}); }
+function lower(s){ return String(s || '').toLowerCase(); }
+
+function isProductionHost(){
+  try {
+    var h = (window.location && window.location.hostname ? window.location.hostname : '').toLowerCase();
+    return h === 'www.mildmate.com' || h === 'mildmate.com';
+  } catch(e) { return false; }
+}
+function canUseAdminSecretFallback(){ return !isProductionHost(); }
+
+async function getAdminBearerToken(){
+  var now = Date.now();
+  if (authTokenCache.token && now < authTokenCache.expiresAt) return authTokenCache.token;
+  if (authTokenCache.inflight) return authTokenCache.inflight;
+  authTokenCache.inflight = (async function(){
+    var token = '';
+    try {
+      if (window.clerk && window.clerk.session && typeof window.clerk.session.getToken === 'function') token = await window.clerk.session.getToken();
+      if (!token && typeof window.getClerkToken === 'function') token = await window.getClerkToken();
+    } catch(e) { token = ''; }
+    authTokenCache.token = token || '';
+    authTokenCache.expiresAt = Date.now() + (token ? 15000 : 1500);
+    return authTokenCache.token;
+  })().finally(function(){ authTokenCache.inflight = null; });
+  return authTokenCache.inflight;
+}
+
+async function waitForAdminBearerToken(maxWaitMs){
+  var deadline = Date.now() + (maxWaitMs || 8000);
+  while (Date.now() < deadline) {
+    var t = '';
+    try { t = await getAdminBearerToken(); } catch(e) { t = ''; }
+    if (t) return true;
+    await new Promise(function(r){ setTimeout(r, 250); });
+  }
+  return false;
+}
+
+window.addEventListener('clerk:signed-in', function(){ authTokenCache.token=''; authTokenCache.expiresAt=0; });
+window.addEventListener('clerk:signed-out', function(){ authTokenCache.token=''; authTokenCache.expiresAt=0; });
+
+async function authHeaders(){
+  var headers = {};
+  try {
+    var token = await getAdminBearerToken();
+    if (token) headers.Authorization = 'Bearer ' + token;
+  } catch(e) {}
+  if (canUseAdminSecretFallback()) {
+    var secret = '';
+    try { secret = localStorage.getItem('admin_secret') || ''; } catch(e) {}
+    if (secret) headers['X-Admin-Secret'] = secret;
+  }
+  return headers;
+}
+
+async function recoverAdminToken(){
+  if (authRecoveryInflight) return authRecoveryInflight;
+  authRecoveryInflight = (async function(){
+    authTokenCache.token = '';
+    authTokenCache.expiresAt = 0;
+    await waitForAdminBearerToken(2500);
+  })().finally(function(){ authRecoveryInflight = null; });
+  return authRecoveryInflight;
+}
+
+async function api(path){
+  var headers = await authHeaders();
+  var res = await fetch(API + path, { headers: headers });
+  if (res.status === 401 && window.clerk) {
+    await recoverAdminToken();
+    headers = await authHeaders();
+    res = await fetch(API + path, { headers: headers });
+  }
+  var body = null;
+  try { body = await res.json(); } catch(e) {}
+  if (!res.ok || !body || body.success === false) {
+    var msg = (body && (body.message || body.error_code)) || ('HTTP ' + res.status);
+    throw new Error(msg);
+  }
+  return body;
+}
+
+async function apiSafe(path){
+  try { return await api(path); }
+  catch(e){ return { success:false, available:false, _error:String(e && e.message || e) }; }
+}
+
+function pill(status, label){
+  var s = lower(status || 'unavailable');
+  var cls = (s === 'ok' || s === 'healthy' || s === 'high') ? 'ok'
+    : (s === 'warning' || s === 'medium' || s === 'stale') ? 'warning'
+    : (s === 'critical' || s === 'low') ? 'critical'
+    : (s === 'insufficient' || s === 'insufficient_or_sparse') ? 'insufficient'
+    : (s === 'zero') ? 'zero'
+    : 'unavailable';
+  return '<span class="pill ' + cls + '">' + esc(label || status || 'unknown') + '</span>';
+}
+
+function statusFromFreshness(payload){
+  if (!payload || payload.available === false) return 'unavailable';
+  var fs = payload.freshness || payload;
+  if (!fs) return 'unavailable';
+  if (lower(fs.status) === 'warning') return 'stale';
+  if (lower(fs.status) === 'empty') return 'insufficient';
+  return 'ok';
+}
+
+function loadReviewState(){
+  try {
+    var raw = localStorage.getItem(REVIEW_KEY) || '{}';
+    reviewState = JSON.parse(raw);
+  } catch(e) { reviewState = {}; }
+}
+function saveReviewState(){
+  try { localStorage.setItem(REVIEW_KEY, JSON.stringify(reviewState)); } catch(e) {}
+}
+function trackerRowState(id){
+  if (!reviewState[id]) reviewState[id] = { approval:'pending', action:'not_started', review_date:'', updated_at:'' };
+  return reviewState[id];
+}
+
+function renderKpis(summary, opp, growth, dq, quotes){
+  var top = ((opp && opp.overall) || []).filter(function(r){ return r && r.score !== null; })[0] || null;
+  var confidence = growth && growth.signals && growth.signals.confidence ? growth.signals.confidence : null;
+  var risks = (dq && dq.data_quality && Array.isArray(dq.data_quality.warnings)) ? dq.data_quality.warnings : [];
+  var sales = summary && summary.summary ? summary.summary : {};
+  var q = quotes && quotes.summary ? quotes.summary : {};
+  var html = '';
+  html += '<div class="card"><div class="card-b"><div class="kpi-v">' + (top ? fmtNum(top.score) : '—') + '</div><div class="kpi-l">Top opportunity score</div></div></div>';
+  html += '<div class="card"><div class="card-b"><div class="kpi-v">' + fmtNum(opp && opp.row_counts ? opp.row_counts.scored : null) + ' / ' + fmtNum(opp && opp.row_counts ? opp.row_counts.total : null) + '</div><div class="kpi-l">Scored opportunities</div></div></div>';
+  html += '<div class="card"><div class="card-b"><div class="kpi-v">' + fmtNum(confidence ? confidence.value : null) + '</div><div class="kpi-l">Data confidence</div>' + pill(confidence ? confidence.status : 'unavailable', (confidence && confidence.status) || 'unavailable') + '</div></div>';
+  html += '<div class="card"><div class="card-b"><div class="kpi-v">' + fmtNum(risks.length) + '</div><div class="kpi-l">Active risk warnings</div></div></div>';
+  html += '<div class="card"><div class="card-b"><div class="kpi-v">' + fmtNum(sales.orders) + '</div><div class="kpi-l">Sales orders (window)</div></div></div>';
+  html += '<div class="card"><div class="card-b"><div class="kpi-v">' + fmtNum(q.new_quotes_30d) + '</div><div class="kpi-l">New quotes (30d)</div></div></div>';
+  document.getElementById('kpi-grid').innerHTML = html;
+}
+
+function renderOpportunityTables(opp){
+  if (opp && opp.available === false) {
+    var msg = opp.message || 'Opportunity data unavailable in this environment.';
+    document.getElementById('opp-overall').innerHTML = '<div class="state">Unavailable: ' + esc(msg) + '</div>';
+    document.getElementById('opp-channel').innerHTML = '<div class="state">Unavailable: ' + esc(msg) + '</div>';
+    return;
+  }
+  var overall = ((opp && opp.overall) || []).filter(function(r){ return r && r.score !== null; }).slice(0, 5);
+  var byChan = ((opp && opp.by_channel) || []).filter(function(r){ return r && r.score !== null; }).slice(0, 5);
+  if (!overall.length) {
+    document.getElementById('opp-overall').innerHTML = '<div class="state">No scored rows yet.</div>';
+  } else {
+    var h = '<table><thead><tr><th>#</th><th>Product</th><th class="num">Score</th><th class="num">Confidence</th><th>Tier</th></tr></thead><tbody>';
+    overall.forEach(function(r){
+      h += '<tr><td>' + fmtNum(r.rank) + '</td><td>' + esc(r.title_en || r.slug || ('#' + r.product_id)) + '</td><td class="num">' + fmtNum(r.score) + '</td><td class="num">' + fmtNum(r.confidence) + '</td><td>' + esc(r.tier || '—') + '</td></tr>';
+    });
+    document.getElementById('opp-overall').innerHTML = h + '</tbody></table>';
+  }
+  if (!byChan.length) {
+    document.getElementById('opp-channel').innerHTML = '<div class="state">No scored channel rows yet.</div>';
+  } else {
+    var c = '<table><thead><tr><th>Channel</th><th>Product</th><th class="num">Score</th><th class="num">Confidence</th></tr></thead><tbody>';
+    byChan.forEach(function(r){
+      c += '<tr><td>' + esc(r.channel || '—') + '</td><td>' + esc(r.title_en || r.slug || ('#' + r.product_id)) + '</td><td class="num">' + fmtNum(r.score) + '</td><td class="num">' + fmtNum(r.confidence) + '</td></tr>';
+    });
+    document.getElementById('opp-channel').innerHTML = c + '</tbody></table>';
+  }
+}
+
+function sectionCard(title, detailHref, status, metrics, note){
+  var m = '';
+  metrics.forEach(function(it){
+    m += '<div class="metric"><div class="label">' + esc(it.label) + '</div><div class="val">' + it.value + '</div></div>';
+  });
+  var n = note ? '<div class="note" style="margin-top:8px">' + esc(note) + '</div>' : '';
+  return '<div class="card"><div class="card-h"><h3>' + esc(title) + '</h3><a class="btn" href="' + esc(detailHref) + '">Details</a></div><div class="card-b">' +
+    pill(status, status) + '<div style="height:8px"></div>' + m + n + '</div></div>';
+}
+
+function renderChannelSummary(data){
+  var summary = data.summary && data.summary.summary ? data.summary.summary : {};
+  var ga4 = data.ga4 || {};
+  var gsc = data.gsc || {};
+  var leads = data.leads || {};
+  var etsy = data.etsy || {};
+  var ads = data.ads || {};
+  var growth = data.growth || {};
+  var prof = data.profitability || {};
+  var quotes = data.quotes || {};
+
+  var seoStatus = statusFromFreshness(ga4);
+  var etsyStatus = statusFromFreshness(etsy);
+  var adsPolicy = growth && growth.google_ads_policy ? lower(growth.google_ads_policy.business_signal) : '';
+  var adsStatus = statusFromFreshness(ads);
+  if (adsPolicy === 'insufficient_or_sparse') adsStatus = 'insufficient';
+  var salesStatus = (summary.orders > 0) ? 'ok' : 'insufficient';
+  var profStatus = (prof && prof.available === false) ? 'unavailable' : ((prof && prof.success && prof.summary && prof.summary.orders > 0) ? 'ok' : 'insufficient');
+  var quoteStatus = (quotes && quotes.available === false) ? 'unavailable' : ((quotes && quotes.success && quotes.summary && quotes.summary.total_quotes > 0) ? 'ok' : 'insufficient');
+
+  var cards = '';
+  cards += sectionCard('SEO & Website', '/super-admin/marketing/data-analyst/?tab=seo', seoStatus, [
+    { label:'GA4 sessions', value:fmtNum(ga4.summary ? ga4.summary.sessions : null) },
+    { label:'GA4 purchases', value:fmtNum(ga4.summary ? ga4.summary.purchases : null) },
+    { label:'GA4 freshness days', value:fmtNum(ga4.freshness ? ga4.freshness.days_since_latest_report : null) },
+    { label:'GSC clicks', value:fmtNum(gsc.summary ? gsc.summary.clicks : null) }
+  ], 'Leads shown separately to avoid blending conversion-intent and purchase funnel.');
+
+  cards += sectionCard('GA4 Lead Acquisition', '/super-admin/marketing/data-analyst/?tab=seo', statusFromFreshness(leads), [
+    { label:'Generate lead events', value:fmtNum(leads.summary ? leads.summary.generate_lead_events : null) },
+    { label:'Quote request events', value:fmtNum(leads.summary ? leads.summary.quote_request_events : null) },
+    { label:'Latest report date', value:fmtDate(leads.freshness ? leads.freshness.latest_report_date : null) },
+    { label:'Freshness days', value:fmtNum(leads.freshness ? leads.freshness.days_since_latest_report : null) }
+  ], 'Canonical property only (308922589).');
+
+  cards += sectionCard('Etsy', '/super-admin/marketing/data-analyst/?tab=etsy', etsyStatus, [
+    { label:'Views', value:fmtNum(etsy.summary ? etsy.summary.views : null) },
+    { label:'Orders', value:fmtNum(etsy.summary ? etsy.summary.orders : null) },
+    { label:'Revenue', value:fmtMoneyThb(etsy.summary ? etsy.summary.revenue : null) },
+    { label:'Freshness days', value:fmtNum(etsy.freshness ? etsy.freshness.days_since_latest_report : null) }
+  ], '');
+
+  cards += sectionCard('Google Ads', '/super-admin/marketing/data-analyst/?tab=google-ads', adsStatus, [
+    { label:'Clicks', value:fmtNum(ads.summary ? ads.summary.clicks : null) },
+    { label:'Cost (THB)', value:fmtMoneyThb(ads.summary ? ads.summary.cost : null) },
+    { label:'Conversions', value:fmtNum(ads.summary ? ads.summary.conversions : null) },
+    { label:'ROAS', value:fmtNum(ads.summary ? ads.summary.roas : null) }
+  ], adsPolicy === 'insufficient_or_sparse' ? 'Business signal currently neutral in Phase 13 due sparse/zero evidence.' : '');
+
+  cards += sectionCard('Sales', '/super-admin/marketing/data-analyst/?tab=sales', salesStatus, [
+    { label:'Orders', value:fmtNum(summary.orders) },
+    { label:'Revenue (THB)', value:fmtMoneyThb(summary.order_revenue) },
+    { label:'Units', value:fmtNum(summary.units) },
+    { label:'Mapped order %', value:fmtPct(summary.mapped_order_pct) }
+  ], '');
+
+  cards += sectionCard('Profitability Guardrail', '/super-admin/marketing/data-analyst/?tab=growth', profStatus, [
+    { label:'Orders covered', value:fmtNum(prof.summary ? prof.summary.orders : null) },
+    { label:'Contribution margin (THB)', value:fmtMoneyThb(prof.summary ? prof.summary.contribution_margin_thb : null) },
+    { label:'Contribution margin %', value:fmtPct(prof.summary ? prof.summary.contribution_margin_pct : null) },
+    { label:'Contains estimates', value:prof.summary && prof.summary.contains_estimates ? 'Yes' : 'No' }
+  ], (prof && prof.available === false && prof.message) ? prof.message : 'Profitability remains a guardrail; rankings stay model-owned by Phase 14.');
+
+  cards += sectionCard('Quote Funnel (Tier 1)', '/super-admin/marketing/data-analyst/?tab=overview', quoteStatus, [
+    { label:'Total quotes', value:fmtNum(quotes.summary ? quotes.summary.total_quotes : null) },
+    { label:'Approved quotes', value:fmtNum(quotes.summary ? quotes.summary.approved_quotes : null) },
+    { label:'Exact converted quotes', value:fmtNum(quotes.conversion ? quotes.conversion.exact_converted_quotes : null) },
+    { label:'At-risk (7d)', value:fmtNum(quotes.summary ? quotes.summary.expiring_7d : null) }
+  ], (quotes && quotes.available === false && quotes.message) ? quotes.message : '');
+
+  document.getElementById('channel-grid').innerHTML = cards;
+}
+
+function buildActions(data){
+  var actions = [];
+  var oppOverall = ((data.opportunity && data.opportunity.overall) || []).filter(function(r){ return r && r.score !== null; });
+  if (oppOverall.length) {
+    var top = oppOverall[0];
+    actions.push({
+      id: 'opp-top-' + String(top.product_id || 'x'),
+      title: 'Review top opportunity: ' + (top.title_en || top.slug || ('Product #' + top.product_id)),
+      why: 'Highest modeled score ' + fmtNum(top.score) + ' (confidence ' + fmtNum(top.confidence) + ').',
+      link: '/super-admin/marketing/data-analyst/?tab=growth'
+    });
+  }
+  var warnings = ((data.dq && data.dq.data_quality && data.dq.data_quality.warnings) || []);
+  if (warnings.length) {
+    actions.push({
+      id: 'dq-risks',
+      title: 'Resolve data quality warnings',
+      why: warnings.length + ' warning(s) can reduce confidence and action reliability.',
+      link: '/super-admin/marketing/data-analyst/?tab=data-quality'
+    });
+  }
+  var confidence = data.growth && data.growth.signals && data.growth.signals.confidence ? data.growth.signals.confidence : null;
+  if (confidence && lower(confidence.status) !== 'high') {
+    actions.push({
+      id: 'confidence-review',
+      title: 'Validate low/medium confidence drivers',
+      why: 'Confidence status = ' + confidence.status + '. Review freshness and mapped coverage before scaling.',
+      link: '/super-admin/marketing/data-analyst/?tab=growth'
+    });
+  }
+  var ga4Fresh = data.ga4 && data.ga4.freshness ? data.ga4.freshness : null;
+  if (ga4Fresh && lower(ga4Fresh.status) === 'warning') {
+    actions.push({
+      id: 'ga4-freshness',
+      title: 'Review GA4 freshness warning',
+      why: 'Website funnel freshness is stale or has recent partial/failed statuses.',
+      link: '/super-admin/marketing/data-analyst/?tab=seo'
+    });
+  }
+  var adsPolicy = data.growth && data.growth.google_ads_policy ? lower(data.growth.google_ads_policy.business_signal) : '';
+  if (adsPolicy === 'insufficient_or_sparse') {
+    actions.push({
+      id: 'ads-monitoring',
+      title: 'Keep Google Ads attribution monitoring active',
+      why: 'Paid-media signal is currently neutral and should not drive score changes yet.',
+      link: '/super-admin/marketing/data-analyst/?tab=google-ads'
+    });
+  }
+  return actions.slice(0, 8);
+}
+
+function renderRisks(data){
+  var warnings = ((data.dq && data.dq.data_quality && data.dq.data_quality.warnings) || []);
+  var list = warnings.slice(0, 8).map(function(w){ return '<li>' + esc(w) + '</li>'; });
+  if (!list.length) list.push('<li>No active warnings from data-quality rollup.</li>');
+  document.getElementById('risk-list').innerHTML = list.join('');
+}
+
+function renderActions(actions){
+  if (!actions.length) {
+    document.getElementById('actions-table').innerHTML = '<div class="state">No actions generated for current filters.</div>';
+    return;
+  }
+  var h = '<table><thead><tr><th>Next action</th><th>Why now</th><th>Approval</th><th>Action status</th><th>Result-review date</th><th>Detail</th></tr></thead><tbody>';
+  actions.forEach(function(a){
+    var st = trackerRowState(a.id);
+    h += '<tr>' +
+      '<td><strong>' + esc(a.title) + '</strong></td>' +
+      '<td class="muted">' + esc(a.why) + '</td>' +
+      '<td>' +
+        '<select class="tracker-select" data-id="' + esc(a.id) + '" data-field="approval">' +
+          '<option value="pending"' + (st.approval==='pending'?' selected':'') + '>Pending review</option>' +
+          '<option value="approved"' + (st.approval==='approved'?' selected':'') + '>Approved</option>' +
+          '<option value="hold"' + (st.approval==='hold'?' selected':'') + '>Hold</option>' +
+          '<option value="rejected"' + (st.approval==='rejected'?' selected':'') + '>Rejected</option>' +
+        '</select>' +
+      '</td>' +
+      '<td>' +
+        '<select class="tracker-select" data-id="' + esc(a.id) + '" data-field="action">' +
+          '<option value="not_started"' + (st.action==='not_started'?' selected':'') + '>Not started</option>' +
+          '<option value="in_progress"' + (st.action==='in_progress'?' selected':'') + '>In progress</option>' +
+          '<option value="blocked"' + (st.action==='blocked'?' selected':'') + '>Blocked</option>' +
+          '<option value="done"' + (st.action==='done'?' selected':'') + '>Done</option>' +
+        '</select>' +
+      '</td>' +
+      '<td><input type="date" class="tracker-date" data-id="' + esc(a.id) + '" data-field="review_date" value="' + esc(st.review_date || '') + '" /></td>' +
+      '<td><a class="btn" href="' + esc(a.link) + '">Open</a></td>' +
+      '</tr>';
+  });
+  h += '</tbody></table>';
+  document.getElementById('actions-table').innerHTML = h;
+
+  var els = document.querySelectorAll('.tracker-select, .tracker-date');
+  for (var i = 0; i < els.length; i++) {
+    els[i].addEventListener('change', function(ev){
+      var t = ev.target;
+      var id = t.getAttribute('data-id');
+      var field = t.getAttribute('data-field');
+      if (!id || !field) return;
+      var rec = trackerRowState(id);
+      rec[field] = t.value || '';
+      rec.updated_at = new Date().toISOString();
+      reviewState[id] = rec;
+      saveReviewState();
+    });
+  }
+}
+
+function filterQS(){
+  var p = [];
+  var s = document.getElementById('f-start').value;
+  var e = document.getElementById('f-end').value;
+  if (s) p.push('start=' + encodeURIComponent(s));
+  if (e) p.push('end=' + encodeURIComponent(e));
+  return p.length ? '?' + p.join('&') : '';
+}
+
+async function loadCommandCenter(){
+  var state = document.getElementById('refresh-state');
+  state.textContent = 'Loading…';
+  var qs = filterQS();
+  var data = {
+    summary: await apiSafe('/summary' + qs),
+    opportunity: await apiSafe('/opportunity'),
+    growth: await apiSafe('/growth-signals' + qs),
+    dq: await apiSafe('/data-quality'),
+    gsc: await apiSafe('/gsc' + qs),
+    ga4: await apiSafe('/ga4' + qs),
+    leads: await apiSafe('/ga4-leads' + qs),
+    etsy: await apiSafe('/etsy' + qs),
+    ads: await apiSafe('/google-ads' + qs),
+    profitability: await apiSafe('/profitability' + qs),
+    quotes: await apiSafe('/quotes' + qs)
+  };
+  renderKpis(data.summary, data.opportunity, data.growth, data.dq, data.quotes);
+  renderOpportunityTables(data.opportunity);
+  renderRisks(data);
+  renderChannelSummary(data);
+  renderActions(buildActions(data));
+  state.textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+
+function initFilters(){
+  var now = new Date();
+  var end = now.toISOString().slice(0,10);
+  var startDate = new Date(now.getTime() - 27 * 86400000);
+  var start = startDate.toISOString().slice(0,10);
+  document.getElementById('f-start').value = start;
+  document.getElementById('f-end').value = end;
+  document.getElementById('refresh-btn').addEventListener('click', loadCommandCenter);
+}
+
+async function boot(){
+  loadReviewState();
+  initFilters();
+
+  var hasLocalSecret = false;
+  try { hasLocalSecret = !!localStorage.getItem('admin_secret'); } catch(e) {}
+  var skip = !!window.__SKIP_CLERK || (canUseAdminSecretFallback() && hasLocalSecret);
+  if (!skip) {
+    var tries = 0;
+    while (tries < 40 && !(window.clerk && window.clerk.session)) {
+      await new Promise(function(r){ setTimeout(r, 250); });
+      tries++;
+    }
+    if (!(window.clerk && window.clerk.session)) {
+      document.getElementById('gate-msg').textContent = 'You are not signed in. Sign in and we will return you here.';
+      document.getElementById('gate-signin').style.display = 'inline-flex';
+      return;
+    }
+  }
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await loadCommandCenter();
+}
+
+boot();
+</script>
+</body>
+</html>

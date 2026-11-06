@@ -9721,8 +9721,34 @@ function err(code, message, status = 400) {
   return json5({ success: false, error_code: code, message }, status);
 }
 __name(err, "err");
+function isSchemaMissingError(message) {
+  const msg = String(message || "").toLowerCase();
+  return msg.includes("no such table") || msg.includes("no such view") || msg.includes("no such column");
+}
+__name(isSchemaMissingError, "isSchemaMissingError");
 async function getOpportunity(env) {
-  const model = await loadModel(env);
+  let model;
+  try {
+    model = await loadModel(env);
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (isSchemaMissingError(msg)) {
+      return json5({
+        success: true,
+        available: false,
+        error_code: "OPPORTUNITY_SCHEMA_UNAVAILABLE",
+        message: "Opportunity schema is not available in this environment yet. Apply migration 054_opportunity_engine.sql.",
+        model_version: null,
+        weights: null,
+        latest_score_date: null,
+        computed_at: null,
+        row_counts: null,
+        overall: [],
+        by_channel: []
+      });
+    }
+    throw e;
+  }
   let latest = null;
   try {
     latest = await env.DB.prepare(
@@ -9742,6 +9768,7 @@ async function getOpportunity(env) {
   const byChannel = rows.filter((r) => r.channel !== "");
   return json5({
     success: true,
+    available: true,
     model_version: model.model_version,
     weights: model.weights,
     latest_score_date: latest ? latest.score_date : null,
@@ -9789,6 +9816,11 @@ function err2(code, message, status = 400) {
   return json6({ success: false, error_code: code, message }, status);
 }
 __name(err2, "err");
+function isSchemaMissingError2(message) {
+  const msg = String(message || "").toLowerCase();
+  return msg.includes("no such table") || msg.includes("no such view") || msg.includes("no such column");
+}
+__name(isSchemaMissingError2, "isSchemaMissingError");
 function isProductionHost6(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -10412,118 +10444,142 @@ __name(getChannels, "getChannels");
 async function getQuotes(env, f) {
   const range = createdRangeWhere(f, "q.created_at");
   const baseSql = `FROM custom_quotes q WHERE 1=1${range.sql}`;
-  const summaryRow = await env.DB.prepare(
-    `SELECT
-       COUNT(*) AS total_quotes,
-       SUM(CASE WHEN q.created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS new_quotes_7d,
-       SUM(CASE WHEN q.created_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS new_quotes_30d,
-       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) != 'archived'
-                 AND (q.expires_at IS NULL OR q.expires_at > datetime('now'))
-                THEN 1 ELSE 0 END) AS active_quotes,
-       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved' THEN 1 ELSE 0 END) AS approved_quotes,
-       SUM(CASE WHEN q.expires_at IS NOT NULL AND q.expires_at <= datetime('now')
-                 AND LOWER(COALESCE(q.status, 'pending')) != 'archived'
-                THEN 1 ELSE 0 END) AS expired_quotes,
-       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
-                 AND q.expires_at IS NOT NULL
-                 AND q.expires_at > datetime('now')
-                 AND q.expires_at <= datetime('now', '+7 days')
-                THEN 1 ELSE 0 END) AS expiring_7d,
-       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
-                 AND NOT EXISTS (
-                   SELECT 1 FROM orders o
-                   WHERE o.quote_id = q.quote_id
-                 )
-                THEN 1 ELSE 0 END) AS approved_unconverted
-     ${baseSql}`
-  ).bind(...range.binds).first();
-  const exactRow = await env.DB.prepare(
-    `SELECT COUNT(DISTINCT q.quote_id) AS exact_converted
-     ${baseSql}
-       AND EXISTS (
-         SELECT 1 FROM orders o
-         WHERE o.quote_id = q.quote_id
-       )`
-  ).bind(...range.binds).first();
-  const legacyRow = await env.DB.prepare(
-    `SELECT COUNT(DISTINCT q.quote_id) AS legacy_email_matched
-     ${baseSql}
-       AND NOT EXISTS (
-         SELECT 1 FROM orders o
-         WHERE o.quote_id = q.quote_id
-       )
-       AND EXISTS (
-         SELECT 1 FROM orders o2
-         WHERE LOWER(COALESCE(o2.email, '')) = LOWER(COALESCE(q.email, ''))
-       )`
-  ).bind(...range.binds).first();
-  const topProducts = await env.DB.prepare(
-    `SELECT
-       q.product_slug,
-       COUNT(*) AS quote_count,
-       SUM(CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.quote_id = q.quote_id) THEN 1 ELSE 0 END) AS exact_converted
-     ${baseSql}
-     GROUP BY q.product_slug
-     ORDER BY quote_count DESC, exact_converted DESC, q.product_slug
-     LIMIT 12`
-  ).bind(...range.binds).all();
-  const atRisk = await env.DB.prepare(
-    `SELECT
-       q.quote_id,
-       q.product_slug,
-       q.created_at,
-       q.expires_at,
-       q.quoted_price_usd,
-       q.quoted_price
-     ${baseSql}
-       AND LOWER(COALESCE(q.status, 'pending')) = 'approved'
-       AND q.expires_at IS NOT NULL
-       AND q.expires_at > datetime('now')
-       AND q.expires_at <= datetime('now', '+7 days')
-       AND NOT EXISTS (
-         SELECT 1 FROM orders o
-         WHERE o.quote_id = q.quote_id
-       )
-     ORDER BY q.expires_at ASC, q.created_at ASC
-     LIMIT 25`
-  ).bind(...range.binds).all();
-  const approvedQuotes = Number(summaryRow?.approved_quotes || 0);
-  const exactConverted = Number(exactRow?.exact_converted || 0);
-  const phase5 = await buildPhase5QuoteFunnel(env, f, baseSql, range.binds);
-  return json6({
-    success: true,
-    filters: { start: f.start, end: f.end },
-    phase5,
-    summary: {
-      total_quotes: Number(summaryRow?.total_quotes || 0),
-      new_quotes_7d: Number(summaryRow?.new_quotes_7d || 0),
-      new_quotes_30d: Number(summaryRow?.new_quotes_30d || 0),
-      active_quotes: Number(summaryRow?.active_quotes || 0),
-      approved_quotes: approvedQuotes,
-      approved_unconverted: Number(summaryRow?.approved_unconverted || 0),
-      expiring_7d: Number(summaryRow?.expiring_7d || 0),
-      expired_quotes: Number(summaryRow?.expired_quotes || 0)
-    },
-    conversion: {
-      exact_converted_quotes: exactConverted,
-      exact_conversion_pct: approvedQuotes > 0 ? Math.round(exactConverted / approvedQuotes * 1e3) / 10 : null,
-      legacy_email_matched_quotes: Number(legacyRow?.legacy_email_matched || 0)
-    },
-    top_products: (topProducts.results || []).map((r) => ({
-      product_slug: r.product_slug || "(unknown)",
-      quote_count: Number(r.quote_count || 0),
-      exact_converted: Number(r.exact_converted || 0),
-      exact_conversion_pct: Number(r.quote_count || 0) > 0 ? Math.round(Number(r.exact_converted || 0) / Number(r.quote_count || 0) * 1e3) / 10 : null
-    })),
-    at_risk: (atRisk.results || []).map((r) => ({
-      quote_id: r.quote_id,
-      product_slug: r.product_slug,
-      created_at: r.created_at,
-      expires_at: r.expires_at,
-      quoted_price_usd: r.quoted_price_usd,
-      quoted_price_thb: r.quoted_price
-    }))
-  });
+  try {
+    const summaryRow = await env.DB.prepare(
+      `SELECT
+         COUNT(*) AS total_quotes,
+         SUM(CASE WHEN q.created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS new_quotes_7d,
+         SUM(CASE WHEN q.created_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS new_quotes_30d,
+         SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) != 'archived'
+                   AND (q.expires_at IS NULL OR q.expires_at > datetime('now'))
+                  THEN 1 ELSE 0 END) AS active_quotes,
+         SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved' THEN 1 ELSE 0 END) AS approved_quotes,
+         SUM(CASE WHEN q.expires_at IS NOT NULL AND q.expires_at <= datetime('now')
+                   AND LOWER(COALESCE(q.status, 'pending')) != 'archived'
+                  THEN 1 ELSE 0 END) AS expired_quotes,
+         SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
+                   AND q.expires_at IS NOT NULL
+                   AND q.expires_at > datetime('now')
+                   AND q.expires_at <= datetime('now', '+7 days')
+                  THEN 1 ELSE 0 END) AS expiring_7d,
+         SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
+                   AND NOT EXISTS (
+                     SELECT 1 FROM orders o
+                     WHERE o.quote_id = q.quote_id
+                   )
+                  THEN 1 ELSE 0 END) AS approved_unconverted
+       ${baseSql}`
+    ).bind(...range.binds).first();
+    const exactRow = await env.DB.prepare(
+      `SELECT COUNT(DISTINCT q.quote_id) AS exact_converted
+       ${baseSql}
+         AND EXISTS (
+           SELECT 1 FROM orders o
+           WHERE o.quote_id = q.quote_id
+         )`
+    ).bind(...range.binds).first();
+    const legacyRow = await env.DB.prepare(
+      `SELECT COUNT(DISTINCT q.quote_id) AS legacy_email_matched
+       ${baseSql}
+         AND NOT EXISTS (
+           SELECT 1 FROM orders o
+           WHERE o.quote_id = q.quote_id
+         )
+         AND EXISTS (
+           SELECT 1 FROM orders o2
+           WHERE LOWER(COALESCE(o2.email, '')) = LOWER(COALESCE(q.email, ''))
+         )`
+    ).bind(...range.binds).first();
+    const topProducts = await env.DB.prepare(
+      `SELECT
+         q.product_slug,
+         COUNT(*) AS quote_count,
+         SUM(CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.quote_id = q.quote_id) THEN 1 ELSE 0 END) AS exact_converted
+       ${baseSql}
+       GROUP BY q.product_slug
+       ORDER BY quote_count DESC, exact_converted DESC, q.product_slug
+       LIMIT 12`
+    ).bind(...range.binds).all();
+    const atRisk = await env.DB.prepare(
+      `SELECT
+         q.quote_id,
+         q.product_slug,
+         q.created_at,
+         q.expires_at,
+         q.quoted_price_usd,
+         q.quoted_price
+       ${baseSql}
+         AND LOWER(COALESCE(q.status, 'pending')) = 'approved'
+         AND q.expires_at IS NOT NULL
+         AND q.expires_at > datetime('now')
+         AND q.expires_at <= datetime('now', '+7 days')
+         AND NOT EXISTS (
+           SELECT 1 FROM orders o
+           WHERE o.quote_id = q.quote_id
+         )
+       ORDER BY q.expires_at ASC, q.created_at ASC
+       LIMIT 25`
+    ).bind(...range.binds).all();
+    const approvedQuotes = Number(summaryRow?.approved_quotes || 0);
+    const exactConverted = Number(exactRow?.exact_converted || 0);
+    const phase5 = await buildPhase5QuoteFunnel(env, f, baseSql, range.binds);
+    return json6({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end },
+      phase5,
+      summary: {
+        total_quotes: Number(summaryRow?.total_quotes || 0),
+        new_quotes_7d: Number(summaryRow?.new_quotes_7d || 0),
+        new_quotes_30d: Number(summaryRow?.new_quotes_30d || 0),
+        active_quotes: Number(summaryRow?.active_quotes || 0),
+        approved_quotes: approvedQuotes,
+        approved_unconverted: Number(summaryRow?.approved_unconverted || 0),
+        expiring_7d: Number(summaryRow?.expiring_7d || 0),
+        expired_quotes: Number(summaryRow?.expired_quotes || 0)
+      },
+      conversion: {
+        exact_converted_quotes: exactConverted,
+        exact_conversion_pct: approvedQuotes > 0 ? Math.round(exactConverted / approvedQuotes * 1e3) / 10 : null,
+        legacy_email_matched_quotes: Number(legacyRow?.legacy_email_matched || 0)
+      },
+      top_products: (topProducts.results || []).map((r) => ({
+        product_slug: r.product_slug || "(unknown)",
+        quote_count: Number(r.quote_count || 0),
+        exact_converted: Number(r.exact_converted || 0),
+        exact_conversion_pct: Number(r.quote_count || 0) > 0 ? Math.round(Number(r.exact_converted || 0) / Number(r.quote_count || 0) * 1e3) / 10 : null
+      })),
+      at_risk: (atRisk.results || []).map((r) => ({
+        quote_id: r.quote_id,
+        product_slug: r.product_slug,
+        created_at: r.created_at,
+        expires_at: r.expires_at,
+        quoted_price_usd: r.quoted_price_usd,
+        quoted_price_thb: r.quoted_price
+      }))
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (isSchemaMissingError2(msg)) {
+      return json6({
+        success: true,
+        available: false,
+        error_code: "QUOTES_SCHEMA_UNAVAILABLE",
+        message: "Quote funnel schema is not available in this environment yet. Apply migrations 059_quote_tier1_pipeline.sql and 060_quote_acquisition_attribution.sql.",
+        filters: { start: f.start, end: f.end },
+        phase5: {
+          available: false,
+          error_code: "PHASE5_FUNNEL_UNAVAILABLE",
+          message: "Quote attribution schema is unavailable in this environment."
+        },
+        summary: null,
+        conversion: null,
+        top_products: [],
+        at_risk: []
+      });
+    }
+    throw e;
+  }
 }
 __name(getQuotes, "getQuotes");
 var PHASE5_ATTRIBUTION_COVERAGE_START = "2026-10-30";
@@ -13024,6 +13080,7 @@ async function getProfitability(env, f) {
     }, "pct");
     return json6({
       success: true,
+      available: true,
       filters: { start: f.start, end: f.end, channel: f.channel },
       currency: "THB",
       note: "Margins are computed only over covered orders; percentages use each metric's own covered-revenue base. Estimates are labelled. Ad spend is month-aggregate only (never per order).",
@@ -13041,8 +13098,21 @@ async function getProfitability(env, f) {
     });
   } catch (e) {
     const msg = String(e?.message || e);
-    if (msg.includes("no such table") || msg.includes("no such view")) {
-      return err2("PROFIT_VIEWS_MISSING", "Profitability views not found \u2014 apply migration 053_profitability_layer.sql first.", 500);
+    if (isSchemaMissingError2(msg)) {
+      return json6({
+        success: true,
+        available: false,
+        error_code: "PROFIT_VIEWS_MISSING",
+        message: "Profitability views are not available in this environment yet. Apply migration 053_profitability_layer.sql.",
+        filters: { start: f.start, end: f.end, channel: f.channel },
+        currency: "THB",
+        summary: null,
+        channels: [],
+        monthly: [],
+        products: [],
+        after_ads: [],
+        coverage: null
+      });
     }
     throw e;
   }
@@ -23131,7 +23201,7 @@ function allowDevClerkOrigins2(csp) {
 }
 __name(allowDevClerkOrigins2, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-ezHzdk/functionsRoutes-0.09471334629093098.mjs
+// ../.wrangler/tmp/pages-TM8K8A/functionsRoutes-0.6779817546723819.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

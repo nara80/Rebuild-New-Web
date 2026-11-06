@@ -2134,8 +2134,12 @@ function initDashboardTabs(){
   });
   var startTab = 'overview';
   try {
+    var fromQuery = (new URLSearchParams(window.location.search).get('tab') || '').toLowerCase();
+    if (fromQuery && DASHBOARD_TABS.some(function(t){ return t.key === fromQuery; })) startTab = fromQuery;
+  } catch(e) {}
+  try {
     var saved = localStorage.getItem('data_analyst_active_tab');
-    if (saved && DASHBOARD_TABS.some(function(t){ return t.key === saved; })) startTab = saved;
+    if (startTab === 'overview' && saved && DASHBOARD_TABS.some(function(t){ return t.key === saved; })) startTab = saved;
   } catch(e) {}
   setDashboardTab(startTab);
 }
