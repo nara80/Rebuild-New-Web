@@ -68,7 +68,7 @@
       <h2 style="margin:0 0 8px">Marketing Command Center</h2>
       <p id="gate-msg" class="muted">Checking admin access…</p>
       <a id="gate-signin" href="#" class="btn primary" style="display:none"
-         onclick="if(typeof signInWithClerk==='function'){signInWithClerk(window.location.href);return false;}window.location.href='/super-admin/';return false;">Sign In</a>
+         onclick="window.location.href='/super-admin/';return false;">Open Super Admin to sign in</a>
     </div>
   </div>
 
@@ -588,7 +588,13 @@ async function boot(){
       tries++;
     }
     if (!(window.clerk && window.clerk.session)) {
-      document.getElementById('gate-msg').textContent = 'You are not signed in. Sign in and we will return you here.';
+      document.getElementById('gate-msg').textContent = 'You are not signed in. Sign in through Super Admin first, then return here.';
+      document.getElementById('gate-signin').style.display = 'inline-flex';
+      return;
+    }
+    var tokenReady = await waitForAdminBearerToken(8000);
+    if (!tokenReady) {
+      document.getElementById('gate-msg').textContent = 'Signed in, but admin token is not ready yet. Please wait a moment and reload this page.';
       document.getElementById('gate-signin').style.display = 'inline-flex';
       return;
     }

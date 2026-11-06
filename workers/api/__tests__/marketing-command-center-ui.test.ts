@@ -57,9 +57,15 @@ describe("Phase 15 Marketing Command Center UI contract", () => {
     expect(commandCenterHtml).toContain("mm_phase15_command_center_review_v1");
   });
 
-  it("provides direct command-center sign-in wiring", () => {
+  it("requires sign-in through the existing super-admin flow", () => {
     expect(commandCenterHtml).toContain("id=\"gate-signin\"");
-    expect(commandCenterHtml).toContain("signInWithClerk(window.location.href)");
+    expect(commandCenterHtml).toContain("window.location.href='/super-admin/'");
+    expect(commandCenterHtml).not.toContain("signInWithClerk(window.location.href)");
+  });
+
+  it("waits for admin bearer token readiness before loading dashboards", () => {
+    expect(commandCenterHtml).toContain("waitForAdminBearerToken(8000)");
+    expect(commandCenterHtml).toContain("Signed in, but admin token is not ready yet");
   });
 
   it("maps executive KPIs directly from existing Data Analyst source fields", () => {

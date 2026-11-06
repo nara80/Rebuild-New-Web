@@ -23201,7 +23201,7 @@ function allowDevClerkOrigins2(csp) {
 }
 __name(allowDevClerkOrigins2, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-TM8K8A/functionsRoutes-0.6779817546723819.mjs
+// ../.wrangler/tmp/pages-F1U0ao/functionsRoutes-0.1761163976293365.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
