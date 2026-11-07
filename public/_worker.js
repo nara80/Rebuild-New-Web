@@ -3434,6 +3434,22 @@ __name(redirectWithCookieClears, "redirectWithCookieClears");
 
 // auth/clerk-return/[[path]].ts
 var DEFAULT_NEXT_PATH = "/super-admin/";
+var DEV_HANDSHAKE_PARAM = /^__clerk_db_jwt(?:_[A-Za-z0-9_-]{1,64})?$/;
+function isPreviewHost(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  if (h.endsWith(".pages.dev")) return true;
+  if (h === "localhost" || h === "127.0.0.1" || h === "::1") return true;
+  return false;
+}
+__name(isPreviewHost, "isPreviewHost");
+function findDevHandshake(url) {
+  for (const [name, value] of url.searchParams.entries()) {
+    if (!value) continue;
+    if (DEV_HANDSHAKE_PARAM.test(name)) return { name, value };
+  }
+  return null;
+}
+__name(findDevHandshake, "findDevHandshake");
 function normalizeNextPath(raw) {
   const value = String(raw || "").trim();
   if (!value) return DEFAULT_NEXT_PATH;
@@ -3465,6 +3481,14 @@ var onRequest2 = /* @__PURE__ */ __name(async (context) => {
   const nextPath = normalizeNextPath(url.searchParams.get("next"));
   const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
   if (handshakeResponse) return handshakeResponse;
+  if (isPreviewHost(url.hostname)) {
+    const devHandshake = findDevHandshake(url);
+    if (devHandshake) {
+      const target = new URL(nextPath, url.origin);
+      target.searchParams.set(devHandshake.name, devHandshake.value);
+      return Response.redirect(target.toString(), 302);
+    }
+  }
   const session = extractClerkSessionToken(context.request, { allowQueryToken: true });
   const verified = await verifySessionCandidates(session, context.request, context.env);
   if (verified.state !== "valid") {
@@ -23574,7 +23598,7 @@ function allowDevClerkOrigins2(csp) {
 }
 __name(allowDevClerkOrigins2, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-hBFM5Q/functionsRoutes-0.8401611774500993.mjs
+// ../.wrangler/tmp/pages-CkxZE5/functionsRoutes-0.4866654421586958.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
