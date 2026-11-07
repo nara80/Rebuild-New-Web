@@ -329,6 +329,58 @@ describe("Phase 16 — human approval / rejection / review workflow", () => {
     );
     expect(res.status).toBe(409);
   });
+
+  it("persists approve/reject/review decisions so Action History reflects them", async () => {
+    const rows = [
+      { id: 14, action_date: "2026-11-07", source: "human", ai_model: "TEST-DEMO-FIXTURE", status: "proposed", product_id: 1, channel: "seo", action_type: "push_product", title: "A", detail: "d", recommendation_json: "{}", approved_budget: null, caution: 0 },
+      { id: 15, action_date: "2026-11-07", source: "human", ai_model: "TEST-DEMO-FIXTURE", status: "proposed", product_id: 2, channel: "google-ads", action_type: "campaign", title: "B", detail: "d", recommendation_json: "{}", approved_budget: null, caution: 1 },
+      { id: 16, action_date: "2026-11-07", source: "human", ai_model: "TEST-DEMO-FIXTURE", status: "approved", product_id: 3, channel: "", action_type: "content", title: "C", detail: "d", recommendation_json: "{}", approved_budget: 3000, caution: 0 },
+    ];
+    const { db, state } = makeDb({ actions: rows });
+
+    await handleAdminAiAnalyst(req("/api/admin/ai-analyst/actions/14", { method: "PUT", body: JSON.stringify({ op: "approve" }) }), envWith(db));
+    await handleAdminAiAnalyst(req("/api/admin/ai-analyst/actions/15", { method: "PUT", body: JSON.stringify({ op: "reject" }) }), envWith(db));
+    await handleAdminAiAnalyst(req("/api/admin/ai-analyst/actions/16", { method: "PUT", body: JSON.stringify({ op: "review", result_class: "positive", lessons: "held steady" }) }), envWith(db));
+
+    const byId: any = {};
+    state.actions.forEach((a: any) => { byId[a.id] = a; });
+    expect(byId[14].status).toBe("approved");
+    expect(byId[15].status).toBe("rejected");
+    expect(byId[16].status).toBe("reviewed");
+
+    // Action History (list endpoint) reflects the persisted decisions.
+    const list = await handleAdminAiAnalyst(req("/api/admin/ai-analyst/actions"), envWith(db));
+    const body: any = await list.json();
+    const listed: any = {};
+    body.actions.forEach((a: any) => { listed[a.id] = a; });
+    expect(listed[14].status).toBe("approved");
+    expect(listed[14].approved_by).toBe("admin@example.com");
+    expect(listed[15].status).toBe("rejected");
+    expect(listed[15].rejected_by).toBe("admin@example.com");
+    expect(listed[16].status).toBe("reviewed");
+    expect(listed[16].result_class).toBe("positive");
+    expect(listed[16].lessons).toBe("held steady");
+    expect(listed[16].approved_budget).toBe(3000); // approved budget preserved
+  });
+
+  it("stores the literal 'null' marker when a review supplies no post metrics", async () => {
+    // This is the data shape the AI Analyst UI must render as
+    // "No post-action metrics recorded" instead of `Post: "null"`.
+    const { db, state } = await seedApprovedRow();
+    await handleAdminAiAnalyst(
+      req("/api/admin/ai-analyst/actions/5", { method: "PUT", body: JSON.stringify({ op: "approve" }) }),
+      envWith(db)
+    );
+    const res = await handleAdminAiAnalyst(
+      req("/api/admin/ai-analyst/actions/5", { method: "PUT", body: JSON.stringify({ op: "review", result_class: "positive", lessons: "no metrics available" }) }),
+      envWith(db)
+    );
+    const body: any = await res.json();
+    expect(body.status).toBe("reviewed");
+    expect(state.actions[0].post_metrics_json).toBe("null");
+    expect(state.actions[0].result_class).toBe("positive");
+    expect(state.actions[0].lessons).toBe("no metrics available");
+  });
 });
 
 describe("Phase 16 — feedback loop and contract", () => {

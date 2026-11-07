@@ -610,10 +610,85 @@ function aiStatusPill(status){
   return '<span class="pill ' + cls + '">' + esc(status || 'unknown') + '</span>';
 }
 
-function escJson(v){
-  if (v === null || v === undefined) return '—';
-  try { return esc(JSON.stringify(v).slice(0, 220)); } catch(e) { return '—'; }
+// ── METRICS_RENDER_BEGIN ────────────────────────────────────────────────────
+// baseline_metrics_json / post_metrics_json are D1 TEXT columns holding JSON.
+// Render them as readable field/value rows instead of a raw escaped JSON blob.
+// Read-only: the stored value is never modified, and missing values are never
+// invented or estimated. Every key and value is escaped before it reaches HTML.
+var METRICS_MAX_FIELDS = 12;
+var METRICS_MAX_DEPTH = 3;
+
+// Safe parse. Distinguishes "nothing recorded" from "record present but unreadable".
+function parseMetrics(raw){
+  if (raw === null || raw === undefined) return { ok: false };
+  var s = String(raw).trim();
+  if (!s || s === 'null' || s === 'undefined') return { ok: false };
+  try {
+    var v = JSON.parse(s);
+    if (v === null || v === undefined) return { ok: false };
+    if (Array.isArray(v)) return v.length ? { ok: true, value: v } : { ok: false };
+    if (typeof v === 'object') return Object.keys(v).length ? { ok: true, value: v } : { ok: false };
+    return { ok: true, value: v };
+  } catch(e) {
+    return { ok: false, malformed: true };
+  }
 }
+
+function humanizeKey(k){
+  var s = String(k).replace(/[_-]+/g, ' ').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
+  if (!s) return String(k);
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function fmtMetricScalar(v){
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (typeof v === 'number') return isFinite(v) ? String(v) : '—';
+  var s = String(v).trim();
+  if (!s) return '—';
+  return s.length > 120 ? s.slice(0, 117) + '…' : s;
+}
+
+// Flatten nested metrics into readable "Field · Subfield" -> value rows.
+function flattenMetrics(value, prefix, out, depth){
+  if (out.length >= METRICS_MAX_FIELDS) return;
+  if (value === null || value === undefined) { out.push([prefix || 'Value', '—']); return; }
+  if (Array.isArray(value)) { out.push([prefix || 'Items', value.length ? value.length + ' item(s)' : '—']); return; }
+  if (typeof value !== 'object') { out.push([prefix || 'Value', fmtMetricScalar(value)]); return; }
+  var keys = Object.keys(value);
+  if (!keys.length) { out.push([prefix || 'Value', '—']); return; }
+  for (var i = 0; i < keys.length; i++) {
+    if (out.length >= METRICS_MAX_FIELDS) return;
+    var k = keys[i];
+    var label = prefix ? prefix + ' · ' + humanizeKey(k) : humanizeKey(k);
+    var v = value[k];
+    if (v !== null && typeof v === 'object') {
+      if (depth >= METRICS_MAX_DEPTH) out.push([label, '…']);
+      else flattenMetrics(v, label, out, depth + 1);
+    } else {
+      out.push([label, fmtMetricScalar(v)]);
+    }
+  }
+}
+
+// Labeled metrics block. `emptyText` shows when nothing usable is stored;
+// `malformedText` shows when a record exists but cannot be parsed.
+function metricsBlock(label, raw, emptyText, malformedText){
+  var parsed = parseMetrics(raw);
+  var rows = [];
+  if (parsed.ok) flattenMetrics(parsed.value, '', rows, 0);
+  var head = '<div class="muted" style="font-size:.68rem;margin-top:4px">' + esc(label) + '</div>';
+  if (!rows.length) {
+    var msg = parsed.malformed ? (malformedText || emptyText) : emptyText;
+    return head + '<div class="muted" style="font-size:.68rem">' + esc(msg) + '</div>';
+  }
+  var h = head + '<div style="display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:.68rem;margin-top:2px">';
+  for (var i = 0; i < rows.length; i++) {
+    h += '<span class="muted">' + esc(rows[i][0]) + '</span><span>' + esc(rows[i][1]) + '</span>';
+  }
+  return h + '</div>';
+}
+// ── METRICS_RENDER_END ──────────────────────────────────────────────────────
 
 function aiActionRow(a){
   var srcLabel = a.source === 'ai' ? ('AI · ' + esc(a.ai_model || 'model')) : 'Human';
@@ -634,11 +709,13 @@ function aiActionRow(a){
       '<button class="btn ai-reject" data-id="' + a.id + '">Reject</button></td>';
   } else if (a.status === 'approved') {
     h += '<td><button class="btn ai-review-open" data-id="' + a.id + '">Record review</button>' +
-      '<div class="muted" style="font-size:.68rem;margin-top:4px">Baseline: ' + escJson(a.baseline_metrics_json) + '</div></td>';
+      metricsBlock('Baseline metrics', a.baseline_metrics_json, 'No baseline snapshot recorded', 'Baseline record unreadable') + '</td>';
   } else if (a.status === 'reviewed') {
+    var postParsed = parseMetrics(a.post_metrics_json);
     h += '<td><span class="pill ' + (lower(a.result_class) === 'positive' ? 'ok' : lower(a.result_class) === 'negative' ? 'critical' : 'insufficient') + '">' + esc(a.result_class || '—') + '</span>' +
-      '<div class="muted" style="font-size:.68rem;margin-top:4px">Post: ' + escJson(a.post_metrics_json) + '</div>' +
-      (a.lessons ? '<div class="muted" style="font-size:.68rem;margin-top:4px">Lessons: ' + esc(a.lessons) + '</div>' : '') + '</td>';
+      '<div class="muted" style="font-size:.66rem;margin-top:2px">' + (postParsed.ok ? 'Result backed by recorded metrics' : 'Manually selected result (no metrics recorded)') + '</div>' +
+      metricsBlock('Post-action metrics', a.post_metrics_json, 'No post-action metrics recorded', 'Post-action record unreadable') +
+      (a.lessons ? '<div style="font-size:.68rem;margin-top:4px"><span class="muted">Lessons learned</span><div>' + esc(a.lessons) + '</div></div>' : '') + '</td>';
   } else {
     h += '<td>—</td>';
   }
