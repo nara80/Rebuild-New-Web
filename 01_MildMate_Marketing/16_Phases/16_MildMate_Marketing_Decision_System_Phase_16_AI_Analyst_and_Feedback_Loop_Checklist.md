@@ -173,7 +173,7 @@ Baseline correction:
 
 - **Remote-dev session limitation:** in `wrangler dev --remote`, body-bearing requests (`PUT` / `POST`) start returning `503` with an empty body after a direct `wrangler d1 execute` touches the same database, while `GET` keeps working. This is a Cloudflare remote-dev-session behaviour, not an application defect. For write testing use a local `wrangler dev` replica or the deployed preview URL with a signed-in Clerk admin session.
 - **Actor attribution on the non-browser path:** approvals performed with the `X-Admin-Secret` fallback record an empty actor (`approved_by=''`). The deployed preview route is Clerk-only, so browser approvals are attributed to the signed-in admin email (covered by the unit test *approve captures baseline snapshot and human attribution*).
-- **Preview data gaps are reported, not hidden:** preview D1 has no `opportunity_scores` table, so the contract returns `schema_unavailable: ["opportunity_scores"]` with `opportunities: []`; preview data confidence resolves to `low` (missing / stale collector runs), which forces caution flags on recommendations, as designed.
+- **Preview data gaps are reported, not hidden:** preview D1 had no `opportunity_scores` table at that time, so the contract returned `schema_unavailable: ["opportunity_scores"]` with `opportunities: []`; preview data confidence resolved to `low` (missing / stale collector runs), which forces caution flags on recommendations, as designed. *(Superseded 2026-11-07: the Phase 13/14 schema has since been applied to preview D1 — see "Preview System Verification & Remediation (2026-11-07)" below. The contract no longer lists `opportunity_scores` as unavailable; `opportunities` stays empty until the first authenticated recompute.)*
 - **No AI provider is configured**, so the panel intentionally shows the "AI provider not configured" state and stores nothing.
 
 ### Owner browser acceptance steps (preview only)
@@ -230,3 +230,76 @@ Baseline correction:
 2. Open `https://phase16-ai-analyst.mildmate-new.pages.dev/super-admin/marketing/` → **Sign in** → complete the Clerk form.
    **Pass:** the browser lands back on `/super-admin/marketing/` (the URL may briefly show `?__clerk_db_jwt=…`, which the app removes automatically) with the **AI Analyst (Phase 16)** panel visible and the three `[TEST/DEMO]` rows listed.
    **Fail:** the browser returns to `kind-joey-29.accounts.dev/sign-in` or `/default-redirect` → the preview hostname is still missing from Allowed origins (step 1).
+
+---
+## Preview System Verification & Remediation (2026-11-07)
+
+Consolidated verification and correction of the **existing** Phase 16 preview implementation. Full detail: `01_MildMate_Marketing/09_Handoffs/Phase_16_System_Verification_Handoff_2026-11-07.md`. No new feature development; production deployment, `mildmate-db-prod`, production Clerk, collectors/crons and the Claude API were all left untouched.
+
+### Reported symptoms → verdict
+
+| # | Reported symptom | Root cause | Verdict |
+|---|---|---|---|
+| 1 | "Phase 14 Opportunity Engine schema unavailable / UI requests `054_opportunity_engine.sql`" | The Phase 13/14 schema and the collector fact tables the scoring core reads were **never applied to preview D1** (preview held only the `042` analysis layer). The UI was reporting the truth. | **FIXED** — additive migrations applied to preview D1 (§ changes) |
+| 2 | "Top opportunity score: unavailable" | No opportunity snapshot had ever been generated in preview. Snapshot creation is an **authenticated admin action** ("Recompute scores") or the production-only weekly cron. | **FIXED schema / EXPECTED LIMITATION for the snapshot** — owner action (acceptance step 2) |
+| 3 | "Scored opportunities: unavailable" | Same as #2. | Same as #2 |
+| 4 | "Data Confidence: 0 / INSUFFICIENT_SIGNAL" | Preview has no GA4/GSC/Etsy/Ads rows and no sales inside the 28-day window; the Phase 13 growth layer reports the honest insufficient-signal state rather than synthesising values. | **EXPECTED LIMITATION** — deliberately not faked to HIGH |
+| 5 | "Active risk warnings: 5" | 1 environment limitation + 4 deliberately named preview fixtures. | **EXPECTED** — working as designed; nothing reset or hidden |
+| 6 | "Sales orders: 0" | `initFilters()` pre-fills the Command Center date inputs with a **28-day window**, and every preview sales fixture is dated ≤ 2026-09-01. Unfiltered aggregate = **10 orders / ฿22,722 / 16 units**. | **EXPECTED** — filter effect, not a data gap |
+| 7 | "Last successful sync ≈ 87,430 minutes ago" | Preview `sync_runs` holds a single `notion` mapping-sync fixture from 2026-09-07; preview has no collectors. | **EXPECTED ENVIRONMENT LIMITATION** |
+
+### Risk-warning classification (all five)
+
+| Warning | Triggering evidence | Classification |
+|---|---|---|
+| `Last successful sync was 87430 minutes ago (threshold 30).` | only `sync_runs` row = 2026-09-07 fixture | Expected environment limitation |
+| `1 active item(s) have no Product_ID.` | `sales_order_items.id=22` (order `EXACT-001`), `product_id = NULL` | Intentional preview test data |
+| `1 commercial order(s) have no items.` | order `NOITEM-001` (its only item is `item_status='removed'`) | Intentional preview test data |
+| `1 order(s) have an unknown status value.` | order `BADSTATUS-001`, `status='weird'` | Intentional preview test data |
+| `1 unknown source label(s) present.` | order `UNK-001`, `source_system='randomshop'` | Intentional preview test data |
+
+No preview defect found among the warnings. `zero_total_orders = 0`, which confirms the count of exactly five.
+
+### Changes applied (preview D1 only)
+
+Additive migrations applied to `mildmate-db` in dependency order: `046_gsc_analytics`, `048_ga4_analytics`, `049_etsy_analytics`, `050_google_ads_analytics`, `053_profitability_layer`, `054_opportunity_engine`, `055_ga4_multi_property`, `062_ga4_website_canonical_freshness`. `056_ga4_property_unique_rebuild` was deliberately **not** applied (it carries an explicit approval gate and is superseded by the rebuild inside `055`).
+
+- **No migration file was modified. No preview row was deleted or rewritten. Fixtures preserved** (3 `[TEST/DEMO]` rows still `proposed` / `proposed` / `approved`).
+- **No application code change was required or made** — the defect was environmental. `public/_worker.js` is unchanged and no preview redeployment was necessary (D1 is read at request time).
+- The preview `d1_migrations` ledger is already incomplete (3 rows for a far larger schema) and was deliberately not rewritten; the applied set is recorded in the handoff.
+
+### Phase 14–16 verification matrix
+
+| Area | Verdict |
+|---|---|
+| Phase 14 model registry (`v1`, demand sub-weights 80/20) on preview | **PASS** |
+| Phase 14 opportunity schema + read route | **FIXED** (schema) / **PASS** (route stays read-only) |
+| Phase 14 score snapshot in preview | **EXPECTED LIMITATION** — owner recompute action (production has 596 rows, latest `score_date` 2026-11-06) |
+| Phase 13 cost model on preview | **FIXED** (3 verified rows seeded; 29 formula rows require the authenticated "Recalculate costs" action) |
+| All 9 scoring-core input queries resolve on preview D1 | **PASS** (read-only execution) |
+| Phase 15 Command Center page + contract shape | **PASS** (renders; KPI semantics verified against the handler's exact queries) |
+| Phase 15/16 authenticated API payloads | **BLOCKED** from this environment (see below) |
+| Phase 16 `marketing_actions` schema + fixtures | **PASS** |
+| Phase 16 approve / reject / review logic | **PASS** via automated suite; live authenticated run **BLOCKED** (see below) |
+| Phase 16 feedback loop (`past_outcomes`) | **PASS** (code + tests) |
+| No AI provider configured → explicit unavailable state | **PASS** (`ai_available:false`, nothing stored) |
+
+### Blocker (documented, not a code defect)
+
+Live authenticated verification of the approval workflow requires a Clerk **Bearer** token: the preview gateway classifies `/api/admin/ai-analyst/*` as a `browser_admin` route and does not accept the `X-Admin-Secret` fallback, the Pages **Preview** environment has no `ADMIN_SECRET` or `CLERK_SECRET_KEY`, and no Clerk session can be minted here (Clerk CLI unauthenticated; the Development instance does not yet authorize the preview origin). The workflow was already verified earlier in this cycle at the handler level against live preview D1, and is covered by the automated suite; only *browser* acceptance remains, which is the owner's step.
+
+### Regression results
+
+- Focused suites: **41/41 passing** · full repository suite: **263/263 passing (28 files)**.
+- `phase5-quote-funnel.test.ts` date-sensitive failure: fixed and stable (fixture dates now relative via `utcDaysAgo(...)`; the application rule is unchanged).
+- Source/runtime bundle parity: rebuilding `public/_worker.js` reproduced the committed bundle except for wrangler's non-deterministic temp-path comment — **in sync**, working tree clean.
+
+### Owner acceptance tests (preview only)
+
+0. **Unblock sign-in:** Clerk Dashboard → Development instance → API keys → Allowed origins → add `https://phase16-ai-analyst.mildmate-new.pages.dev`.
+1. **Command Center loads** at `/super-admin/marketing/`. Expected today with the default 28-day filter: top opportunity score `—`, scored opportunities `— / —`, data confidence `0 insufficient_signal`, risk warnings `5`, sales orders `0`, new quotes (30d) `0`. **The "Phase 14 schema unavailable / apply migration 054" state must no longer appear** — the opportunity panel now reads "No scored rows yet."
+2. **Generate the first snapshot:** on `/super-admin/marketing/data-analyst/` click **Recalculate costs**, then **Recompute scores**; confirm a `score_date = 2026-11-07` snapshot and that the Command Center KPIs populate.
+3. **AI Analyst loop:** approve *[TEST/DEMO] Refresh Standard Fitted Sheet*; reject *[TEST/DEMO] Deep Pocket Fitted Sheet Ads test* (must never show a result class or executed state); record a review (result class + lesson) on *[TEST/DEMO] Marine Fitted Sheet content update*; refresh and confirm all three states persist with your admin email in the audit columns; then click **Generate AI recommendations** and confirm the explicit "AI provider not configured … Nothing generated or stored" message.
+4. **Reset:** `npx wrangler d1 execute mildmate-db --remote --file scripts/seed-phase16-demo-fixtures.sql`.
+
+**Recommendation:** GO for owner acceptance, conditional on steps 0 and 2 (both owner-side actions). NO-GO for production release of Phase 16 while the AI provider is intentionally unconfigured, Google Ads attribution remains UNVERIFIED (Phase 12 open), and owner browser acceptance is unrecorded.
