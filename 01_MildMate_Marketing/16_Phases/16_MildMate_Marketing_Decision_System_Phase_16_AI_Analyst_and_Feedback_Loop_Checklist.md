@@ -216,6 +216,14 @@ Baseline correction:
 - `workers/api/__tests__/phase5-quote-funnel.test.ts`: the Ads fixture dates are now relative (`utcDaysAgo(...)`), so the "fresh Ads data" case can no longer go stale as the calendar moves. The application rule (`days_since_latest_report > 4` → `warning`) is unchanged — only the test fixture changed.
 - Full repository suite after the change: **263/263 passing (28 files)**.
 
+### Preview delivery
+
+- Preview deployment `8b335081-a353-464f-9f7c-27bedddd3f9c` (branch `phase16-ai-analyst`, source `3ead520f`) → **https://phase16-ai-analyst.mildmate-new.pages.dev**.
+- Commits on `feature/marketing-ai-analyst-r1` (pushed to origin): `9ff24506` (callback fix + regression suite), `a0db84a8` (date-relative Phase 5 fixture), `3ead520f` (this record).
+- Live verification after deployment: callback **with** `__clerk_db_jwt` → `302` to `/super-admin/marketing/?__clerk_db_jwt=…` (no sign-in bounce); callback **without** a handshake → `302` to the dev hosted sign-in (unchanged); production callback → `302` to `accounts.mildmate.com` (unchanged); `/api/admin/ai-analyst/contract` → `401` unauthenticated; Command Center AI panel markers present; preview D1 fixtures unchanged (3 rows, ids 14/15/16).
+- Headless-browser trace of the corrected callback: callback → app page (handshake parameter present) → app page (parameter removed by the Clerk SDK) with **zero** hosted sign-in portal loads, i.e. the recurring loop no longer occurs.
+- Production was not deployed to, and `mildmate-db-prod` was not touched.
+
 ### Owner browser acceptance test (preview only)
 
 1. Clerk Dashboard → Development instance → API keys → Allowed origins → add `https://phase16-ai-analyst.mildmate-new.pages.dev` → save.
