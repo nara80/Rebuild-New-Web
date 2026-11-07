@@ -23,6 +23,13 @@
 //     attribution only; N/A at zero denominator). Test quotes excluded.
 // GET /api/admin/analysis/growth-signals?start&end&channel&product_id
 // GET /api/admin/analysis/profitability ?start&end&channel
+// GET /api/admin/analysis/funnel        ?start&end
+//   └ Owner-approved five-stage Marketing Funnel Model (Awareness,
+//     Engagement, Lead & Quote, Conversion, Retention) reported PER CHANNEL.
+//     No cross-channel rate is ever produced; GA4 canonical property only;
+//     GA4 purchases / Etsy revenue are directional and never added to
+//     canonical order revenue; Ads purchase attribution stays UNVERIFIED;
+//     Retention is UNAVAILABLE (no customer identity on sales_orders).
 // GET  /api/admin/analysis/opportunity            — Phase 14 latest score snapshot (read-only)
 // POST /api/admin/analysis/opportunity/recompute  — Phase 14 recompute (dashboard button; cron uses the same core)
 //
@@ -3860,6 +3867,565 @@ async function getProfitability(env: any, f: Filters): Promise<Response> {
 
 // ── Router ────────────────────────────────────────────────────────────────
 
+// ── Marketing Funnel Model (read-only; owner-approved 2026-11-07) ─────────
+//
+// GET /api/admin/analysis/funnel ?start&end
+//
+// Reconciles the approved five-stage funnel (Awareness, Engagement,
+// Lead & Quote, Conversion, Retention) against metrics that already exist in
+// Phases 10-16. Additive only: no metric definition, weight, or guardrail is
+// changed here.
+//
+// Hard guardrails - do not weaken:
+//  * No cross-channel conversion rate is produced. Each channel keeps its own
+//    unit, window, and freshness and is never summed with another channel.
+//  * Website metrics use canonical GA4 property 308922589 only. Legacy
+//    property 366290587 is never merged. The analysis_ga4_* views carry no
+//    property_id filter, so this handler queries ga4_funnel_daily directly.
+//  * Canonical revenue is order revenue from analysis_sales_daily. GA4
+//    purchases and Etsy listing revenue are reported separately, are marked
+//    directional, and are never added to canonical revenue.
+//  * Google Ads purchase attribution stays UNVERIFIED.
+//  * Retention is UNAVAILABLE: sales_orders carries no customer identity.
+//  * UNALLOCATED item revenue stays unknown, never zero.
+
+const FUNNEL_MODEL_VERSION = "marketing-funnel-v1";
+const FUNNEL_MARKETPLACE_CHANNELS = ["shopee", "lazada", "tiktok", "ebay"];
+const FUNNEL_DIRECT_CHANNELS = ["line", "whatsapp", "facebook", "manual"];
+
+const FUNNEL_STAGES = [
+  { id: "awareness", name: "Awareness", definition: "Potential customers reached by a channel before any interaction." },
+  { id: "engagement", name: "Engagement", definition: "Reached users who showed interest (viewed, clicked, engaged, saved)." },
+  { id: "lead_quote", name: "Lead & Quote", definition: "Identified demand: lead events and custom-quote requests." },
+  { id: "conversion", name: "Conversion", definition: "Commercial orders and revenue." },
+  { id: "retention", name: "Retention", definition: "Repeat purchase / customer return behavior." },
+];
+
+const FUNNEL_FRESHNESS_THRESHOLDS = { ga4: 3, gsc: 4, etsy: 7, google_ads: 4, ga4_leads: 10 };
+
+function funnelFreshness(fresh: any, warnDays: number): any {
+  if (!fresh) {
+    return {
+      latest_report_date: null,
+      days_since_latest_report: null,
+      total_rows: null,
+      last_success_sync_at: null,
+      last_sync_status: null,
+      warning_threshold_days: warnDays,
+      status: "unavailable",
+    };
+  }
+  const latest = fresh.latest_report_date === undefined ? null : fresh.latest_report_date;
+  const rawDays = fresh.days_since_latest_report;
+  const days = rawDays === null || rawDays === undefined ? null : Number(rawDays);
+  const rawRows = fresh.total_rows;
+  const rows = rawRows === null || rawRows === undefined ? null : Number(rawRows);
+  const lastStatus = String(fresh.last_sync_status || "").toLowerCase();
+  let status = "ok";
+  if (rows === null) status = "unavailable";
+  else if (rows === 0) status = "empty";
+  else if (days !== null && days > warnDays) status = "warning";
+  else if (lastStatus === "failed" || lastStatus === "partial" || lastStatus === "error") status = "warning";
+  return {
+    latest_report_date: latest,
+    days_since_latest_report: days,
+    total_rows: rows,
+    last_success_sync_at: fresh.last_success_sync_at === undefined ? null : fresh.last_success_sync_at,
+    last_sync_status: fresh.last_sync_status === undefined ? null : fresh.last_sync_status,
+    warning_threshold_days: warnDays,
+    status,
+  };
+}
+
+function funnelMetric(key: string, label: string, value: any, unit: string | null, source: string, opts?: any): any {
+  const o = opts || {};
+  return {
+    key,
+    label,
+    value: value === undefined ? null : value,
+    unit: unit || null,
+    source,
+    grain: o.grain || null,
+    coverage_pct: o.coverage === undefined ? null : o.coverage,
+    directional: !!o.directional,
+    note: o.note || null,
+  };
+}
+
+function funnelStage(status: string, unit: string | null, metrics: any[], limitations: string[]): any {
+  return { status, unit: unit || null, metrics: metrics || [], limitations: limitations || [] };
+}
+
+async function getFunnel(env: any, f: Filters): Promise<Response> {
+  // Window: honour ?start/?end; otherwise last 28 days inclusive (matches the
+  // Marketing Command Center default filter).
+  const endDay: string = f.end || new Date().toISOString().slice(0, 10);
+  let startDay: string = f.start || "";
+  if (!startDay) {
+    const d = new Date(endDay + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() - 27);
+    startDay = d.toISOString().slice(0, 10);
+  }
+  const windowDays = Math.round((Date.parse(endDay + "T00:00:00Z") - Date.parse(startDay + "T00:00:00Z")) / 86400000) + 1;
+
+  const db = env.DB;
+  const schemaUnavailable: string[] = [];
+  async function src<T>(name: string, fn: () => Promise<T>): Promise<T | null> {
+    try {
+      return await fn();
+    } catch (e: any) {
+      const m = String(e && e.message ? e.message : e);
+      if (isSchemaMissingError(m)) {
+        schemaUnavailable.push(name);
+        return null;
+      }
+      throw e;
+    }
+  }
+  const num0 = (v: any): number => (v === null || v === undefined ? 0 : Number(v));
+  const covPct = (num: number, den: number): number | null => (den > 0 ? Math.round((num / den) * 1000) / 10 : null);
+
+  // ---- Canonical website traffic (GA4 canonical property only) ----
+  const ga4: any = await src("ga4_funnel_daily", () =>
+    db.prepare(
+      `SELECT COUNT(*) AS rows_n,
+              COALESCE(SUM(g.sessions),0) AS sessions,
+              COALESCE(SUM(g.users),0) AS users,
+              COALESCE(SUM(g.engaged_sessions),0) AS engaged_sessions,
+              COALESCE(SUM(g.product_views),0) AS product_views,
+              COALESCE(SUM(g.add_to_cart),0) AS add_to_cart,
+              COALESCE(SUM(g.begin_checkout),0) AS begin_checkout,
+              COALESCE(SUM(g.purchases),0) AS purchases,
+              COALESCE(SUM(g.purchase_revenue),0) AS purchase_revenue,
+              COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.sessions ELSE 0 END),0) AS mapped_sessions
+         FROM ga4_funnel_daily g
+        WHERE g.property_scope = 'website'
+          AND g.property_id = ?1
+          AND g.landing_page_path NOT LIKE '%/listing/%'
+          AND g.report_date >= ?2 AND g.report_date <= ?3`
+    ).bind(GA4_WEBSITE_CANONICAL_PROPERTY_ID, startDay, endDay).first()
+  );
+
+  // ---- Search visibility (GSC) ----
+  const gsc: any = await src("gsc_search_daily", () =>
+    db.prepare(
+      `SELECT COUNT(*) AS rows_n,
+              COALESCE(SUM(clicks),0) AS clicks,
+              COALESCE(SUM(impressions),0) AS impressions,
+              COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN clicks ELSE 0 END),0) AS mapped_clicks
+         FROM gsc_search_daily
+        WHERE report_date >= ?1 AND report_date <= ?2`
+    ).bind(startDay, endDay).first()
+  );
+
+  // ---- Lead events (canonical property only) ----
+  const leads: any = await src("ga4_lead_acquisition_daily", () =>
+    db.prepare(
+      `SELECT COUNT(*) AS rows_n,
+              COALESCE(SUM(CASE WHEN event_name = 'generate_lead' THEN event_count ELSE 0 END),0) AS generate_lead_events,
+              COALESCE(SUM(CASE WHEN event_name = 'quote_request' THEN event_count ELSE 0 END),0) AS quote_request_events,
+              COALESCE(SUM(CASE WHEN event_name = 'generate_lead' AND users_available = 1 THEN event_users ELSE 0 END),0) AS generate_lead_users,
+              COALESCE(SUM(CASE WHEN event_name = 'quote_request' AND users_available = 1 THEN event_users ELSE 0 END),0) AS quote_request_users,
+              SUM(CASE WHEN event_name = 'generate_lead' AND users_available = 1 THEN 1 ELSE 0 END) AS generate_lead_user_rows,
+              SUM(CASE WHEN event_name = 'quote_request' AND users_available = 1 THEN 1 ELSE 0 END) AS quote_request_user_rows
+         FROM ga4_lead_acquisition_daily
+        WHERE property_id = ?1 AND report_date >= ?2 AND report_date <= ?3`
+    ).bind(GA4_LEAD_CANONICAL_PROPERTY_ID, startDay, endDay).first()
+  );
+
+  // ---- Etsy listing funnel (Etsy-native units) ----
+  const etsy: any = await src("etsy_listing_daily", () =>
+    db.prepare(
+      `SELECT COUNT(*) AS rows_n,
+              COUNT(DISTINCT listing_id) AS listings,
+              COUNT(DISTINCT CASE WHEN is_active = 1 THEN listing_id END) AS active_listings,
+              COALESCE(SUM(visits),0) AS visits,
+              COALESCE(SUM(views),0) AS views,
+              COALESCE(SUM(favorites),0) AS favorites,
+              COALESCE(SUM(orders),0) AS orders,
+              COALESCE(SUM(transactions),0) AS transactions,
+              COALESCE(SUM(units_sold),0) AS units_sold,
+              COALESCE(SUM(revenue),0) AS revenue,
+              COALESCE(SUM(revenue_thb),0) AS revenue_thb,
+              COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN views ELSE 0 END),0) AS mapped_views
+         FROM etsy_listing_daily
+        WHERE report_date >= ?1 AND report_date <= ?2`
+    ).bind(startDay, endDay).first()
+  );
+
+  // ---- Paid search (Google Ads) ----
+  const ads: any = await src("google_ads_campaign_daily", () =>
+    db.prepare(
+      `SELECT COUNT(*) AS rows_n,
+              COALESCE(SUM(impressions),0) AS impressions,
+              COALESCE(SUM(clicks),0) AS clicks,
+              COALESCE(SUM(cost),0) AS cost,
+              COALESCE(SUM(conversions),0) AS conversions,
+              COALESCE(SUM(conversion_value),0) AS conversion_value,
+              COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN cost ELSE 0 END),0) AS mapped_cost
+         FROM google_ads_campaign_daily
+        WHERE report_date >= ?1 AND report_date <= ?2`
+    ).bind(startDay, endDay).first()
+  );
+
+  // ---- Canonical sales (order revenue is the only revenue authority) ----
+  const salesRes: any = await src("analysis_sales_daily", () =>
+    db.prepare(
+      `SELECT channel_norm, currency,
+              SUM(orders) AS orders, SUM(order_revenue) AS order_revenue, SUM(units) AS units,
+              SUM(mapped_orders) AS mapped_orders, SUM(exact_items) AS exact_items,
+              SUM(unallocated_items) AS unallocated_items
+         FROM analysis_sales_daily
+        WHERE order_day >= ?1 AND order_day <= ?2
+        GROUP BY channel_norm, currency`
+    ).bind(startDay, endDay).all()
+  );
+
+  // ---- Quote demand (Tier 1) ----
+  const quoteBase: any = await src("custom_quotes", () =>
+    db.prepare(
+      `SELECT COUNT(*) AS total_quotes,
+              SUM(CASE WHEN LOWER(COALESCE(status,'pending')) = 'approved' THEN 1 ELSE 0 END) AS approved_quotes,
+              SUM(CASE WHEN LOWER(COALESCE(status,'pending')) = 'approved' AND expires_at IS NOT NULL
+                        AND expires_at > datetime('now') AND expires_at <= datetime('now','+7 days')
+                   THEN 1 ELSE 0 END) AS expiring_7d
+         FROM custom_quotes
+        WHERE substr(COALESCE(created_at, datetime('now')),1,10) >= ?1
+          AND substr(COALESCE(created_at, datetime('now')),1,10) <= ?2`
+    ).bind(startDay, endDay).first()
+  );
+
+  // Exact quote->order attribution needs orders.quote_id (migration 059).
+  // Isolated so a missing column degrades only this one metric.
+  const quoteExact: any = await src("orders.quote_id", () =>
+    db.prepare(
+      `SELECT COUNT(DISTINCT q.quote_id) AS exact_converted_quotes
+         FROM custom_quotes q
+        WHERE LOWER(COALESCE(q.status,'pending')) = 'approved'
+          AND substr(COALESCE(q.created_at, datetime('now')),1,10) >= ?1
+          AND substr(COALESCE(q.created_at, datetime('now')),1,10) <= ?2
+          AND EXISTS (SELECT 1 FROM orders o WHERE o.quote_id = q.quote_id)`
+    ).bind(startDay, endDay).first()
+  );
+
+  // ---- Freshness ----
+  const freshGa4: any = await src("analysis_ga4_freshness", () => db.prepare("SELECT * FROM analysis_ga4_freshness").first());
+  const freshGsc: any = await src("analysis_gsc_freshness", () => db.prepare("SELECT * FROM analysis_gsc_freshness").first());
+  const freshEtsy: any = await src("analysis_etsy_freshness", () => db.prepare("SELECT * FROM analysis_etsy_freshness").first());
+  const freshAds: any = await src("analysis_google_ads_freshness", () => db.prepare("SELECT * FROM analysis_google_ads_freshness").first());
+  const freshLeads: any = await src("analysis_ga4_lead_freshness", () => db.prepare("SELECT * FROM analysis_ga4_lead_freshness").first());
+  const dq: any = await src("analysis_data_quality", () =>
+    db.prepare("SELECT last_success_sync_at, last_sync_status, sync_errors_7d FROM analysis_data_quality").first()
+  );
+
+  // ---- Aggregate canonical sales into channel buckets ----
+  const salesAgg: Record<string, any> = {};
+  for (const r of (salesRes && salesRes.results) || []) {
+    const ch = String(r.channel_norm || "(unknown)");
+    if (!salesAgg[ch]) {
+      salesAgg[ch] = { orders: 0, revenue: 0, units: 0, mapped_orders: 0, exact_items: 0, unallocated_items: 0, currencies: [] as string[] };
+    }
+    const a = salesAgg[ch];
+    a.orders += num0(r.orders);
+    a.revenue += num0(r.order_revenue);
+    a.units += num0(r.units);
+    a.mapped_orders += num0(r.mapped_orders);
+    a.exact_items += num0(r.exact_items);
+    a.unallocated_items += num0(r.unallocated_items);
+    if (r.currency && a.currencies.indexOf(String(r.currency)) < 0) a.currencies.push(String(r.currency));
+  }
+  function salesBucket(names: string[]): any {
+    const out = { orders: 0, revenue: 0, units: 0, mapped_orders: 0, exact_items: 0, unallocated_items: 0, currencies: [] as string[] };
+    for (const n of names) {
+      const a = salesAgg[n];
+      if (!a) continue;
+      out.orders += a.orders;
+      out.revenue += a.revenue;
+      out.units += a.units;
+      out.mapped_orders += a.mapped_orders;
+      out.exact_items += a.exact_items;
+      out.unallocated_items += a.unallocated_items;
+      for (const c of a.currencies) if (out.currencies.indexOf(c) < 0) out.currencies.push(c);
+    }
+    return out;
+  }
+  const knownChannels = ["website", "etsy"].concat(FUNNEL_MARKETPLACE_CHANNELS, FUNNEL_DIRECT_CHANNELS);
+  const unknownChannels = Object.keys(salesAgg).filter((c) => c !== "(unknown)" && knownChannels.indexOf(c) < 0);
+  const websiteSales = salesBucket(["website"]);
+  const etsySales = salesBucket(["etsy"]);
+  const mpSales = salesBucket(FUNNEL_MARKETPLACE_CHANNELS.concat(FUNNEL_DIRECT_CHANNELS));
+  const otherSales = salesBucket(unknownChannels.concat(salesAgg["(unknown)"] ? ["(unknown)"] : []));
+
+  // A single-currency revenue figure is safe; a mixed set is reported as null.
+  function revOf(s: any): number | null {
+    return s.currencies.length > 1 ? null : s.revenue;
+  }
+  function currencyOf(s: any): string | null {
+    return s.currencies.length === 1 ? s.currencies[0] : null;
+  }
+  function salesMetrics(s: any, prefix: string): any[] {
+    const mixed = s.currencies.length > 1;
+    const currency = currencyOf(s) || "THB";
+    const out = [
+      funnelMetric(prefix + "_orders", "Orders (canonical)", s.orders, "orders", "analysis_sales_daily", {
+        grain: "order_day x channel",
+        coverage: covPct(s.mapped_orders, s.orders),
+      }),
+      funnelMetric(prefix + "_order_revenue", "Order revenue", revOf(s), currency, "analysis_sales_daily.order_revenue", {
+        grain: "order_day x channel",
+        note: mixed ? "Multiple currencies present; revenue withheld rather than mixed." : null,
+      }),
+      funnelMetric(prefix + "_units", "Units", s.units, "units", "analysis_sales_daily", { grain: "order_day x channel" }),
+      funnelMetric(prefix + "_mapped_order_pct", "Mapped order %", covPct(s.mapped_orders, s.orders), "%", "analysis_order_mapping", {
+        note: "Mapping is derived from items, never from order-level mapping_status.",
+      }),
+      funnelMetric(prefix + "_exact_revenue_coverage_pct", "Exact line-revenue coverage", covPct(s.exact_items, s.exact_items + s.unallocated_items), "%", "analysis_active_items", {
+        note: s.exact_items === 0 && s.unallocated_items > 0 ? "No exact revenue data; UNALLOCATED stays unknown, not zero." : null,
+      }),
+    ];
+    return out;
+  }
+
+  // ---- Status helpers ----
+  const ga4Fresh = funnelFreshness(freshGa4, FUNNEL_FRESHNESS_THRESHOLDS.ga4);
+  const gscFresh = funnelFreshness(freshGsc, FUNNEL_FRESHNESS_THRESHOLDS.gsc);
+  const etsyFresh = funnelFreshness(freshEtsy, FUNNEL_FRESHNESS_THRESHOLDS.etsy);
+  const adsFresh = funnelFreshness(freshAds, FUNNEL_FRESHNESS_THRESHOLDS.google_ads);
+  const leadsFresh = funnelFreshness(freshLeads, FUNNEL_FRESHNESS_THRESHOLDS.ga4_leads);
+
+  const trafficRows = num0(ga4 && ga4.rows_n) + num0(gsc && gsc.rows_n);
+  const websiteTrafficStatus = !ga4 && !gsc ? "UNAVAILABLE" : trafficRows === 0 ? "INSUFFICIENT" : "PARTIAL";
+  const websiteLeadsRows = num0(leads && leads.rows_n) + num0(quoteBase && quoteBase.total_quotes);
+  const websiteLeadStatus = !leads && !quoteBase ? "UNAVAILABLE" : websiteLeadsRows === 0 ? "INSUFFICIENT" : "AVAILABLE";
+  const websiteConvRows = websiteSales.orders;
+  const websiteConvStatus = salesRes === null ? "UNAVAILABLE" : websiteConvRows === 0 ? "INSUFFICIENT" : "AVAILABLE";
+  const etsyStatus = !etsy ? "UNAVAILABLE" : num0(etsy.rows_n) === 0 ? "INSUFFICIENT" : "AVAILABLE";
+  const adsStatus = !ads ? "UNAVAILABLE" : num0(ads.rows_n) === 0 ? "INSUFFICIENT" : "PARTIAL";
+  const mpStatus = salesRes === null ? "UNAVAILABLE" : mpSales.orders === 0 ? "INSUFFICIENT" : "AVAILABLE";
+
+  const leadUsersAvailable = num0(leads && leads.generate_lead_user_rows) > 0 || num0(leads && leads.quote_request_user_rows) > 0;
+
+  const channels: any[] = [
+    {
+      id: "website",
+      label: "Website",
+      kind: "owned",
+      sources: ["ga4_funnel_daily", "gsc_search_daily", "ga4_lead_acquisition_daily", "custom_quotes", "analysis_sales_daily"],
+      freshness: { ga4: ga4Fresh, gsc: gscFresh, ga4_leads: leadsFresh, sales: { last_success_sync_at: dq ? dq.last_success_sync_at : null, status: dq ? "ok" : "unavailable" } },
+      stages: {
+        awareness: funnelStage(websiteTrafficStatus, "sessions / impressions", [
+          funnelMetric("sessions", "Sessions", ga4 ? num0(ga4.sessions) : null, "sessions", "ga4_funnel_daily.sessions", {
+            grain: "report_date x page x source x medium x campaign x country x device",
+            coverage: ga4 ? covPct(num0(ga4.mapped_sessions), num0(ga4.sessions)) : null,
+            note: "Canonical property 308922589 only; legacy 366290587 excluded.",
+          }),
+          funnelMetric("users", "Users", ga4 ? num0(ga4.users) : null, "users", "ga4_funnel_daily.users", {}),
+          funnelMetric("gsc_impressions", "Search impressions", gsc ? num0(gsc.impressions) : null, "impressions", "gsc_search_daily.impressions", {}),
+        ], [
+          "All website traffic, not only new users; no first-touch dedupe across sources.",
+          "GSC impressions are query-level and can repeat a page across queries.",
+        ]),
+        engagement: funnelStage(websiteTrafficStatus, "views / sessions / clicks", [
+          funnelMetric("product_views", "Product views", ga4 ? num0(ga4.product_views) : null, "views", "ga4_funnel_daily.product_views", {}),
+          funnelMetric("engaged_sessions", "Engaged sessions", ga4 ? num0(ga4.engaged_sessions) : null, "sessions", "ga4_funnel_daily.engaged_sessions", {}),
+          funnelMetric("add_to_cart", "Add to cart", ga4 ? num0(ga4.add_to_cart) : null, "events", "ga4_funnel_daily.add_to_cart", {}),
+          funnelMetric("add_to_cart_rate_pct", "Add-to-cart rate", ga4 ? covPct(num0(ga4.add_to_cart), num0(ga4.sessions)) : null, "%", "derived: add_to_cart / sessions", {
+            directional: true,
+            note: "Directional only; GA4 event data finalizes with delay.",
+          }),
+          funnelMetric("gsc_clicks", "Search clicks", gsc ? num0(gsc.clicks) : null, "clicks", "gsc_search_daily.clicks", {}),
+          funnelMetric("gsc_ctr_pct", "Search CTR", gsc ? covPct(num0(gsc.clicks), num0(gsc.impressions)) : null, "%", "derived: clicks / impressions", {}),
+        ], ["Engagement rates use sessions as the denominator and are directional."]),
+        lead_quote: funnelStage(websiteLeadStatus, "lead events / quotes", [
+          funnelMetric("generate_lead_events", "Generate-lead events", leads ? num0(leads.generate_lead_events) : null, "events", "ga4_lead_acquisition_daily", { note: "Canonical property 308922589 only." }),
+          funnelMetric("quote_request_events", "Quote-request events", leads ? num0(leads.quote_request_events) : null, "events", "ga4_lead_acquisition_daily", {}),
+          funnelMetric("generate_lead_users", "Generate-lead users", leads && leadUsersAvailable ? num0(leads.generate_lead_users) : null, "users", "ga4_lead_acquisition_daily.event_users", {
+            note: leadUsersAvailable ? null : "Users unavailable for this period (users_available flag not set).",
+          }),
+          funnelMetric("total_quotes", "Quotes submitted", quoteBase ? num0(quoteBase.total_quotes) : null, "quotes", "custom_quotes", {}),
+          funnelMetric("approved_quotes", "Quotes approved", quoteBase ? num0(quoteBase.approved_quotes) : null, "quotes", "custom_quotes.status", {}),
+          funnelMetric("expiring_7d", "Approved quotes expiring <=7d", quoteBase ? num0(quoteBase.expiring_7d) : null, "quotes", "custom_quotes.expires_at", {}),
+          funnelMetric("exact_converted_quotes", "Exact converted quotes", quoteExact ? num0(quoteExact.exact_converted_quotes) : null, "quotes", "orders.quote_id", {
+            note: quoteExact ? null : "Exact quote->order attribution unavailable (orders.quote_id not present).",
+          }),
+          funnelMetric("exact_conversion_pct", "Exact quote conversion", quoteExact && quoteBase && num0(quoteBase.approved_quotes) > 0 ? covPct(num0(quoteExact.exact_converted_quotes), num0(quoteBase.approved_quotes)) : null, "%", "derived: exact converted / approved", {
+            note: "Legacy email-matched conversions are reported separately and never added here.",
+          }),
+        ], ["Lead capture exists on the website only; Etsy and marketplace channels have none.", "The lead layer carries no product_id (not product-attributable)."]),
+        conversion: funnelStage(websiteConvStatus, "orders / THB", salesMetrics(websiteSales, "website").concat([
+          funnelMetric("ga4_purchases", "GA4 purchases (directional)", ga4 ? num0(ga4.purchases) : null, "purchases", "ga4_funnel_daily.purchases", {
+            directional: true,
+            note: "Directional only; never added to canonical order revenue.",
+          }),
+          funnelMetric("ga4_purchase_revenue", "GA4 purchase revenue (directional)", ga4 ? num0(ga4.purchase_revenue) : null, "currency", "ga4_funnel_daily.purchase_revenue", {
+            directional: true,
+            note: "Never added to canonical order revenue.",
+          }),
+        ]), ["Canonical revenue is order revenue from analysis_sales_daily; GA4 purchases are directional."]),
+        retention: funnelStage("UNAVAILABLE", null, [], ["sales_orders carries no customer identity, so repeat purchase cannot be measured."]),
+      },
+    },
+    {
+      id: "etsy",
+      label: "Etsy",
+      kind: "marketplace",
+      sources: ["etsy_listing_daily", "etsy_listing_master"],
+      freshness: { etsy: etsyFresh },
+      stages: {
+        awareness: funnelStage(etsyStatus, "views / visits", [
+          funnelMetric("listings", "Listings", etsy ? num0(etsy.listings) : null, "listings", "etsy_listing_daily", {}),
+          funnelMetric("active_listings", "Active listings", etsy ? num0(etsy.active_listings) : null, "listings", "etsy_listing_daily.is_active", {}),
+          funnelMetric("views", "Views", etsy ? num0(etsy.views) : null, "views", "etsy_listing_daily.views", {
+            coverage: etsy ? covPct(num0(etsy.mapped_views), num0(etsy.views)) : null,
+          }),
+          funnelMetric("visits", "Visits", etsy ? num0(etsy.visits) : null, "visits", "etsy_listing_daily.visits", {}),
+        ], ["Etsy views and visits are Etsy-native definitions; do not conflate with GA4 sessions."]),
+        engagement: funnelStage(etsyStatus, "views / favorites", [
+          funnelMetric("views", "Views", etsy ? num0(etsy.views) : null, "views", "etsy_listing_daily.views", {}),
+          funnelMetric("favorites", "Favorites", etsy ? num0(etsy.favorites) : null, "favorites", "etsy_listing_daily.favorites", {
+            note: "Intent proxy with no website equivalent.",
+          }),
+        ], ["Etsy favorites is a weak intent proxy."]),
+        lead_quote: funnelStage("UNAVAILABLE", null, [], ["No lead or quote capture exists on Etsy."]),
+        conversion: funnelStage(etsyStatus, "orders / THB", salesMetrics(etsySales, "etsy").concat([
+          funnelMetric("etsy_listing_orders", "Etsy listing orders (directional)", etsy ? num0(etsy.orders) : null, "orders", "etsy_listing_daily.orders", { directional: true }),
+          funnelMetric("etsy_transactions", "Etsy transactions (directional)", etsy ? num0(etsy.transactions) : null, "transactions", "etsy_listing_daily.transactions", { directional: true }),
+          funnelMetric("etsy_units_sold", "Units sold (Etsy listing)", etsy ? num0(etsy.units_sold) : null, "units", "etsy_listing_daily.units_sold", {}),
+          funnelMetric("etsy_revenue_thb", "Etsy revenue (THB)", etsy ? num0(etsy.revenue_thb) : null, "THB", "etsy_listing_daily.revenue_thb", {
+            directional: true,
+            note: "Etsy-native listing revenue; never added to canonical order revenue.",
+          }),
+        ]), [
+          "Canonical Etsy order revenue (analysis_sales_daily, channel = etsy) and Etsy listing revenue are reported separately and are never summed.",
+          "Etsy listing revenue is Etsy-reported and is not canonical D1 order revenue.",
+        ]),
+        retention: funnelStage("UNAVAILABLE", null, [], ["No customer identity is captured for Etsy sales."]),
+      },
+    },
+    {
+      id: "paid_search",
+      label: "Paid Search (Google Ads)",
+      kind: "paid",
+      sources: ["google_ads_campaign_daily"],
+      freshness: { google_ads: adsFresh },
+      stages: {
+        awareness: funnelStage(adsStatus, "impressions / clicks", [
+          funnelMetric("impressions", "Impressions", ads ? num0(ads.impressions) : null, "impressions", "google_ads_campaign_daily.impressions", {}),
+          funnelMetric("clicks", "Clicks", ads ? num0(ads.clicks) : null, "clicks", "google_ads_campaign_daily.clicks", {}),
+          funnelMetric("cost", "Cost", ads ? num0(ads.cost) : null, "currency", "google_ads_campaign_daily.cost", {
+            note: "Platform-reported spend.",
+          }),
+        ], ["Paid reach has no shared identity with website or Etsy traffic."]),
+        engagement: funnelStage(adsStatus, "clicks", [
+          funnelMetric("ctr_pct", "CTR", ads ? covPct(num0(ads.clicks), num0(ads.impressions)) : null, "%", "derived: clicks / impressions", {}),
+          funnelMetric("cpc", "CPC", ads && num0(ads.clicks) > 0 ? Math.round((num0(ads.cost) / num0(ads.clicks)) * 100) / 100 : null, "currency", "derived: cost / clicks", {}),
+        ], []),
+        lead_quote: funnelStage("UNAVAILABLE", null, [], ["No lead or quote capture is attributed to paid search."]),
+        conversion: funnelStage("UNVERIFIED", "platform-attributed", [
+          funnelMetric("conversions", "Conversions (unverified)", ads ? num0(ads.conversions) : null, "conversions", "google_ads_campaign_daily.conversions", {
+            directional: true,
+            note: "Paid-purchase attribution has not been validated; monitoring data only.",
+          }),
+          funnelMetric("conversion_value", "Conversion value (unverified)", ads ? num0(ads.conversion_value) : null, "currency", "google_ads_campaign_daily.conversion_value", {
+            directional: true,
+          }),
+          funnelMetric("roas", "ROAS (unverified)", ads && num0(ads.cost) > 0 ? Math.round((num0(ads.conversion_value) / num0(ads.cost)) * 100) / 100 : null, "ratio", "derived: conversion_value / cost", {
+            directional: true,
+          }),
+        ], ["Google Ads purchase attribution is UNVERIFIED (Phase 12 open); conversions must not be treated as funnel conversion."]),
+        retention: funnelStage("UNAVAILABLE", null, [], ["No customer identity is available for paid channels."]),
+      },
+    },
+    {
+      id: "marketplace",
+      label: "Marketplace & Direct",
+      kind: "marketplace",
+      sources: ["analysis_sales_daily"],
+      channels_included: FUNNEL_MARKETPLACE_CHANNELS.concat(FUNNEL_DIRECT_CHANNELS),
+      freshness: { sales: { last_success_sync_at: dq ? dq.last_success_sync_at : null, status: dq ? "ok" : "unavailable" } },
+      stages: {
+        awareness: funnelStage("UNAVAILABLE", null, [], ["No reach or impression data exists for these channels."]),
+        engagement: funnelStage("UNAVAILABLE", null, [], ["No engagement data exists for these channels."]),
+        lead_quote: funnelStage("UNAVAILABLE", null, [], ["No lead or quote capture exists for these channels."]),
+        conversion: funnelStage(mpStatus, "orders / THB", salesMetrics(mpSales, "mp"), [
+          "Orders enter analytics through manual Notion entry, so freshness follows the human entry cadence.",
+        ]),
+        retention: funnelStage("UNAVAILABLE", null, [], ["No customer identity is captured for these channels."]),
+      },
+    },
+  ];
+
+  if (unknownChannels.length || salesAgg["(unknown)"]) {
+    channels.push({
+      id: "other",
+      label: "Other / Unrecognised source",
+      kind: "other",
+      sources: ["analysis_sales_daily"],
+      channels_included: unknownChannels.concat(salesAgg["(unknown)"] ? ["(unknown)"] : []),
+      freshness: { sales: { last_success_sync_at: dq ? dq.last_success_sync_at : null, status: dq ? "ok" : "unavailable" } },
+      stages: {
+        awareness: funnelStage("UNAVAILABLE", null, [], []),
+        engagement: funnelStage("UNAVAILABLE", null, [], []),
+        lead_quote: funnelStage("UNAVAILABLE", null, [], []),
+        conversion: funnelStage(otherSales.orders > 0 ? "PARTIAL" : "INSUFFICIENT", "orders / THB", salesMetrics(otherSales, "other"), [
+          "source_system is outside the known channel list; flagged in Data Quality as unknown_source_labels.",
+        ]),
+        retention: funnelStage("UNAVAILABLE", null, [], []),
+      },
+    });
+  }
+
+  const notes: string[] = [
+    "Funnel stages are reported per channel and are never chained across channels.",
+    "Website traffic uses canonical GA4 property 308922589 only; legacy property 366290587 is excluded.",
+    "GA4 purchases and Etsy revenue are directional and are never added to canonical order revenue.",
+    "Retention is UNAVAILABLE: sales_orders carries no customer identity.",
+  ];
+  if (schemaUnavailable.length) notes.push("Schema unavailable in this environment: " + schemaUnavailable.join(", ") + ".");
+  if (unknownChannels.length) notes.push("Sales rows with unrecognised source_system: " + unknownChannels.join(", ") + " (reported under Other).");
+
+  return json({
+    success: true,
+    available: true,
+    model: FUNNEL_MODEL_VERSION,
+    generated_at: new Date().toISOString(),
+    filters: { start: startDay, end: endDay },
+    window: { start: startDay, end: endDay, days: windowDays, timezone: "UTC", basis: "source-reported report_date / analytics order_day" },
+    stages: FUNNEL_STAGES,
+    channels,
+    data_confidence: {
+      sources: {
+        ga4_website: ga4Fresh,
+        gsc: gscFresh,
+        etsy: etsyFresh,
+        google_ads: adsFresh,
+        ga4_leads: leadsFresh,
+        sales: {
+          last_success_sync_at: dq ? dq.last_success_sync_at : null,
+          last_sync_status: dq ? dq.last_sync_status : null,
+          sync_errors_7d: dq ? num0(dq.sync_errors_7d) : null,
+          warning_threshold_days: 3,
+          status: dq ? "ok" : "unavailable",
+        },
+      },
+      thresholds_days: FUNNEL_FRESHNESS_THRESHOLDS,
+    },
+    guardrails: {
+      cross_channel_rates: false,
+      channels_summed: false,
+      canonical_ga4_property: GA4_WEBSITE_CANONICAL_PROPERTY_ID,
+      legacy_ga4_property_merged: false,
+      canonical_revenue_source: "analysis_sales_daily.order_revenue",
+      directional_revenue_sources: ["ga4_funnel_daily.purchase_revenue", "etsy_listing_daily.revenue_thb"],
+      google_ads_purchase_attribution: "UNVERIFIED",
+      retention: "UNAVAILABLE",
+      unallocated_revenue: "unknown_not_zero",
+    },
+    schema_unavailable: schemaUnavailable,
+    notes,
+  });
+}
+
 export async function handleAdminAnalysis(request: Request, env: any): Promise<Response> {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -3902,6 +4468,7 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
   if (sub === "/quotes") return getQuotes(env, f);
   if (sub === "/growth-signals") return getGrowthSignals(env, f);
   if (sub === "/profitability") return getProfitability(env, f);
+  if (sub === "/funnel") return getFunnel(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);

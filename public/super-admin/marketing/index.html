@@ -144,6 +144,17 @@
 
       <div class="card" style="margin-top:12px">
         <div class="card-h">
+          <h2>Marketing Funnel Model (5 Stages)</h2>
+          <span class="muted" style="font-size:.72rem">Per-channel only. No cross-channel conversion rate is produced.</span>
+        </div>
+        <div class="card-b">
+          <div id="funnel-guardrails" class="state" style="margin-bottom:10px">Loading funnel…</div>
+          <div id="funnel-grid" class="grid channels"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="card-h">
           <h2>Next Actions with Human Review</h2>
           <span class="muted" style="font-size:.72rem">Local tracker (this browser) for approval, action status, and result-review date</span>
         </div>
@@ -461,6 +472,85 @@ function renderChannelSummary(data){
   ], (quotes && quotes.available === false && quotes.message) ? quotes.message : '');
 
   document.getElementById('channel-grid').innerHTML = cards;
+}
+
+function funnelStatusClass(status){
+  var s = lower(status);
+  if (s === 'available') return 'ok';
+  if (s === 'partial') return 'warning';
+  if (s === 'unverified') return 'insufficient';
+  if (s === 'insufficient') return 'insufficient';
+  return 'unavailable';
+}
+function funnelPill(status){
+  return '<span class="pill ' + funnelStatusClass(status) + '">' + esc(status || 'UNKNOWN') + '</span>';
+}
+function funnelValue(m){
+  if (m.value === null || m.value === undefined) return '<span class="muted">Unavailable</span>';
+  var v = Number(m.value);
+  var out;
+  if (m.unit === '%') out = fmtPct(v);
+  else if (m.unit === 'THB') out = fmtMoneyThb(v);
+  else out = fmtNum(v);
+  if (m.unit && m.unit !== '%' && m.unit !== 'THB' && m.unit !== 'currency') out += ' <span class="muted">' + esc(m.unit) + '</span>';
+  if (m.directional) out += ' <span class="pill insufficient">directional</span>';
+  return out;
+}
+function renderFunnel(data){
+  var grid = document.getElementById('funnel-grid');
+  var guard = document.getElementById('funnel-guardrails');
+  var f = data && data.funnel ? data.funnel : null;
+  if (!f || f.available === false || f.success === false) {
+    guard.innerHTML = 'Funnel unavailable in this environment' + (f && f.message ? ': ' + esc(f.message) : '.');
+    grid.innerHTML = '';
+    return;
+  }
+  var w = f.window || {};
+  var notes = (f.notes || []).slice();
+  if (f.schema_unavailable && f.schema_unavailable.length) {
+    notes.push('Schema unavailable in this environment: ' + f.schema_unavailable.join(', ') + '.');
+  }
+  guard.innerHTML =
+    '<span class="muted">Model ' + esc(f.model || '') + ' · window ' + esc(w.start || '') + ' to ' + esc(w.end || '') +
+      ' (' + esc(String(w.days || '')) + 'd, ' + esc(w.timezone || '') + ')</span><br>' +
+    '<span class="pill unavailable">no cross-channel rates</span> ' +
+    '<span class="pill insufficient">canonical GA4 property only</span> ' +
+    '<span class="pill insufficient">Ads attribution unverified</span> ' +
+    '<span class="pill unavailable">retention unavailable</span>' +
+    (notes.length ? '<div class="note">' + notes.map(esc).join('<br>') + '</div>' : '');
+
+  var stages = f.stages || [];
+  var html = '';
+  (f.channels || []).forEach(function(ch){
+    var rows = '';
+    stages.forEach(function(st){
+      var stage = (ch.stages || {})[st.id] || { status: 'UNAVAILABLE', metrics: [], limitations: [] };
+      var metrics = stage.metrics || [];
+      var mHtml = metrics.length
+        ? metrics.map(function(m){
+            return '<div class="metric"><span class="label">' + esc(m.label) + '</span><span class="val">' + funnelValue(m) + '</span></div>';
+          }).join('')
+        : '<span class="muted">No metrics for this stage.</span>';
+      var limits = (stage.limitations || []).map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('');
+      rows += '<tr>' +
+        '<td style="min-width:96px"><strong>' + esc(st.name) + '</strong></td>' +
+        '<td>' + funnelPill(stage.status) + '</td>' +
+        '<td style="min-width:220px">' + mHtml + '</td>' +
+        '<td>' + (limits ? '<ul class="risk" style="padding-left:14px;font-size:.72rem">' + limits + '</ul>' : '<span class="muted">—</span>') + '</td>' +
+        '</tr>';
+    });
+    var fresh = ch.freshness || {};
+    var freshBits = Object.keys(fresh).map(function(k){
+      var fr = fresh[k] || {};
+      var d = fr.days_since_latest_report;
+      return esc(k) + ': ' + esc(fr.status || 'unknown') + ((d === null || d === undefined) ? '' : ' (' + esc(String(d)) + 'd)');
+    }).join(' · ');
+    html += '<div class="card" style="grid-column:1/-1">' +
+      '<div class="card-h"><h3>' + esc(ch.label) + '</h3><span class="muted" style="font-size:.7rem">' + freshBits + '</span></div>' +
+      '<div class="card-b"><div class="table-wrap"><table><thead><tr><th>Stage</th><th>Status</th><th>Metrics</th><th>Limitations</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
+      '</div>';
+  });
+  grid.innerHTML = html || '<div class="state">No funnel channels returned.</div>';
 }
 
 function buildActions(data){
@@ -846,12 +936,14 @@ async function loadCommandCenter(){
     etsy: await apiSafe('/etsy' + qs),
     ads: await apiSafe('/google-ads' + qs),
     profitability: await apiSafe('/profitability' + qs),
-    quotes: await apiSafe('/quotes' + qs)
+    quotes: await apiSafe('/quotes' + qs),
+    funnel: await apiSafe('/funnel' + qs)
   };
   renderKpis(data.summary, data.opportunity, data.growth, data.dq, data.quotes);
   renderOpportunityTables(data.opportunity);
   renderRisks(data);
   renderChannelSummary(data);
+  renderFunnel(data);
   renderActions(buildActions(data));
   await loadAiActions();
   state.textContent = 'Updated ' + new Date().toLocaleTimeString();
