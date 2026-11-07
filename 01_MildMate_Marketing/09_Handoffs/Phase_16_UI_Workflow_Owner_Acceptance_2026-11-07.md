@@ -6,7 +6,7 @@
 - **Preview branch:** `feature/marketing-ai-analyst-r1` (worktree `.phase16-ai-analyst`)
 - **Preview D1:** `mildmate-db` (`85ce2f41-463a-43fa-8485-181e983b8fd4`)
 - **Production:** unchanged and untouched.
-- **Status at time of writing:** owner has confirmed **Super Admin: PASS** and **Marketing Command Center: PASS**. The human approval workflow acceptance (steps 1–7 below) is **PENDING owner confirmation**.
+- **Status:** **OWNER ACCEPTED — 2026-11-07.** The owner completed the authenticated preview workflow, verified persistence after a hard refresh, and reported PASS on every step. Acceptance record and the two UI corrections are in section 2.5 below.
 
 ---
 
@@ -18,7 +18,7 @@
 | Marketing Command Center | PASS (owner browser) |
 | Phase 14 preview schema | Repaired (additive migrations applied to preview D1 only) |
 | Phase 16 automated workflow tests | PASS |
-| Phase 16 human approval workflow (browser) | **PENDING owner acceptance** |
+| Phase 16 human approval workflow (browser) | **OWNER ACCEPTED — 2026-11-07** |
 | Production | Unchanged |
 
 Per owner direction, the completed Phase 14–16 schema audits and the Clerk authentication investigation are **closed and not repeated**. No further Clerk configuration changes are made while the current preview session works.
@@ -39,7 +39,40 @@ Supporting values: #14 `confidence=80`, `caution=0`, `review_date=2026-12-07`. #
 
 All three rows carry `source='human'`, `ai_model='TEST-DEMO-FIXTURE'`, and the `[TEST/DEMO]` title prefix, so they are always distinguishable from genuine future AI recommendations (`source='ai'`). No fabricated marketing performance and no customer PII.
 
-**Fixtures are frozen until the owner finishes acceptance.** Do not reset, re-seed, or mutate them before then.
+Fixtures were frozen until the owner finished acceptance. Acceptance is now complete; the fixtures still hold their owner-accepted states and must not be reset without authorization.
+
+---
+
+## 2.5 Owner acceptance result — OWNER ACCEPTED, 2026-11-07
+
+The owner ran the authenticated workflow in the preview browser and confirmed every step. Verbatim confirmed results:
+
+| # | Check | Result |
+|---|---|---|
+| 1 | #14 Standard Fitted Sheet: `PROPOSED` → `APPROVED` | **PASS** |
+| 2 | #15 Deep Pocket Fitted Sheet: `PROPOSED` → `REJECTED` | **PASS** |
+| 3 | #16 Marine Fitted Sheet: `APPROVED` → `REVIEWED` | **PASS** |
+| 4 | #16 result classification = `POSITIVE` | **PASS** |
+| 5 | #16 lessons learned saved and persisted | **PASS** |
+| 6 | #16 approved budget `THB 3,000` preserved | **PASS** |
+| 7 | All three statuses persisted after Ctrl+F5 | **PASS** |
+| 8 | Rejected action remained non-executed | **PASS** |
+
+**Phase 16 UI & Human Approval Workflow: OWNER ACCEPTED.**
+
+Scope of this acceptance: the human approval / rejection / post-action-review workflow and its persistence, exercised against clearly labeled `[TEST/DEMO]` fixture records.
+
+**Explicitly NOT claimed:** no real AI generation was validated (no provider is configured, by design), and no measurable marketing improvement was demonstrated. The `[TEST/DEMO]` records are not real marketing actions.
+
+### UI corrections applied after acceptance
+
+Two display defects the owner reported were corrected in the AI Analyst panel of `public/super-admin/marketing/index.html`. Both are presentation-only — the stored D1 values are unchanged and no marketing fact is inferred.
+
+**A. Baseline metrics readability.** The panel previously passed `baseline_metrics_json` through `JSON.stringify` and rendered the escaped JSON blob, which was hard to read. It now parses the stored record and renders labeled field/value rows with humanized field names (for example `snapshot_at` → *Snapshot at*, `opportunity_at_approval · score` → *Opportunity at approval · Score*). Nested objects are flattened with `·` separators, arrays are summarized as `N item(s)`, and rendering is capped at 12 fields and 3 levels so a large record cannot flood the cell. Missing or unreadable records fall back to an explicit empty state. Every key and value is escaped before it reaches HTML.
+
+**B. Missing post-action metrics.** A reviewed action with no metrics previously rendered `Post: "null"` — the API stores `JSON.stringify(null)` as the four-character string `"null"`, which the old renderer then stringified again. The panel now shows **`No post-action metrics recorded`** for absent metrics and *Post-action record unreadable* for an unparseable record. The saved result classification and lessons learned are preserved and still displayed, and the row now states whether the result is **Manually selected result (no metrics recorded)** or **Result backed by recorded metrics**, so a human classification is never presented as a metrics-verified outcome.
+
+Both helpers live in a marked, self-contained block (`METRICS_RENDER_BEGIN` / `METRICS_RENDER_END`) in the page's inline script. No other Command Center component was modified.
 
 ---
 
@@ -143,9 +176,9 @@ Anthropic API credentials **will be required** to begin the next stage. They are
 ## 5. Guardrails observed in this cycle
 
 - No production deployment, no `main` merge.
-- No D1 write of any kind in this cycle — fixtures were read only and left byte-identical.
+- No production D1 write. Preview D1 was read only; the owner-accepted fixture rows were left byte-identical (never reset or mutated).
 - No Clerk configuration change.
-- No application code change.
+- Application code change limited to the AI Analyst display layer in `public/super-admin/marketing/index.html`; no other Command Center component touched.
 - No AI provider configuration; no paid AI generation.
 - Preview deployment and existing test/acceptance evidence preserved.
 
@@ -153,10 +186,16 @@ Anthropic API credentials **will be required** to begin the next stage. They are
 
 ## 6. Next step
 
-**Owner:** run steps 1–7 above in the preview browser and report the outcome.
+**Done:** owner ran the workflow in the preview browser — **OWNER ACCEPTED, 2026-11-07** (section 2.5). The two reported display defects were corrected in the AI Analyst panel and the focused tests re-run green. Existing acceptance and test evidence preserved.
 
-**On PASS:** Phase 16 UI/workflow owner acceptance is recorded, existing evidence is preserved, and the remaining Claude integration requirements in section 4 become the next authorized workstream. Anthropic credentials will then be needed.
+**Remaining Phase 16 items:**
 
-**On a genuine UI issue:** report the specific step and observed behaviour; the fix is scoped to the Phase 16 preview branch with the relevant tests re-run.
+1. **AI provider integration (deferred, needs separate authorization).** Implement the native Anthropic Messages API adapter and validate the exact versioned model ID; see section 4. Anthropic credentials required.
+2. **Opportunity scoring snapshot on the preview.** The Command Center still shows `—` for the top opportunity score and scored opportunities because preview `opportunity_scores` is empty (no snapshot generated yet). Not a defect; the owner-side step is *Recalculate costs* → *Recompute scores* on the Data Analyst tab when a populated snapshot is wanted.
+3. **Google Ads purchase attribution** remains UNVERIFIED (Phase 12 open). Independent business track; the #15 fixture's caution flag reflects it.
+4. **Fixture reset** (owner action, when wanted): `npx wrangler d1 execute mildmate-db --remote --file scripts/seed-phase16-demo-fixtures.sql`. The three owner-accepted demo rows are left in place and must not be reset without authorization.
+5. **Production release of Phase 16** remains NO-GO while the AI provider is intentionally unconfigured and owner acceptance of a production deployment has not been sought.
+
+**Recommendation for the subsequent Claude integration stage:** proceed as a separate authorized stage — add the Anthropic Messages adapter behind the existing provider-neutral boundary, keep the OpenAI-compatible path intact, keep `ai_available:false` as the default until a key is deliberately set, extend the Phase 16 suite with adapter tests (request mapping, response normalization, no-key and provider-error paths), mirror any `workers/api/admin-ai-analyst.ts` change into `public/index.js` + `public/_worker.js` and rebuild the bundle via `extract-worker.ps1`, and validate the exact model identifier against Anthropic's live model list before the first paid call. Do not begin until the owner authorizes it and supplies credentials.
 
 Then stop and await separate authorization for Claude integration.

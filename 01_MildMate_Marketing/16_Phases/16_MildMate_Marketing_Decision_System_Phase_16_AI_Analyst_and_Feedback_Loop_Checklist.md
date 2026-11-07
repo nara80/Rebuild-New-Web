@@ -317,7 +317,7 @@ Live authenticated verification of the approval workflow requires a Clerk **Bear
 | Marketing Command Center | PASS (owner browser) |
 | Phase 14 preview schema | Repaired (preview D1 only) |
 | Phase 16 automated workflow tests | PASS |
-| Phase 16 human approval workflow (browser) | **PENDING owner acceptance** |
+| Phase 16 human approval workflow (browser) | **OWNER ACCEPTED — 2026-11-07** |
 | Production | Unchanged |
 
 Phase 14–16 schema audits and the Clerk authentication investigation are **closed and not repeated**. No further Clerk configuration changes are made while the current preview session works.
@@ -358,3 +358,53 @@ No production deployment, no `main` merge, no D1 write, no Clerk change, no appl
 ### Next step
 
 Owner runs steps 1–7 in the preview browser. On PASS, acceptance is recorded here and the Claude integration requirements above become the next authorized workstream. Then stop and await separate authorization for Claude integration.
+
+---
+## Owner Acceptance Closure & UI Cleanup (2026-11-07)
+
+**Phase 16 UI & Human Approval Workflow: OWNER ACCEPTED — 2026-11-07.**
+
+The owner completed the authenticated preview workflow and verified persistence after a hard refresh. Confirmed results:
+
+| # | Check | Result |
+|---|---|---|
+| 1 | #14 Standard Fitted Sheet: `PROPOSED` → `APPROVED` | PASS |
+| 2 | #15 Deep Pocket Fitted Sheet: `PROPOSED` → `REJECTED` | PASS |
+| 3 | #16 Marine Fitted Sheet: `APPROVED` → `REVIEWED` | PASS |
+| 4 | #16 result classification `POSITIVE` | PASS |
+| 5 | #16 lessons learned saved and persisted | PASS |
+| 6 | #16 approved budget `THB 3,000` preserved | PASS |
+| 7 | All three statuses persisted after Ctrl+F5 | PASS |
+| 8 | Rejected action remained non-executed | PASS |
+
+These were `[TEST/DEMO]` fixture records, not real marketing actions. **No real AI generation and no measurable marketing improvement is claimed** — no provider is configured, by design.
+
+### UI defects corrected (AI Analyst panel only)
+
+Two display defects in `public/super-admin/marketing/index.html`:
+
+- **Baseline metrics readability.** `baseline_metrics_json` was rendered as a raw escaped JSON blob. It now renders as labeled, humanized field/value rows (nested objects flattened with `·`, arrays summarized as `N item(s)`, capped at 12 fields / 3 levels), with an explicit empty state for missing or unreadable records. Stored D1 data is never modified; all keys and values are escaped.
+- **Missing post-action metrics.** A reviewed action with no metrics rendered `Post: "null"`. It now shows **`No post-action metrics recorded`** (and *Post-action record unreadable* for unparseable records), preserves the saved result classification and lessons, and labels the row **Manually selected result (no metrics recorded)** vs **Result backed by recorded metrics** so a human classification is never presented as a metrics-verified outcome.
+
+Helpers live in a marked block (`METRICS_RENDER_BEGIN` / `METRICS_RENDER_END`) in the page's inline script. No other Command Center component changed.
+
+### Tests
+
+- New `workers/api/__tests__/ai-analyst-metrics-render.test.ts` — 23 tests covering structured baseline rendering, humanized keys, array/large-record handling, missing and malformed metric data, HTML escaping of keys/values/labels/lessons, reviewed-without-metrics empty state, manual-vs-metrics-backed distinction, and renderer regression guards. The suite extracts and exercises the real functions from the shipped page.
+- Extended `workers/api/__tests__/ai-analyst-r1.test.ts` — added Action History persistence across approve/reject/review and the `post_metrics_json = "null"` storage shape.
+- Focused run: 52/52 pass (metrics-render 23, ai-analyst-r1 16, ai-analyst-ui 4, marketing-command-center-ui 9).
+
+### Fixtures
+
+The three owner-accepted demo rows remain in preview D1 in their accepted states and were **not** reset. Reset remains owner-authorized-only: `npx wrangler d1 execute mildmate-db --remote --file scripts/seed-phase16-demo-fixtures.sql`.
+
+### Remaining Phase 16 items
+
+1. **Anthropic Claude integration** — deferred; requires a native Messages API adapter, exact model-ID validation, and credentials. Separate authorization required.
+2. **Opportunity snapshot on preview** — Command Center still shows `—` for top opportunity score / scored opportunities because preview `opportunity_scores` is empty. Owner-side step: *Recalculate costs* → *Recompute scores* on the Data Analyst tab.
+3. **Google Ads purchase attribution** — UNVERIFIED (Phase 12 open); independent business track.
+4. **Production release of Phase 16** — NO-GO while the AI provider is intentionally unconfigured.
+
+### Guardrails observed
+
+No production migration, no production deployment, no `main` merge, no Clerk configuration change, no collector modification. Application change limited to the AI Analyst display layer. No AI provider credentials configured and no paid AI generation.
