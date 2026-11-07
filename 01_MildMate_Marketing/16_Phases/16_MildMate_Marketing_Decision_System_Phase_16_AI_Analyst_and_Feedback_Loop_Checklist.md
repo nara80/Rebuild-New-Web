@@ -303,3 +303,58 @@ Live authenticated verification of the approval workflow requires a Clerk **Bear
 4. **Reset:** `npx wrangler d1 execute mildmate-db --remote --file scripts/seed-phase16-demo-fixtures.sql`.
 
 **Recommendation:** GO for owner acceptance, conditional on steps 0 and 2 (both owner-side actions). NO-GO for production release of Phase 16 while the AI provider is intentionally unconfigured, Google Ads attribution remains UNVERIFIED (Phase 12 open), and owner browser acceptance is unrecorded.
+
+---
+## Final UI Acceptance Before Claude Integration (2026-11-07)
+
+**Full pack:** `09_Handoffs/Phase_16_UI_Workflow_Owner_Acceptance_2026-11-07.md`
+
+### Owner-confirmed status
+
+| Item | Status |
+|---|---|
+| Phase 16 preview Super Admin | PASS (owner browser) |
+| Marketing Command Center | PASS (owner browser) |
+| Phase 14 preview schema | Repaired (preview D1 only) |
+| Phase 16 automated workflow tests | PASS |
+| Phase 16 human approval workflow (browser) | **PENDING owner acceptance** |
+| Production | Unchanged |
+
+Phase 14–16 schema audits and the Clerk authentication investigation are **closed and not repeated**. No further Clerk configuration changes are made while the current preview session works.
+
+### Fixtures verified live (read-only, 2026-11-07)
+
+Preview D1 `marketing_actions` holds all three `[TEST/DEMO]` fixtures in their initial states: **#14** `proposed` (Standard Fitted Sheet, `seo`, conf 80) → approve; **#15** `proposed` (Deep Pocket Fitted Sheet, `google-ads`, conf 55, `caution=1`) → reject; **#16** `approved` (Marine Fitted Sheet, `overall`, `approved_budget=3000 THB`, conf 70) → post-action review. Fixtures are frozen until the owner completes acceptance.
+
+### Acceptance script (7 steps)
+
+1. AI Analyst panel + recommendation details render correctly (three rows, all columns, filter buttons work).
+2. Approve the **proposed Standard Fitted Sheet** action (#14).
+3. Reject the **proposed Deep Pocket Fitted Sheet Ads** action (#15) — no result class, no executed state.
+4. Review the **approved Marine Fitted Sheet** action (#16) with a result classification and a lesson learned.
+5. Verify Action History, approved budget (฿3,000 on #16), baseline snapshot, and human audit records.
+6. Refresh and confirm all decisions persist (from D1, not browser state).
+7. Confirm **Generate AI recommendations** reports that no provider is configured and stores nothing.
+
+### Behaviour notes recorded so they are not misread as defects
+
+- **Approved budget on #14 stays `—`.** The panel's Approve button sends no budget and the handler uses `COALESCE(?3, approved_budget)`, so a null budget leaves the column unchanged. The ฿3,000 value is fixture #16's. Correct behaviour.
+- **Audit attribution** (`approved_by` / `rejected_by` / `reviewed_by`) is read from the JWT `email` claim. If the Development instance's session token omits `email`, the audit column renders blank — a token-claim nuance to report as an observation, not an authorization failure; decisions still persist.
+- **The "Next Actions with Human Review" card is a browser-local tracker**, separate from the D1-backed AI Analyst panel. Workflow persistence is proven by the AI Analyst card after refresh.
+- **Default 28-day filter** on the Command Center legitimately yields `—` / `0` for several KPIs; documented in the Preview System Verification section above.
+
+### Provider decision recorded — Anthropic Claude (deferred)
+
+- **Provider:** Anthropic Claude API. **Model (owner-stated identifier):** `claude-haiku-5-5`.
+- **Deferred:** no API key, no Cloudflare AI secret change, no adapter implementation, no paid generation, no production change.
+- **Adapter required:** the current `callAiProvider()` is OpenAI-compatible (`chat/completions`, `Authorization: Bearer`); Anthropic's Messages API uses a different endpoint, `x-api-key` auth, and request/response schema, so Claude cannot be called without a native adapter.
+- **Remaining requirements:** (1) native Messages API adapter preserving the existing OpenAI-compatible path; (2) validate the exact versioned model ID against Anthropic's live model list — do not assume the owner-stated string is callable as-is; (3) set `AI_API_KEY` (+ optional `AI_API_BASE` / `AI_MODEL`) at the next stage only; (4) preserve `validateRecommendations()` grounding and the `ai_available:false` default; (5) mirror `workers/api/admin-ai-analyst.ts` into `public/index.js` + `public/_worker.js` and rebuild the bundle via `extract-worker.ps1`; (6) extend the Phase 16 suite with adapter tests.
+- **Credential notice:** Anthropic API credentials will be required for the next stage, and only after separate authorization.
+
+### Guardrails observed
+
+No production deployment, no `main` merge, no D1 write, no Clerk change, no application code change, no AI provider configuration. Preview deployment and existing test/acceptance evidence preserved.
+
+### Next step
+
+Owner runs steps 1–7 in the preview browser. On PASS, acceptance is recorded here and the Claude integration requirements above become the next authorized workstream. Then stop and await separate authorization for Claude integration.
