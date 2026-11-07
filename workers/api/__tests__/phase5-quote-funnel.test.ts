@@ -161,6 +161,22 @@ const DIRECT_ATTR = {
   gclid: null, gbraid: null, wbraid: null,
 };
 
+/**
+ * UTC calendar date N days before today (YYYY-MM-DD).
+ *
+ * The application computes Ads freshness against the CURRENT date
+ * (`days_since_latest_report > 4` → "warning"), so any hard-coded report
+ * date makes the fixture go stale as time passes. Keeping the fixture
+ * date-relative preserves the test intent (fresh vs stale Ads data) without
+ * changing application behaviour.
+ */
+function utcDaysAgo(days: number): string {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
 function baseTables(): FakeTables {
   return {
     custom_quotes: [
@@ -187,8 +203,12 @@ function baseTables(): FakeTables {
       { quote_id: "QT-261101-001", stripe_session_id: "cs_paid_1", product_slug: "bedbridge-connector", product_title_en: "BedBridge Connector", quantity: 1, price_usd: null, price_thb: 5000, currency: "THB", status: "refunded", is_archived: 0, created_at: "2026-11-03 08:00:00" },
     ],
     google_ads_campaign_daily: [
-      { report_date: "2026-11-01", currency: "THB", cost: 120.5 },
-      { report_date: "2026-11-02", currency: "THB", cost: 79.5 },
+      // Ads freshness is computed against the CURRENT date by the application
+      // (`days_since_latest_report > 4` → "warning"), so the fixture dates are
+      // relative to today (UTC) instead of hard-coded — a fixed date turns
+      // this fixture stale over time. The application rule is NOT changed.
+      { report_date: utcDaysAgo(1), currency: "THB", cost: 120.5 },
+      { report_date: utcDaysAgo(0), currency: "THB", cost: 79.5 },
     ],
   };
 }
@@ -350,7 +370,7 @@ describe("Phase 5 — quote funnel extension (phase5 block)", () => {
   it("computes cost-per-quote only from the Ads-attributable denominator and exposes stale freshness", async () => {
     const tables = baseTables();
     tables.google_ads_campaign_daily = [
-      { report_date: "2026-10-19", currency: "THB", cost: 400 },
+      { report_date: utcDaysAgo(30), currency: "THB", cost: 400 },
     ];
     const body = await getPhase5(makeEnv(tables));
     const ads = body.phase5.google_ads;
