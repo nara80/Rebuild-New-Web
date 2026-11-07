@@ -189,3 +189,36 @@ Baseline correction:
 ### Reset after owner testing
 
 `npx wrangler d1 execute mildmate-db --remote --file scripts/seed-phase16-demo-fixtures.sql` restores the three fixtures to their initial states and removes any rows created during owner testing.
+
+---
+## Preview Sign-in Blocker — Root Cause & Correction (2026-11-07)
+
+**Symptom:** owner acceptance of the Phase 16 preview was blocked by a recurring Clerk **Development** sign-in loop on `https://phase16-ai-analyst.mildmate-new.pages.dev` (hosted sign-in `kind-joey-29.accounts.dev`): the sign-in page stayed on a blank/loading state with repeated network requests and the browser never reached the Command Center. Production Clerk auth (`accounts.mildmate.com`) was unaffected.
+
+### Root cause (demonstrated from live evidence, not inferred)
+
+| # | Layer | Evidence |
+|---|---|---|
+| 1 | The Clerk **Development** instance does not authorize the preview origin | Live instance config (`allowedOrigins`) = localhost / `127.0.0.1` / `0.0.0.0` / `lvh.me` variants + `https://clerk.accounts.dev` + `https://*.clerk.accounts.dev` + `http://*.clerk.accounts.dev` + `https://kind-joey-29.accounts.dev/default-redirect` — **no `*.pages.dev` origin**. Clerk's own runtime warning captured in the preview browser: `Clerk: Redirect URL https://phase16-ai-analyst.mildmate-new.pages.dev/auth/clerk-return/?next=/super-admin/marketing/ is not on one of the allowedRedirectOrigins, falling back to the default redirect URL.` After a successful sign-in Clerk therefore returns to `https://kind-joey-29.accounts.dev/default-redirect`, never to the preview. |
+| 2 | The preview callback never consumed the Development handshake (the loop itself) | `functions/auth/clerk-return/[[path].ts` calls `consumeClerkHandshake()` (`workers/api/clerk-handshake.ts`), which recognises only the **Production** `__clerk_handshake` payload. The Development token `__clerk_db_jwt` was stripped by `stripAuthParams()` and never consumed. Live proof: the callback answered `302 → kind-joey-29.accounts.dev/sign-in` **identically with and without** `__clerk_db_jwt` — sign-in → callback → sign-in. |
+| 3 | Production was never affected | Production signs in through the Production instance and the `__clerk_handshake` payload, which `consumeClerkHandshake()` verifies against the configured production JWKS (`CLERK_ISSUER` / `CLERK_JWKS_URL`); `workers/api/clerk-verify.ts` fails closed on production hosts when the production issuer is missing. The production callback path is untouched by this correction. |
+| 4 | The preview API already trusts the Development instance | The development JWKS (`https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json`) returns keys, and the preview admin API answers `Unknown signing key` for a production-signed token — the preview verifies against the **Development** keys, as intended. |
+| 5 | The hosted sign-in page itself renders | `GET https://kind-joey-29.accounts.dev/sign-in?redirect_url=…` → `200` with the "Sign in to MildMate Beddings" form; the blank appearance is the repeated bounce of the loop plus Development-instance latency, not a broken sign-in page. |
+
+### Correction (preview-only)
+
+1. **Code (this branch):** `functions/auth/clerk-return/[[path].ts` forwards the Clerk Development handshake to the destination page on preview/local hosts only (`*.pages.dev`, `localhost`, `127.0.0.1`, `::1`): the `__clerk_db_jwt` token is carried to `next` instead of being dropped. The Clerk SDK the app already loads (`public/js/clerk.js` → `hasClerkHandshakeParams()` → `initClerk()` → `waitForSessionAndCleanup()`) then finishes the handshake, establishes the session and removes the token from the address bar. Production hosts keep the exact previous behaviour — there is no dev-handshake branch on production at all.
+2. **Clerk instance configuration (owner action, required):** the Development instance must authorize the preview hostname; otherwise Clerk refuses to return the browser to the preview after sign-in, and no application code can override Clerk's origin authorization. Clerk Dashboard → **Development instance → API keys → Allowed origins** → add `https://phase16-ai-analyst.mildmate-new.pages.dev` (optionally `https://mildmate-new.pages.dev` for the project host). This environment cannot perform that step: the Clerk CLI is not authenticated (`clerk doctor --json` → "Not logged in") and no `CLERK_SECRET_KEY` / `CLERK_PLATFORM_API_KEY` exists locally.
+
+### Regression coverage
+
+- New suite `workers/api/__tests__/clerk-dev-handshake-preview.test.ts` (6 tests): the preview forwards the dev handshake (plain and suffixed parameter name), keeps the `next` query string, refuses an off-site `next` (no open redirect), the preview without a handshake still redirects to the dev sign-in portal, and the production callback is unchanged.
+- `workers/api/__tests__/phase5-quote-funnel.test.ts`: the Ads fixture dates are now relative (`utcDaysAgo(...)`), so the "fresh Ads data" case can no longer go stale as the calendar moves. The application rule (`days_since_latest_report > 4` → `warning`) is unchanged — only the test fixture changed.
+- Full repository suite after the change: **263/263 passing (28 files)**.
+
+### Owner browser acceptance test (preview only)
+
+1. Clerk Dashboard → Development instance → API keys → Allowed origins → add `https://phase16-ai-analyst.mildmate-new.pages.dev` → save.
+2. Open `https://phase16-ai-analyst.mildmate-new.pages.dev/super-admin/marketing/` → **Sign in** → complete the Clerk form.
+   **Pass:** the browser lands back on `/super-admin/marketing/` (the URL may briefly show `?__clerk_db_jwt=…`, which the app removes automatically) with the **AI Analyst (Phase 16)** panel visible and the three `[TEST/DEMO]` rows listed.
+   **Fail:** the browser returns to `kind-joey-29.accounts.dev/sign-in` or `/default-redirect` → the preview hostname is still missing from Allowed origins (step 1).
