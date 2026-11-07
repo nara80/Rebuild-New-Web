@@ -1,6 +1,10 @@
 -- Phase 16 TEST/DEMO workflow fixtures — PREVIEW D1 ONLY (mildmate-db).
 -- Clearly labeled manual fixtures; never AI-generated; never for production.
-DELETE FROM marketing_actions WHERE ai_model = 'TEST-DEMO-FIXTURE';
+-- Re-running this file is the documented RESET: it removes every TEST/DEMO row
+-- (including temporary TEST-DEMO-FIXTURE-SIM rows) and restores the three
+-- canonical fixtures to their initial states
+-- (proposed / proposed / approved with budget 3000 THB).
+DELETE FROM marketing_actions WHERE ai_model LIKE 'TEST-DEMO-FIXTURE%';
 
 INSERT INTO marketing_actions (action_date, source, ai_model, status, product_id, channel, action_type, title, detail, recommendation_json, baseline_metrics_json, approved_budget, budget_currency, success_target, confidence, caution, caution_note, review_date)
 VALUES

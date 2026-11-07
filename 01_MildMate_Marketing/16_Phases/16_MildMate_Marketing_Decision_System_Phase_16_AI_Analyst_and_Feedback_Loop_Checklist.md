@@ -131,3 +131,61 @@ Baseline correction:
 - Fixture markers: `source='human'`, `ai_model='TEST-DEMO-FIXTURE'`, title prefix `[TEST/DEMO]` — always distinguishable from genuine future AI recommendations (`source='ai'`).
 - Contents: 2 rows `status='proposed'` (one to approve, one to reject) + 1 row `status='approved'` with illustrative baseline snapshot and `approved_budget=3000 THB` (for the post-action review step). Values are illustrative only; no fabricated marketing performance, no customer PII.
 - Production D1 (`mildmate-db-prod`) was never touched.
+- Fixture IDs are re-issued on every reset (`AUTOINCREMENT`); always address rows by their `[TEST/DEMO]` title, never by a hard-coded ID.
+- Documented reset (preview only): `npx wrangler d1 execute mildmate-db --remote --file scripts/seed-phase16-demo-fixtures.sql`. The script deletes every `TEST-DEMO-FIXTURE%` row (including temporary `TEST-DEMO-FIXTURE-SIM` rows) and restores the three canonical fixtures.
+
+---
+## Phase 16 UI & Human-Approval Workflow Verification (2026-11-07)
+
+**Target:** preview branch deployment `phase16-ai-analyst` → `https://phase16-ai-analyst.mildmate-new.pages.dev`, preview D1 `mildmate-db` (`85ce2f41-...`). Production deployment and `mildmate-db-prod` were not touched.
+
+### Verification layers used
+
+| Layer | What it proves |
+|---|---|
+| Live preview HTTP (`GET /api/admin/ai-analyst/*`, unauthenticated) | Route is deployed and Clerk-gated: `401` without an admin session, `200` for reads once authenticated. |
+| Real handler + **live preview D1** (`wrangler dev --remote` harness importing `workers/api/admin-ai-analyst.ts`) | Approve and reject executed the real handler code against the real preview database; baseline snapshot, approved budget and audit timestamps persisted. |
+| Real handler + **local D1 replica** (schema-identical, seeded with the same fixtures) | Full lifecycle including all four result classes, status filters, rejected-row guarantees, and the feedback loop. |
+| **Live preview D1** direct execution of the handler's exact `approve` / `reject` / `review` statements | The production SQL path applies cleanly on the live preview database. |
+| Automated suite | `workers/api/__tests__/ai-analyst-r1.test.ts` (14 tests) + `workers/api/__tests__/ai-analyst-ui.test.ts` (4 tests), plus the full repository suite. |
+
+### Result checklist
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Preview AI endpoint deployed and Clerk-gated | PASS (401 unauthenticated) |
+| 2 | Command Center UI renders the AI Analyst panel (generate button, filters, actions table, review form) | PASS (markers present on the live preview page) |
+| 3 | `GET /actions` lists fixtures; `?status=` filters work | PASS |
+| 4 | `GET /contract` returns canonical products, data confidence, per-source freshness, Ads UNVERIFIED flag | PASS (30 canonical products, `ads_unverified=true`) |
+| 5 | Approve stores baseline snapshot + approved budget | PASS |
+| 6 | Re-approving an approved action is blocked | PASS (`409 INVALID_TRANSITION`) |
+| 7 | Reject stores actor + timestamp and preserves the row | PASS |
+| 8 | Reviewing a rejected action is blocked | PASS (`409 INVALID_TRANSITION`) |
+| 9 | Invalid `result_class` is rejected | PASS (`400 BAD_RESULT_CLASS`) |
+| 10 | All four result classes persist (`positive`, `neutral`, `negative`, `inconclusive`) with post-metrics + lessons | PASS |
+| 11 | Rejected rows are never marked executed (no `approved_at`, `reviewed_at`, `result_class`, post-metrics, budget or baseline) | PASS |
+| 12 | Reviewed outcomes feed the next AI contract (`past_outcomes`) | PASS |
+| 13 | Audit separation: AI (`source='ai'`) vs human (`source='human'`) vs test data (`ai_model='TEST-DEMO-FIXTURE'`, `[TEST/DEMO]` title prefix) | PASS |
+| 14 | No provider configured → `ai_available:false`, nothing generated or stored | PASS |
+| 15 | Fixtures reset to the documented initial state after verification | PASS (3 rows: proposed / proposed / approved) |
+
+### Findings and limitations (no code change required)
+
+- **Remote-dev session limitation:** in `wrangler dev --remote`, body-bearing requests (`PUT` / `POST`) start returning `503` with an empty body after a direct `wrangler d1 execute` touches the same database, while `GET` keeps working. This is a Cloudflare remote-dev-session behaviour, not an application defect. For write testing use a local `wrangler dev` replica or the deployed preview URL with a signed-in Clerk admin session.
+- **Actor attribution on the non-browser path:** approvals performed with the `X-Admin-Secret` fallback record an empty actor (`approved_by=''`). The deployed preview route is Clerk-only, so browser approvals are attributed to the signed-in admin email (covered by the unit test *approve captures baseline snapshot and human attribution*).
+- **Preview data gaps are reported, not hidden:** preview D1 has no `opportunity_scores` table, so the contract returns `schema_unavailable: ["opportunity_scores"]` with `opportunities: []`; preview data confidence resolves to `low` (missing / stale collector runs), which forces caution flags on recommendations, as designed.
+- **No AI provider is configured**, so the panel intentionally shows the "AI provider not configured" state and stores nothing.
+
+### Owner browser acceptance steps (preview only)
+
+1. Open `https://phase16-ai-analyst.mildmate-new.pages.dev/super-admin/marketing/` and sign in with the Clerk super-admin account.
+2. Scroll to **"AI Analyst (Phase 16) — Advisory Only"**. The three `[TEST/DEMO]` rows must appear: *Refresh Standard Fitted Sheet* (proposed), *Deep Pocket Fitted Sheet Ads test* (proposed, caution flag visible), *Marine Fitted Sheet content update* (approved).
+3. Click **Approve** on *Refresh Standard Fitted Sheet* → status becomes *approved*, the row records your admin email as approver, and the baseline snapshot is stored.
+4. Click **Reject** on *Deep Pocket Fitted Sheet Ads test* → status becomes *rejected* with your email and timestamp; it must never show a result class or executed state.
+5. Click **Review** on *Marine Fitted Sheet content update* → the review form opens; pick a result class (positive / neutral / negative / inconclusive), add a note, submit → status becomes *reviewed*.
+6. Press **Refresh**. All three states must persist, and the audit columns (approver / rejecter / reviewer) must still show your email.
+7. Click **Generate AI recommendations** → expect the explicit "AI provider not configured … Nothing generated or stored" message, and no new rows.
+
+### Reset after owner testing
+
+`npx wrangler d1 execute mildmate-db --remote --file scripts/seed-phase16-demo-fixtures.sql` restores the three fixtures to their initial states and removes any rows created during owner testing.
