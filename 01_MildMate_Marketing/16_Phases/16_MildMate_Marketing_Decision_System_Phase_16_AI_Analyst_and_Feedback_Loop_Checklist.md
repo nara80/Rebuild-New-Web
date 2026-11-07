@@ -116,3 +116,18 @@ Baseline correction:
 
 - **Phase 15 is now complete** for the current owner-approved command-center/auth scope (production source `45a436f`).
 - Phase 16 remains pending implementation and should proceed only after explicit scope approval.
+
+---
+## Owner Decision — AI Model Selection (2026-11-07)
+
+- **Claude Haiku 5.5 is the owner's selected AI model for the FUTURE Phase 16 AI integration stage.**
+- **API integration is deferred.** Do NOT configure `AI_API_KEY`, `AI_API_BASE`, or `AI_MODEL` at this stage. No paid AI generation is authorized.
+- **Integration caveat (important):** the current Phase 16 implementation is provider-neutral over the **OpenAI-compatible** `chat/completions` protocol (default base `https://api.deepseek.com`). Anthropic's Messages API is a different protocol (different endpoint, `x-api-key` auth header, and request/response schema). Calling Claude Haiku 5.5 will require an **adapter change** in `workers/api/admin-ai-analyst.ts` (`callAiProvider`). Do not assume the existing integration can call Anthropic as-is.
+- Until a provider is configured, the AI Analyst panel shows the explicit `ai_available:false` state and generates nothing (by design).
+
+## TEST/DEMO Fixtures — Preview Only (2026-11-07)
+
+- Three clearly labeled workflow fixtures were inserted directly into **preview D1 `marketing_actions`** (database `mildmate-db`, ID `85ce2f41-...`) via wrangler — no application code changes, no fixture code paths that could ever run in production.
+- Fixture markers: `source='human'`, `ai_model='TEST-DEMO-FIXTURE'`, title prefix `[TEST/DEMO]` — always distinguishable from genuine future AI recommendations (`source='ai'`).
+- Contents: 2 rows `status='proposed'` (one to approve, one to reject) + 1 row `status='approved'` with illustrative baseline snapshot and `approved_budget=3000 THB` (for the post-action review step). Values are illustrative only; no fabricated marketing performance, no customer PII.
+- Production D1 (`mildmate-db-prod`) was never touched.
